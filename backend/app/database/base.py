@@ -4,14 +4,14 @@ from uuid import UUID, uuid4
 from sqlalchemy import DateTime
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-
+from app.database.naming import metadata
 
 class Base(DeclarativeBase):
     """
     Base class for all database models.
     Every model in the application inherits from this class.
     """
-    pass
+    metadata = metadata
 
 
 class BaseModel(Base):
