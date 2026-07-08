@@ -26,4 +26,6 @@ class AuthRepository:
         self.db.add(user)
         self.db.flush()
         return user
-
+    def get_user_by_id(self, user_id: str) -> User | None:
+        statement = select(User).where(User.id == user_id)
+        return self.db.scalar(statement)

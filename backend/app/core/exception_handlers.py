@@ -4,6 +4,7 @@ from app.exceptions.auth import (
     InvalidCredentials,
     LawFirmAlreadyExists,
     UserAlreadyExists,
+    InactiveUser,
 )
 
 
@@ -28,4 +29,11 @@ def register_exception_handlers(app: FastAPI):
         raise HTTPException(
             status_code=401,
             detail="Invalid email or password.",
+        )
+
+    @app.exception_handler(InactiveUser)
+    async def inactive_user(_, __):
+        raise HTTPException(
+            status_code=403,
+            detail="This account has been deactivated.",
         )
