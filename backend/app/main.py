@@ -5,6 +5,8 @@ from app.modules.auth.routes import router as auth_router
 
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.modules.clients.routes import router as clients_router, client_auth_router
+
 
 
 app = FastAPI(
@@ -12,6 +14,8 @@ app = FastAPI(
     version="1.0.0",
     description="Backend API for the LegalHub Legal Practice Management System",
 )
+app.include_router(clients_router)
+app.include_router(client_auth_router)
 app.include_router(auth_router)
 # Register global exception handlers
 register_exception_handlers(app)
