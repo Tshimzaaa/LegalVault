@@ -1,0 +1,77 @@
+.navbar {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  width: calc(100% - 48px);
+  max-width: 1100px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.brand-icon {
+  width: 22px;
+  height: 22px;
+  color: #22c55e;
+}
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.navbar-links a {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #d1d5db;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.navbar-links a:hover {
+  color: #fff;
+}
+
+.caret {
+  font-size: 10px;
+}
+
+.navbar-cta {
+  background: #22c55e;
+  color: #06210f;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: none;
+  text-decoration: none;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.navbar-cta:hover {
+  background: #16a34a;
+}

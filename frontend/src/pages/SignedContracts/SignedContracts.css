@@ -1,0 +1,11 @@
+.signed-stats {
+  flex: 0 0 auto;
+  grid-template-columns: repeat(3, 1fr);
+  margin-bottom: 12px;
+}
+
+.signed-table-card {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
