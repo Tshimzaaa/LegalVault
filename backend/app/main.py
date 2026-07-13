@@ -12,7 +12,6 @@ from app.modules.clients.routes import router as clients_router, client_auth_rou
 from app.modules.matters.routes import router as matters_router
 from app.modules.templates.routes import router as templates_router
 
-
 app = FastAPI(
     title="LegalHub API",
     version="1.0.0",
