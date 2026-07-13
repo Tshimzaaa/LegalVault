@@ -44,3 +44,11 @@ class ClientRepository:
         self.db.add(contact)
         self.db.flush()
         return contact
+    def list_by_firm(self, firm_id) -> list[Client]:
+        return list(self.db.scalars(select(Client).where(Client.firm_id == firm_id)))
+    
+    def update_invite_token(self, contact, token: str, expires_at):
+        contact.invitation_token = token
+        contact.invitation_expires_at = expires_at
+        self.db.flush()
+        return contact

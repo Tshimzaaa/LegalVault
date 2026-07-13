@@ -51,7 +51,9 @@ class ClientLoginRequest(BaseModel):
     email: EmailStr
     password: str
 
-
 class ClientTokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    
+class ResendInviteRequest(BaseModel):
+    email: EmailStr

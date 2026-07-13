@@ -15,3 +15,5 @@ class InvalidClientCredentials(Exception):
 
 class InactiveContact(Exception):
     pass
+class ContactNotFound(Exception):
+    pass

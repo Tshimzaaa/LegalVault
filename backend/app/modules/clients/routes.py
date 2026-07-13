@@ -10,6 +10,7 @@ from app.modules.clients.schemas import (
     AcceptInviteRequest,
     ClientLoginRequest,
     ClientTokenResponse,
+    ResendInviteRequest,
 )
 from app.modules.clients.service import ClientService
 from app.modules.clients.dependencies import get_current_contact
@@ -62,3 +63,19 @@ def client_login(request: ClientLoginRequest, db: Session = Depends(get_db)):
 @client_auth_router.get("/me", response_model=ContactResponse)
 def get_me(current_contact: ClientContact = Depends(get_current_contact)):
     return current_contact
+@router.get("", response_model=list[ClientResponse])
+def list_clients(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    service = ClientService(db)
+    return service.list_clients(current_user.firm_id)
+@router.post("/contacts/resend-invite", status_code=200)
+def resend_invite(
+    request: ResendInviteRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    service = ClientService(db)
+    service.resend_invite(request.email, current_user.firm_id)
+    return {"message": "Invitation resent."}

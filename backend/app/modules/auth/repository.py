@@ -29,3 +29,6 @@ class AuthRepository:
     def get_user_by_id(self, user_id: str) -> User | None:
         statement = select(User).where(User.id == user_id)
         return self.db.scalar(statement)
+    def list_by_firm(self, firm_id) -> list[User]:
+        statement = select(User).where(User.firm_id == firm_id)
+        return list(self.db.scalars(statement))
