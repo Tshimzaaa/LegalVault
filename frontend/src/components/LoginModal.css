@@ -82,6 +82,38 @@
   border-color: #22c55e;
 }
 
+.modal-password-wrap {
+  position: relative;
+  display: flex;
+}
+
+.modal-password-wrap input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.modal-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.modal-password-toggle:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .modal-error {
   margin: 0 0 12px;
   color: #f87171;
