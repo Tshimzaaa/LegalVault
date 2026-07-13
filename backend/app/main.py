@@ -34,7 +34,7 @@ register_exception_handlers(app)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # his dev URL, and later your real domain
+    allow_origins=["http://localhost:5174"],  # his dev URL, and later your real domain
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

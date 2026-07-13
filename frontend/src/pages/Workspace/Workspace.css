@@ -1,0 +1,199 @@
+.dash-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  grid-template-areas: 'sidebar main';
+  height: 100svh;
+  flex-grow: 1;
+  background: #050506;
+  color: #fff;
+  font-size: 13px;
+  overflow: hidden;
+}
+
+.dash-main {
+  grid-area: main;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: 20px 28px 16px;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.dash-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  margin-bottom: 14px;
+}
+
+.dash-topbar h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #22c55e;
+  margin: 0;
+}
+
+.topbar-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid #4b5563;
+}
+
+.dot.filled {
+  background: #6b7280;
+  border-color: #6b7280;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  background: #0b0b0d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 14px;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 10px;
+  color: #e5e7eb;
+}
+
+.card-subtitle {
+  display: block;
+  font-size: 11px;
+  color: #6b7280;
+  margin-bottom: 10px;
+  margin-top: -8px;
+}
+
+.icon-btn {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+}
+
+.icon-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #d1d5db;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+
+.chip svg {
+  width: 11px;
+  height: 11px;
+}
+
+.chip.small {
+  padding: 3px 9px;
+}
+
+.chip-badge {
+  background: rgba(34, 197, 94, 0.18);
+  color: #22c55e;
+  border-radius: 999px;
+  padding: 0 6px;
+  font-size: 10.5px;
+}
+
+.stat-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.stat-big {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.stat-sub {
+  font-size: 11.5px;
+  color: #6b7280;
+}
+
+.stat-sub.top {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.muted {
+  color: #9ca3af;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.status-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.data-table th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0 10px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.data-table td {
+  padding: 11px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: #e5e7eb;
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
