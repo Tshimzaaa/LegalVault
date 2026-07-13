@@ -27,6 +27,7 @@
   font-size: 18px;
   font-weight: 600;
   color: #fff;
+  text-decoration: none;
 }
 
 .brand-icon {
@@ -41,21 +42,18 @@
   gap: 32px;
 }
 
-.navbar-links a {
+.navbar-link {
   display: flex;
   align-items: center;
   gap: 4px;
   color: #d1d5db;
   text-decoration: none;
   font-size: 14px;
+  transition: color 0.15s;
 }
 
-.navbar-links a:hover {
+.navbar-link:hover {
   color: #fff;
-}
-
-.caret {
-  font-size: 10px;
 }
 
 .navbar-cta {

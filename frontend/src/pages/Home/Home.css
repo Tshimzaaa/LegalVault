@@ -7,6 +7,7 @@
   position: relative;
   overflow: hidden;
   padding: 140px 24px 0;
+  scroll-margin-top: 110px;
   text-align: center;
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
@@ -171,6 +172,7 @@
 .mockup-slide {
   position: absolute;
   inset: 0;
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -181,6 +183,23 @@
 
 .mockup-slide.active {
   opacity: 1;
+}
+
+.capture-root {
+  position: fixed;
+  top: 0;
+  left: -100000px;
+  pointer-events: none;
+}
+
+.capture-frame {
+  width: 1440px;
+  height: 900px;
+  overflow: hidden;
+}
+
+.capture-frame .dash-layout {
+  height: 900px;
 }
 
 .slide-dots {

@@ -1,145 +1,491 @@
-Good, that's the hard infrastructure part done. Now it's on his end mostly, but here's exactly what needs to happen to wire up a login form to your API.
+((.venv) ) 
+Ian Maz@DESKTOP-VD6UCU9 MINGW64 ~/OneDrive/Desktop/our-project/backend (main)
+$ uvicorn app.main:app --reload
+INFO:     Will watch for changes in these directories: ['C:\\Users\\Ian Maz\\OneDrive\\Desktop\\our-project\\backend']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [8740] using StatReload
+INFO:     Started server process [27564]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:63024 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63024 - "GET /openapi.json HTTP/1.1" 200 OK
+2026-07-08 14:21:38,548 INFO sqlalchemy.engine.Engine select pg_catalog.version()
+2026-07-08 14:21:38,549 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-07-08 14:21:39,344 INFO sqlalchemy.engine.Engine select current_schema()
+2026-07-08 14:21:39,345 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-07-08 14:21:40,166 INFO sqlalchemy.engine.Engine show standard_conforming_strings
+2026-07-08 14:21:40,167 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-07-08 14:21:40,987 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-07-08 14:21:41,026 INFO sqlalchemy.engine.Engine SELECT users.firm_id, users.first_name, users.last_name, users.email, users.password_hash, users.role, users.is_active, users.last_login, users.id, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = %(email_1)s
+2026-07-08 14:21:41,026 INFO sqlalchemy.engine.Engine [generated in 0.00051s] {'email_1': 'test@legalhub.com'}
+2026-07-08 14:21:42,319 INFO sqlalchemy.engine.Engine UPDATE users SET last_login=%(last_login)s, updated_at=%(updated_at)s WHERE users.id = %(users_id)s::UUID
+2026-07-08 14:21:42,319 INFO sqlalchemy.engine.Engine [generated in 0.00060s] {'last_login': datetime.datetime(2026, 7, 8, 12, 21, 42, 313236, tzinfo=datetime.timezone.utc), 'updated_at': datetime.datetime(2026, 7, 8, 12, 21, 42, 319168, tzinfo=datetime.timezone.utc), 'users_id': UUID('2733c650-0bb0-4b25-90ac-03b8d0546fe2')}
+2026-07-08 14:21:42,853 INFO sqlalchemy.engine.Engine COMMIT
+2026-07-08 14:21:43,267 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-07-08 14:21:43,273 INFO sqlalchemy.engine.Engine SELECT users.firm_id AS users_firm_id, users.first_name AS users_first_name, users.last_name AS users_last_name, users.email AS users_email, users.password_hash AS users_password_hash, users.role AS users_role, users.is_active AS users_is_active, users.last_login AS users_last_login, users.id AS users_id, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = %(pk_1)s::UUID
+2026-07-08 14:21:43,273 INFO sqlalchemy.engine.Engine [generated in 0.00043s] {'pk_1': UUID('2733c650-0bb0-4b25-90ac-03b8d0546fe2')}
+INFO:     127.0.0.1:63025 - "POST /auth/login HTTP/1.1" 200 OK
+2026-07-08 14:21:44,065 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:64151 - "OPTIONS /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64151 - "POST /auth/login HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:64408 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64449 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64451 - "GET /openapi.json HTTP/1.1" 200 OK
+2026-07-08 14:54:19,404 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-07-08 14:54:19,405 INFO sqlalchemy.engine.Engine SELECT users.firm_id, users.first_name, users.last_name, users.email, users.password_hash, users.role, users.is_active, users.last_login, users.id, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = %(email_1)s
+2026-07-08 14:54:19,405 INFO sqlalchemy.engine.Engine [cached since 1971s ago] {'email_1': 'nobody@example.com'}
+INFO:     127.0.0.1:64456 - "POST /auth/login HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+psycopg2.OperationalError: SSL error: unexpected eof while reading
 
-## What he needs to build (React + Vite)
 
-### 1. A login function
+The above exception was the direct cause of the following exception:
 
-```javascript
-// api/auth.js
-const BASE_URL = "http://127.0.0.1:8000";
+Traceback (most recent call last):
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\uvicorn\protocols\http\h11_impl.py", line 416, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 63, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\applications.py", line 1163, in __call__
+    await super().__call__(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    raise exc
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 88, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\middleware\asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 2683, in app
+    await route.handle(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 1753, in handle
+    await self.original_router.handle(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 2738, in handle
+    await included_router._handle_selected(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 1773, in _handle_selected
+    await original_route.handle(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 1264, in handle
+    await app(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 150, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 136, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 690, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 346, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\concurrency.py", line 34, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\anyio\to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\anyio\_backends\_asyncio.py", line 2596, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\anyio\_backends\_asyncio.py", line 1029, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\app\modules\auth\routes.py", line 17, in login
+    return login_user(db, credentials)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\app\modules\auth\services\login.py", line 13, in login_user
+    user = repo.get_user_by_email(credentials.email)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\app\modules\auth\repository.py", line 18, in get_user_by_email
+    return self.db.scalar(statement)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2421, in scalar
+    return self._execute_internal(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2271, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\orm\context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+             ^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1421, in execute
+    return meth(
+           ^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1988, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 2365, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) SSL error: unexpected eof while reading
 
-export async function login(email, password) {
-  const res = await fetch(`${BASE_URL}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
+[SQL: SELECT users.firm_id, users.first_name, users.last_name, users.email, users.password_hash, users.role, users.is_active, users.last_login, users.id, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = %(email_1)s]
+[parameters: {'email_1': 'nobody@example.com'}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+INFO:     127.0.0.1:64513 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64513 - "GET /openapi.json HTTP/1.1" 200 OK
+2026-07-08 14:56:33,125 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-07-08 14:56:33,126 INFO sqlalchemy.engine.Engine SELECT users.firm_id, users.first_name, users.last_name, users.email, users.password_hash, users.role, users.is_active, users.last_login, users.id, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = %(email_1)s
+2026-07-08 14:56:33,126 INFO sqlalchemy.engine.Engine [cached since 2105s ago] {'email_1': 'tshii@gmail.com'}
+2026-07-08 14:56:34,007 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:64531 - "POST /auth/login HTTP/1.1" 401 Unauthorized
+2026-07-08 14:57:24,484 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-07-08 14:57:24,485 INFO sqlalchemy.engine.Engine SELECT users.firm_id, users.first_name, users.last_name, users.email, users.password_hash, users.role, users.is_active, users.last_login, users.id, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = %(email_1)s
+2026-07-08 14:57:24,486 INFO sqlalchemy.engine.Engine [cached since 2156s ago] {'email_1': 'test@legalhub.com'}
+2026-07-08 14:57:25,442 INFO sqlalchemy.engine.Engine UPDATE users SET last_login=%(last_login)s, updated_at=%(updated_at)s WHERE users.id = %(users_id)s::UUID
+2026-07-08 14:57:25,442 INFO sqlalchemy.engine.Engine [cached since 2156s ago] {'last_login': datetime.datetime(2026, 7, 8, 12, 57, 25, 441492, tzinfo=datetime.timezone.utc), 'updated_at': datetime.datetime(2026, 7, 8, 12, 57, 25, 442492, tzinfo=datetime.timezone.utc), 'users_id': UUID('2733c650-0bb0-4b25-90ac-03b8d0546fe2')}
+2026-07-08 14:57:25,955 INFO sqlalchemy.engine.Engine COMMIT
+2026-07-08 14:57:26,396 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-07-08 14:57:26,397 INFO sqlalchemy.engine.Engine SELECT users.firm_id AS users_firm_id, users.first_name AS users_first_name, users.last_name AS users_last_name, users.email AS users_email, users.password_hash AS users_password_hash, users.role AS users_role, users.is_active AS users_is_active, users.last_login AS users_last_login, users.id AS users_id, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = %(pk_1)s::UUID
+2026-07-08 14:57:26,397 INFO sqlalchemy.engine.Engine [cached since 2156s ago] {'pk_1': UUID('2733c650-0bb0-4b25-90ac-03b8d0546fe2')}
+INFO:     127.0.0.1:64558 - "POST /auth/login HTTP/1.1" 200 OK
+2026-07-08 14:57:27,164 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:64558 - "OPTIONS /auth/me HTTP/1.1" 200 OK
+2026-07-08 14:57:30,232 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-07-08 14:57:30,238 INFO sqlalchemy.engine.Engine SELECT users.firm_id, users.first_name, users.last_name, users.email, users.password_hash, users.role, users.is_active, users.last_login, users.id, users.created_at, users.updated_at 
+FROM users 
+WHERE users.id = %(id_1)s::UUID
+2026-07-08 14:57:30,254 INFO sqlalchemy.engine.Engine [generated in 0.01525s] {'id_1': '2733c650-0bb0-4b25-90ac-03b8d0546fe2'}
+INFO:     127.0.0.1:64558 - "GET /auth/me HTTP/1.1" 200 OK
+2026-07-08 14:57:31,078 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-07-08 15:02:36,919 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-07-08 15:02:36,920 INFO sqlalchemy.engine.Engine SELECT users.firm_id, users.first_name, users.last_name, users.email, users.password_hash, users.role, users.is_active, users.last_login, users.id, users.created_at, users.updated_at 
+FROM users 
+WHERE users.id = %(id_1)s::UUID
+2026-07-08 15:02:36,920 INFO sqlalchemy.engine.Engine [cached since 306.7s ago] {'id_1': '2733c650-0bb0-4b25-90ac-03b8d0546fe2'}
+INFO:     127.0.0.1:64744 - "GET /auth/me HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+psycopg2.OperationalError: SSL error: unexpected eof while reading
 
-  if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.detail || "Login failed");
-  }
 
-  const data = await res.json();
-  return data.access_token;
-}
+The above exception was the direct cause of the following exception:
 
-export async function getCurrentUser(token) {
-  const res = await fetch(`${BASE_URL}/auth/me`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+Traceback (most recent call last):
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\uvicorn\protocols\http\h11_impl.py", line 416, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 63, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\applications.py", line 1163, in __call__
+    await super().__call__(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    raise exc
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 96, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 154, in simple_response
+    await self.app(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\middleware\asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 2683, in app
+    await route.handle(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 1753, in handle
+    await self.original_router.handle(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 2738, in handle
+    await included_router._handle_selected(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 1773, in _handle_selected
+    await original_route.handle(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 1264, in handle
+    await app(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 150, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 136, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 473, in app
+    solved_result = await solve_dependencies(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\dependencies\utils.py", line 680, in solve_dependencies
+    solved = await run_in_threadpool(call, **solved_result.values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\concurrency.py", line 34, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\anyio\to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\anyio\_backends\_asyncio.py", line 2596, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\anyio\_backends\_asyncio.py", line 1029, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\app\modules\auth\dependencies.py", line 24, in get_current_user
+    user = repo.get_user_by_id(payload["sub"])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\app\modules\auth\repository.py", line 31, in get_user_by_id
+    return self.db.scalar(statement)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2421, in scalar
+    return self._execute_internal(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2271, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\orm\context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+             ^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1421, in execute
+    return meth(
+           ^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1988, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 2365, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) SSL error: unexpected eof while reading
 
-  if (!res.ok) {
-    throw new Error("Not authenticated");
-  }
+[SQL: SELECT users.firm_id, users.first_name, users.last_name, users.email, users.password_hash, users.role, users.is_active, users.last_login, users.id, users.created_at, users.updated_at 
+FROM users 
+WHERE users.id = %(id_1)s::UUID]
+[parameters: {'id_1': '2733c650-0bb0-4b25-90ac-03b8d0546fe2'}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2026-07-08 15:02:39,709 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-07-08 15:02:39,711 INFO sqlalchemy.engine.Engine SELECT users.firm_id, users.first_name, users.last_name, users.email, users.password_hash, users.role, users.is_active, users.last_login, users.id, users.created_at, users.updated_at 
+FROM users 
+WHERE users.id = %(id_1)s::UUID
+2026-07-08 15:02:39,711 INFO sqlalchemy.engine.Engine [cached since 309.5s ago] {'id_1': '2733c650-0bb0-4b25-90ac-03b8d0546fe2'}
+INFO:     127.0.0.1:64745 - "GET /auth/me HTTP/1.1" 200 OK
+2026-07-08 15:02:40,515 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:64768 - "OPTIONS /auth/login HTTP/1.1" 200 OK
+2026-07-08 15:03:11,016 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-07-08 15:03:11,017 INFO sqlalchemy.engine.Engine SELECT users.firm_id, users.first_name, users.last_name, users.email, users.password_hash, users.role, users.is_active, users.last_login, users.id, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = %(email_1)s
+2026-07-08 15:03:11,017 INFO sqlalchemy.engine.Engine [cached since 2503s ago] {'email_1': 'test@legalhub.com'}
+2026-07-08 15:03:11,970 INFO sqlalchemy.engine.Engine UPDATE users SET last_login=%(last_login)s, updated_at=%(updated_at)s WHERE users.id = %(users_id)s::UUID
+2026-07-08 15:03:11,970 INFO sqlalchemy.engine.Engine [cached since 2502s ago] {'last_login': datetime.datetime(2026, 7, 8, 13, 3, 11, 969271, tzinfo=datetime.timezone.utc), 'updated_at': datetime.datetime(2026, 7, 8, 13, 3, 11, 970266, tzinfo=datetime.timezone.utc), 'users_id': UUID('2733c650-0bb0-4b25-90ac-03b8d0546fe2')}
+2026-07-08 15:03:12,440 INFO sqlalchemy.engine.Engine COMMIT
+2026-07-08 15:03:13,018 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-07-08 15:03:13,019 INFO sqlalchemy.engine.Engine SELECT users.firm_id AS users_firm_id, users.first_name AS users_first_name, users.last_name AS users_last_name, users.email AS users_email, users.password_hash AS users_password_hash, users.role AS users_role, users.is_active AS users_is_active, users.last_login AS users_last_login, users.id AS users_id, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.id = %(pk_1)s::UUID
+2026-07-08 15:03:13,019 INFO sqlalchemy.engine.Engine [cached since 2503s ago] {'pk_1': UUID('2733c650-0bb0-4b25-90ac-03b8d0546fe2')}
+INFO:     127.0.0.1:64768 - "POST /auth/login HTTP/1.1" 200 OK
+2026-07-08 15:03:13,803 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-07-08 15:03:13,839 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-07-08 15:03:13,840 INFO sqlalchemy.engine.Engine SELECT users.firm_id, users.first_name, users.last_name, users.email, users.password_hash, users.role, users.is_active, users.last_login, users.id, users.created_at, users.updated_at 
+FROM users 
+WHERE users.id = %(id_1)s::UUID
+2026-07-08 15:03:13,840 INFO sqlalchemy.engine.Engine [cached since 343.6s ago] {'id_1': '2733c650-0bb0-4b25-90ac-03b8d0546fe2'}
+INFO:     127.0.0.1:64768 - "GET /auth/me HTTP/1.1" 200 OK
+2026-07-08 15:03:14,697 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:64835 - "OPTIONS /auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64834 - "OPTIONS /auth/me HTTP/1.1" 200 OK
+2026-07-08 15:08:46,978 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-07-08 15:08:46,986 INFO sqlalchemy.engine.Engine SELECT users.firm_id, users.first_name, users.last_name, users.email, users.password_hash, users.role, users.is_active, users.last_login, users.id, users.created_at, users.updated_at 
+FROM users 
+WHERE users.id = %(id_1)s::UUID
+2026-07-08 15:08:46,987 INFO sqlalchemy.engine.Engine [cached since 676.7s ago] {'id_1': '2733c650-0bb0-4b25-90ac-03b8d0546fe2'}
+INFO:     127.0.0.1:64834 - "GET /auth/me HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+psycopg2.OperationalError: SSL error: unexpected eof while reading
 
-  return res.json();
-}
-```
 
-### 2. A login form component
+The above exception was the direct cause of the following exception:
 
-```jsx
-import { useState } from "react";
-import { login, getCurrentUser } from "../api/auth";
+Traceback (most recent call last):
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\uvicorn\protocols\http\h11_impl.py", line 416, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 63, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\applications.py", line 1163, in __call__
+    await super().__call__(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    raise exc
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 96, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 154, in simple_response
+    await self.app(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\middleware\asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 2683, in app
+    await route.handle(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 1753, in handle
+    await self.original_router.handle(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 2738, in handle
+    await included_router._handle_selected(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 1773, in _handle_selected
+    await original_route.handle(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 1264, in handle
+    await app(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 150, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 136, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\routing.py", line 473, in app
+    solved_result = await solve_dependencies(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\fastapi\dependencies\utils.py", line 680, in solve_dependencies
+    solved = await run_in_threadpool(call, **solved_result.values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\starlette\concurrency.py", line 34, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\anyio\to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\anyio\_backends\_asyncio.py", line 2596, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\anyio\_backends\_asyncio.py", line 1029, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\app\modules\auth\dependencies.py", line 24, in get_current_user
+    user = repo.get_user_by_id(payload["sub"])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\app\modules\auth\repository.py", line 31, in get_user_by_id
+    return self.db.scalar(statement)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2421, in scalar
+    return self._execute_internal(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2271, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\orm\context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+             ^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1421, in execute
+    return meth(
+           ^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1988, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 2365, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "C:\Users\Ian Maz\OneDrive\Desktop\our-project\backend\.venv\Lib\site-packages\sqlalchemy\engine\default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) SSL error: unexpected eof while reading
 
-function LoginForm({ onLoginSuccess }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setError("");
-
-    try {
-      const token = localStorage.getItem("access_token") || (await login(email, password));
-      localStorage.setItem("access_token", token);
-
-      const user = await getCurrentUser(token);
-      onLoginSuccess(user);
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      <button type="submit">Log In</button>
-    </form>
-  );
-}
-
-export default LoginForm;
-```
-
-(Small bug avoidance note for him: don't actually check `localStorage` before calling `login()` like I half-wrote above — that was leftover logic that doesn't belong there. Just call `await login(email, password)` directly. I'll clean that up below.)
-
-Corrected line in `handleSubmit`:
-```javascript
-const token = await login(email, password);
-localStorage.setItem("access_token", token);
-```
-
-### 3. Keeping the user logged in across page refreshes
-
-```jsx
-import { useState, useEffect } from "react";
-import { getCurrentUser } from "../api/auth";
-
-function App() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (token) {
-      getCurrentUser(token)
-        .then(setUser)
-        .catch(() => localStorage.removeItem("access_token"))
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
-  }, []);
-
-  if (loading) return <p>Loading...</p>;
-
-  return user ? <Dashboard user={user} /> : <LoginForm onLoginSuccess={setUser} />;
-}
-```
-
-### 4. Logout
-
-```javascript
-function logout() {
-  localStorage.removeItem("access_token");
-  window.location.reload();
-}
-```
-
----
-
-## What he should test on his end
-
-1. Type wrong password → form should show the error message from your API
-2. Type correct credentials → should log in and load `/auth/me` data
-3. Refresh the page → should stay logged in (via the `useEffect` check)
-4. Click logout → should clear token and show login form again
-
-Have him try it against the test account you already made (`test@legalhub.com` / `Password123!`) since that user already exists in your shared database. Let me know what breaks, if anything, once he wires it up.
+[SQL: SELECT users.firm_id, users.first_name, users.last_name, users.email, users.password_hash, users.role, users.is_active, users.last_login, users.id, users.created_at, users.updated_at 
+FROM users 
+WHERE users.id = %(id_1)s::UUID]
+[parameters: {'id_1': '2733c650-0bb0-4b25-90ac-03b8d0546fe2'}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2026-07-08 15:08:49,754 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-07-08 15:08:49,755 INFO sqlalchemy.engine.Engine SELECT users.firm_id, users.first_name, users.last_name, users.email, users.password_hash, users.role, users.is_active, users.last_login, users.id, users.created_at, users.updated_at 
+FROM users 
+WHERE users.id = %(id_1)s::UUID
+2026-07-08 15:08:49,756 INFO sqlalchemy.engine.Engine [cached since 679.5s ago] {'id_1': '2733c650-0bb0-4b25-90ac-03b8d0546fe2'}
+INFO:     127.0.0.1:64835 - "GET /auth/me HTTP/1.1" 200 OK
+2026-07-08 15:08:50,590 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-07-08 15:09:13,726 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-07-08 15:09:13,728 INFO sqlalchemy.engine.Engine SELECT users.firm_id, users.first_name, users.last_name, users.email, users.password_hash, users.role, users.is_active, users.last_login, users.id, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = %(email_1)s
+2026-07-08 15:09:13,728 INFO sqlalchemy.engine.Engine [cached since 2866s ago] {'email_1': 'test@legal.com'}
+2026-07-08 15:09:14,545 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:64846 - "POST /auth/login HTTP/1.1" 401 Unauthorized

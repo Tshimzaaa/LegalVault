@@ -3,11 +3,12 @@ import Navbar from './components/Navbar'
 import LoginModal from './components/LoginModal'
 import Home from './pages/Home/Home'
 import Workspace from './pages/Workspace/Workspace'
+import LawFirmPortal from './pages/LawFirmPortal/LawFirmPortal'
 import { login, getCurrentUser } from './api/auth'
 import type { User } from './api/auth'
 
 // TEMP: bypass login to view Dashboard alone. Remove before shipping.
-const DEV_BYPASS_LOGIN = true
+const DEV_BYPASS_LOGIN = false
 const DEV_USER: User = {
   id: 'dev',
   firm_id: 'dev',
@@ -23,6 +24,7 @@ function App() {
   const [user, setUser] = useState<User | null>(DEV_BYPASS_LOGIN ? DEV_USER : null)
   const [checkingSession, setCheckingSession] = useState(!DEV_BYPASS_LOGIN)
   const [showLogin, setShowLogin] = useState(false)
+  const [showLawFirmPortal, setShowLawFirmPortal] = useState(false)
 
   useEffect(() => {
     if (DEV_BYPASS_LOGIN) return
@@ -55,6 +57,10 @@ function App() {
     return null
   }
 
+  if (showLawFirmPortal) {
+    return <LawFirmPortal onBack={() => setShowLawFirmPortal(false)} />
+  }
+
   if (user) {
     return <Workspace user={user} onLogout={handleLogout} />
   }
@@ -62,7 +68,7 @@ function App() {
   return (
     <>
       <Navbar onLoginClick={() => setShowLogin(true)} />
-      <Home />
+      <Home onOpenLawFirmPortal={() => setShowLawFirmPortal(true)} />
       {showLogin && (
         <LoginModal onClose={() => setShowLogin(false)} onSubmit={handleLogin} />
       )}

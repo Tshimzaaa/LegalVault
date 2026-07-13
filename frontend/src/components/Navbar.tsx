@@ -1,5 +1,18 @@
 import './Navbar.css'
 
+interface NavLink {
+  label: string
+  href: string
+}
+
+const navLinks: NavLink[] = [
+  { label: 'Home', href: '#home' },
+  { label: 'About', href: '#about' },
+  { label: 'Pricing', href: '#pricing' },
+  { label: 'Blog', href: '#blog' },
+  { label: 'Contact', href: '#contact' },
+]
+
 interface NavbarProps {
   onLoginClick: () => void
 }
@@ -7,7 +20,7 @@ interface NavbarProps {
 function Navbar({ onLoginClick }: NavbarProps) {
   return (
     <header className="navbar">
-      <div className="navbar-brand">
+      <a href="#home" className="navbar-brand">
         <svg className="brand-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path
             d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c3-1 5-4 5-7a5 5 0 0 0-5-5 3 3 0 0 1 0-6c3 0 5.5 2 7 5"
@@ -17,16 +30,14 @@ function Navbar({ onLoginClick }: NavbarProps) {
           />
         </svg>
         <span>Index</span>
-      </div>
+      </a>
 
       <nav className="navbar-links">
-        <a href="#home">Home</a>
-        <a href="#pages" className="has-caret">
-          All Pages <span className="caret">▾</span>
-        </a>
-        <a href="#pricing">Pricing</a>
-        <a href="#blog">Blog</a>
-        <a href="#contact">Contact</a>
+        {navLinks.map((link) => (
+          <a key={link.href} href={link.href} className="navbar-link">
+            {link.label}
+          </a>
+        ))}
       </nav>
 
       <button type="button" className="navbar-cta" onClick={onLoginClick}>
