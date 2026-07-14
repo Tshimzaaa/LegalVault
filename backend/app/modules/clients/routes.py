@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-
+from fastapi import Request
+from app.core.limiter import limiter
 from app.database.session import get_db
 from app.modules.clients.schemas import (
     CreateClientRequest,
@@ -24,7 +25,11 @@ client_auth_router = APIRouter(prefix="/client-auth", tags=["client-auth"])
 
 
 # --- Staff-facing routes (require staff login) ---
-
+@client_auth_router.post("/login", response_model=ClientTokenResponse)
+@limiter.limit("5/minute")
+def client_login(request: Request, credentials: ClientLoginRequest, db: Session = Depends(get_db)):
+    service = ClientService(db)
+    return service.login(credentials)
 @router.post("", response_model=ClientResponse, status_code=201)
 def create_client(
     request: CreateClientRequest,

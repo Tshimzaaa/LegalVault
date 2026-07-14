@@ -15,12 +15,19 @@ class Settings(BaseSettings):
     R2_ENDPOINT_URL: str
     R2_BUCKET_NAME: str
 
+    ENVIRONMENT: str = "development"
+    REGISTER_SECRET: str = "change-me"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         extra="ignore"
     )
-    ENVIRONMENT: str = "development"
+
 
 settings = Settings()
-if settings.ENVIRONMENT == "production" and settings.SECRET_KEY == "your-long-random-secret":
-    sys.exit("SECRET_KEY must be changed before running in production.")
+
+if settings.ENVIRONMENT == "production":
+    if settings.SECRET_KEY in ("your-long-random-secret", "change-me", ""):
+        sys.exit("SECRET_KEY must be set to a real random value before running in production.")
+    if settings.REGISTER_SECRET in ("change-me", ""):
+        sys.exit("REGISTER_SECRET must be set before running in production.")

@@ -54,7 +54,7 @@ class RegisterService:
         )
 
         try:
-            self.repository.create_law_firm(law_firm)  # flushes here, law_firm.id now exists
+            self.repository.create_law_firm(law_firm)
 
             user = User(
                 firm_id=law_firm.id,

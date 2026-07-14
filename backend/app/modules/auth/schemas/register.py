@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field
-from app.core.config import settings
+
 from app.core.constants import (
     ADDRESS_MAX_LENGTH,
     FIRST_NAME_MAX_LENGTH,
@@ -57,10 +57,9 @@ class RegisterAdminRequest(BaseModel):
 
 
 class RegisterRequest(BaseModel):
+    admin_secret: str
     law_firm: RegisterLawFirmRequest
     admin: RegisterAdminRequest
-    admin_secret: str
-
 
 
 class RegisterResponse(BaseModel):
