@@ -1,5 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from app.exceptions.templates import TemplateNotFound, UnsupportedFileType
+from app.exceptions.auth import InvalidOrExpiredResetToken as StaffInvalidResetToken
+from app.exceptions.clients import InvalidOrExpiredResetToken as ClientInvalidResetToken
+
 
 from app.exceptions.auth import (
     InvalidCredentials,
@@ -115,3 +118,10 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(ContactNotFound)
     async def contact_not_found(_, __):
         raise HTTPException(status_code=404, detail="Contact not found.")
+    @app.exception_handler(StaffInvalidResetToken)
+    async def staff_invalid_reset_token(_, __):
+        raise HTTPException(status_code=400, detail="This password reset link is invalid or has expired.")
+
+    @app.exception_handler(ClientInvalidResetToken)
+    async def client_invalid_reset_token(_, __):
+        raise HTTPException(status_code=400, detail="This password reset link is invalid or has expired.")

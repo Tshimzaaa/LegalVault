@@ -52,3 +52,17 @@ class ClientRepository:
         contact.invitation_expires_at = expires_at
         self.db.flush()
         return contact
+    def get_contact_by_reset_token(self, token: str) -> ClientContact | None:
+        return self.db.scalar(select(ClientContact).where(ClientContact.reset_token == token))
+
+    def set_reset_token(self, contact: ClientContact, token: str, expires_at) -> ClientContact:
+        contact.reset_token = token
+        contact.reset_token_expires_at = expires_at
+        self.db.flush()
+        return contact
+
+    def clear_reset_token(self, contact: ClientContact) -> ClientContact:
+        contact.reset_token = None
+        contact.reset_token_expires_at = None
+        self.db.flush()
+        return contact

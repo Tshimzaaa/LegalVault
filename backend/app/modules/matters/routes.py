@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-
+from app.modules.clients.dependencies import get_current_contact
+from app.modules.clients.models import ClientContact
 from app.database.session import get_db
 from app.modules.matters.schemas import (
     CreateMatterRequest,
@@ -16,7 +17,15 @@ from app.modules.auth.dependencies import get_current_user
 from app.modules.auth.models import User
 
 router = APIRouter(prefix="/matters", tags=["matters"])
+client_matters_router = APIRouter(prefix="/client-matters", tags=["client-matters"])
 
+@client_matters_router.get("", response_model=list[MatterResponse])
+def list_my_matters(
+    db: Session = Depends(get_db),
+    current_contact: ClientContact = Depends(get_current_contact),
+):
+    service = MatterService(db)
+    return service.list_visible_matters_for_client(current_contact.client_id)
 
 @router.post("", response_model=MatterResponse, status_code=201)
 def create_matter(

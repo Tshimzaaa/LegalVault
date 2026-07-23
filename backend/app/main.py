@@ -7,7 +7,7 @@ from app.modules.auth.routes import router as auth_router
 
 from fastapi.middleware.cors import CORSMiddleware
 from app.modules.templates.routes import router as templates_router, client_templates_router
-
+from app.modules.matters.routes import router as matters_router, client_matters_router
 from app.modules.clients.routes import router as clients_router, client_auth_router
 from app.modules.matters.routes import router as matters_router
 from app.modules.templates.routes import router as templates_router
@@ -20,7 +20,7 @@ app = FastAPI(
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
+app.include_router(client_matters_router)
 app.include_router(matters_router)
 app.include_router(templates_router)
 app.include_router(templates_router)

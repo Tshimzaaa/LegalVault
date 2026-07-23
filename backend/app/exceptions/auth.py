@@ -12,3 +12,5 @@ class UserAlreadyExists(Exception):
 
 class InactiveUser(Exception):
     pass
+class InvalidOrExpiredResetToken(Exception):
+    pass

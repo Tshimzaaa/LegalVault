@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from fastapi import Request
+from app.modules.clients.schemas import ClientForgotPasswordRequest, ClientResetPasswordRequest
+
 from app.core.limiter import limiter
 from app.database.session import get_db
 from app.modules.clients.schemas import (
@@ -19,6 +21,7 @@ from app.modules.clients.models import ClientContact
 
 from app.modules.auth.dependencies import get_current_user
 from app.modules.auth.models import User
+
 
 router = APIRouter(prefix="/clients", tags=["clients"])
 client_auth_router = APIRouter(prefix="/client-auth", tags=["client-auth"])
@@ -84,3 +87,15 @@ def resend_invite(
     service = ClientService(db)
     service.resend_invite(request.email, current_user.firm_id)
     return {"message": "Invitation resent."}
+@client_auth_router.post("/forgot-password", status_code=200)
+def client_forgot_password(request: ClientForgotPasswordRequest, db: Session = Depends(get_db)):
+    service = ClientService(db)
+    service.request_password_reset(request.email)
+    return {"message": "If that email exists, a reset link has been sent."}
+
+@client_auth_router.post("/reset-password", status_code=200)
+def client_reset_password(request: ClientResetPasswordRequest, db: Session = Depends(get_db)):
+    service = ClientService(db)
+    service.reset_password(request.token, request.new_password)
+    return {"message": "Password reset successful."}
+

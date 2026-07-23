@@ -91,3 +91,17 @@ class ClientContact(BaseModel):
         "Client",
         back_populates="contacts",
     )
+    reset_token: Mapped[str | None] = mapped_column(
+        String(255),
+        unique=True,
+        nullable=True,
+    )
+
+    reset_token_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    tokens_invalid_before: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )

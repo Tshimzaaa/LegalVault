@@ -17,3 +17,5 @@ class InactiveContact(Exception):
     pass
 class ContactNotFound(Exception):
     pass
+class InvalidOrExpiredResetToken(Exception):
+    pass
