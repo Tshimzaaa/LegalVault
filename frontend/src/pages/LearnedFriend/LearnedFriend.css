@@ -1,0 +1,7 @@
+.learned-friend-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.template-use-btn {
+  white-space: nowrap;
+}

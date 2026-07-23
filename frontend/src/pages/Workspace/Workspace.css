@@ -17,10 +17,7 @@
   min-height: 0;
   overflow: hidden;
   padding: 20px 28px 16px;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
+  background: #000;
 }
 
 .dash-topbar {
@@ -29,6 +26,12 @@
   justify-content: space-between;
   flex-shrink: 0;
   margin-bottom: 14px;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .dash-topbar h1 {

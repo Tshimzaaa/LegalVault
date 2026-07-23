@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import html2canvas from 'html2canvas'
 import './Home.css'
 import Sidebar from '../../components/Sidebar'
-import type { Page } from '../../components/Sidebar'
+import { staffNavItems } from '../Workspace/Workspace'
+import type { StaffPage } from '../Workspace/Workspace'
 import type { User } from '../../api/auth'
 import Dashboard from '../Dashboard/Dashboard'
 import type { DashboardSummary } from '../../api/dashboard'
@@ -64,7 +65,7 @@ const demoSummary: DashboardSummary = {
 interface CaptureTarget {
   key: string
   alt: string
-  page: Page
+  page: StaffPage
   node: React.ReactNode
 }
 
@@ -126,11 +127,7 @@ function useCapturedSlides() {
   return { captured, captureRootRef }
 }
 
-interface HomeProps {
-  onOpenLawFirmPortal?: () => void
-}
-
-function Home({ onOpenLawFirmPortal }: HomeProps) {
+function Home() {
   const [active, setActive] = useState(0)
   const { captured, captureRootRef } = useCapturedSlides()
 
@@ -204,14 +201,20 @@ function Home({ onOpenLawFirmPortal }: HomeProps) {
       <About />
       <Pricing />
       <Blog />
-      <Contact onOpenLawFirmPortal={onOpenLawFirmPortal} />
+      <Contact />
 
       {/* Off-screen render of every page, captured once into the static images above. */}
       <div className="capture-root" ref={captureRootRef} aria-hidden="true">
         {captureTargets.map((target) => (
           <div key={target.key} data-capture-key={target.key} className="capture-frame">
             <div className="dash-layout">
-              <Sidebar activePage={target.page} onNavigate={noop} user={demoUser} onLogout={noop} />
+              <Sidebar
+                activePage={target.page}
+                onNavigate={noop}
+                navItems={staffNavItems}
+                user={demoUser}
+                onLogout={noop}
+              />
               {target.node}
             </div>
           </div>

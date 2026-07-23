@@ -1,0 +1,153 @@
+.reporting-stats {
+  flex: 0 0 auto;
+  grid-template-columns: repeat(4, 1fr);
+  margin-bottom: 12px;
+}
+
+.stat-delta {
+  display: block;
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.stat-delta.up {
+  color: #4ade80;
+}
+
+.stat-delta.down {
+  color: #f87171;
+}
+
+.reporting-charts {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.reporting-chart-card {
+  align-items: stretch;
+}
+
+.chart-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.chart-wrap svg {
+  flex: 1;
+  min-height: 0;
+  overflow: visible;
+}
+
+.chart-x-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.bar-x-axis span {
+  flex: 1;
+  text-align: center;
+  font-size: 9px;
+}
+
+.chart-end-label {
+  fill: #4ade80;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.chart-axis-label {
+  fill: #6b7280;
+  font-size: 8px;
+}
+
+.chart-bar-label {
+  fill: #e5e7eb;
+  font-size: 9.5px;
+  font-weight: 600;
+}
+
+.chart-tooltip {
+  position: absolute;
+  top: 4px;
+  transform: translateX(-50%);
+  background: #17181a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 5px 9px;
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.chart-tooltip strong {
+  color: #fff;
+  font-size: 12px;
+}
+
+.chart-tooltip span {
+  color: #9ca3af;
+}
+
+.donut-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+
+.donut-segment {
+  transition: stroke-width 0.15s ease;
+  cursor: pointer;
+}
+
+.donut-center-value {
+  fill: #fff;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.donut-center-label {
+  fill: #6b7280;
+  font-size: 9px;
+}
+
+.donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.donut-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  color: #d1d5db;
+  border-radius: 6px;
+  padding: 2px 4px;
+  transition: background 0.15s ease;
+}
+
+.donut-legend-row.active {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.donut-legend-label {
+  flex: 1;
+}
+
+.donut-legend-value {
+  color: #9ca3af;
+  font-variant-numeric: tabular-nums;
+}

@@ -1,4 +1,4 @@
-const BASE_URL = 'http://127.0.0.1:8000'
+import { apiRequest } from './client'
 
 export interface User {
   id: string
@@ -12,29 +12,14 @@ export interface User {
 }
 
 export async function login(email: string, password: string): Promise<string> {
-  const res = await fetch(`${BASE_URL}/auth/login`, {
+  const data = await apiRequest<{ access_token: string }>('/auth/login', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    body: { email, password },
+    skipAuthRedirect: true,
   })
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => null)
-    throw new Error(errorData?.detail || 'Login failed')
-  }
-
-  const data = await res.json()
   return data.access_token
 }
 
 export async function getCurrentUser(token: string): Promise<User> {
-  const res = await fetch(`${BASE_URL}/auth/me`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-
-  if (!res.ok) {
-    throw new Error('Not authenticated')
-  }
-
-  return res.json()
+  return apiRequest<User>('/auth/me', { token })
 }

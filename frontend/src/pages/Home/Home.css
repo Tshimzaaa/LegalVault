@@ -9,11 +9,6 @@
   padding: 140px 24px 0;
   scroll-margin-top: 110px;
   text-align: center;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  background-size: 44px 44px;
-  background-position: center top;
 }
 
 .hero::before {

@@ -1,4 +1,4 @@
-const BASE_URL = 'http://127.0.0.1:8000'
+import { apiRequest } from './client'
 
 export interface DashboardSummary {
   activeCases: {
@@ -22,13 +22,5 @@ export interface DashboardSummary {
 }
 
 export async function getDashboardSummary(token: string): Promise<DashboardSummary> {
-  const res = await fetch(`${BASE_URL}/dashboard/summary`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-
-  if (!res.ok) {
-    throw new Error('Failed to load dashboard data')
-  }
-
-  return res.json()
+  return apiRequest<DashboardSummary>('/dashboard/summary', { token })
 }

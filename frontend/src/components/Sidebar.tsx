@@ -1,49 +1,37 @@
 import './Sidebar.css'
-import {
-  IconLeaf,
-  IconGauge,
-  IconGavel,
-  IconWorkflow,
-  IconSignedContract,
-  IconReport,
-  IconContractData,
-  IconTemplates,
-} from './icons'
-import type { User } from '../api/auth'
+import { IconLeaf } from './icons'
 
-export type Page =
-  | 'dashboard'
-  | 'new-matter'
-  | 'workflow'
-  | 'signed-contracts'
-  | 'reporting'
-  | 'contract-data'
-  | 'templates'
-
-interface NavItem {
+export interface NavItem {
   label: string
   icon: React.ReactNode
-  page: Page
+  page: string
 }
 
-const navItems: NavItem[] = [
-  { label: 'Dashboard', icon: <IconGauge />, page: 'dashboard' },
-  { label: 'New Matter', icon: <IconGavel />, page: 'new-matter' },
-  { label: 'Workflow', icon: <IconWorkflow />, page: 'workflow' },
-  { label: 'Signed Contracts', icon: <IconSignedContract />, page: 'signed-contracts' },
-  { label: 'Reporting', icon: <IconReport />, page: 'reporting' },
-  { label: 'Contract Data', icon: <IconContractData />, page: 'contract-data' },
-  { label: 'Templates', icon: <IconTemplates />, page: 'templates' },
-]
+export interface SidebarUser {
+  first_name: string
+  last_name: string
+  email: string
+}
 
 interface SidebarProps {
-  activePage: Page
-  onNavigate: (page: Page) => void
-  user: User
+  activePage: string
+  onNavigate: (page: string) => void
+  navItems: NavItem[]
+  user: SidebarUser
   onLogout: () => void
+  brandName?: string
+  brandSub?: string
 }
 
-function Sidebar({ activePage, onNavigate, user, onLogout }: SidebarProps) {
+function Sidebar({
+  activePage,
+  onNavigate,
+  navItems,
+  user,
+  onLogout,
+  brandName = 'LEGAL',
+  brandSub = 'matter management platform',
+}: SidebarProps) {
   return (
     <aside className="dash-sidebar">
       <div className="sidebar-brand">
@@ -51,8 +39,8 @@ function Sidebar({ activePage, onNavigate, user, onLogout }: SidebarProps) {
           <IconLeaf />
         </span>
         <span className="brand-text">
-          <span className="brand-name">LEGAL</span>
-          <span className="brand-sub">matter management platform</span>
+          <span className="brand-name">{brandName}</span>
+          <span className="brand-sub">{brandSub}</span>
         </span>
       </div>
 

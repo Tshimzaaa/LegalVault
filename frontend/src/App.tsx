@@ -1,78 +1,131 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import LoginModal from './components/LoginModal'
 import Home from './pages/Home/Home'
 import Workspace from './pages/Workspace/Workspace'
-import LawFirmPortal from './pages/LawFirmPortal/LawFirmPortal'
+import ClientPortal from './pages/ClientPortal/ClientPortal'
 import { login, getCurrentUser } from './api/auth'
+import { clientLogin, getCurrentContact } from './api/clientAuth'
+import { setUnauthorizedHandler } from './api/client'
 import type { User } from './api/auth'
+import type { ClientContact } from './api/clientAuth'
 
-// TEMP: bypass login to view Dashboard alone. Remove before shipping.
-const DEV_BYPASS_LOGIN = false
-const DEV_USER: User = {
-  id: 'dev',
-  firm_id: 'dev',
-  first_name: 'Dev',
-  last_name: 'User',
-  email: 'dev@example.com',
-  role: 'admin',
-  is_active: true,
-  last_login: null,
-}
+type Actor = { kind: 'staff'; user: User } | { kind: 'client'; contact: ClientContact }
 
 function App() {
-  const [user, setUser] = useState<User | null>(DEV_BYPASS_LOGIN ? DEV_USER : null)
-  const [checkingSession, setCheckingSession] = useState(!DEV_BYPASS_LOGIN)
-  const [showLogin, setShowLogin] = useState(false)
-  const [showLawFirmPortal, setShowLawFirmPortal] = useState(false)
+  const [actor, setActor] = useState<Actor | null>(null)
+  const [checkingSession, setCheckingSession] = useState(true)
+  const navigate = useNavigate()
+  const location = useLocation()
+  const staffOnly = Boolean((location.state as { staffOnly?: boolean } | null)?.staffOnly)
+
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('actor_kind')
+    setActor(null)
+  }, [])
 
   useEffect(() => {
-    if (DEV_BYPASS_LOGIN) return
+    setUnauthorizedHandler(() => {
+      handleLogout()
+      navigate('/login')
+    })
+  }, [handleLogout, navigate])
+
+  useEffect(() => {
     const token = localStorage.getItem('access_token')
     if (!token) {
       setCheckingSession(false)
       return
     }
+    // Pre-existing sessions from before actor_kind existed were always staff.
+    const actorKind = localStorage.getItem('actor_kind') ?? 'staff'
 
-    getCurrentUser(token)
-      .then(setUser)
-      .catch(() => localStorage.removeItem('access_token'))
+    const restore =
+      actorKind === 'client'
+        ? getCurrentContact(token).then((contact) => setActor({ kind: 'client', contact }))
+        : getCurrentUser(token).then((user) => setActor({ kind: 'staff', user }))
+
+    restore
+      .catch(() => {
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('actor_kind')
+      })
       .finally(() => setCheckingSession(false))
   }, [])
 
   async function handleLogin(email: string, password: string) {
-    const token = await login(email, password)
-    localStorage.setItem('access_token', token)
-    const currentUser = await getCurrentUser(token)
-    setUser(currentUser)
-    setShowLogin(false)
-  }
+    // Bottom "Staff Login" footer link — real staff backend login only.
+    if (staffOnly) {
+      const staffToken = await login(email, password)
+      localStorage.setItem('access_token', staffToken)
+      localStorage.setItem('actor_kind', 'staff')
+      const user = await getCurrentUser(staffToken)
+      setActor({ kind: 'staff', user })
+      navigate('/staff/dashboard')
+      return
+    }
 
-  function handleLogout() {
-    localStorage.removeItem('access_token')
-    setUser(null)
+    // Top-of-homepage Login — real client-auth backend login only.
+    const clientToken = await clientLogin(email, password)
+    localStorage.setItem('access_token', clientToken)
+    localStorage.setItem('actor_kind', 'client')
+    const contact = await getCurrentContact(clientToken)
+    setActor({ kind: 'client', contact })
+    navigate('/client/dashboard')
   }
 
   if (checkingSession) {
     return null
   }
 
-  if (showLawFirmPortal) {
-    return <LawFirmPortal onBack={() => setShowLawFirmPortal(false)} />
-  }
-
-  if (user) {
-    return <Workspace user={user} onLogout={handleLogout} />
-  }
+  const homePath = actor?.kind === 'staff' ? '/staff/dashboard' : '/client/dashboard'
+  // Only auto-skip the form if the entry point clicked (top = client, bottom = staff)
+  // matches the portal you're already logged into — otherwise show the form so you
+  // can log into the other portal instead of being bounced back to your current one.
+  const expectedKind = staffOnly ? 'staff' : 'client'
+  const alreadyInExpectedPortal = actor?.kind === expectedKind
 
   return (
-    <>
-      <Navbar onLoginClick={() => setShowLogin(true)} />
-      <Home onOpenLawFirmPortal={() => setShowLawFirmPortal(true)} />
-      {showLogin && (
-        <LoginModal onClose={() => setShowLogin(false)} onSubmit={handleLogin} />
-      )}
-    </>
+    <Routes>
+      <Route path="/" element={<><Navbar onLoginClick={() => navigate('/login')} /><Home /></>} />
+      <Route
+        path="/login"
+        element={
+          alreadyInExpectedPortal ? (
+            <Navigate to={homePath} replace />
+          ) : (
+            <>
+              <Navbar onLoginClick={() => {}} />
+              <Home />
+              <LoginModal onClose={() => navigate('/')} onSubmit={handleLogin} />
+            </>
+          )
+        }
+      />
+      <Route
+        path="/staff/*"
+        element={
+          actor?.kind === 'staff' ? (
+            <Workspace user={actor.user} onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/client/*"
+        element={
+          actor?.kind === 'client' ? (
+            <ClientPortal contact={actor.contact} onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }
 

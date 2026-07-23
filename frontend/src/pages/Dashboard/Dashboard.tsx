@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import './Dashboard.css'
 import {
   IconChevron,
@@ -9,7 +9,12 @@ import {
   IconCheckCircle,
   IconMail,
   IconHelp,
+  IconInbox,
+  IconMessageCircle,
+  IconArrowUp,
+  IconArrowDown,
 } from '../../components/icons'
+import ProfileMenu from '../../components/ProfileMenu'
 import type { User } from '../../api/auth'
 import { getDashboardSummary } from '../../api/dashboard'
 import type { DashboardSummary } from '../../api/dashboard'
@@ -59,58 +64,27 @@ function sparklinePoints(values: number[]) {
     .join(' ')
 }
 
-function ProfileMenu({ user, onLogout }: { user: User; onLogout: () => void }) {
-  const [open, setOpen] = useState(false)
-  const rootRef = useRef<HTMLDivElement>(null)
-  const initials = `${user.first_name[0] ?? ''}${user.last_name[0] ?? ''}`.toUpperCase()
+// Mock data — no backend endpoint for firm-wide intake/staff/turnaround metrics yet.
+const intakeQueue = [
+  { title: 'NDA Request (Apex Corp)', meta: 'High Priority • Awaiting Review', status: 'Assigned' },
+  { title: 'Lease Review (John Doe)', meta: 'Medium Priority • Attorney Assigned', status: 'Assigned' },
+  { title: 'General Inquiry (Jane Smith)', meta: 'Low Priority • Conflict Check', status: 'Status' },
+]
 
-  useEffect(() => {
-    if (!open) return
-    function handleClickOutside(e: MouseEvent) {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [open])
+const staffFeed = [
+  { who: 'A. Deff', initials: 'AD', task: 'Completed Contract Drafting (High Vol.)', time: '11m ago', tag: 'High Vol.' },
+  { who: 'E. Adenike', initials: 'EA', task: 'Reviewed SOW (Completed)', time: '26m ago', tag: 'Completed' },
+  { who: 'Portal', initials: null, task: 'Received e-sign [SA-2024-101] (Apex Corp)', time: '1h ago', tag: 'Complete' },
+]
 
-  return (
-    <div className="profile-menu-root" ref={rootRef}>
-      <button
-        type="button"
-        className="profile-avatar-btn"
-        onClick={() => setOpen((v) => !v)}
-        aria-label="Account menu"
-        aria-expanded={open}
-      >
-        {initials}
-      </button>
+const turnaround: { label: string; sub?: string; value: string; change: string; dir: 'up' | 'down' }[] = [
+  { label: 'NDA Intake Turnaround Time', value: '3 days', change: '12%', dir: 'down' },
+  { label: 'Lease Approval Time', sub: '(27 tasks)', value: '2.1 days', change: '8%', dir: 'down' },
+  { label: 'Client Doc Response Time', value: '1.6 days', change: '15%', dir: 'down' },
+]
 
-      {open && (
-        <div className="profile-menu">
-          <div className="profile-menu-header">
-            <span className="profile-menu-avatar">{initials}</span>
-            <span className="profile-menu-name">
-              {user.first_name} {user.last_name}
-            </span>
-            <span className="profile-menu-email">{user.email}</span>
-          </div>
-          <div className="profile-menu-divider" />
-          <button
-            type="button"
-            className="profile-menu-logout"
-            onClick={() => {
-              setOpen(false)
-              onLogout()
-            }}
-          >
-            Log out
-          </button>
-        </div>
-      )}
-    </div>
-  )
+function Avatar({ initials }: { initials: string }) {
+  return <span className="feed-avatar">{initials}</span>
 }
 
 interface DashboardProps {
@@ -349,6 +323,79 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
           </section>
 
           <section className="dash-row row-3">
+            <div className="card intake-queue">
+              <div className="card-header">
+                <span>Matter Intake Review Queue</span>
+                <span className="card-subtitle-inline">mock — pending backend</span>
+              </div>
+              <div className="list-rows">
+                {intakeQueue.map((item) => (
+                  <div key={item.title} className="intake-row">
+                    <span className="doc-icon">
+                      <IconInbox />
+                    </span>
+                    <div className="deadline-text">
+                      <span className="deadline-title">{item.title}</span>
+                      <span className="deadline-sub">{item.meta}</span>
+                    </div>
+                    <span className="status-badge intake-status">{item.status}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="card staff-feed">
+              <div className="card-header">
+                <span>Staff Task &amp; Bottleneck Feed</span>
+                <span className="card-subtitle-inline">mock — pending backend</span>
+              </div>
+              <div className="list-rows">
+                {staffFeed.map((f) => (
+                  <div key={f.who} className="feed-row">
+                    {f.initials ? <Avatar initials={f.initials} /> : (
+                      <span className="doc-icon">
+                        <IconMessageCircle />
+                      </span>
+                    )}
+                    <div className="deadline-text">
+                      <span className="deadline-title">{f.who}</span>
+                      <span className="deadline-sub">{f.task}</span>
+                    </div>
+                    <span className="feed-right">
+                      <span className="deadline-sub">{f.time}</span>
+                      <span className="status-badge feed-tag">{f.tag}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="card turnaround">
+              <div className="card-header">
+                <span>Turnaround Metrics</span>
+                <span className="card-subtitle-inline">mock — pending backend</span>
+              </div>
+              <div className="list-rows">
+                {turnaround.map((t) => (
+                  <div key={t.label} className="turnaround-row">
+                    <div className="deadline-text">
+                      <span className="deadline-title">{t.label}</span>
+                      {t.sub && <span className="deadline-sub">{t.sub}</span>}
+                    </div>
+                    <span className="turnaround-value-col">
+                      <span className="stat-sub tabular">{t.value}</span>
+                      <span className={`turnaround-change ${t.dir}`}>
+                        {t.dir === 'up' ? <IconArrowUp /> : <IconArrowDown />}
+                        {t.change}
+                      </span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="dash-row row-4">
             <div className="card need-help">
               <span className="need-help-icon">
                 <IconHelp />
