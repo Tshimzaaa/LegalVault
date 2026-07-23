@@ -1,6 +1,7 @@
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
+from datetime import datetime, UTC
 
 from app.database.session import get_db
 from app.modules.auth.repository import AuthRepository
@@ -17,7 +18,7 @@ def get_current_user(
     db: Session = Depends(get_db),
 ) -> User:
     payload = decode_access_token(token)
-    if not payload or "sub" not in payload:
+    if not payload or "sub" not in payload or "iat" not in payload:
         raise InvalidCredentials()
 
     repo = AuthRepository(db)
@@ -26,8 +27,13 @@ def get_current_user(
         raise InvalidCredentials()
     if not user.is_active:
         raise InactiveUser()
-    return user
 
+    if user.tokens_invalid_before:
+        token_issued_at = datetime.fromtimestamp(payload["iat"], tz=UTC)
+        if token_issued_at < user.tokens_invalid_before:
+            raise InvalidCredentials()
+
+    return user
 
 def require_admin(user: User = Depends(get_current_user)) -> User:
     if user.role != UserRole.ADMIN:

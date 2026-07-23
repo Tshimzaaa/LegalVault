@@ -1,8 +1,9 @@
 from sqlalchemy.orm import Session
-
+from app.core.config import settings
 from app.exceptions.auth import (
     LawFirmAlreadyExists,
     UserAlreadyExists,
+    InvalidCredentials
 )
 from app.modules.auth.repository import AuthRepository
 from app.modules.auth.models import (
@@ -27,6 +28,8 @@ class RegisterService:
         self.repository = AuthRepository(db)
 
     def register(self, request: RegisterRequest) -> RegisterResponse:
+        if request.admin_secret != settings.REGISTER_SECRET:
+            raise InvalidCredentials()
 
         existing_firm = self.repository.get_law_firm_by_email(
             request.law_firm.email
@@ -51,7 +54,7 @@ class RegisterService:
         )
 
         try:
-            self.repository.create_law_firm(law_firm)  # flushes here, law_firm.id now exists
+            self.repository.create_law_firm(law_firm)
 
             user = User(
                 firm_id=law_firm.id,

@@ -1,6 +1,8 @@
-from datetime import datetime, UTC
+import secrets
+from datetime import datetime,timedelta, UTC
 from sqlalchemy.orm import Session
-
+import secrets as _secrets  # or reuse existing `secrets` import if already there
+from app.exceptions.clients import InvalidOrExpiredResetToken
 from app.modules.clients.repository import ClientRepository
 from app.modules.clients.models import Client
 from app.modules.clients.schemas import (
@@ -18,11 +20,13 @@ from app.exceptions.clients import (
     InviteAlreadyAccepted,
     InvalidClientCredentials,
     InactiveContact,
+    ContactNotFound,
 )
+
+RESET_TOKEN_EXPIRY_HOURS = 1
 
 
 class ClientService:
-
     def __init__(self, db: Session):
         self.db = db
         self.repository = ClientRepository(db)
@@ -94,3 +98,47 @@ class ClientService:
             extra_claims={"type": "client", "client_id": str(contact.client_id)},
         )
         return ClientTokenResponse(access_token=token)
+    def list_clients(self, firm_id):
+        return self.repository.list_by_firm(firm_id)
+    def resend_invite(self, email: str, firm_id):
+        contact = self.repository.get_contact_by_email(email)
+        if not contact:
+            raise ContactNotFound()  # new exception, see below
+
+        client = self.repository.get_client_by_id(contact.client_id)
+        if not client or str(client.firm_id) != str(firm_id):
+            raise ContactNotFound()  # don't reveal cross-firm existence
+
+        if contact.invitation_status == "accepted":
+            raise InviteAlreadyAccepted()
+
+        new_token = secrets.token_urlsafe(32)
+        new_expiry = datetime.now(UTC) + timedelta(hours=48)
+        self.repository.update_invite_token(contact, new_token, new_expiry)
+        self.db.commit()
+
+        invite_link = f"https://yourapp.com/accept-invite?token={new_token}"
+        print(f"[STUB EMAIL] Resent invitation for {contact.email}: {invite_link}")
+
+        return contact
+    def request_password_reset(self, email: str):
+        contact = self.repository.get_contact_by_email(email)
+        if not contact:
+            return  # don't reveal existence
+
+        token = _secrets.token_urlsafe(32)
+        expires_at = datetime.now(UTC) + timedelta(hours=RESET_TOKEN_EXPIRY_HOURS)
+        self.repository.set_reset_token(contact, token, expires_at)
+        self.db.commit()
+
+        reset_link = f"https://yourapp.com/client-reset-password?token={token}"
+        print(f"[STUB EMAIL] Password reset for {contact.email}: {reset_link}")
+
+    def reset_password(self, token: str, new_password: str):
+        contact = self.repository.get_contact_by_reset_token(token)
+        if not contact or not contact.reset_token_expires_at or contact.reset_token_expires_at < datetime.now(UTC):
+            raise InvalidOrExpiredResetToken()
+
+        contact.password_hash = hash_password(new_password)
+        self.repository.clear_reset_token(contact)
+        self.db.commit()

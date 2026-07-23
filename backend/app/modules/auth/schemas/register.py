@@ -57,6 +57,7 @@ class RegisterAdminRequest(BaseModel):
 
 
 class RegisterRequest(BaseModel):
+    admin_secret: str
     law_firm: RegisterLawFirmRequest
     admin: RegisterAdminRequest
 

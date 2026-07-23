@@ -1,6 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from fastapi import Request
+from app.modules.clients.schemas import ClientForgotPasswordRequest, ClientResetPasswordRequest
 
+from app.core.limiter import limiter
 from app.database.session import get_db
 from app.modules.clients.schemas import (
     CreateClientRequest,
@@ -10,6 +13,7 @@ from app.modules.clients.schemas import (
     AcceptInviteRequest,
     ClientLoginRequest,
     ClientTokenResponse,
+    ResendInviteRequest,
 )
 from app.modules.clients.service import ClientService
 from app.modules.clients.dependencies import get_current_contact
@@ -18,12 +22,17 @@ from app.modules.clients.models import ClientContact
 from app.modules.auth.dependencies import get_current_user
 from app.modules.auth.models import User
 
+
 router = APIRouter(prefix="/clients", tags=["clients"])
 client_auth_router = APIRouter(prefix="/client-auth", tags=["client-auth"])
 
 
 # --- Staff-facing routes (require staff login) ---
-
+@client_auth_router.post("/login", response_model=ClientTokenResponse)
+@limiter.limit("5/minute")
+def client_login(request: Request, credentials: ClientLoginRequest, db: Session = Depends(get_db)):
+    service = ClientService(db)
+    return service.login(credentials)
 @router.post("", response_model=ClientResponse, status_code=201)
 def create_client(
     request: CreateClientRequest,
@@ -62,3 +71,31 @@ def client_login(request: ClientLoginRequest, db: Session = Depends(get_db)):
 @client_auth_router.get("/me", response_model=ContactResponse)
 def get_me(current_contact: ClientContact = Depends(get_current_contact)):
     return current_contact
+@router.get("", response_model=list[ClientResponse])
+def list_clients(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    service = ClientService(db)
+    return service.list_clients(current_user.firm_id)
+@router.post("/contacts/resend-invite", status_code=200)
+def resend_invite(
+    request: ResendInviteRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    service = ClientService(db)
+    service.resend_invite(request.email, current_user.firm_id)
+    return {"message": "Invitation resent."}
+@client_auth_router.post("/forgot-password", status_code=200)
+def client_forgot_password(request: ClientForgotPasswordRequest, db: Session = Depends(get_db)):
+    service = ClientService(db)
+    service.request_password_reset(request.email)
+    return {"message": "If that email exists, a reset link has been sent."}
+
+@client_auth_router.post("/reset-password", status_code=200)
+def client_reset_password(request: ClientResetPasswordRequest, db: Session = Depends(get_db)):
+    service = ClientService(db)
+    service.reset_password(request.token, request.new_password)
+    return {"message": "Password reset successful."}
+

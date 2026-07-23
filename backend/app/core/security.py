@@ -45,7 +45,7 @@ def create_access_token(
 
     expire = datetime.now(UTC) + expires_delta
 
-    payload = {"sub": subject, "exp": expire}
+    payload = {"sub": subject, "exp": expire, "iat": datetime.now(UTC)}
     if extra_claims:
         payload.update(extra_claims)
 
