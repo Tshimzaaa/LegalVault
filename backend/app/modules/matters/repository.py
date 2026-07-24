@@ -41,4 +41,6 @@ class MatterRepository:
         return list(
             self.db.scalars(select(MatterAssignment).where(MatterAssignment.matter_id == matter_id))
         )
-    
+    def count_matters_for_firm(self, firm_id) -> int:
+        from sqlalchemy import func
+        return self.db.scalar(select(func.count()).select_from(Matter).where(Matter.firm_id == firm_id))

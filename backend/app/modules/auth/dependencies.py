@@ -33,9 +33,14 @@ def get_current_user(
         if token_issued_at < user.tokens_invalid_before:
             raise InvalidCredentials()
 
+    firm = repo.get_firm_by_id(user.firm_id)
+    if not firm or not firm.is_active:
+        raise InactiveUser()
+
     return user
+
 
 def require_admin(user: User = Depends(get_current_user)) -> User:
     if user.role != UserRole.ADMIN:
-        raise InvalidCredentials()  # swap for a dedicated PermissionDenied exception later
+        raise InvalidCredentials()
     return user

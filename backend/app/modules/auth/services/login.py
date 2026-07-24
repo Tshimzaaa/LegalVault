@@ -18,7 +18,9 @@ def login_user(db: Session, credentials: LoginRequest) -> TokenResponse:
 
     if not user.is_active:
         raise InactiveUser()
-
+    firm = repo.get_firm_by_id(user.firm_id)  # or however you access AuthRepository here
+    if not firm or not firm.is_active:
+        raise InactiveUser()  # reuse existing exception, or add a dedicated FirmSuspended one
     user.last_login = datetime.now(UTC)
     db.commit()
 

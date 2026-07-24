@@ -66,3 +66,6 @@ class ClientRepository:
         contact.reset_token_expires_at = None
         self.db.flush()
         return contact
+    def count_clients_for_firm(self, firm_id) -> int:
+        from sqlalchemy import func
+        return self.db.scalar(select(func.count()).select_from(Client).where(Client.firm_id == firm_id))

@@ -80,3 +80,49 @@ class RegisterService:
         except Exception:
             self.db.rollback()
             raise
+    def register_as_owner(self, law_firm_request, admin_request) -> RegisterResponse:
+        existing_firm = self.repository.get_law_firm_by_email(law_firm_request.email)
+        if existing_firm:
+            raise LawFirmAlreadyExists()
+
+        existing_user = self.repository.get_user_by_email(admin_request.email)
+        if existing_user:
+            raise UserAlreadyExists()
+
+        hashed_password = hash_password(admin_request.password)
+
+        law_firm = LawFirm(
+            name=law_firm_request.name,
+            email=law_firm_request.email,
+            phone=law_firm_request.phone,
+            website=law_firm_request.website,
+            address=law_firm_request.address,
+        )
+
+        try:
+            self.repository.create_law_firm(law_firm)
+
+            user = User(
+                firm_id=law_firm.id,
+                first_name=admin_request.first_name,
+                last_name=admin_request.last_name,
+                email=admin_request.email,
+                password_hash=hashed_password,
+                role=UserRole.ADMIN,
+            )
+
+            self.repository.create_user(user)
+            self.db.commit()
+
+            access_token = create_access_token(subject=str(user.id))
+
+            return RegisterResponse(
+                message="Registration successful.",
+                law_firm_id=law_firm.id,
+                user_id=user.id,
+                access_token=access_token,
+            )
+
+        except Exception:
+            self.db.rollback()
+            raise

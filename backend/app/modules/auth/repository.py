@@ -47,3 +47,12 @@ class AuthRepository:
         user.reset_token_expires_at = None
         self.db.flush()
         return user
+    def get_firm_by_id(self, firm_id) -> LawFirm | None:
+        return self.db.scalar(select(LawFirm).where(LawFirm.id == firm_id))
+
+    def list_all_firms(self) -> list[LawFirm]:
+        return list(self.db.scalars(select(LawFirm)))
+
+    def count_users_for_firm(self, firm_id) -> int:
+        from sqlalchemy import func
+        return self.db.scalar(select(func.count()).select_from(User).where(User.firm_id == firm_id))
