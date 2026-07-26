@@ -16,8 +16,11 @@ if TYPE_CHECKING:
 
 class MatterStatus(str, enum.Enum):
     INTAKE = "intake"
-    IN_PROGRESS = "in_progress"
+    IN_REVIEW = "in_review"
+    AWAITING_SIGNATURE = "awaiting_signature"
+    SIGNED = "signed"
     CLOSED = "closed"
+    DECLINED = "declined"
 
 
 class MatterRole(str, enum.Enum):
