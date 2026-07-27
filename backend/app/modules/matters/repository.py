@@ -1,5 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from app.modules.matters.models import MatterDocument
 
 from app.modules.matters.models import Matter, MatterAssignment
 
@@ -44,3 +45,21 @@ class MatterRepository:
     def count_matters_for_firm(self, firm_id) -> int:
         from sqlalchemy import func
         return self.db.scalar(select(func.count()).select_from(Matter).where(Matter.firm_id == firm_id))
+    def create_document(self, document: MatterDocument) -> MatterDocument:
+        self.db.add(document)
+        self.db.flush()
+        return document
+
+    def get_document_by_id(self, document_id) -> MatterDocument | None:
+        return self.db.scalar(select(MatterDocument).where(MatterDocument.id == document_id))
+
+    def get_latest_version(self, matter_id, title: str) -> MatterDocument | None:
+        statement = (
+            select(MatterDocument)
+            .where(MatterDocument.matter_id == matter_id, MatterDocument.title == title)
+            .order_by(MatterDocument.version.desc())
+        )
+        return self.db.scalar(statement)
+
+    def list_documents_for_matter(self, matter_id) -> list[MatterDocument]:
+        return list(self.db.scalars(select(MatterDocument).where(MatterDocument.matter_id == matter_id)))

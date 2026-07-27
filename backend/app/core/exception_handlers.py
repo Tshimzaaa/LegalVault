@@ -24,6 +24,7 @@ from app.exceptions.matters import (
     MatterNotFound,
     ClientNotFoundForMatter,
     StaffAlreadyAssigned,
+    MatterDocumentNotFound,
 )
 
 def register_exception_handlers(app: FastAPI):
@@ -125,3 +126,7 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(ClientInvalidResetToken)
     async def client_invalid_reset_token(_, __):
         raise HTTPException(status_code=400, detail="This password reset link is invalid or has expired.")
+
+    @app.exception_handler(MatterDocumentNotFound)
+    async def matter_document_not_found(_, __):
+        raise HTTPException(status_code=404, detail="Document not found.")  

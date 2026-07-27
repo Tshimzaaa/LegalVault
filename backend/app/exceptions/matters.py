@@ -9,3 +9,6 @@ class StaffAlreadyAssigned(Exception):
 
 class UserNotFoundForAssignment(Exception):
     pass
+
+class MatterDocumentNotFound(Exception):
+    pass

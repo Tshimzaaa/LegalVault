@@ -87,3 +87,26 @@ class MatterAssignment(BaseModel):
         "Matter",
         back_populates="assignments",
     )
+    
+class MatterDocument(BaseModel):
+    __tablename__ = "matter_documents"
+
+    matter_id: Mapped[UUID] = mapped_column(
+        ForeignKey("matters.id"),
+        nullable=False,
+    )
+
+    uploaded_by: Mapped[UUID] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=False,
+    )
+
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+
+    version: Mapped[int] = mapped_column(nullable=False, default=1)
+
+    file_key: Mapped[str] = mapped_column(String(500), nullable=False)
+
+    original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    content_type: Mapped[str] = mapped_column(String(100), nullable=False)

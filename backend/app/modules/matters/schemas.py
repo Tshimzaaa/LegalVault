@@ -47,3 +47,21 @@ class MatterAssignmentResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class MatterDocumentResponse(BaseModel):
+    id: UUID
+    matter_id: UUID
+    uploaded_by: UUID
+    title: str
+    version: int
+    original_filename: str
+    content_type: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class MatterDocumentDownloadResponse(BaseModel):
+    download_url: str
+    expires_in_seconds: int
