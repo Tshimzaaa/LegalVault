@@ -10,6 +10,8 @@ from app.modules.auth.services.login import login_user
 from app.modules.auth.services.register import RegisterService
 from app.modules.auth.dependencies import get_current_user
 from app.modules.auth.models import User
+from app.modules.auth.schemas.invite import InviteStaffRequest, AcceptStaffInviteRequest
+from app.modules.auth.services.invite import invite_staff, accept_staff_invite
 from app.main import limiter  # or restructure to avoid circular import — flag if this errors
 from app.modules.auth.schemas.password_reset import ForgotPasswordRequest, ResetPasswordRequest
 from app.modules.auth.services.password_reset import request_password_reset, reset_password
@@ -18,9 +20,6 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @router.post("/login", response_model=TokenResponse)
 @limiter.limit("5/minute")
 def login(request: Request, credentials: LoginRequest, db: Session = Depends(get_db)):
-    return login_user(db, credentials)
-@router.post("/login", response_model=TokenResponse)
-def login(credentials: LoginRequest, db: Session = Depends(get_db)):
     return login_user(db, credentials)
 
 
@@ -50,3 +49,15 @@ def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db
 def reset_password_route(request: ResetPasswordRequest, db: Session = Depends(get_db)):
     reset_password(db, request)
     return {"message": "Password reset successful."}
+@router.post("/invite-staff", response_model=UserResponse, status_code=201)
+def invite_staff_route(
+    request: InviteStaffRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return invite_staff(db, current_user.firm_id, request)
+
+
+@router.post("/accept-staff-invite", response_model=UserResponse)
+def accept_staff_invite_route(request: AcceptStaffInviteRequest, db: Session = Depends(get_db)):
+    return accept_staff_invite(db, request)

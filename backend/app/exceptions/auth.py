@@ -14,3 +14,9 @@ class InactiveUser(Exception):
     pass
 class InvalidOrExpiredResetToken(Exception):
     pass
+
+class InvalidOrExpiredInvite(Exception):
+    pass
+
+class InviteAlreadyAccepted(Exception):
+    pass

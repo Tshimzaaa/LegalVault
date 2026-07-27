@@ -56,3 +56,12 @@ class AuthRepository:
     def count_users_for_firm(self, firm_id) -> int:
         from sqlalchemy import func
         return self.db.scalar(select(func.count()).select_from(User).where(User.firm_id == firm_id))
+
+    def get_user_by_invitation_token(self, token: str) -> User | None:
+        statement = select(User).where(User.invitation_token == token)
+        return self.db.scalar(statement)
+
+    def create_invited_user(self, user: User) -> User:
+        self.db.add(user)
+        self.db.flush()
+        return user

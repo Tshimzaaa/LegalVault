@@ -43,9 +43,9 @@ class User(BaseModel):
         nullable=False,
     )
 
-    password_hash: Mapped[str] = mapped_column(
+    password_hash: Mapped[str | None] = mapped_column(
         String(PASSWORD_HASH_MAX_LENGTH),
-        nullable=False,
+        nullable=True,
     )
 
     role: Mapped[UserRole] = mapped_column(
@@ -79,6 +79,22 @@ class User(BaseModel):
         nullable=True,
     )
     tokens_invalid_before: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    invitation_status: Mapped[str] = mapped_column(
+        String(20),
+        default="accepted",
+        nullable=False,
+    )
+
+    invitation_token: Mapped[str | None] = mapped_column(
+        String(255),
+        unique=True,
+        nullable=True,
+    )
+
+    invitation_expires_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )
