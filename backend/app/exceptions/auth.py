@@ -20,3 +20,8 @@ class InvalidOrExpiredInvite(Exception):
 
 class InviteAlreadyAccepted(Exception):
     pass
+class StaffNotFound(Exception):
+    pass
+
+class CannotDeactivateSelf(Exception):
+    pass

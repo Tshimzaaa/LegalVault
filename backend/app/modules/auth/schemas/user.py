@@ -17,3 +17,6 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True
         # password_hash intentionally excluded — never serialize it
+
+class UpdateStaffStatusRequest(BaseModel):
+    is_active: bool

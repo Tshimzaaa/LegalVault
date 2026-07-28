@@ -4,7 +4,7 @@ from app.modules.auth.repository import AuthRepository
 from app.database.session import get_db
 from app.modules.auth.schemas.login import LoginRequest
 from app.modules.auth.schemas.token import TokenResponse
-from app.modules.auth.schemas.user import UserResponse
+from app.modules.auth.schemas.user import UserResponse, UpdateStaffStatusRequest
 from app.modules.auth.schemas.register import RegisterRequest, RegisterResponse
 from app.modules.auth.services.login import login_user
 from app.modules.auth.services.register import RegisterService
@@ -15,6 +15,9 @@ from app.modules.auth.services.invite import invite_staff, accept_staff_invite
 from app.main import limiter  # or restructure to avoid circular import — flag if this errors
 from app.modules.auth.schemas.password_reset import ForgotPasswordRequest, ResetPasswordRequest
 from app.modules.auth.services.password_reset import request_password_reset, reset_password
+from app.modules.auth.dependencies import require_admin
+from app.exceptions.auth import StaffNotFound, CannotDeactivateSelf
+
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/login", response_model=TokenResponse)
@@ -61,3 +64,23 @@ def invite_staff_route(
 @router.post("/accept-staff-invite", response_model=UserResponse)
 def accept_staff_invite_route(request: AcceptStaffInviteRequest, db: Session = Depends(get_db)):
     return accept_staff_invite(db, request)
+
+@router.patch("/users/{staff_id}/status", response_model=UserResponse)
+def update_staff_status(
+    staff_id: str,
+    request: UpdateStaffStatusRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    repo = AuthRepository(db)
+    staff = repo.get_user_by_id(staff_id)
+
+    if not staff or str(staff.firm_id) != str(current_user.firm_id):
+        raise StaffNotFound()
+
+    if str(staff.id) == str(current_user.id):
+        raise CannotDeactivateSelf()
+
+    staff.is_active = request.is_active
+    db.commit()
+    return staff

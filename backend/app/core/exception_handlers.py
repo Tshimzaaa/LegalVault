@@ -11,6 +11,8 @@ from app.exceptions.auth import (
     InactiveUser,
     InvalidOrExpiredInvite,
     InviteAlreadyAccepted,
+    StaffNotFound,
+    CannotDeactivateSelf
 )
 from app.exceptions.clients import (
     ClientNotFound,
@@ -140,3 +142,10 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(InviteAlreadyAccepted)
     async def staff_invite_already_accepted(_, __):
         raise HTTPException(status_code=409, detail="This invitation has already been used.")
+    @app.exception_handler(StaffNotFound)
+    async def staff_not_found(_, __):
+        raise HTTPException(status_code=404, detail="Staff member not found.")
+
+    @app.exception_handler(CannotDeactivateSelf)
+    async def cannot_deactivate_self(_, __):
+        raise HTTPException(status_code=400, detail="You cannot deactivate your own account.")
