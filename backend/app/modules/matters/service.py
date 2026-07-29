@@ -26,6 +26,8 @@ ALLOWED_DOCUMENT_TYPES = {
     "application/msword",
     "text/plain",
 }
+
+
 class MatterService:
 
     def __init__(self, db: Session):
@@ -89,9 +91,11 @@ class MatterService:
     def list_visible_matters_for_client(self, client_id) -> list[Matter]:
         matters = self.repository.list_by_client(client_id)
         return [m for m in matters if m.is_visible_to_client]
+
     def list_assignments(self, matter_id, firm_id):
         self.get_matter(matter_id, firm_id)  # validates ownership, raises 404 if not found/wrong firm
         return self.repository.list_assignments_for_matter(matter_id)
+
     def upload_matter_document(
         self,
         matter_id,
@@ -127,14 +131,28 @@ class MatterService:
         self.db.commit()
         return document
 
-
     def list_matter_documents(self, matter_id, firm_id) -> list[MatterDocument]:
         self.get_matter(matter_id, firm_id)  # ownership check
         return self.repository.list_documents_for_matter(matter_id)
 
-
     def get_matter_document_download(self, matter_id, document_id, firm_id) -> str:
         self.get_matter(matter_id, firm_id)  # ownership check
+        document = self.repository.get_document_by_id(document_id)
+        if not document or str(document.matter_id) != str(matter_id):
+            raise MatterDocumentNotFound()
+        return get_download_url(document.file_key)
+
+    def list_client_matter_documents(self, matter_id, client_id) -> list[MatterDocument]:
+        matter = self.repository.get_by_id(matter_id)
+        if not matter or str(matter.client_id) != str(client_id) or not matter.is_visible_to_client:
+            raise MatterNotFound()
+        return self.repository.list_documents_for_matter(matter_id)
+
+    def get_client_matter_document_download(self, matter_id, document_id, client_id) -> str:
+        matter = self.repository.get_by_id(matter_id)
+        if not matter or str(matter.client_id) != str(client_id) or not matter.is_visible_to_client:
+            raise MatterNotFound()
+
         document = self.repository.get_document_by_id(document_id)
         if not document or str(document.matter_id) != str(matter_id):
             raise MatterDocumentNotFound()

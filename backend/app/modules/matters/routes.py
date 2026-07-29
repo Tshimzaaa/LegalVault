@@ -151,3 +151,25 @@ def download_matter_document(
     service = MatterService(db)
     url = service.get_matter_document_download(matter_id, document_id, current_user.firm_id)
     return MatterDocumentDownloadResponse(download_url=url, expires_in_seconds=3600)
+
+
+@client_matters_router.get("/{matter_id}/documents", response_model=list[MatterDocumentResponse])
+def list_my_matter_documents(
+    matter_id: str,
+    db: Session = Depends(get_db),
+    current_contact: ClientContact = Depends(get_current_contact),
+):
+    service = MatterService(db)
+    return service.list_client_matter_documents(matter_id, current_contact.client_id)
+
+
+@client_matters_router.get("/{matter_id}/documents/{document_id}/download", response_model=MatterDocumentDownloadResponse)
+def download_my_matter_document(
+    matter_id: str,
+    document_id: str,
+    db: Session = Depends(get_db),
+    current_contact: ClientContact = Depends(get_current_contact),
+):
+    service = MatterService(db)
+    url = service.get_client_matter_document_download(matter_id, document_id, current_contact.client_id)
+    return MatterDocumentDownloadResponse(download_url=url, expires_in_seconds=3600)
