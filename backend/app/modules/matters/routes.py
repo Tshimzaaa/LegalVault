@@ -173,3 +173,26 @@ def download_my_matter_document(
     service = MatterService(db)
     url = service.get_client_matter_document_download(matter_id, document_id, current_contact.client_id)
     return MatterDocumentDownloadResponse(download_url=url, expires_in_seconds=3600)
+
+@client_matters_router.post("/{matter_id}/documents", response_model=MatterDocumentResponse, status_code=201)
+async def upload_my_matter_document(
+    matter_id: str,
+    title: str = Form(...),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_contact: ClientContact = Depends(get_current_contact),
+):
+    file_bytes = await file.read()
+    if len(file_bytes) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail="File too large. Maximum size is 10MB.")
+
+    service = MatterService(db)
+    return service.upload_matter_document(
+        matter_id=matter_id,
+        title=title,
+        file_bytes=file_bytes,
+        original_filename=file.filename,
+        content_type=file.content_type,
+        client_id=current_contact.client_id,
+        uploaded_by_contact_id=current_contact.id,
+    )

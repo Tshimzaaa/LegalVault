@@ -51,7 +51,8 @@ class MatterAssignmentResponse(BaseModel):
 class MatterDocumentResponse(BaseModel):
     id: UUID
     matter_id: UUID
-    uploaded_by: UUID
+    uploaded_by: UUID | None
+    uploaded_by_contact_id: UUID | None
     title: str
     version: int
     original_filename: str

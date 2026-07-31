@@ -87,7 +87,8 @@ class MatterAssignment(BaseModel):
         "Matter",
         back_populates="assignments",
     )
-    
+
+
 class MatterDocument(BaseModel):
     __tablename__ = "matter_documents"
 
@@ -96,9 +97,14 @@ class MatterDocument(BaseModel):
         nullable=False,
     )
 
-    uploaded_by: Mapped[UUID] = mapped_column(
+    uploaded_by: Mapped[UUID | None] = mapped_column(
         ForeignKey("users.id"),
-        nullable=False,
+        nullable=True,
+    )
+
+    uploaded_by_contact_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("client_contacts.id"),
+        nullable=True,
     )
 
     title: Mapped[str] = mapped_column(String(200), nullable=False)

@@ -99,14 +99,23 @@ class MatterService:
     def upload_matter_document(
         self,
         matter_id,
-        firm_id,
-        uploaded_by,
         title: str,
         file_bytes: bytes,
         original_filename: str,
         content_type: str,
+        firm_id=None,
+        uploaded_by=None,
+        client_id=None,
+        uploaded_by_contact_id=None,
     ) -> MatterDocument:
-        matter = self.get_matter(matter_id, firm_id)  # validates ownership, raises MatterNotFound if wrong firm
+        if firm_id is not None:
+            matter = self.get_matter(matter_id, firm_id)
+        elif client_id is not None:
+            matter = self.repository.get_by_id(matter_id)
+            if not matter or str(matter.client_id) != str(client_id) or not matter.is_visible_to_client:
+                raise MatterNotFound()
+        else:
+            raise ValueError("Either firm_id or client_id must be provided")
 
         if content_type not in ALLOWED_DOCUMENT_TYPES:
             from app.exceptions.templates import UnsupportedFileType
@@ -121,6 +130,7 @@ class MatterService:
         document = MatterDocument(
             matter_id=matter.id,
             uploaded_by=uploaded_by,
+            uploaded_by_contact_id=uploaded_by_contact_id,
             title=title,
             version=next_version,
             file_key=file_key,
