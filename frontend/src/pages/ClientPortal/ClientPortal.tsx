@@ -17,11 +17,12 @@ import {
 import ClientDashboard from '../ClientDashboard/ClientDashboard'
 import RequestSupport from '../RequestSupport/RequestSupport'
 import ClientWorkflow from '../ClientWorkflow/ClientWorkflow'
+import ClientMatterDetail from '../ClientMatterDetail/ClientMatterDetail'
 import ClientSignedContracts from '../ClientSignedContracts/ClientSignedContracts'
 import ClientReporting from '../ClientReporting/ClientReporting'
 import Resources from '../Resources/Resources'
 import LearnedFriend from '../LearnedFriend/LearnedFriend'
-import LightHubGuide from '../LightHubGuide/LightHubGuide'
+import LegalGuide from '../LightHubGuide/LightHubGuide'
 import MatterAdmin from '../MatterAdmin/MatterAdmin'
 import Integrations from '../Integrations/Integrations'
 import ClientTemplates from '../ClientTemplates/ClientTemplates'
@@ -62,7 +63,9 @@ interface ClientPortalProps {
 function ClientPortal({ contact, onLogout }: ClientPortalProps) {
   const location = useLocation()
   const navigate = useNavigate()
-  const activePage = (location.pathname.split('/')[2] as ClientPage) || 'dashboard'
+  const rawPage = location.pathname.split('/')[2]
+  // Matter detail lives under /client/matters/:id but highlights the Workflow tab it was opened from.
+  const activePage: ClientPage = rawPage === 'matters' ? 'workflow' : (rawPage as ClientPage) || 'dashboard'
 
   return (
     <div className="dash-layout">
@@ -72,7 +75,7 @@ function ClientPortal({ contact, onLogout }: ClientPortalProps) {
         navItems={clientNavItems}
         user={contact}
         onLogout={onLogout}
-        brandName="LightHub"
+        brandName="Legal"
         brandSub="client portal"
       />
       <Routes>
@@ -80,11 +83,12 @@ function ClientPortal({ contact, onLogout }: ClientPortalProps) {
         <Route path="dashboard" element={<ClientDashboard contact={contact} onLogout={onLogout} />} />
         <Route path="request-support" element={<RequestSupport contact={contact} onLogout={onLogout} />} />
         <Route path="workflow" element={<ClientWorkflow contact={contact} onLogout={onLogout} />} />
+        <Route path="matters/:matterId" element={<ClientMatterDetail contact={contact} onLogout={onLogout} />} />
         <Route path="signed-contracts" element={<ClientSignedContracts contact={contact} onLogout={onLogout} />} />
         <Route path="reporting" element={<ClientReporting contact={contact} onLogout={onLogout} />} />
         <Route path="resources" element={<Resources contact={contact} onLogout={onLogout} />} />
         <Route path="learned-friend" element={<LearnedFriend contact={contact} onLogout={onLogout} />} />
-        <Route path="guide" element={<LightHubGuide contact={contact} onLogout={onLogout} />} />
+        <Route path="guide" element={<LegalGuide contact={contact} onLogout={onLogout} />} />
         <Route path="matter-admin" element={<MatterAdmin contact={contact} onLogout={onLogout} />} />
         <Route path="integrations" element={<Integrations contact={contact} onLogout={onLogout} />} />
         <Route path="templates" element={<ClientTemplates contact={contact} onLogout={onLogout} />} />

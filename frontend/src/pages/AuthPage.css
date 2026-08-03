@@ -1,0 +1,40 @@
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #050506;
+  padding: 20px;
+}
+
+.auth-page .modal-box {
+  position: static;
+  margin: 0;
+}
+
+.auth-page .modal-box.wide {
+  max-width: 480px;
+}
+
+.auth-page-link {
+  display: block;
+  text-align: center;
+  margin-top: 14px;
+  color: #22c55e;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.auth-page-link:hover {
+  text-decoration: underline;
+}
+
+.auth-page-link-inline {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+}

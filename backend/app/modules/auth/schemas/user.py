@@ -12,6 +12,7 @@ class UserResponse(BaseModel):
     email: EmailStr
     role: UserRole
     is_active: bool
+    invitation_status: str
     last_login: datetime | None = None
 
     class Config:

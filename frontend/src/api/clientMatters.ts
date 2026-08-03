@@ -1,0 +1,34 @@
+import { apiRequest, apiUpload } from './client'
+import type { Matter, MatterDocument } from './matters'
+
+export async function listClientMatters(token: string): Promise<Matter[]> {
+  return apiRequest<Matter[]>('/client-matters', { token })
+}
+
+export async function listClientMatterDocuments(token: string, matterId: string): Promise<MatterDocument[]> {
+  return apiRequest<MatterDocument[]>(`/client-matters/${matterId}/documents`, { token })
+}
+
+export async function uploadClientMatterDocument(
+  token: string,
+  matterId: string,
+  title: string,
+  file: File,
+): Promise<MatterDocument> {
+  const formData = new FormData()
+  formData.append('title', title)
+  formData.append('file', file)
+  return apiUpload<MatterDocument>(`/client-matters/${matterId}/documents`, formData, token)
+}
+
+export async function getClientMatterDocumentDownloadUrl(
+  token: string,
+  matterId: string,
+  documentId: string,
+): Promise<string> {
+  const data = await apiRequest<{ download_url: string; expires_in_seconds: number }>(
+    `/client-matters/${matterId}/documents/${documentId}/download`,
+    { token },
+  )
+  return data.download_url
+}

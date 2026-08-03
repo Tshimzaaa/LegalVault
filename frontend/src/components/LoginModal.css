@@ -67,7 +67,9 @@
   color: #d1d5db;
 }
 
-.modal-field input {
+.modal-field input,
+.modal-field select,
+.modal-field textarea {
   background: #18181b;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
@@ -77,9 +79,20 @@
   font-family: inherit;
 }
 
-.modal-field input:focus {
+.modal-field input:focus,
+.modal-field select:focus,
+.modal-field textarea:focus {
   outline: none;
   border-color: #22c55e;
+}
+
+.modal-field-row {
+  display: flex;
+  gap: 12px;
+}
+
+.modal-field-row .modal-field {
+  flex: 1;
 }
 
 .modal-password-wrap {
@@ -123,6 +136,10 @@
 .modal-submit {
   width: 100%;
   margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   background: #22c55e;
   color: #06210f;
   border: none;
@@ -141,4 +158,43 @@
 .modal-submit:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.modal-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(6, 33, 15, 0.3);
+  border-top-color: #06210f;
+  border-radius: 50%;
+  animation: modal-spin 0.7s linear infinite;
+}
+
+@keyframes modal-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.modal-hint {
+  margin: 10px 0 0;
+  color: #9ca3af;
+  font-size: 12px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.modal-link-back {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 13px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.modal-link-back:hover {
+  color: #fff;
 }

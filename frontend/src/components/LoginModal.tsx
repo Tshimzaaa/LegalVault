@@ -1,30 +1,99 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import './LoginModal.css'
+import { forgotPassword } from '../api/auth'
+import { clientForgotPassword } from '../api/clientAuth'
 
 interface LoginModalProps {
   onClose: () => void
   onSubmit: (email: string, password: string) => Promise<void>
+  staffOnly?: boolean
 }
 
-function LoginModal({ onClose, onSubmit }: LoginModalProps) {
+function LoginModal({ onClose, onSubmit, staffOnly }: LoginModalProps) {
+  const [mode, setMode] = useState<'login' | 'forgot' | 'sent'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [waking, setWaking] = useState(false)
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError('')
     setSubmitting(true)
+    // The API host can be a free-tier instance that sleeps when idle, so a
+    // cold start takes much longer than a normal login request.
+    const wakeTimer = setTimeout(() => setWaking(true), 4000)
     try {
       await onSubmit(email, password)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')
     } finally {
+      clearTimeout(wakeTimer)
+      setSubmitting(false)
+      setWaking(false)
+    }
+  }
+
+  async function handleForgotSubmit(e: FormEvent) {
+    e.preventDefault()
+    setError('')
+    setSubmitting(true)
+    try {
+      await (staffOnly ? forgotPassword(email) : clientForgotPassword(email))
+      setMode('sent')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
       setSubmitting(false)
     }
+  }
+
+  if (mode === 'forgot' || mode === 'sent') {
+    return (
+      <div className="modal-backdrop" onClick={onClose}>
+        <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+          <button type="button" className="modal-close" onClick={onClose} aria-label="Close">
+            ×
+          </button>
+
+          <h2>Reset password</h2>
+          <p className="modal-sub">
+            {mode === 'sent'
+              ? 'If that email exists, a reset link is on its way.'
+              : "Enter your email and we'll send you a reset link."}
+          </p>
+
+          {mode === 'forgot' && (
+            <form onSubmit={handleForgotSubmit}>
+              <label className="modal-field">
+                <span>Email</span>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                  autoFocus
+                />
+              </label>
+
+              {error && <p className="modal-error">{error}</p>}
+
+              <button type="submit" className="modal-submit" disabled={submitting}>
+                {submitting ? 'Sending…' : 'Send reset link'}
+              </button>
+            </form>
+          )}
+
+          <button type="button" className="modal-link-back" onClick={() => setMode('login')}>
+            &larr; Back to login
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -84,7 +153,25 @@ function LoginModal({ onClose, onSubmit }: LoginModalProps) {
           {error && <p className="modal-error">{error}</p>}
 
           <button type="submit" className="modal-submit" disabled={submitting}>
-            {submitting ? 'Logging in…' : 'Login'}
+            {submitting && <span className="modal-spinner" aria-hidden="true" />}
+            {waking ? 'Waking up server…' : submitting ? 'Logging in…' : 'Login'}
+          </button>
+
+          {waking && (
+            <p className="modal-hint">
+              The server was asleep and is starting up — this can take up to a minute.
+            </p>
+          )}
+
+          <button
+            type="button"
+            className="modal-link-back"
+            onClick={() => {
+              setError('')
+              setMode('forgot')
+            }}
+          >
+            Forgot password?
           </button>
         </form>
       </div>

@@ -10,7 +10,7 @@ from app.modules.auth.services.login import login_user
 from app.modules.auth.services.register import RegisterService
 from app.modules.auth.dependencies import get_current_user
 from app.modules.auth.models import User
-from app.modules.auth.schemas.invite import InviteStaffRequest, AcceptStaffInviteRequest
+from app.modules.auth.schemas.invite import InviteStaffRequest, InviteStaffResponse, AcceptStaffInviteRequest
 from app.modules.auth.services.invite import invite_staff, accept_staff_invite
 from app.main import limiter  # or restructure to avoid circular import — flag if this errors
 from app.modules.auth.schemas.password_reset import ForgotPasswordRequest, ResetPasswordRequest
@@ -52,7 +52,7 @@ def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db
 def reset_password_route(request: ResetPasswordRequest, db: Session = Depends(get_db)):
     reset_password(db, request)
     return {"message": "Password reset successful."}
-@router.post("/invite-staff", response_model=UserResponse, status_code=201)
+@router.post("/invite-staff", response_model=InviteStaffResponse, status_code=201)
 def invite_staff_route(
     request: InviteStaffRequest,
     db: Session = Depends(get_db),

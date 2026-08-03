@@ -4,7 +4,7 @@
 
 .workflow-board {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(6, minmax(150px, 1fr));
   gap: 12px;
   flex: 1;
   min-height: 0;
@@ -68,6 +68,11 @@
   flex: 1;
   min-height: 50px;
   border-radius: 10px;
+}
+
+.workflow-empty-col {
+  font-size: 12px;
+  padding: 4px 2px;
 }
 
 .workflow-card {

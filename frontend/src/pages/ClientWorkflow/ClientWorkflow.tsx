@@ -1,57 +1,21 @@
-import { useState } from 'react'
-import type { DragEvent } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './ClientWorkflow.css'
 import { IconPlus } from '../../components/icons'
 import ProfileMenu from '../../components/ProfileMenu'
 import type { ClientContact } from '../../api/clientAuth'
+import { listClientMatters } from '../../api/clientMatters'
+import type { Matter, MatterStatus } from '../../api/matters'
 
-interface RequestCard {
-  title: string
-  company: string
-  agreementType: string
-  created: string
-  modified: string
-}
+type LoadState = 'loading' | 'error' | 'ready'
 
-type ColumnLabel = 'Submitted' | 'In Progress' | 'In Review' | 'Complete'
-
-interface Column {
-  label: ColumnLabel
-  color: string
-  cards: RequestCard[]
-}
-
-const initialColumns: Column[] = [
-  {
-    label: 'Submitted',
-    color: '#9ca3af',
-    cards: [
-      { title: 'NDA Request', company: 'Company C', agreementType: 'NDA', created: '18 Jul', modified: '18 Jul' },
-      { title: 'Supplier Onboarding', company: 'Coastal Retail', agreementType: 'Supplier Agreement', created: '17 Jul', modified: '17 Jul' },
-    ],
-  },
-  {
-    label: 'In Progress',
-    color: '#3987e5',
-    cards: [
-      { title: 'Consultancy Agreement Review', company: 'Company C', agreementType: 'Consultancy Agreement', created: '12 Jul', modified: '22 Jul' },
-      { title: 'Vendor NDA', company: 'Vantage Logistics', agreementType: 'NDA', created: '10 Jul', modified: '21 Jul' },
-    ],
-  },
-  {
-    label: 'In Review',
-    color: '#eab308',
-    cards: [{ title: 'Supplier Agreement', company: 'Kaya Software', agreementType: 'Supplier Agreement', created: '5 Jul', modified: '20 Jul' }],
-  },
-  {
-    label: 'Complete',
-    color: '#22c55e',
-    cards: [
-      { title: 'Mutual NDA', company: 'Company C', agreementType: 'NDA', created: '28 Jun', modified: '15 Jul' },
-      { title: 'Consultancy Agreement', company: 'Nkosi Holdings', agreementType: 'Consultancy Agreement', created: '20 Jun', modified: '10 Jul' },
-    ],
-  },
+const columnOrder: { status: MatterStatus; label: string; color: string }[] = [
+  { status: 'intake', label: 'Intake', color: '#eab308' },
+  { status: 'in_review', label: 'In Review', color: '#3987e5' },
+  { status: 'awaiting_signature', label: 'Awaiting Signature', color: '#a855f7' },
+  { status: 'signed', label: 'Signed', color: '#199e70' },
+  { status: 'closed', label: 'Closed', color: '#22c55e' },
+  { status: 'declined', label: 'Declined', color: '#ef4444' },
 ]
 
 interface ClientWorkflowProps {
@@ -61,51 +25,25 @@ interface ClientWorkflowProps {
 
 function ClientWorkflow({ contact, onLogout }: ClientWorkflowProps) {
   const navigate = useNavigate()
-  const [columns, setColumns] = useState(initialColumns)
-  const [draggingTitle, setDraggingTitle] = useState<string | null>(null)
-  const [dragOverColumn, setDragOverColumn] = useState<ColumnLabel | null>(null)
+  const [matters, setMatters] = useState<Matter[]>([])
+  const [status, setStatus] = useState<LoadState>('loading')
 
-  const total = columns.reduce((sum, c) => sum + c.cards.length, 0)
-
-  function handleDragStart(e: DragEvent<HTMLDivElement>, cardTitle: string) {
-    e.dataTransfer.setData('text/plain', cardTitle)
-    e.dataTransfer.effectAllowed = 'move'
-    setDraggingTitle(cardTitle)
-  }
-
-  function handleDragEnd() {
-    setDraggingTitle(null)
-    setDragOverColumn(null)
-  }
-
-  function handleDragOver(e: DragEvent<HTMLDivElement>, columnLabel: ColumnLabel) {
-    e.preventDefault()
-    e.dataTransfer.dropEffect = 'move'
-    setDragOverColumn(columnLabel)
-  }
-
-  function handleDrop(e: DragEvent<HTMLDivElement>, targetLabel: ColumnLabel) {
-    e.preventDefault()
-    const cardTitle = e.dataTransfer.getData('text/plain')
-    setDragOverColumn(null)
-    setDraggingTitle(null)
-
-    setColumns((prev) => {
-      const sourceColumn = prev.find((c) => c.cards.some((card) => card.title === cardTitle))
-      const card = sourceColumn?.cards.find((c) => c.title === cardTitle)
-      if (!card || sourceColumn?.label === targetLabel) return prev
-
-      return prev.map((col) => {
-        if (col.label === sourceColumn?.label) {
-          return { ...col, cards: col.cards.filter((c) => c.title !== cardTitle) }
-        }
-        if (col.label === targetLabel) {
-          return { ...col, cards: [...col.cards, card] }
-        }
-        return col
+  function loadAll() {
+    const token = localStorage.getItem('access_token')
+    if (!token) {
+      setStatus('error')
+      return
+    }
+    setStatus('loading')
+    listClientMatters(token)
+      .then((list) => {
+        setMatters(list)
+        setStatus('ready')
       })
-    })
+      .catch(() => setStatus('error'))
   }
+
+  useEffect(loadAll, [])
 
   return (
     <main className="dash-main workflow-main">
@@ -113,7 +51,7 @@ function ClientWorkflow({ contact, onLogout }: ClientWorkflowProps) {
         <h1>Workflow</h1>
         <div className="workflow-header-actions">
           <span className="chip">
-            Total Requests <span className="chip-badge">{total}</span>
+            Total Matters <span className="chip-badge">{matters.length}</span>
           </span>
           <button type="button" className="btn-solid workflow-new-btn" onClick={() => navigate('/client/request-support')}>
             <IconPlus /> New Request
@@ -122,46 +60,57 @@ function ClientWorkflow({ contact, onLogout }: ClientWorkflowProps) {
         </div>
       </header>
 
-      <section className="workflow-board">
-        {columns.map((col) => (
-          <div
-            key={col.label}
-            className={`workflow-column${dragOverColumn === col.label ? ' drag-over' : ''}`}
-            onDragOver={(e) => handleDragOver(e, col.label)}
-            onDragLeave={() => setDragOverColumn((c) => (c === col.label ? null : c))}
-            onDrop={(e) => handleDrop(e, col.label)}
-          >
-            <div className="workflow-column-header">
-              <span className="status-dot" style={{ background: col.color }} />
-              <span className="workflow-column-title">{col.label}</span>
-              <span className="workflow-column-count">{col.cards.length}</span>
-            </div>
+      {status === 'loading' && (
+        <div className="dash-state">
+          <span className="dash-spinner" />
+          <p>Loading your matters…</p>
+        </div>
+      )}
 
-            <div className="workflow-column-body">
-              {col.cards.map((card) => (
-                <div
-                  key={card.title}
-                  className={`card workflow-card${draggingTitle === card.title ? ' dragging' : ''}`}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, card.title)}
-                  onDragEnd={handleDragEnd}
-                >
-                  <span className="workflow-card-title">{card.title}</span>
-                  <span className="workflow-card-client">{card.company}</span>
-                  <span className="request-card-type">{card.agreementType}</span>
-                  <div className="workflow-card-footer request-card-footer">
-                    <span className="deadline-sub">Created {card.created}</span>
-                    <span className="deadline-sub">Modified {card.modified}</span>
-                  </div>
+      {status === 'error' && (
+        <div className="dash-state">
+          <p>Couldn&rsquo;t reach the backend for your matters.</p>
+          <button type="button" className="btn-ghost" onClick={loadAll}>
+            Retry
+          </button>
+        </div>
+      )}
+
+      {status === 'ready' && (
+        <section className="workflow-board client-matter-board">
+          {columnOrder.map((col) => {
+            const cards = matters.filter((m) => m.status === col.status)
+            return (
+              <div key={col.status} className="workflow-column">
+                <div className="workflow-column-header">
+                  <span className="status-dot" style={{ background: col.color }} />
+                  <span className="workflow-column-title">{col.label}</span>
+                  <span className="workflow-column-count">{cards.length}</span>
                 </div>
-              ))}
-              {col.cards.length === 0 && dragOverColumn === col.label && (
-                <div className="workflow-drop-placeholder" />
-              )}
-            </div>
-          </div>
-        ))}
-      </section>
+
+                <div className="workflow-column-body">
+                  {cards.map((m) => (
+                    <div
+                      key={m.id}
+                      className="card workflow-card"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => navigate(`/client/matters/${m.id}`)}
+                      onKeyDown={(e) => e.key === 'Enter' && navigate(`/client/matters/${m.id}`)}
+                    >
+                      <span className="workflow-card-title">{m.title}</span>
+                      <div className="workflow-card-footer request-card-footer">
+                        <span className="deadline-sub">Opened {new Date(m.created_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {cards.length === 0 && <p className="muted workflow-empty-col">Nothing here yet.</p>}
+                </div>
+              </div>
+            )
+          })}
+        </section>
+      )}
     </main>
   )
 }

@@ -5,13 +5,23 @@ import LoginModal from './components/LoginModal'
 import Home from './pages/Home/Home'
 import Workspace from './pages/Workspace/Workspace'
 import ClientPortal from './pages/ClientPortal/ClientPortal'
+import Register from './pages/Register/Register'
+import ResetPassword from './pages/ResetPassword/ResetPassword'
+import AcceptInvite from './pages/AcceptInvite/AcceptInvite'
+import AcceptStaffInvite from './pages/AcceptStaffInvite/AcceptStaffInvite'
+import OwnerLogin from './pages/OwnerLogin/OwnerLogin'
+import OwnerPortal from './pages/OwnerPortal/OwnerPortal'
 import { login, getCurrentUser } from './api/auth'
 import { clientLogin, getCurrentContact } from './api/clientAuth'
+import { ownerLogin, listFirms } from './api/owner'
 import { setUnauthorizedHandler } from './api/client'
 import type { User } from './api/auth'
 import type { ClientContact } from './api/clientAuth'
 
-type Actor = { kind: 'staff'; user: User } | { kind: 'client'; contact: ClientContact }
+type Actor =
+  | { kind: 'staff'; user: User }
+  | { kind: 'client'; contact: ClientContact }
+  | { kind: 'owner' }
 
 function App() {
   const [actor, setActor] = useState<Actor | null>(null)
@@ -45,7 +55,9 @@ function App() {
     const restore =
       actorKind === 'client'
         ? getCurrentContact(token).then((contact) => setActor({ kind: 'client', contact }))
-        : getCurrentUser(token).then((user) => setActor({ kind: 'staff', user }))
+        : actorKind === 'owner'
+          ? listFirms(token).then(() => setActor({ kind: 'owner' }))
+          : getCurrentUser(token).then((user) => setActor({ kind: 'staff', user }))
 
     restore
       .catch(() => {
@@ -76,6 +88,14 @@ function App() {
     navigate('/client/dashboard')
   }
 
+  async function handleOwnerLogin(secret: string) {
+    const ownerToken = await ownerLogin(secret)
+    localStorage.setItem('access_token', ownerToken)
+    localStorage.setItem('actor_kind', 'owner')
+    setActor({ kind: 'owner' })
+    navigate('/owner')
+  }
+
   if (checkingSession) {
     return null
   }
@@ -99,8 +119,28 @@ function App() {
             <>
               <Navbar onLoginClick={() => {}} />
               <Home />
-              <LoginModal onClose={() => navigate('/')} onSubmit={handleLogin} />
+              <LoginModal onClose={() => navigate('/')} onSubmit={handleLogin} staffOnly={staffOnly} />
             </>
+          )
+        }
+      />
+      <Route path="/register" element={<Register />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/accept-invite" element={<AcceptInvite />} />
+      <Route path="/accept-staff-invite" element={<AcceptStaffInvite />} />
+      <Route
+        path="/owner/login"
+        element={
+          actor?.kind === 'owner' ? <Navigate to="/owner" replace /> : <OwnerLogin onSubmit={handleOwnerLogin} />
+        }
+      />
+      <Route
+        path="/owner/*"
+        element={
+          actor?.kind === 'owner' ? (
+            <OwnerPortal onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/owner/login" replace />
           )
         }
       />

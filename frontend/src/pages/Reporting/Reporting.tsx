@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './Reporting.css'
+import { listMatters } from '../../api/matters'
 
 const revenueTrend = [
   { month: 'Jan', value: 620 },
@@ -27,7 +28,6 @@ const billableHours = [
 
 const statTiles = [
   { label: 'Total revenue', value: 'R4.71M', delta: '+8% vs last period', up: true },
-  { label: 'Active matters', value: '23', delta: '+3 vs last period', up: true },
   { label: 'Win rate', value: '78%', delta: '+2pts vs last period', up: true },
   { label: 'Avg. case duration', value: '94 days', delta: '-6 days vs last period', up: true },
 ]
@@ -255,6 +255,17 @@ function BillableHoursBar() {
 }
 
 function Reporting() {
+  const [activeMatters, setActiveMatters] = useState<number | null>(null)
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token')
+    if (!token) return
+
+    listMatters(token)
+      .then((matters) => setActiveMatters(matters.filter((m) => m.status !== 'closed' && m.status !== 'declined').length))
+      .catch(() => setActiveMatters(null))
+  }, [])
+
   return (
     <main className="dash-main">
       <header className="dash-topbar">
@@ -262,6 +273,14 @@ function Reporting() {
       </header>
 
       <section className="dash-row reporting-stats">
+        <div className="card">
+          <div className="card-header">
+            <span>Active matters</span>
+          </div>
+          <div className="stat-line">
+            <span className="stat-big">{activeMatters ?? '—'}</span>
+          </div>
+        </div>
         {statTiles.map((t) => (
           <div key={t.label} className="card">
             <div className="card-header">

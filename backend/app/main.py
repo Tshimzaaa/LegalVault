@@ -10,6 +10,8 @@ from app.modules.templates.routes import router as templates_router, client_temp
 from app.modules.matters.routes import router as matters_router, client_matters_router
 from app.modules.clients.routes import router as clients_router, client_auth_router
 from app.modules.owner.routes import router as owner_router
+from app.modules.dashboard.routes import router as dashboard_router
+from app.modules.support_requests.routes import router as support_requests_router, client_support_requests_router
 
 app = FastAPI(
     title="LegalHub API",
@@ -28,6 +30,9 @@ app.include_router(clients_router)
 app.include_router(client_auth_router)
 app.include_router(auth_router)
 app.include_router(owner_router)
+app.include_router(dashboard_router)
+app.include_router(support_requests_router)
+app.include_router(client_support_requests_router)
 
 # Register global exception handlers
 register_exception_handlers(app)

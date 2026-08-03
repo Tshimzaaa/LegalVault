@@ -50,3 +50,23 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
 
   return res.json()
 }
+
+/** Multipart form upload — apiRequest always JSON-encodes its body, which can't carry a File. */
+export async function apiUpload<T>(path: string, formData: FormData, token: string): Promise<T> {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  })
+
+  if (res.status === 401) {
+    onUnauthorized?.()
+  }
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null)
+    throw new ApiError(res.status, errorData?.detail || `Request failed (${res.status})`)
+  }
+
+  return res.json()
+}

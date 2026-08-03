@@ -1,0 +1,31 @@
+.owner-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.owner-stat-icon {
+  opacity: 0.6;
+  width: 18px;
+  height: 18px;
+}
+
+.owner-firms-table-card {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.owner-create-firm-card {
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+.owner-create-firm-form .field-row {
+  grid-template-columns: 1fr 1fr;
+}
+
+.owner-firm-toggle {
+  padding: 6px 14px;
+  font-size: 12px;
+}

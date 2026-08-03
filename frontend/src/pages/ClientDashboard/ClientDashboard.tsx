@@ -1,13 +1,10 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './ClientDashboard.css'
-import {
-  IconFolder,
-  IconFilePlus,
-  IconLearnedFriend,
-  IconArrowUp,
-} from '../../components/icons'
+import { IconFolder, IconFilePlus, IconLearnedFriend } from '../../components/icons'
 import ProfileMenu from '../../components/ProfileMenu'
 import type { ClientContact } from '../../api/clientAuth'
+import { listClientMatters } from '../../api/clientMatters'
 
 const contractBreakdown = [
   { label: 'Signed', count: 31, color: '#22c55e' },
@@ -35,6 +32,16 @@ interface ClientDashboardProps {
 
 function ClientDashboard({ contact, onLogout }: ClientDashboardProps) {
   const navigate = useNavigate()
+  const [openMatters, setOpenMatters] = useState<number | null>(null)
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token')
+    if (!token) return
+
+    listClientMatters(token)
+      .then((matters) => setOpenMatters(matters.filter((m) => m.status !== 'closed' && m.status !== 'declined').length))
+      .catch(() => setOpenMatters(null))
+  }, [])
 
   return (
     <main className="dash-main">
@@ -52,11 +59,8 @@ function ClientDashboard({ contact, onLogout }: ClientDashboardProps) {
             <span>Open Matters</span>
           </div>
           <div className="stat-line">
-            <span className="stat-big">42</span>
+            <span className="stat-big">{openMatters ?? '—'}</span>
           </div>
-          <span className="stat-delta up">
-            <IconArrowUp /> +18 vs last period
-          </span>
         </div>
 
         <div className="card quick-actions">

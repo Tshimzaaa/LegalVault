@@ -1,56 +1,192 @@
+import { useEffect, useRef, useState } from 'react'
+import type { FormEvent } from 'react'
 import './Templates.css'
-import {
-  IconSignedContract,
-  IconShield,
-  IconFolder,
-  IconDollar,
-  IconGavel,
-  IconContractData,
-  IconFilePlus,
-  IconUser,
-} from '../../components/icons'
+import { IconPlus } from '../../components/icons'
+import { listTemplates, downloadTemplate, uploadTemplate } from '../../api/templates'
+import type { Template } from '../../api/templates'
+import { getTemplateIcon } from '../../utils/templateIcon'
 
-interface Template {
-  name: string
-  category: string
-  description: string
-  icon: React.ReactNode
-}
-
-const templates: Template[] = [
-  { name: 'Employment Contract', category: 'Employment', description: 'Standard fixed-term or permanent employment agreement.', icon: <IconUser /> },
-  { name: 'Mutual NDA', category: 'Confidentiality', description: 'Two-way non-disclosure agreement for early-stage discussions.', icon: <IconShield /> },
-  { name: 'Commercial Lease', category: 'Real Estate', description: 'Lease agreement for retail or office premises.', icon: <IconFolder /> },
-  { name: 'Retainer Agreement', category: 'Billing', description: 'Recurring monthly retainer with scope and fee schedule.', icon: <IconDollar /> },
-  { name: 'Settlement Agreement', category: 'Litigation', description: 'Full and final settlement terms between disputing parties.', icon: <IconGavel /> },
-  { name: 'Corporate Bylaws', category: 'Corporate', description: 'Governance rules for a newly incorporated entity.', icon: <IconContractData /> },
-  { name: 'IP License Agreement', category: 'Intellectual Property', description: 'Licensing terms for trademarks, patents, or software.', icon: <IconSignedContract /> },
-  { name: 'Engagement Letter', category: 'Onboarding', description: 'Client onboarding letter outlining scope and fees.', icon: <IconFilePlus /> },
-]
+type LoadState = 'loading' | 'error' | 'ready'
 
 function Templates() {
+  const [templates, setTemplates] = useState<Template[]>([])
+  const [status, setStatus] = useState<LoadState>('loading')
+  const [attempt, setAttempt] = useState(0)
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
+  const [downloadError, setDownloadError] = useState<string | null>(null)
+
+  const [showUpload, setShowUpload] = useState(false)
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [category, setCategory] = useState('')
+  const [file, setFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    setStatus('loading')
+
+    const token = localStorage.getItem('access_token')
+    if (!token) {
+      setStatus('error')
+      return
+    }
+
+    listTemplates(token)
+      .then((data) => {
+        if (cancelled) return
+        setTemplates(data)
+        setStatus('ready')
+      })
+      .catch(() => {
+        if (cancelled) return
+        setStatus('error')
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [attempt])
+
+  async function handleUseTemplate(templateId: string) {
+    const token = localStorage.getItem('access_token')
+    if (!token) return
+    setDownloadError(null)
+    setDownloadingId(templateId)
+    try {
+      const { download_url } = await downloadTemplate(token, templateId)
+      window.open(download_url, '_blank', 'noopener,noreferrer')
+    } catch {
+      setDownloadError('Could not open that template. Please try again.')
+    } finally {
+      setDownloadingId(null)
+    }
+  }
+
+  async function handleUpload(e: FormEvent) {
+    e.preventDefault()
+    setUploadError(null)
+
+    const token = localStorage.getItem('access_token')
+    if (!token || !title || !category || !file) {
+      setUploadError('Title, category, and a file are required.')
+      return
+    }
+
+    setUploading(true)
+    try {
+      await uploadTemplate(token, { title, description, category, file })
+      setTitle('')
+      setDescription('')
+      setCategory('')
+      setFile(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      setShowUpload(false)
+      setAttempt((n) => n + 1)
+    } catch {
+      setUploadError('Could not upload the template. Please try again.')
+    } finally {
+      setUploading(false)
+    }
+  }
+
   return (
     <main className="dash-main">
       <header className="dash-topbar">
         <h1>Templates</h1>
-        <span className="chip">
-          Available <span className="chip-badge">{templates.length}</span>
-        </span>
+        <div className="topbar-actions">
+          <span className="chip">
+            Available <span className="chip-badge">{templates.length}</span>
+          </span>
+          <button type="button" className="btn-solid" onClick={() => setShowUpload((v) => !v)}>
+            <IconPlus /> Upload Template
+          </button>
+        </div>
       </header>
 
-      <section className="templates-grid">
-        {templates.map((t) => (
-          <div key={t.name} className="card template-card">
-            <span className="template-icon">{t.icon}</span>
-            <span className="template-name">{t.name}</span>
-            <span className="template-category">{t.category}</span>
-            <p className="template-description">{t.description}</p>
-            <button type="button" className="btn-ghost template-use-btn">
-              Use Template
+      {showUpload && (
+        <form className="card template-upload-form" onSubmit={handleUpload}>
+          <div className="field-row">
+            <label className="field">
+              <span>Title</span>
+              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Mutual NDA" />
+            </label>
+            <label className="field">
+              <span>Category</span>
+              <input
+                type="text"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                placeholder="Confidentiality"
+              />
+            </label>
+          </div>
+          <label className="field">
+            <span>Description</span>
+            <textarea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />
+          </label>
+          <label className="field">
+            <span>File (PDF, Word, or text — max 10MB)</span>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.doc,.docx,.txt"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+          </label>
+          <div className="matter-actions">
+            <button type="button" className="btn-ghost" onClick={() => setShowUpload(false)}>
+              Cancel
+            </button>
+            <button type="submit" className="btn-solid" disabled={uploading}>
+              {uploading ? 'Uploading…' : 'Upload'}
             </button>
           </div>
-        ))}
-      </section>
+          {uploadError && <p className="matter-error">{uploadError}</p>}
+        </form>
+      )}
+
+      {status === 'loading' && (
+        <div className="dash-state">
+          <span className="dash-spinner" />
+          <p>Loading templates…</p>
+        </div>
+      )}
+
+      {status === 'error' && (
+        <div className="dash-state">
+          <p>Couldn&rsquo;t reach the backend for your templates.</p>
+          <button type="button" className="btn-ghost" onClick={() => setAttempt((n) => n + 1)}>
+            Retry
+          </button>
+        </div>
+      )}
+
+      {downloadError && <p className="matter-error">{downloadError}</p>}
+
+      {status === 'ready' && (
+        <section className="templates-grid">
+          {templates.map((t) => (
+            <div key={t.id} className="card template-card">
+              <span className="template-icon">{getTemplateIcon(t.category)}</span>
+              <span className="template-name">{t.title}</span>
+              <span className="template-category">{t.category}</span>
+              <p className="template-description">{t.description}</p>
+              <button
+                type="button"
+                className="btn-ghost template-use-btn"
+                disabled={downloadingId === t.id}
+                onClick={() => handleUseTemplate(t.id)}
+              >
+                {downloadingId === t.id ? 'Preparing…' : 'Use Template'}
+              </button>
+            </div>
+          ))}
+          {templates.length === 0 && <p className="muted">No templates uploaded yet.</p>}
+        </section>
+      )}
     </main>
   )
 }

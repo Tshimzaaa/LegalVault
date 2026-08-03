@@ -1,0 +1,54 @@
+from pydantic import BaseModel
+
+
+class ActiveCasesSummary(BaseModel):
+    count: int
+    totalValue: str
+    progressPercent: int
+
+
+class ContractStatusBreakdownItem(BaseModel):
+    label: str
+    count: int
+    color: str
+
+
+class ContractStatusSummary(BaseModel):
+    total: int
+    breakdown: list[ContractStatusBreakdownItem]
+    rings: list[int]
+
+
+class KeyDeadline(BaseModel):
+    title: str
+    deadline: str
+    flagColor: str
+
+
+class FinancialSummary(BaseModel):
+    billableHours: int
+    sparkline: list[int]
+
+
+class TaskItem(BaseModel):
+    title: str
+    deadline: str
+
+
+class RecentDocument(BaseModel):
+    title: str
+    subtitle: str
+
+
+class RecentCommunication(BaseModel):
+    text: str
+
+
+class DashboardSummaryResponse(BaseModel):
+    activeCases: ActiveCasesSummary
+    contractStatus: ContractStatusSummary
+    keyDeadlines: list[KeyDeadline]
+    financialSummary: FinancialSummary
+    tasks: list[TaskItem]
+    recentDocuments: list[RecentDocument]
+    recentCommunications: list[RecentCommunication]

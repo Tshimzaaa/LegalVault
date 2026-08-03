@@ -228,6 +228,7 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
                     </div>
                   </div>
                 ))}
+                {summary.keyDeadlines.length === 0 && <p className="muted">No upcoming deadlines.</p>}
               </div>
             </div>
           </section>
@@ -245,16 +246,20 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
                 <span className="stat-big">{summary.financialSummary.billableHours}</span>
                 <span className="stat-sub">R-value</span>
               </div>
-              <svg className="sparkline" viewBox="0 0 120 40" preserveAspectRatio="none">
-                <polyline
-                  points={sparklinePoints(summary.financialSummary.sparkline)}
-                  fill="none"
-                  stroke="#22c55e"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              {summary.financialSummary.sparkline.length > 0 ? (
+                <svg className="sparkline" viewBox="0 0 120 40" preserveAspectRatio="none">
+                  <polyline
+                    points={sparklinePoints(summary.financialSummary.sparkline)}
+                    fill="none"
+                    stroke="#22c55e"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              ) : (
+                <p className="muted">No billing data yet.</p>
+              )}
             </div>
 
             <div className="card recent-documents">
@@ -277,6 +282,7 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
                     </div>
                   </div>
                 ))}
+                {summary.recentDocuments.length === 0 && <p className="muted">No documents yet.</p>}
               </div>
             </div>
 
@@ -299,6 +305,7 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
                     </div>
                   </div>
                 ))}
+                {summary.tasks.length === 0 && <p className="muted">No tasks yet.</p>}
               </div>
             </div>
 
@@ -318,6 +325,7 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
                     <span className="comm-text">{c.text}</span>
                   </div>
                 ))}
+                {summary.recentCommunications.length === 0 && <p className="muted">No recent communication.</p>}
               </div>
             </div>
           </section>

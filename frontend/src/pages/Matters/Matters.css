@@ -1,0 +1,13 @@
+.matters-table-card {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.matters-row {
+  cursor: pointer;
+}
+
+.matters-row:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}

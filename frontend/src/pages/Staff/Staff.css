@@ -1,0 +1,36 @@
+.staff-invite-card {
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+.staff-table-card {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.staff-toggle-btn {
+  padding: 6px 14px;
+  font-size: 12px;
+}
+
+.staff-invite-link-box {
+  font-size: 12.5px;
+}
+
+.staff-invite-link-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.staff-invite-link-row input {
+  flex: 1;
+  background: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 7px;
+  padding: 8px 10px;
+  color: #fff;
+  font-size: 12px;
+  font-family: inherit;
+}

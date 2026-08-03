@@ -9,16 +9,16 @@ from app.exceptions.auth import (
     LawFirmAlreadyExists,
     UserAlreadyExists,
     InactiveUser,
-    InvalidOrExpiredInvite,
-    InviteAlreadyAccepted,
+    InvalidOrExpiredInvite as StaffInvalidOrExpiredInvite,
+    InviteAlreadyAccepted as StaffInviteAlreadyAccepted,
     StaffNotFound,
     CannotDeactivateSelf
 )
 from app.exceptions.clients import (
     ClientNotFound,
     ContactAlreadyExists,
-    InvalidOrExpiredInvite,
-    InviteAlreadyAccepted,
+    InvalidOrExpiredInvite as ClientInvalidOrExpiredInvite,
+    InviteAlreadyAccepted as ClientInviteAlreadyAccepted,
     InvalidClientCredentials,
     InactiveContact,
     ContactNotFound,
@@ -29,7 +29,9 @@ from app.exceptions.matters import (
     ClientNotFoundForMatter,
     StaffAlreadyAssigned,
     MatterDocumentNotFound,
+    UserNotFoundForAssignment,
 )
+from app.exceptions.support_requests import SupportRequestNotFound
 
 def register_exception_handlers(app: FastAPI):
 
@@ -75,14 +77,14 @@ def register_exception_handlers(app: FastAPI):
             detail="A contact with this email already exists.",
         )
 
-    @app.exception_handler(InvalidOrExpiredInvite)
+    @app.exception_handler(ClientInvalidOrExpiredInvite)
     async def invalid_invite(_, __):
         raise HTTPException(
             status_code=400,
             detail="This invitation link is invalid or has expired.",
         )
 
-    @app.exception_handler(InviteAlreadyAccepted)
+    @app.exception_handler(ClientInviteAlreadyAccepted)
     async def invite_already_accepted(_, __):
         raise HTTPException(
             status_code=409,
@@ -113,6 +115,10 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(StaffAlreadyAssigned)
     async def staff_already_assigned(_, __):
         raise HTTPException(status_code=409, detail="This staff member is already assigned to this matter with that role.")
+
+    @app.exception_handler(UserNotFoundForAssignment)
+    async def user_not_found_for_assignment(_, __):
+        raise HTTPException(status_code=404, detail="Staff member not found.")
     @app.exception_handler(TemplateNotFound)
     async def template_not_found(_, __):
         raise HTTPException(status_code=404, detail="Template not found.")
@@ -135,11 +141,11 @@ def register_exception_handlers(app: FastAPI):
     async def matter_document_not_found(_, __):
         raise HTTPException(status_code=404, detail="Document not found.")  
 
-    @app.exception_handler(InvalidOrExpiredInvite)
+    @app.exception_handler(StaffInvalidOrExpiredInvite)
     async def invalid_staff_invite(_, __):
         raise HTTPException(status_code=400, detail="This invitation link is invalid or has expired.")
 
-    @app.exception_handler(InviteAlreadyAccepted)
+    @app.exception_handler(StaffInviteAlreadyAccepted)
     async def staff_invite_already_accepted(_, __):
         raise HTTPException(status_code=409, detail="This invitation has already been used.")
     @app.exception_handler(StaffNotFound)
@@ -149,3 +155,7 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(CannotDeactivateSelf)
     async def cannot_deactivate_self(_, __):
         raise HTTPException(status_code=400, detail="You cannot deactivate your own account.")
+
+    @app.exception_handler(SupportRequestNotFound)
+    async def support_request_not_found(_, __):
+        raise HTTPException(status_code=404, detail="Support request not found.")

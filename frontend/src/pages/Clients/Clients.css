@@ -1,0 +1,37 @@
+.clients-table-card {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.clients-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.clients-layout {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 16px;
+  align-items: start;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 900px) {
+  .clients-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.clients-invite-btn {
+  padding: 5px 12px;
+  font-size: 12px;
+}
+
+.clients-form-note {
+  color: #4ade80;
+  font-size: 12.5px;
+  margin: 8px 0 0;
+}

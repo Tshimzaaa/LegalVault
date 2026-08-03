@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './ClientReporting.css'
 import ProfileMenu from '../../components/ProfileMenu'
 import type { ClientContact } from '../../api/clientAuth'
+import { listClientMatters } from '../../api/clientMatters'
 
 const activeMattersTrend = [
   { month: 'Feb', value: 24 },
@@ -28,7 +29,6 @@ const turnaroundByType = [
 ]
 
 const statTiles = [
-  { label: 'Active matters', value: '42', delta: '+18 vs last period', up: true },
   { label: 'Avg. turnaround', value: '4.8 days', delta: '-1.2 days vs last period', up: true },
   { label: 'Requests this month', value: '19', delta: '+4 vs last period', up: true },
   { label: 'Completion rate', value: '91%', delta: '+3pts vs last period', up: true },
@@ -233,6 +233,17 @@ interface ClientReportingProps {
 }
 
 function ClientReporting({ contact, onLogout }: ClientReportingProps) {
+  const [activeMatters, setActiveMatters] = useState<number | null>(null)
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token')
+    if (!token) return
+
+    listClientMatters(token)
+      .then((matters) => setActiveMatters(matters.filter((m) => m.status !== 'closed' && m.status !== 'declined').length))
+      .catch(() => setActiveMatters(null))
+  }, [])
+
   return (
     <main className="dash-main">
       <header className="dash-topbar">
@@ -241,6 +252,14 @@ function ClientReporting({ contact, onLogout }: ClientReportingProps) {
       </header>
 
       <section className="dash-row reporting-stats">
+        <div className="card">
+          <div className="card-header">
+            <span>Active matters</span>
+          </div>
+          <div className="stat-line">
+            <span className="stat-big">{activeMatters ?? '—'}</span>
+          </div>
+        </div>
         {statTiles.map((t) => (
           <div key={t.label} className="card">
             <div className="card-header">

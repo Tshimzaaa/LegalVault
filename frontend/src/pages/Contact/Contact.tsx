@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link } from 'react-router-dom'
 import './Contact.css'
 
 function Contact() {
@@ -106,13 +105,6 @@ function Contact() {
           </div>
         </div>
       </div>
-
-      <footer className="contact-footer">
-        <span className="contact-footer-text">&copy; {new Date().getFullYear()} Index Legal</span>
-        <Link to="/login" state={{ staffOnly: true }} className="contact-footer-link">
-          Staff Login
-        </Link>
-      </footer>
     </section>
   )
 }

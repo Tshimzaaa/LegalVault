@@ -29,3 +29,17 @@
   align-items: flex-start;
   gap: 2px;
 }
+
+.client-matter-board {
+  grid-template-columns: repeat(6, minmax(150px, 1fr));
+  overflow-x: auto;
+}
+
+.client-matter-board .workflow-card {
+  cursor: pointer;
+}
+
+.workflow-empty-col {
+  font-size: 12px;
+  padding: 4px 2px;
+}

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import html2canvas from 'html2canvas'
 import './Home.css'
 import Sidebar from '../../components/Sidebar'
+import Footer from '../../components/Footer'
 import { staffNavItems } from '../Workspace/Workspace'
 import type { StaffPage } from '../Workspace/Workspace'
 import type { User } from '../../api/auth'
@@ -26,6 +27,7 @@ const demoUser: User = {
   email: 'demo@example.com',
   role: 'admin',
   is_active: true,
+  invitation_status: 'accepted',
   last_login: null,
 }
 
@@ -202,6 +204,7 @@ function Home() {
       <Pricing />
       <Blog />
       <Contact />
+      <Footer />
 
       {/* Off-screen render of every page, captured once into the static images above. */}
       <div className="capture-root" ref={captureRootRef} aria-hidden="true">

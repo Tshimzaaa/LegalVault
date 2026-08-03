@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './RequestSupport.css'
-import { IconCalendar } from '../../components/icons'
 import ProfileMenu from '../../components/ProfileMenu'
 import type { ClientContact } from '../../api/clientAuth'
+import { createSupportRequest } from '../../api/supportRequests'
+import type { SupportRequestPriority, SupportRequestType } from '../../api/supportRequests'
 
 interface RequestSupportProps {
   contact: ClientContact
@@ -11,11 +13,50 @@ interface RequestSupportProps {
 }
 
 function RequestSupport({ contact, onLogout }: RequestSupportProps) {
-  const [submitted, setSubmitted] = useState(false)
+  const navigate = useNavigate()
+  const [requestType, setRequestType] = useState<SupportRequestType | ''>('')
+  const [counterparty, setCounterparty] = useState('')
+  const [priority, setPriority] = useState<SupportRequestPriority>('medium')
+  const [neededBy, setNeededBy] = useState('')
+  const [description, setDescription] = useState('')
+  const [referenceDocuments, setReferenceDocuments] = useState('')
 
-  function handleSubmit(e: FormEvent) {
+  const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    setSubmitted(true)
+    setError(null)
+
+    const token = localStorage.getItem('access_token')
+    if (!token || !requestType || !description) {
+      setError('Please select a request type and describe what you need.')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      await createSupportRequest(token, {
+        request_type: requestType,
+        counterparty: counterparty || null,
+        priority,
+        needed_by: neededBy || null,
+        description,
+        reference_documents: referenceDocuments || null,
+      })
+      setSubmitted(true)
+      setRequestType('')
+      setCounterparty('')
+      setPriority('medium')
+      setNeededBy('')
+      setDescription('')
+      setReferenceDocuments('')
+    } catch {
+      setError('Could not submit your request. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -32,7 +73,7 @@ function RequestSupport({ contact, onLogout }: RequestSupportProps) {
 
             <label className="field">
               <span>Request Type</span>
-              <select defaultValue="">
+              <select value={requestType} onChange={(e) => setRequestType(e.target.value as SupportRequestType)}>
                 <option value="" disabled>
                   Select request type
                 </option>
@@ -45,12 +86,17 @@ function RequestSupport({ contact, onLogout }: RequestSupportProps) {
 
             <label className="field">
               <span>Vendor / Counterparty</span>
-              <input type="text" placeholder="Company or individual name" />
+              <input
+                type="text"
+                placeholder="Company or individual name"
+                value={counterparty}
+                onChange={(e) => setCounterparty(e.target.value)}
+              />
             </label>
 
             <label className="field">
               <span>Priority</span>
-              <select defaultValue="medium">
+              <select value={priority} onChange={(e) => setPriority(e.target.value as SupportRequestPriority)}>
                 <option value="high">High</option>
                 <option value="medium">Medium</option>
                 <option value="low">Low</option>
@@ -59,10 +105,7 @@ function RequestSupport({ contact, onLogout }: RequestSupportProps) {
 
             <label className="field">
               <span>Needed By</span>
-              <div className="input-with-icon">
-                <input type="text" placeholder="Date Picker" />
-                <IconCalendar />
-              </div>
+              <input type="date" value={neededBy} onChange={(e) => setNeededBy(e.target.value)} />
             </label>
           </section>
         </div>
@@ -73,25 +116,36 @@ function RequestSupport({ contact, onLogout }: RequestSupportProps) {
 
             <label className="field">
               <span>What do you need help with?</span>
-              <textarea placeholder="Describe your request so legal can review it without back-and-forth email" rows={6} />
+              <textarea
+                placeholder="Describe your request so legal can review it without back-and-forth email"
+                rows={6}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
             </label>
 
             <label className="field">
               <span>Reference Documents</span>
-              <input type="text" placeholder="Link to any relevant documents" />
+              <input
+                type="text"
+                placeholder="Link to any relevant documents"
+                value={referenceDocuments}
+                onChange={(e) => setReferenceDocuments(e.target.value)}
+              />
             </label>
           </section>
         </div>
 
         <div className="matter-actions">
-          <button type="button" className="btn-ghost">
+          <button type="button" className="btn-ghost" onClick={() => navigate('/client/dashboard')}>
             Cancel
           </button>
-          <button type="submit" className="btn-solid">
-            Submit Request
+          <button type="submit" className="btn-solid" disabled={submitting}>
+            {submitting ? 'Submitting…' : 'Submit Request'}
           </button>
         </div>
         {submitted && <p className="matter-success">Request submitted. Legal will review it shortly.</p>}
+        {error && <p className="matter-error">{error}</p>}
       </form>
     </main>
   )

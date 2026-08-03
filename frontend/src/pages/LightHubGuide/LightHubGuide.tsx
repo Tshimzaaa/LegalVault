@@ -17,16 +17,16 @@ const steps: Step[] = [
   { title: 'Get help anytime', description: 'Visit Resources for guides, or reach out to your legal team directly from a matter.' },
 ]
 
-interface LightHubGuideProps {
+interface LegalPortalGuideProps {
   contact: ClientContact
   onLogout: () => void
 }
 
-function LightHubGuide({ contact, onLogout }: LightHubGuideProps) {
+function LegalPortalGuide({ contact, onLogout }: LegalPortalGuideProps) {
   return (
     <main className="dash-main">
       <header className="dash-topbar">
-        <h1>How to use LightHub</h1>
+        <h1>How to use legal portal</h1>
         <ProfileMenu user={contact} onLogout={onLogout} />
       </header>
 
@@ -45,4 +45,4 @@ function LightHubGuide({ contact, onLogout }: LightHubGuideProps) {
   )
 }
 
-export default LightHubGuide
+export default LegalPortalGuide

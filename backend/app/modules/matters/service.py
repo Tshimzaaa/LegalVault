@@ -14,6 +14,7 @@ from app.exceptions.matters import (
     ClientNotFoundForMatter,
     StaffAlreadyAssigned,
     MatterDocumentNotFound,
+    UserNotFoundForAssignment,
 )
 from app.modules.clients.repository import ClientRepository
 from app.modules.auth.repository import AuthRepository
@@ -74,6 +75,10 @@ class MatterService:
 
     def assign_staff(self, matter_id, firm_id, request: AssignStaffRequest) -> MatterAssignment:
         matter = self.get_matter(matter_id, firm_id)  # also validates firm ownership
+
+        assignee = self.auth_repository.get_user_by_id(request.user_id)
+        if not assignee or str(assignee.firm_id) != str(firm_id):
+            raise UserNotFoundForAssignment()
 
         existing = self.repository.get_assignment(matter_id, request.user_id, request.role_on_matter)
         if existing:
