@@ -89,3 +89,39 @@ def update_firm_status(
     firm.is_active = request.is_active
     db.commit()
     return firm
+
+
+@router.delete("/firms/{firm_id}", status_code=204)
+def delete_firm(
+    firm_id: str,
+    db: Session = Depends(get_db),
+    _owner=Depends(get_current_owner),
+):
+    auth_repo = AuthRepository(db)
+    firm = auth_repo.get_firm_by_id(firm_id)
+    if not firm:
+        raise HTTPException(status_code=404, detail="Firm not found.")
+
+    if firm.is_active:
+        raise HTTPException(status_code=409, detail="Deactivate the firm before deleting it.")
+
+    client_repo = ClientRepository(db)
+    matter_repo = MatterRepository(db)
+
+    for matter in matter_repo.list_by_firm(firm.id):
+        for document in matter_repo.list_documents_for_matter(matter.id):
+            matter_repo.delete_document(document)
+        for assignment in matter_repo.list_assignments_for_matter(matter.id):
+            matter_repo.delete_assignment(assignment)
+        matter_repo.delete_matter(matter)
+
+    for client in client_repo.list_by_firm(firm.id):
+        for contact in client_repo.list_contacts_for_client(client.id):
+            client_repo.delete_contact(contact)
+        client_repo.delete_client(client)
+
+    for user in auth_repo.list_by_firm(firm.id):
+        auth_repo.delete_user(user)
+
+    auth_repo.delete_firm(firm)
+    db.commit()

@@ -19,3 +19,5 @@ class ContactNotFound(Exception):
     pass
 class InvalidOrExpiredResetToken(Exception):
     pass
+class ClientHasMatters(Exception):
+    pass

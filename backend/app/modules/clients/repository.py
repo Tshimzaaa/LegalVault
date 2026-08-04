@@ -1,9 +1,10 @@
 import secrets
 from datetime import datetime, timedelta, UTC
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.modules.clients.models import Client, ClientContact
+from app.modules.matters.models import MatterDocument
 
 INVITATION_EXPIRY_HOURS = 48
 
@@ -69,3 +70,21 @@ class ClientRepository:
     def count_clients_for_firm(self, firm_id) -> int:
         from sqlalchemy import func
         return self.db.scalar(select(func.count()).select_from(Client).where(Client.firm_id == firm_id))
+
+    def list_contacts_for_client(self, client_id) -> list[ClientContact]:
+        return list(self.db.scalars(select(ClientContact).where(ClientContact.client_id == client_id)))
+
+    def delete_client(self, client: Client):
+        self.db.delete(client)
+        self.db.flush()
+
+    def delete_contact(self, contact: ClientContact):
+        self.db.delete(contact)
+        self.db.flush()
+
+    def clear_contact_document_uploads(self, contact_id):
+        self.db.execute(
+            update(MatterDocument)
+            .where(MatterDocument.uploaded_by_contact_id == contact_id)
+            .values(uploaded_by_contact_id=None)
+        )

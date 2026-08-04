@@ -63,3 +63,15 @@ class MatterRepository:
 
     def list_documents_for_matter(self, matter_id) -> list[MatterDocument]:
         return list(self.db.scalars(select(MatterDocument).where(MatterDocument.matter_id == matter_id)))
+
+    def delete_document(self, document: MatterDocument):
+        self.db.delete(document)
+        self.db.flush()
+
+    def delete_assignment(self, assignment: MatterAssignment):
+        self.db.delete(assignment)
+        self.db.flush()
+
+    def delete_matter(self, matter: Matter):
+        self.db.delete(matter)
+        self.db.flush()

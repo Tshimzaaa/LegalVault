@@ -19,6 +19,10 @@ class ClientResponse(BaseModel):
         from_attributes = True
 
 
+class UpdateClientStatusRequest(BaseModel):
+    is_active: bool
+
+
 # --- Client contact (individual login) schemas ---
 
 class InviteContactRequest(BaseModel):
@@ -40,6 +44,10 @@ class ContactResponse(BaseModel):
     class Config:
         from_attributes = True
         # password_hash and invitation_token intentionally excluded
+
+
+class UpdateContactStatusRequest(BaseModel):
+    is_active: bool
 
 
 class AcceptInviteRequest(BaseModel):

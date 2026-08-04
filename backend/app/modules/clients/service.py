@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 import secrets as _secrets  # or reuse existing `secrets` import if already there
 from app.exceptions.clients import InvalidOrExpiredResetToken
 from app.modules.clients.repository import ClientRepository
-from app.modules.clients.models import Client
+from app.modules.clients.models import Client, ClientContact
 from app.modules.clients.schemas import (
     CreateClientRequest,
     InviteContactRequest,
@@ -21,7 +21,9 @@ from app.exceptions.clients import (
     InvalidClientCredentials,
     InactiveContact,
     ContactNotFound,
+    ClientHasMatters,
 )
+from app.modules.matters.repository import MatterRepository
 
 RESET_TOKEN_EXPIRY_HOURS = 1
 
@@ -141,4 +143,53 @@ class ClientService:
 
         contact.password_hash = hash_password(new_password)
         self.repository.clear_reset_token(contact)
+        self.db.commit()
+
+    def update_client_status(self, client_id, firm_id, is_active: bool) -> Client:
+        client = self.repository.get_client_by_id(client_id)
+        if not client or str(client.firm_id) != str(firm_id):
+            raise ClientNotFound()
+
+        client.is_active = is_active
+        self.db.commit()
+        return client
+
+    def delete_client(self, client_id, firm_id):
+        client = self.repository.get_client_by_id(client_id)
+        if not client or str(client.firm_id) != str(firm_id):
+            raise ClientNotFound()
+
+        matter_repository = MatterRepository(self.db)
+        if matter_repository.list_by_client(client_id):
+            raise ClientHasMatters()
+
+        for contact in self.repository.list_contacts_for_client(client_id):
+            self.repository.delete_contact(contact)
+        self.repository.delete_client(client)
+        self.db.commit()
+
+    def update_contact_status(self, client_id, contact_id, firm_id, is_active: bool) -> ClientContact:
+        client = self.repository.get_client_by_id(client_id)
+        if not client or str(client.firm_id) != str(firm_id):
+            raise ClientNotFound()
+
+        contact = self.repository.get_contact_by_id(contact_id)
+        if not contact or str(contact.client_id) != str(client_id):
+            raise ContactNotFound()
+
+        contact.is_active = is_active
+        self.db.commit()
+        return contact
+
+    def delete_contact(self, client_id, contact_id, firm_id):
+        client = self.repository.get_client_by_id(client_id)
+        if not client or str(client.firm_id) != str(firm_id):
+            raise ClientNotFound()
+
+        contact = self.repository.get_contact_by_id(contact_id)
+        if not contact or str(contact.client_id) != str(client_id):
+            raise ContactNotFound()
+
+        self.repository.clear_contact_document_uploads(contact_id)
+        self.repository.delete_contact(contact)
         self.db.commit()

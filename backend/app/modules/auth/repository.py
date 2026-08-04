@@ -65,3 +65,11 @@ class AuthRepository:
         self.db.add(user)
         self.db.flush()
         return user
+
+    def delete_user(self, user: User):
+        self.db.delete(user)
+        self.db.flush()
+
+    def delete_firm(self, law_firm: LawFirm):
+        self.db.delete(law_firm)
+        self.db.flush()

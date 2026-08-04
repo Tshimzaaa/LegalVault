@@ -14,12 +14,14 @@ from app.modules.clients.schemas import (
     ClientLoginRequest,
     ClientTokenResponse,
     ResendInviteRequest,
+    UpdateClientStatusRequest,
+    UpdateContactStatusRequest,
 )
 from app.modules.clients.service import ClientService
 from app.modules.clients.dependencies import get_current_contact
 from app.modules.clients.models import ClientContact
 
-from app.modules.auth.dependencies import get_current_user
+from app.modules.auth.dependencies import get_current_user, require_admin
 from app.modules.auth.models import User
 
 
@@ -98,4 +100,48 @@ def client_reset_password(request: ClientResetPasswordRequest, db: Session = Dep
     service = ClientService(db)
     service.reset_password(request.token, request.new_password)
     return {"message": "Password reset successful."}
+
+
+@router.patch("/{client_id}/status", response_model=ClientResponse)
+def update_client_status(
+    client_id: str,
+    request: UpdateClientStatusRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    service = ClientService(db)
+    return service.update_client_status(client_id, current_user.firm_id, request.is_active)
+
+
+@router.delete("/{client_id}", status_code=204)
+def delete_client(
+    client_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    service = ClientService(db)
+    service.delete_client(client_id, current_user.firm_id)
+
+
+@router.patch("/{client_id}/contacts/{contact_id}/status", response_model=ContactResponse)
+def update_contact_status(
+    client_id: str,
+    contact_id: str,
+    request: UpdateContactStatusRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    service = ClientService(db)
+    return service.update_contact_status(client_id, contact_id, current_user.firm_id, request.is_active)
+
+
+@router.delete("/{client_id}/contacts/{contact_id}", status_code=204)
+def delete_contact(
+    client_id: str,
+    contact_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    service = ClientService(db)
+    service.delete_contact(client_id, contact_id, current_user.firm_id)
 

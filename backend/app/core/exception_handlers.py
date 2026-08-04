@@ -22,6 +22,7 @@ from app.exceptions.clients import (
     InvalidClientCredentials,
     InactiveContact,
     ContactNotFound,
+    ClientHasMatters,
 )
 
 from app.exceptions.matters import (
@@ -159,3 +160,7 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(SupportRequestNotFound)
     async def support_request_not_found(_, __):
         raise HTTPException(status_code=404, detail="Support request not found.")
+
+    @app.exception_handler(ClientHasMatters)
+    async def client_has_matters(_, __):
+        raise HTTPException(status_code=409, detail="Cannot delete a client that has existing matters.")
