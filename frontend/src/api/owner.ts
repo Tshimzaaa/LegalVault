@@ -66,3 +66,7 @@ export async function updateFirmStatus(token: string, firmId: string, isActive: 
 export async function createFirm(token: string, payload: CreateFirmPayload): Promise<CreateFirmResponse> {
   return apiRequest<CreateFirmResponse>('/owner/firms', { method: 'POST', body: payload, token })
 }
+
+export async function deleteFirm(token: string, firmId: string): Promise<void> {
+  await apiRequest(`/owner/firms/${firmId}`, { method: 'DELETE', token })
+}

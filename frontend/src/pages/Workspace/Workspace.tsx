@@ -13,6 +13,8 @@ import {
   IconContractData,
   IconTemplates,
   IconShield,
+  IconSearch,
+  IconClock,
 } from '../../components/icons'
 import Dashboard from '../Dashboard/Dashboard'
 import NewMatter from '../NewMatter/NewMatter'
@@ -25,6 +27,8 @@ import Reporting from '../Reporting/Reporting'
 import ContractData from '../ContractData/ContractData'
 import Templates from '../Templates/Templates'
 import Staff from '../Staff/Staff'
+import Search from '../Search/Search'
+import AuditLog from '../AuditLog/AuditLog'
 import type { User } from '../../api/auth'
 
 export type StaffPage =
@@ -38,6 +42,8 @@ export type StaffPage =
   | 'contract-data'
   | 'templates'
   | 'staff'
+  | 'search'
+  | 'audit-log'
 
 export const staffNavItems: NavItem[] = [
   { label: 'Dashboard', icon: <IconGauge />, page: 'dashboard' },
@@ -49,7 +55,9 @@ export const staffNavItems: NavItem[] = [
   { label: 'Reporting', icon: <IconReport />, page: 'reporting' },
   { label: 'Contract Data', icon: <IconContractData />, page: 'contract-data' },
   { label: 'Templates', icon: <IconTemplates />, page: 'templates' },
+  { label: 'Search', icon: <IconSearch />, page: 'search' },
   { label: 'Staff', icon: <IconShield />, page: 'staff' },
+  { label: 'Audit Log', icon: <IconClock />, page: 'audit-log' },
 ]
 
 interface WorkspaceProps {
@@ -61,7 +69,9 @@ function Workspace({ user, onLogout }: WorkspaceProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const activePage = (location.pathname.split('/')[2] as StaffPage) || 'dashboard'
-  const navItems = staffNavItems.filter((item) => item.page !== 'staff' || user.role === 'admin')
+  const navItems = staffNavItems.filter(
+    (item) => (item.page !== 'staff' && item.page !== 'audit-log') || user.role === 'admin',
+  )
 
   return (
     <div className="dash-layout">
@@ -78,13 +88,15 @@ function Workspace({ user, onLogout }: WorkspaceProps) {
         <Route path="new-matter" element={<NewMatter />} />
         <Route path="matters" element={<Matters />} />
         <Route path="matters/:matterId" element={<MatterDetail />} />
-        <Route path="clients" element={<Clients />} />
+        <Route path="clients" element={<Clients user={user} />} />
         <Route path="workflow" element={<Workflow />} />
         <Route path="signed-contracts" element={<SignedContracts />} />
         <Route path="reporting" element={<Reporting />} />
         <Route path="contract-data" element={<ContractData />} />
         <Route path="templates" element={<Templates />} />
+        <Route path="search" element={<Search />} />
         <Route path="staff" element={<Staff user={user} />} />
+        <Route path="audit-log" element={<AuditLog user={user} />} />
         <Route path="*" element={<Navigate to="dashboard" replace />} />
       </Routes>
     </div>

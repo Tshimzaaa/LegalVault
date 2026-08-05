@@ -29,3 +29,20 @@
   padding: 6px 14px;
   font-size: 12px;
 }
+
+.owner-audit-card {
+  flex-shrink: 0;
+  max-height: 40%;
+  overflow-y: auto;
+  margin-top: 16px;
+}
+
+.owner-audit-card .card-header select {
+  background: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 7px;
+  padding: 5px 8px;
+  color: #d1d5db;
+  font-size: 11.5px;
+  font-family: inherit;
+}

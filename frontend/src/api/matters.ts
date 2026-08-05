@@ -41,6 +41,35 @@ export interface CreateMatterRequest {
   description?: string | null
 }
 
+export type TaskStatus = 'todo' | 'in_progress' | 'done'
+
+export interface MatterTask {
+  id: string
+  matter_id: string
+  title: string
+  description: string | null
+  assigned_to: string | null
+  due_date: string | null
+  status: TaskStatus
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateMatterTaskRequest {
+  title: string
+  description?: string | null
+  assigned_to?: string | null
+  due_date?: string | null
+}
+
+export interface UpdateMatterTaskRequest {
+  title?: string
+  description?: string | null
+  assigned_to?: string | null
+  due_date?: string | null
+  status?: TaskStatus
+}
+
 export async function listMatters(token: string): Promise<Matter[]> {
   return apiRequest<Matter[]>('/matters', { token })
 }
@@ -107,4 +136,29 @@ export async function getMatterDocumentDownloadUrl(
     { token },
   )
   return data.download_url
+}
+
+export async function listTasks(token: string, matterId: string): Promise<MatterTask[]> {
+  return apiRequest<MatterTask[]>(`/matters/${matterId}/tasks`, { token })
+}
+
+export async function createTask(
+  token: string,
+  matterId: string,
+  body: CreateMatterTaskRequest,
+): Promise<MatterTask> {
+  return apiRequest<MatterTask>(`/matters/${matterId}/tasks`, { method: 'POST', body, token })
+}
+
+export async function updateTask(
+  token: string,
+  matterId: string,
+  taskId: string,
+  body: UpdateMatterTaskRequest,
+): Promise<MatterTask> {
+  return apiRequest<MatterTask>(`/matters/${matterId}/tasks/${taskId}`, { method: 'PATCH', body, token })
+}
+
+export async function deleteTask(token: string, matterId: string, taskId: string): Promise<void> {
+  await apiRequest(`/matters/${matterId}/tasks/${taskId}`, { method: 'DELETE', token })
 }

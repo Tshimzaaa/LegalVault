@@ -35,3 +35,57 @@
   font-size: 12.5px;
   margin: 8px 0 0;
 }
+
+.clients-expand-btn {
+  width: 20px;
+  height: 20px;
+}
+
+.clients-chevron {
+  display: flex;
+  transition: transform 0.15s ease;
+  transform: rotate(-90deg);
+}
+
+.clients-chevron.open {
+  transform: rotate(0deg);
+}
+
+.clients-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.clients-action-btn {
+  padding: 5px 12px;
+  font-size: 11.5px;
+}
+
+.clients-contacts-cell {
+  background: rgba(255, 255, 255, 0.02);
+  padding: 12px 10px 12px 40px !important;
+}
+
+.clients-contacts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.clients-contact-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12.5px;
+}
+
+.clients-contact-name {
+  min-width: 140px;
+  color: #e5e7eb;
+}
+
+.clients-contact-row .clients-row-actions {
+  margin-left: auto;
+}

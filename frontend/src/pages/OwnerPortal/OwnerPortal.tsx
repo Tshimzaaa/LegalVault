@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import './OwnerPortal.css'
-import { IconDollar, IconLayers, IconPlus, IconUser } from '../../components/icons'
-import { listFirms, getFirm, updateFirmStatus, createFirm } from '../../api/owner'
+import { IconDollar, IconLayers, IconPlus, IconUser, IconTrash } from '../../components/icons'
+import { listFirms, getFirm, updateFirmStatus, createFirm, deleteFirm } from '../../api/owner'
 import type { FirmDetail } from '../../api/owner'
+import { listOwnerAuditLog, auditActionLabel, formatAuditDetails } from '../../api/auditLog'
+import type { AuditLogEntry } from '../../api/auditLog'
 
 type LoadState = 'loading' | 'error' | 'ready'
+const AUDIT_PAGE_SIZE = 50
 
 const emptyCreateForm = {
   firmName: '',
@@ -33,6 +36,16 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
   const [createError, setCreateError] = useState('')
   const [creating, setCreating] = useState(false)
 
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [firmActionError, setFirmActionError] = useState<string | null>(null)
+
+  const [auditEntries, setAuditEntries] = useState<AuditLogEntry[]>([])
+  const [auditStatus, setAuditStatus] = useState<LoadState>('loading')
+  const [auditFirmFilter, setAuditFirmFilter] = useState('')
+  const [auditOffset, setAuditOffset] = useState(0)
+  const [auditHasMore, setAuditHasMore] = useState(true)
+  const [auditLoadingMore, setAuditLoadingMore] = useState(false)
+
   const token = localStorage.getItem('access_token')
 
   function loadAll() {
@@ -52,14 +65,65 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
 
   useEffect(loadAll, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  function loadAudit() {
+    if (!token) {
+      setAuditStatus('error')
+      return
+    }
+    setAuditStatus('loading')
+    listOwnerAuditLog(token, { firmId: auditFirmFilter || undefined, limit: AUDIT_PAGE_SIZE, offset: 0 })
+      .then((data) => {
+        setAuditEntries(data)
+        setAuditOffset(data.length)
+        setAuditHasMore(data.length === AUDIT_PAGE_SIZE)
+        setAuditStatus('ready')
+      })
+      .catch(() => setAuditStatus('error'))
+  }
+
+  useEffect(loadAudit, [auditFirmFilter]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function handleLoadMoreAudit() {
+    if (!token) return
+    setAuditLoadingMore(true)
+    try {
+      const data = await listOwnerAuditLog(token, {
+        firmId: auditFirmFilter || undefined,
+        limit: AUDIT_PAGE_SIZE,
+        offset: auditOffset,
+      })
+      setAuditEntries((prev) => [...prev, ...data])
+      setAuditOffset((prev) => prev + data.length)
+      setAuditHasMore(data.length === AUDIT_PAGE_SIZE)
+    } finally {
+      setAuditLoadingMore(false)
+    }
+  }
+
   async function handleToggleStatus(firm: FirmDetail) {
     if (!token) return
+    setFirmActionError(null)
     setTogglingId(firm.id)
     try {
       const updated = await updateFirmStatus(token, firm.id, !firm.is_active)
       setFirms((prev) => prev.map((f) => (f.id === firm.id ? { ...f, is_active: updated.is_active } : f)))
     } finally {
       setTogglingId(null)
+    }
+  }
+
+  async function handleDeleteFirm(firm: FirmDetail) {
+    if (!token) return
+    if (!window.confirm(`Permanently delete ${firm.name} and all its staff, clients, and matters?`)) return
+    setFirmActionError(null)
+    setDeletingId(firm.id)
+    try {
+      await deleteFirm(token, firm.id)
+      setFirms((prev) => prev.filter((f) => f.id !== firm.id))
+    } catch (err) {
+      setFirmActionError(err instanceof Error ? err.message : 'Could not delete this firm.')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -256,6 +320,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
             <div className="card-header">
               <span>Firms on the platform</span>
             </div>
+            {firmActionError && <p className="matter-error">{firmActionError}</p>}
             <table className="data-table">
               <thead>
                 <tr>
@@ -288,14 +353,26 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                       </span>
                     </td>
                     <td>
-                      <button
-                        type="button"
-                        className="btn-ghost owner-firm-toggle"
-                        disabled={togglingId === f.id}
-                        onClick={() => handleToggleStatus(f)}
-                      >
-                        {togglingId === f.id ? 'Saving…' : f.is_active ? 'Suspend' : 'Activate'}
-                      </button>
+                      <div className="clients-row-actions">
+                        <button
+                          type="button"
+                          className="btn-ghost owner-firm-toggle"
+                          disabled={togglingId === f.id}
+                          onClick={() => handleToggleStatus(f)}
+                        >
+                          {togglingId === f.id ? 'Saving…' : f.is_active ? 'Suspend' : 'Activate'}
+                        </button>
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          disabled={f.is_active || deletingId === f.id}
+                          onClick={() => handleDeleteFirm(f)}
+                          aria-label={`Delete ${f.name}`}
+                          title={f.is_active ? 'Suspend the firm before deleting it' : 'Delete permanently'}
+                        >
+                          <IconTrash />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -308,6 +385,77 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                 )}
               </tbody>
             </table>
+          </section>
+
+          <section className="card owner-audit-card">
+            <div className="card-header">
+              <span>Platform Audit Log</span>
+              <select value={auditFirmFilter} onChange={(e) => setAuditFirmFilter(e.target.value)}>
+                <option value="">All firms</option>
+                {firms.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {auditStatus === 'loading' && (
+              <div className="dash-state">
+                <span className="dash-spinner" />
+                <p>Loading audit log…</p>
+              </div>
+            )}
+
+            {auditStatus === 'error' && (
+              <div className="dash-state">
+                <p>Couldn&rsquo;t reach the backend for the audit log.</p>
+                <button type="button" className="btn-ghost" onClick={loadAudit}>
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {auditStatus === 'ready' && (
+              <>
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>When</th>
+                      <th>Actor</th>
+                      <th>Action</th>
+                      <th>Target</th>
+                      <th>Details</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {auditEntries.map((e) => (
+                      <tr key={e.id}>
+                        <td className="muted tabular">{new Date(e.created_at).toLocaleString()}</td>
+                        <td className="muted">{e.actor_type}</td>
+                        <td>{auditActionLabel[e.action] ?? e.action}</td>
+                        <td className="muted">{e.target_type}</td>
+                        <td className="muted audit-log-details">{formatAuditDetails(e.details)}</td>
+                      </tr>
+                    ))}
+                    {auditEntries.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="muted">
+                          No audit log entries yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+                {auditHasMore && (
+                  <div className="audit-log-load-more">
+                    <button type="button" className="btn-ghost" disabled={auditLoadingMore} onClick={handleLoadMoreAudit}>
+                      {auditLoadingMore ? 'Loading…' : 'Load more'}
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </section>
         </>
       )}

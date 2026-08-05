@@ -1,13 +1,30 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import './Clients.css'
-import { IconPlus } from '../../components/icons'
-import { listClients, createClient, inviteContact, resendInvite } from '../../api/clients'
-import type { Client } from '../../api/clients'
+import { IconPlus, IconChevron, IconTrash } from '../../components/icons'
+import {
+  listClients,
+  createClient,
+  inviteContact,
+  resendInvite,
+  listContacts,
+  updateClientStatus,
+  deleteClient,
+  updateContactStatus,
+  deleteContact,
+} from '../../api/clients'
+import type { Client, Contact } from '../../api/clients'
+import type { User } from '../../api/auth'
 
 type LoadState = 'loading' | 'error' | 'ready'
 
-function Clients() {
+interface ClientsProps {
+  user: User
+}
+
+function Clients({ user }: ClientsProps) {
+  const isAdmin = user.role === 'admin'
+
   const [clients, setClients] = useState<Client[]>([])
   const [status, setStatus] = useState<LoadState>('loading')
   const [attempt, setAttempt] = useState(0)
@@ -29,11 +46,21 @@ function Clients() {
   const [resending, setResending] = useState(false)
   const [resendMessage, setResendMessage] = useState<string | null>(null)
 
+  const [togglingClientId, setTogglingClientId] = useState<string | null>(null)
+  const [deletingClientId, setDeletingClientId] = useState<string | null>(null)
+  const [clientActionError, setClientActionError] = useState<string | null>(null)
+
+  const [expandedClientId, setExpandedClientId] = useState<string | null>(null)
+  const [contactsByClient, setContactsByClient] = useState<Record<string, Contact[]>>({})
+  const [contactsLoading, setContactsLoading] = useState(false)
+  const [contactActionId, setContactActionId] = useState<string | null>(null)
+
+  const token = localStorage.getItem('access_token')
+
   useEffect(() => {
     let cancelled = false
     setStatus('loading')
 
-    const token = localStorage.getItem('access_token')
     if (!token) {
       setStatus('error')
       return
@@ -53,12 +80,12 @@ function Clients() {
     return () => {
       cancelled = true
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attempt])
 
   async function handleCreateClient(e: FormEvent) {
     e.preventDefault()
     setCreateError(null)
-    const token = localStorage.getItem('access_token')
     if (!token || !companyName) return
 
     setCreating(true)
@@ -78,7 +105,6 @@ function Clients() {
     e.preventDefault()
     setInviteError(null)
     setInviteSent(false)
-    const token = localStorage.getItem('access_token')
     if (!token || !inviteClientId || !inviteFirstName || !inviteLastName || !inviteEmail) {
       setInviteError('Select a client and fill in all fields.')
       return
@@ -95,6 +121,11 @@ function Clients() {
       setInviteLastName('')
       setInviteEmail('')
       setInviteSent(true)
+      if (expandedClientId === inviteClientId) {
+        listContacts(token, inviteClientId).then((data) =>
+          setContactsByClient((prev) => ({ ...prev, [inviteClientId]: data })),
+        )
+      }
     } catch {
       setInviteError('Could not send the invite. The email may already be in use.')
     } finally {
@@ -105,7 +136,6 @@ function Clients() {
   async function handleResend(e: FormEvent) {
     e.preventDefault()
     setResendMessage(null)
-    const token = localStorage.getItem('access_token')
     if (!token || !resendEmail) return
 
     setResending(true)
@@ -117,6 +147,83 @@ function Clients() {
       setResendMessage('Could not resend the invite.')
     } finally {
       setResending(false)
+    }
+  }
+
+  async function handleToggleClientStatus(client: Client) {
+    if (!token) return
+    setClientActionError(null)
+    setTogglingClientId(client.id)
+    try {
+      const updated = await updateClientStatus(token, client.id, !client.is_active)
+      setClients((prev) => prev.map((c) => (c.id === client.id ? updated : c)))
+    } catch (err) {
+      setClientActionError(err instanceof Error ? err.message : 'Could not update client status.')
+    } finally {
+      setTogglingClientId(null)
+    }
+  }
+
+  async function handleDeleteClient(client: Client) {
+    if (!token) return
+    if (!window.confirm(`Delete ${client.company_name}? This cannot be undone.`)) return
+    setClientActionError(null)
+    setDeletingClientId(client.id)
+    try {
+      await deleteClient(token, client.id)
+      setClients((prev) => prev.filter((c) => c.id !== client.id))
+      if (expandedClientId === client.id) setExpandedClientId(null)
+    } catch (err) {
+      setClientActionError(
+        err instanceof Error ? err.message : 'Could not delete this client — it may still have open matters.',
+      )
+    } finally {
+      setDeletingClientId(null)
+    }
+  }
+
+  async function handleToggleExpand(client: Client) {
+    if (expandedClientId === client.id) {
+      setExpandedClientId(null)
+      return
+    }
+    setExpandedClientId(client.id)
+    if (!token || contactsByClient[client.id]) return
+    setContactsLoading(true)
+    try {
+      const data = await listContacts(token, client.id)
+      setContactsByClient((prev) => ({ ...prev, [client.id]: data }))
+    } finally {
+      setContactsLoading(false)
+    }
+  }
+
+  async function handleToggleContactStatus(clientId: string, contact: Contact) {
+    if (!token) return
+    setContactActionId(contact.id)
+    try {
+      const updated = await updateContactStatus(token, clientId, contact.id, !contact.is_active)
+      setContactsByClient((prev) => ({
+        ...prev,
+        [clientId]: (prev[clientId] ?? []).map((c) => (c.id === contact.id ? updated : c)),
+      }))
+    } finally {
+      setContactActionId(null)
+    }
+  }
+
+  async function handleDeleteContact(clientId: string, contact: Contact) {
+    if (!token) return
+    if (!window.confirm(`Remove ${contact.first_name} ${contact.last_name} from this client?`)) return
+    setContactActionId(contact.id)
+    try {
+      await deleteContact(token, clientId, contact.id)
+      setContactsByClient((prev) => ({
+        ...prev,
+        [clientId]: (prev[clientId] ?? []).filter((c) => c.id !== contact.id),
+      }))
+    } finally {
+      setContactActionId(null)
     }
   }
 
@@ -173,33 +280,136 @@ function Clients() {
       {status === 'ready' && (
         <div className="clients-layout">
           <section className="card clients-table-card">
+            {clientActionError && <p className="matter-error">{clientActionError}</p>}
             <table className="data-table">
               <thead>
                 <tr>
+                  <th />
                   <th>Company</th>
                   <th>Status</th>
+                  {isAdmin && <th />}
                 </tr>
               </thead>
               <tbody>
                 {clients.map((c) => (
-                  <tr key={c.id}>
-                    <td>{c.company_name}</td>
-                    <td>
-                      <span
-                        className="status-badge"
-                        style={{
-                          color: c.is_active ? '#22c55e' : '#9ca3af',
-                          background: c.is_active ? '#22c55e22' : '#9ca3af22',
-                        }}
-                      >
-                        {c.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                  </tr>
+                  <Fragment key={c.id}>
+                    <tr>
+                      <td>
+                        <button
+                          type="button"
+                          className="icon-btn clients-expand-btn"
+                          onClick={() => handleToggleExpand(c)}
+                          aria-label={`Show contacts for ${c.company_name}`}
+                        >
+                          <span className={expandedClientId === c.id ? 'clients-chevron open' : 'clients-chevron'}>
+                            <IconChevron />
+                          </span>
+                        </button>
+                      </td>
+                      <td>{c.company_name}</td>
+                      <td>
+                        <span
+                          className="status-badge"
+                          style={{
+                            color: c.is_active ? '#22c55e' : '#9ca3af',
+                            background: c.is_active ? '#22c55e22' : '#9ca3af22',
+                          }}
+                        >
+                          {c.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      {isAdmin && (
+                        <td>
+                          <div className="clients-row-actions">
+                            <button
+                              type="button"
+                              className="btn-ghost clients-action-btn"
+                              disabled={togglingClientId === c.id}
+                              onClick={() => handleToggleClientStatus(c)}
+                            >
+                              {togglingClientId === c.id ? 'Saving…' : c.is_active ? 'Deactivate' : 'Activate'}
+                            </button>
+                            <button
+                              type="button"
+                              className="icon-btn"
+                              disabled={deletingClientId === c.id}
+                              onClick={() => handleDeleteClient(c)}
+                              aria-label={`Delete ${c.company_name}`}
+                            >
+                              <IconTrash />
+                            </button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                    {expandedClientId === c.id && (
+                      <tr>
+                        <td colSpan={isAdmin ? 4 : 3} className="clients-contacts-cell">
+                          {contactsLoading && !contactsByClient[c.id] ? (
+                            <p className="muted">Loading contacts…</p>
+                          ) : (
+                            <div className="clients-contacts-list">
+                              {(contactsByClient[c.id] ?? []).map((contact) => (
+                                <div key={contact.id} className="clients-contact-row">
+                                  <span className="clients-contact-name">
+                                    {contact.first_name} {contact.last_name}
+                                  </span>
+                                  <span className="muted">{contact.email}</span>
+                                  {contact.invitation_status === 'pending' ? (
+                                    <span className="status-badge" style={{ color: '#eab308', background: '#eab30822' }}>
+                                      Invite pending
+                                    </span>
+                                  ) : (
+                                    <span
+                                      className="status-badge"
+                                      style={{
+                                        color: contact.is_active ? '#22c55e' : '#ef4444',
+                                        background: contact.is_active ? '#22c55e22' : '#ef444422',
+                                      }}
+                                    >
+                                      {contact.is_active ? 'Active' : 'Deactivated'}
+                                    </span>
+                                  )}
+                                  {isAdmin && (
+                                    <div className="clients-row-actions">
+                                      <button
+                                        type="button"
+                                        className="btn-ghost clients-action-btn"
+                                        disabled={contactActionId === contact.id}
+                                        onClick={() => handleToggleContactStatus(c.id, contact)}
+                                      >
+                                        {contactActionId === contact.id
+                                          ? 'Saving…'
+                                          : contact.is_active
+                                            ? 'Deactivate'
+                                            : 'Reactivate'}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="icon-btn"
+                                        disabled={contactActionId === contact.id}
+                                        onClick={() => handleDeleteContact(c.id, contact)}
+                                        aria-label={`Remove ${contact.first_name} ${contact.last_name}`}
+                                      >
+                                        <IconTrash />
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                              {(contactsByClient[c.id] ?? []).length === 0 && (
+                                <p className="muted">No contacts invited yet.</p>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 ))}
                 {clients.length === 0 && (
                   <tr>
-                    <td colSpan={2} className="muted">
+                    <td colSpan={isAdmin ? 4 : 3} className="muted">
                       No clients yet.
                     </td>
                   </tr>

@@ -37,3 +37,36 @@ export async function inviteContact(
 export async function resendInvite(token: string, email: string): Promise<void> {
   await apiRequest('/clients/contacts/resend-invite', { method: 'POST', body: { email }, token })
 }
+
+export async function listContacts(token: string, clientId: string): Promise<Contact[]> {
+  return apiRequest<Contact[]>(`/clients/${clientId}/contacts`, { token })
+}
+
+export async function updateClientStatus(token: string, clientId: string, isActive: boolean): Promise<Client> {
+  return apiRequest<Client>(`/clients/${clientId}/status`, {
+    method: 'PATCH',
+    body: { is_active: isActive },
+    token,
+  })
+}
+
+export async function deleteClient(token: string, clientId: string): Promise<void> {
+  await apiRequest(`/clients/${clientId}`, { method: 'DELETE', token })
+}
+
+export async function updateContactStatus(
+  token: string,
+  clientId: string,
+  contactId: string,
+  isActive: boolean,
+): Promise<Contact> {
+  return apiRequest<Contact>(`/clients/${clientId}/contacts/${contactId}/status`, {
+    method: 'PATCH',
+    body: { is_active: isActive },
+    token,
+  })
+}
+
+export async function deleteContact(token: string, clientId: string, contactId: string): Promise<void> {
+  await apiRequest(`/clients/${clientId}/contacts/${contactId}`, { method: 'DELETE', token })
+}

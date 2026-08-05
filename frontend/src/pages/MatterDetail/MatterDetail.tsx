@@ -11,13 +11,17 @@ import {
   listMatterDocuments,
   uploadMatterDocument,
   getMatterDocumentDownloadUrl,
+  listTasks,
+  createTask,
+  updateTask,
+  deleteTask,
 } from '../../api/matters'
-import type { Matter, MatterAssignment, MatterRole, MatterDocument } from '../../api/matters'
+import type { Matter, MatterAssignment, MatterRole, MatterDocument, MatterTask, TaskStatus } from '../../api/matters'
 import { listClients } from '../../api/clients'
 import type { Client } from '../../api/clients'
 import { listUsers } from '../../api/auth'
 import type { User } from '../../api/auth'
-import { IconDownload } from '../../components/icons'
+import { IconDownload, IconTrash } from '../../components/icons'
 
 type LoadState = 'loading' | 'error' | 'ready'
 
@@ -29,6 +33,18 @@ const statusOptions: { value: Matter['status']; label: string }[] = [
   { value: 'closed', label: 'Closed' },
   { value: 'declined', label: 'Declined' },
 ]
+
+const taskStatusOptions: { value: TaskStatus; label: string }[] = [
+  { value: 'todo', label: 'To do' },
+  { value: 'in_progress', label: 'In Progress' },
+  { value: 'done', label: 'Done' },
+]
+
+const taskStatusColor: Record<TaskStatus, string> = {
+  todo: '#9ca3af',
+  in_progress: '#3987e5',
+  done: '#22c55e',
+}
 
 const roleOptions: { value: MatterRole; label: string }[] = [
   { value: 'lead_lawyer', label: 'Lead Lawyer' },
@@ -72,6 +88,14 @@ function MatterDetail() {
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
 
+  const [tasks, setTasks] = useState<MatterTask[]>([])
+  const [taskTitle, setTaskTitle] = useState('')
+  const [taskAssignee, setTaskAssignee] = useState('')
+  const [taskDueDate, setTaskDueDate] = useState('')
+  const [creatingTask, setCreatingTask] = useState(false)
+  const [taskError, setTaskError] = useState<string | null>(null)
+  const [taskBusyId, setTaskBusyId] = useState<string | null>(null)
+
   const token = localStorage.getItem('access_token')
 
   function loadAll() {
@@ -86,14 +110,16 @@ function MatterDetail() {
       listClients(token),
       listUsers(token),
       listMatterDocuments(token, matterId),
+      listTasks(token, matterId),
     ])
-      .then(([m, a, c, u, docs]) => {
+      .then(([m, a, c, u, docs, t]) => {
         setMatter(m)
         setStatusValue(m.status)
         setAssignments(a)
         setClients(c)
         setUsers(u)
         setDocuments(docs)
+        setTasks(t)
         setStatus('ready')
       })
       .catch(() => setStatus('error'))
@@ -178,6 +204,53 @@ function MatterDetail() {
       window.open(url, '_blank', 'noopener,noreferrer')
     } finally {
       setDownloadingId(null)
+    }
+  }
+
+  async function handleCreateTask(e: FormEvent) {
+    e.preventDefault()
+    if (!token || !matterId || !taskTitle) {
+      setTaskError('Enter a task title.')
+      return
+    }
+    setTaskError(null)
+    setCreatingTask(true)
+    try {
+      const created = await createTask(token, matterId, {
+        title: taskTitle,
+        assigned_to: taskAssignee || null,
+        due_date: taskDueDate || null,
+      })
+      setTasks((prev) => [...prev, created])
+      setTaskTitle('')
+      setTaskAssignee('')
+      setTaskDueDate('')
+    } catch (err) {
+      setTaskError(err instanceof Error ? err.message : 'Could not create the task.')
+    } finally {
+      setCreatingTask(false)
+    }
+  }
+
+  async function handleTaskStatusChange(task: MatterTask, nextStatus: TaskStatus) {
+    if (!token || !matterId) return
+    setTaskBusyId(task.id)
+    try {
+      const updated = await updateTask(token, matterId, task.id, { status: nextStatus })
+      setTasks((prev) => prev.map((t) => (t.id === task.id ? updated : t)))
+    } finally {
+      setTaskBusyId(null)
+    }
+  }
+
+  async function handleDeleteTask(task: MatterTask) {
+    if (!token || !matterId) return
+    setTaskBusyId(task.id)
+    try {
+      await deleteTask(token, matterId, task.id)
+      setTasks((prev) => prev.filter((t) => t.id !== task.id))
+    } finally {
+      setTaskBusyId(null)
     }
   }
 
@@ -358,6 +431,71 @@ function MatterDetail() {
                 </button>
               </form>
               {uploadError && <p className="matter-error">{uploadError}</p>}
+            </section>
+
+            <section className="card" style={{ marginTop: 16 }}>
+              <div className="card-header">
+                <span>Tasks</span>
+              </div>
+
+              <div className="list-rows">
+                {tasks.map((t) => (
+                  <div key={t.id} className="matter-task-row">
+                    <div className="matter-task-main">
+                      <span className="matter-task-title">{t.title}</span>
+                      <span className="muted matter-task-meta">
+                        {t.assigned_to ? userName(t.assigned_to) : 'Unassigned'}
+                        {t.due_date ? ` · Due ${new Date(t.due_date).toLocaleDateString()}` : ''}
+                      </span>
+                    </div>
+                    <select
+                      value={t.status}
+                      disabled={taskBusyId === t.id}
+                      onChange={(e) => handleTaskStatusChange(t, e.target.value as TaskStatus)}
+                      style={{ color: taskStatusColor[t.status] }}
+                    >
+                      {taskStatusOptions.map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      className="icon-btn"
+                      disabled={taskBusyId === t.id}
+                      onClick={() => handleDeleteTask(t)}
+                      aria-label={`Delete task ${t.title}`}
+                    >
+                      <IconTrash />
+                    </button>
+                  </div>
+                ))}
+                {tasks.length === 0 && <p className="muted">No tasks yet.</p>}
+              </div>
+
+              <form onSubmit={handleCreateTask} className="matter-task-add-row">
+                <input
+                  type="text"
+                  placeholder="New task title"
+                  value={taskTitle}
+                  onChange={(e) => setTaskTitle(e.target.value)}
+                  required
+                />
+                <select value={taskAssignee} onChange={(e) => setTaskAssignee(e.target.value)}>
+                  <option value="">Unassigned</option>
+                  {users.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.first_name} {u.last_name}
+                    </option>
+                  ))}
+                </select>
+                <input type="date" value={taskDueDate} onChange={(e) => setTaskDueDate(e.target.value)} />
+                <button type="submit" className="btn-ghost" disabled={creatingTask}>
+                  {creatingTask ? 'Adding…' : 'Add Task'}
+                </button>
+              </form>
+              {taskError && <p className="matter-error">{taskError}</p>}
             </section>
           </div>
 
