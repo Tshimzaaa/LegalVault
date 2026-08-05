@@ -7,11 +7,14 @@ from app.modules.auth.models import User
 from app.modules.auth.schemas.invite import InviteStaffRequest, AcceptStaffInviteRequest
 from app.core.security import hash_password
 from app.exceptions.auth import UserAlreadyExists, InvalidOrExpiredInvite, InviteAlreadyAccepted
+from app.modules.audit.service import AuditService
+from app.modules.audit.models import ActorType
+from app.modules.audit import actions as audit_actions
 
 INVITE_EXPIRY_HOURS = 48
 
 
-def invite_staff(db: Session, firm_id, request: InviteStaffRequest) -> User:
+def invite_staff(db: Session, firm_id, actor_id, request: InviteStaffRequest) -> User:
     repo = AuthRepository(db)
     existing = repo.get_user_by_email(request.email)
     if existing:
@@ -32,6 +35,16 @@ def invite_staff(db: Session, firm_id, request: InviteStaffRequest) -> User:
         invitation_expires_at=expires_at,
     )
     repo.create_invited_user(user)
+
+    AuditService(db).log(
+        actor_type=ActorType.STAFF,
+        actor_id=actor_id,
+        firm_id=firm_id,
+        action=audit_actions.STAFF_INVITED,
+        target_type="user",
+        target_id=user.id,
+        details={"email": user.email, "role": user.role.value},
+    )
     db.commit()
 
     invite_link = f"https://yourapp.com/accept-staff-invite?token={token}"

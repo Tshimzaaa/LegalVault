@@ -1,6 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from app.modules.matters.models import MatterDocument
+from app.modules.matters.models import MatterDocument, MatterTask
 
 from app.modules.matters.models import Matter, MatterAssignment
 
@@ -74,4 +74,19 @@ class MatterRepository:
 
     def delete_matter(self, matter: Matter):
         self.db.delete(matter)
+        self.db.flush()
+
+    def create_task(self, task: MatterTask) -> MatterTask:
+        self.db.add(task)
+        self.db.flush()
+        return task
+
+    def get_task_by_id(self, task_id) -> MatterTask | None:
+        return self.db.scalar(select(MatterTask).where(MatterTask.id == task_id))
+
+    def list_tasks_for_matter(self, matter_id) -> list[MatterTask]:
+        return list(self.db.scalars(select(MatterTask).where(MatterTask.matter_id == matter_id)))
+
+    def delete_task(self, task: MatterTask):
+        self.db.delete(task)
         self.db.flush()

@@ -20,9 +20,10 @@ from app.core.config import settings
 from app.database.base import Base
 from app.modules.auth.models import LawFirm, User  # noqa: F401
 from app.modules.clients.models import Client, ClientContact  # noqa: F401
-from app.modules.matters.models import Matter, MatterAssignment, MatterDocument  # noqa: F401
+from app.modules.matters.models import Matter, MatterAssignment, MatterDocument, MatterTask  # noqa: F401
 from app.modules.templates.models import Template  # noqa: F401
 from app.modules.support_requests.models import SupportRequest  # noqa: F401
+from app.modules.audit.models import AuditLog  # noqa: F401
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

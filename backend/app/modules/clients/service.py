@@ -24,6 +24,9 @@ from app.exceptions.clients import (
     ClientHasMatters,
 )
 from app.modules.matters.repository import MatterRepository
+from app.modules.audit.service import AuditService
+from app.modules.audit.models import ActorType
+from app.modules.audit import actions as audit_actions
 
 RESET_TOKEN_EXPIRY_HOURS = 1
 
@@ -32,6 +35,7 @@ class ClientService:
     def __init__(self, db: Session):
         self.db = db
         self.repository = ClientRepository(db)
+        self.audit = AuditService(db)
 
     def create_client(self, firm_id, request: CreateClientRequest) -> Client:
         client = Client(firm_id=firm_id, company_name=request.company_name)
@@ -145,16 +149,26 @@ class ClientService:
         self.repository.clear_reset_token(contact)
         self.db.commit()
 
-    def update_client_status(self, client_id, firm_id, is_active: bool) -> Client:
+    def update_client_status(self, client_id, firm_id, actor_id, is_active: bool) -> Client:
         client = self.repository.get_client_by_id(client_id)
         if not client or str(client.firm_id) != str(firm_id):
             raise ClientNotFound()
 
         client.is_active = is_active
+
+        self.audit.log(
+            actor_type=ActorType.STAFF,
+            actor_id=actor_id,
+            firm_id=firm_id,
+            action=audit_actions.CLIENT_STATUS_UPDATED,
+            target_type="client",
+            target_id=client.id,
+            details={"company_name": client.company_name, "is_active": is_active},
+        )
         self.db.commit()
         return client
 
-    def delete_client(self, client_id, firm_id):
+    def delete_client(self, client_id, firm_id, actor_id):
         client = self.repository.get_client_by_id(client_id)
         if not client or str(client.firm_id) != str(firm_id):
             raise ClientNotFound()
@@ -166,9 +180,19 @@ class ClientService:
         for contact in self.repository.list_contacts_for_client(client_id):
             self.repository.delete_contact(contact)
         self.repository.delete_client(client)
+
+        self.audit.log(
+            actor_type=ActorType.STAFF,
+            actor_id=actor_id,
+            firm_id=firm_id,
+            action=audit_actions.CLIENT_DELETED,
+            target_type="client",
+            target_id=client.id,
+            details={"company_name": client.company_name},
+        )
         self.db.commit()
 
-    def update_contact_status(self, client_id, contact_id, firm_id, is_active: bool) -> ClientContact:
+    def update_contact_status(self, client_id, contact_id, firm_id, actor_id, is_active: bool) -> ClientContact:
         client = self.repository.get_client_by_id(client_id)
         if not client or str(client.firm_id) != str(firm_id):
             raise ClientNotFound()
@@ -178,10 +202,20 @@ class ClientService:
             raise ContactNotFound()
 
         contact.is_active = is_active
+
+        self.audit.log(
+            actor_type=ActorType.STAFF,
+            actor_id=actor_id,
+            firm_id=firm_id,
+            action=audit_actions.CONTACT_STATUS_UPDATED,
+            target_type="client_contact",
+            target_id=contact.id,
+            details={"email": contact.email, "is_active": is_active},
+        )
         self.db.commit()
         return contact
 
-    def delete_contact(self, client_id, contact_id, firm_id):
+    def delete_contact(self, client_id, contact_id, firm_id, actor_id):
         client = self.repository.get_client_by_id(client_id)
         if not client or str(client.firm_id) != str(firm_id):
             raise ClientNotFound()
@@ -192,4 +226,14 @@ class ClientService:
 
         self.repository.clear_contact_document_uploads(contact_id)
         self.repository.delete_contact(contact)
+
+        self.audit.log(
+            actor_type=ActorType.STAFF,
+            actor_id=actor_id,
+            firm_id=firm_id,
+            action=audit_actions.CONTACT_DELETED,
+            target_type="client_contact",
+            target_id=contact.id,
+            details={"email": contact.email},
+        )
         self.db.commit()

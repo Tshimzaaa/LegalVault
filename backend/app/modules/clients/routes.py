@@ -110,7 +110,7 @@ def update_client_status(
     current_user: User = Depends(require_admin),
 ):
     service = ClientService(db)
-    return service.update_client_status(client_id, current_user.firm_id, request.is_active)
+    return service.update_client_status(client_id, current_user.firm_id, current_user.id, request.is_active)
 
 
 @router.delete("/{client_id}", status_code=204)
@@ -120,7 +120,7 @@ def delete_client(
     current_user: User = Depends(require_admin),
 ):
     service = ClientService(db)
-    service.delete_client(client_id, current_user.firm_id)
+    service.delete_client(client_id, current_user.firm_id, current_user.id)
 
 
 @router.patch("/{client_id}/contacts/{contact_id}/status", response_model=ContactResponse)
@@ -132,7 +132,9 @@ def update_contact_status(
     current_user: User = Depends(require_admin),
 ):
     service = ClientService(db)
-    return service.update_contact_status(client_id, contact_id, current_user.firm_id, request.is_active)
+    return service.update_contact_status(
+        client_id, contact_id, current_user.firm_id, current_user.id, request.is_active
+    )
 
 
 @router.delete("/{client_id}/contacts/{contact_id}", status_code=204)
@@ -143,5 +145,5 @@ def delete_contact(
     current_user: User = Depends(require_admin),
 ):
     service = ClientService(db)
-    service.delete_contact(client_id, contact_id, current_user.firm_id)
+    service.delete_contact(client_id, contact_id, current_user.firm_id, current_user.id)
 

@@ -1,0 +1,20 @@
+STAFF_INVITED = "staff.invited"
+STAFF_STATUS_UPDATED = "staff.status_updated"
+
+CLIENT_STATUS_UPDATED = "client.status_updated"
+CLIENT_DELETED = "client.deleted"
+CONTACT_STATUS_UPDATED = "contact.status_updated"
+CONTACT_DELETED = "contact.deleted"
+
+FIRM_CREATED = "firm.created"
+FIRM_STATUS_UPDATED = "firm.status_updated"
+FIRM_DELETED = "firm.deleted"
+
+MATTER_CREATED = "matter.created"
+MATTER_STATUS_UPDATED = "matter.status_updated"
+MATTER_VISIBILITY_UPDATED = "matter.visibility_updated"
+MATTER_STAFF_ASSIGNED = "matter.staff_assigned"
+MATTER_DOCUMENT_UPLOADED = "matter.document_uploaded"
+MATTER_TASK_CREATED = "matter.task_created"
+MATTER_TASK_UPDATED = "matter.task_updated"
+MATTER_TASK_DELETED = "matter.task_deleted"

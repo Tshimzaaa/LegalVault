@@ -3,7 +3,7 @@ from app.modules.owner.schemas import OwnerLoginRequest, OwnerTokenResponse
 from app.core.security import create_access_token
 from app.core.config import settings
 
-from fastapi import Depends
+from fastapi import Depends, Query
 from sqlalchemy.orm import Session
 from app.database.session import get_db
 from app.modules.auth.schemas.register import RegisterLawFirmRequest, RegisterAdminRequest
@@ -15,6 +15,11 @@ from app.modules.clients.repository import ClientRepository
 from app.modules.matters.repository import MatterRepository
 from app.modules.owner.schemas import FirmSummary, FirmDetail, UpdateFirmStatusRequest
 from app.exceptions.auth import LawFirmAlreadyExists  # reuse or add a FirmNotFound exception
+from app.modules.audit.service import AuditService
+from app.modules.audit.repository import AuditLogRepository
+from app.modules.audit.models import ActorType
+from app.modules.audit.schemas import AuditLogResponse
+from app.modules.audit import actions as audit_actions
 
 
 router = APIRouter(prefix="/owner", tags=["owner"])
@@ -48,6 +53,18 @@ def owner_login(request: OwnerLoginRequest):
 def list_firms(db: Session = Depends(get_db), _owner=Depends(get_current_owner)):
     repo = AuthRepository(db)
     return repo.list_all_firms()
+
+
+@router.get("/firms/audit-log", response_model=list[AuditLogResponse])
+def list_audit_log(
+    firm_id: str | None = Query(default=None),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    db: Session = Depends(get_db),
+    _owner=Depends(get_current_owner),
+):
+    repo = AuditLogRepository(db)
+    return repo.list_all(limit, offset, firm_id=firm_id)
 
 
 @router.get("/firms/{firm_id}", response_model=FirmDetail)
@@ -87,6 +104,16 @@ def update_firm_status(
         raise HTTPException(status_code=404, detail="Firm not found.")
 
     firm.is_active = request.is_active
+
+    AuditService(db).log(
+        actor_type=ActorType.OWNER,
+        actor_id=None,
+        firm_id=firm.id,
+        action=audit_actions.FIRM_STATUS_UPDATED,
+        target_type="law_firm",
+        target_id=firm.id,
+        details={"name": firm.name, "is_active": request.is_active},
+    )
     db.commit()
     return firm
 
@@ -105,6 +132,16 @@ def delete_firm(
     if firm.is_active:
         raise HTTPException(status_code=409, detail="Deactivate the firm before deleting it.")
 
+    AuditService(db).log(
+        actor_type=ActorType.OWNER,
+        actor_id=None,
+        firm_id=firm.id,
+        action=audit_actions.FIRM_DELETED,
+        target_type="law_firm",
+        target_id=firm.id,
+        details={"name": firm.name, "email": firm.email},
+    )
+
     client_repo = ClientRepository(db)
     matter_repo = MatterRepository(db)
 
@@ -113,6 +150,8 @@ def delete_firm(
             matter_repo.delete_document(document)
         for assignment in matter_repo.list_assignments_for_matter(matter.id):
             matter_repo.delete_assignment(assignment)
+        for task in matter_repo.list_tasks_for_matter(matter.id):
+            matter_repo.delete_task(task)
         matter_repo.delete_matter(matter)
 
     for client in client_repo.list_by_firm(firm.id):

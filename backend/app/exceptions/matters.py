@@ -12,3 +12,6 @@ class UserNotFoundForAssignment(Exception):
 
 class MatterDocumentNotFound(Exception):
     pass
+
+class MatterTaskNotFound(Exception):
+    pass

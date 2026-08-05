@@ -17,6 +17,9 @@ from app.modules.auth.schemas.password_reset import ForgotPasswordRequest, Reset
 from app.modules.auth.services.password_reset import request_password_reset, reset_password
 from app.modules.auth.dependencies import require_admin
 from app.exceptions.auth import StaffNotFound, CannotDeactivateSelf
+from app.modules.audit.service import AuditService
+from app.modules.audit.models import ActorType
+from app.modules.audit import actions as audit_actions
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -58,7 +61,7 @@ def invite_staff_route(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return invite_staff(db, current_user.firm_id, request)
+    return invite_staff(db, current_user.firm_id, current_user.id, request)
 
 
 @router.post("/accept-staff-invite", response_model=UserResponse)
@@ -82,5 +85,15 @@ def update_staff_status(
         raise CannotDeactivateSelf()
 
     staff.is_active = request.is_active
+
+    AuditService(db).log(
+        actor_type=ActorType.STAFF,
+        actor_id=current_user.id,
+        firm_id=current_user.firm_id,
+        action=audit_actions.STAFF_STATUS_UPDATED,
+        target_type="user",
+        target_id=staff.id,
+        details={"email": staff.email, "is_active": request.is_active},
+    )
     db.commit()
     return staff

@@ -1,8 +1,8 @@
 from uuid import UUID
-from datetime import datetime
+from datetime import date, datetime
 from pydantic import BaseModel, Field
 
-from app.modules.matters.models import MatterStatus, MatterRole
+from app.modules.matters.models import MatterStatus, MatterRole, TaskStatus
 
 
 class CreateMatterRequest(BaseModel):
@@ -66,3 +66,33 @@ class MatterDocumentResponse(BaseModel):
 class MatterDocumentDownloadResponse(BaseModel):
     download_url: str
     expires_in_seconds: int
+
+
+class CreateMatterTaskRequest(BaseModel):
+    title: str = Field(min_length=2, max_length=200)
+    description: str | None = None
+    assigned_to: UUID | None = None
+    due_date: date | None = None
+
+
+class UpdateMatterTaskRequest(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    assigned_to: UUID | None = None
+    due_date: date | None = None
+    status: TaskStatus | None = None
+
+
+class MatterTaskResponse(BaseModel):
+    id: UUID
+    matter_id: UUID
+    title: str
+    description: str | None
+    assigned_to: UUID | None
+    due_date: date | None
+    status: TaskStatus
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True

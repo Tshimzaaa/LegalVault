@@ -20,12 +20,16 @@ from app.modules.auth.schemas.register import (
     RegisterRequest,
     RegisterResponse,
 )
+from app.modules.audit.service import AuditService
+from app.modules.audit.models import ActorType
+from app.modules.audit import actions as audit_actions
 
 class RegisterService:
 
     def __init__(self, db: Session):
         self.db = db
         self.repository = AuthRepository(db)
+        self.audit = AuditService(db)
 
     def register(self, request: RegisterRequest) -> RegisterResponse:
         if request.admin_secret != settings.REGISTER_SECRET:
@@ -66,6 +70,16 @@ class RegisterService:
             )
 
             self.repository.create_user(user)
+
+            self.audit.log(
+                actor_type=ActorType.STAFF,
+                actor_id=user.id,
+                firm_id=law_firm.id,
+                action=audit_actions.FIRM_CREATED,
+                target_type="law_firm",
+                target_id=law_firm.id,
+                details={"name": law_firm.name, "email": law_firm.email},
+            )
             self.db.commit()
 
             access_token = create_access_token(subject=str(user.id))
@@ -112,6 +126,16 @@ class RegisterService:
             )
 
             self.repository.create_user(user)
+
+            self.audit.log(
+                actor_type=ActorType.OWNER,
+                actor_id=None,
+                firm_id=law_firm.id,
+                action=audit_actions.FIRM_CREATED,
+                target_type="law_firm",
+                target_id=law_firm.id,
+                details={"name": law_firm.name, "email": law_firm.email},
+            )
             self.db.commit()
 
             access_token = create_access_token(subject=str(user.id))

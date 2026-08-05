@@ -13,6 +13,9 @@ from app.modules.matters.schemas import (
     UpdateMatterVisibilityRequest,
     AssignStaffRequest,
     MatterAssignmentResponse,
+    CreateMatterTaskRequest,
+    UpdateMatterTaskRequest,
+    MatterTaskResponse,
 )
 from app.modules.matters.service import MatterService
 
@@ -42,7 +45,7 @@ def create_matter(
     current_user: User = Depends(get_current_user),
 ):
     service = MatterService(db)
-    return service.create_matter(current_user.firm_id, request)
+    return service.create_matter(current_user.firm_id, current_user.id, request)
 
 
 @router.get("", response_model=list[MatterResponse])
@@ -72,7 +75,7 @@ def update_status(
     current_user: User = Depends(get_current_user),
 ):
     service = MatterService(db)
-    return service.update_status(matter_id, current_user.firm_id, request)
+    return service.update_status(matter_id, current_user.firm_id, current_user.id, request)
 
 
 @router.patch("/{matter_id}/visibility", response_model=MatterResponse)
@@ -83,7 +86,7 @@ def update_visibility(
     current_user: User = Depends(get_current_user),
 ):
     service = MatterService(db)
-    return service.update_visibility(matter_id, current_user.firm_id, request)
+    return service.update_visibility(matter_id, current_user.firm_id, current_user.id, request)
 
 
 @router.post("/{matter_id}/assignments", response_model=MatterAssignmentResponse, status_code=201)
@@ -94,7 +97,7 @@ def assign_staff(
     current_user: User = Depends(get_current_user),
 ):
     service = MatterService(db)
-    return service.assign_staff(matter_id, current_user.firm_id, request)
+    return service.assign_staff(matter_id, current_user.firm_id, current_user.id, request)
 
 
 @router.get("/{matter_id}/assignments", response_model=list[MatterAssignmentResponse])
@@ -151,6 +154,50 @@ def download_matter_document(
     service = MatterService(db)
     url = service.get_matter_document_download(matter_id, document_id, current_user.firm_id)
     return MatterDocumentDownloadResponse(download_url=url, expires_in_seconds=3600)
+
+
+@router.post("/{matter_id}/tasks", response_model=MatterTaskResponse, status_code=201)
+def create_task(
+    matter_id: str,
+    request: CreateMatterTaskRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    service = MatterService(db)
+    return service.create_task(matter_id, current_user.firm_id, current_user.id, request)
+
+
+@router.get("/{matter_id}/tasks", response_model=list[MatterTaskResponse])
+def list_tasks(
+    matter_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    service = MatterService(db)
+    return service.list_tasks(matter_id, current_user.firm_id)
+
+
+@router.patch("/{matter_id}/tasks/{task_id}", response_model=MatterTaskResponse)
+def update_task(
+    matter_id: str,
+    task_id: str,
+    request: UpdateMatterTaskRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    service = MatterService(db)
+    return service.update_task(matter_id, task_id, current_user.firm_id, current_user.id, request)
+
+
+@router.delete("/{matter_id}/tasks/{task_id}", status_code=204)
+def delete_task(
+    matter_id: str,
+    task_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    service = MatterService(db)
+    service.delete_task(matter_id, task_id, current_user.firm_id, current_user.id)
 
 
 @client_matters_router.get("/{matter_id}/documents", response_model=list[MatterDocumentResponse])

@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID
 
-from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, String, Text
+from sqlalchemy import Boolean, Date, DateTime, Enum, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import TYPE_CHECKING
 import enum
@@ -28,6 +28,12 @@ class MatterRole(str, enum.Enum):
     PARALEGAL = "paralegal"
     SECRETARY = "secretary"
     REVIEWER = "reviewer"
+
+
+class TaskStatus(str, enum.Enum):
+    TODO = "todo"
+    IN_PROGRESS = "in_progress"
+    DONE = "done"
 
 
 class Matter(BaseModel):
@@ -61,6 +67,11 @@ class Matter(BaseModel):
 
     assignments: Mapped[list["MatterAssignment"]] = relationship(
         "MatterAssignment",
+        back_populates="matter",
+    )
+
+    tasks: Mapped[list["MatterTask"]] = relationship(
+        "MatterTask",
         back_populates="matter",
     )
 
@@ -116,3 +127,34 @@ class MatterDocument(BaseModel):
     original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
 
     content_type: Mapped[str] = mapped_column(String(100), nullable=False)
+
+
+class MatterTask(BaseModel):
+    __tablename__ = "matter_tasks"
+
+    matter_id: Mapped[UUID] = mapped_column(
+        ForeignKey("matters.id"),
+        nullable=False,
+    )
+
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    assigned_to: Mapped[UUID | None] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=True,
+    )
+
+    due_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+
+    status: Mapped[TaskStatus] = mapped_column(
+        Enum(TaskStatus),
+        default=TaskStatus.TODO,
+        nullable=False,
+    )
+
+    matter: Mapped["Matter"] = relationship(
+        "Matter",
+        back_populates="tasks",
+    )

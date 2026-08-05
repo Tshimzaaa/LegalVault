@@ -31,6 +31,7 @@ from app.exceptions.matters import (
     StaffAlreadyAssigned,
     MatterDocumentNotFound,
     UserNotFoundForAssignment,
+    MatterTaskNotFound,
 )
 from app.exceptions.support_requests import SupportRequestNotFound
 
@@ -164,3 +165,7 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(ClientHasMatters)
     async def client_has_matters(_, __):
         raise HTTPException(status_code=409, detail="Cannot delete a client that has existing matters.")
+
+    @app.exception_handler(MatterTaskNotFound)
+    async def matter_task_not_found(_, __):
+        raise HTTPException(status_code=404, detail="Task not found.")
