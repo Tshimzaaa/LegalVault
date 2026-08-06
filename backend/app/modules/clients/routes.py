@@ -56,6 +56,16 @@ def invite_contact(
     return service.invite_contact(client_id, request, staff_firm_id=current_user.firm_id)
 
 
+@router.get("/{client_id}/contacts", response_model=list[ContactResponse])
+def list_contacts(
+    client_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    service = ClientService(db)
+    return service.list_contacts(client_id, current_user.firm_id)
+
+
 # --- Client-facing (portal) routes ---
 
 @client_auth_router.post("/accept-invite", response_model=ContactResponse)

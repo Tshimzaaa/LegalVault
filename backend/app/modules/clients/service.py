@@ -106,6 +106,12 @@ class ClientService:
         return ClientTokenResponse(access_token=token)
     def list_clients(self, firm_id):
         return self.repository.list_by_firm(firm_id)
+
+    def list_contacts(self, client_id, firm_id):
+        client = self.repository.get_client_by_id(client_id)
+        if not client or str(client.firm_id) != str(firm_id):
+            raise ClientNotFound()
+        return self.repository.list_contacts_for_client(client_id)
     def resend_invite(self, email: str, firm_id):
         contact = self.repository.get_contact_by_email(email)
         if not contact:
