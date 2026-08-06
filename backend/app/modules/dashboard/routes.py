@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -5,14 +7,35 @@ from app.database.session import get_db
 from app.modules.auth.dependencies import get_current_user
 from app.modules.auth.models import User
 from app.modules.matters.service import MatterService
-from app.modules.matters.models import MatterStatus
+from app.modules.matters.repository import MatterRepository
+from app.modules.matters.models import MatterStatus, TaskStatus
 from app.modules.dashboard.schemas import (
     ActiveCasesSummary,
     ContractStatusBreakdownItem,
     ContractStatusSummary,
     DashboardSummaryResponse,
     FinancialSummary,
+    KeyDeadline,
+    TaskItem,
+    RecentDocument,
+    RecentCommunication,
 )
+
+ACTIVE_LIMIT = 5
+INACTIVE_STATUSES = {MatterStatus.CLOSED, MatterStatus.DECLINED}
+
+
+def _deadline_flag_color(due_date: date, today: date) -> str:
+    days_out = (due_date - today).days
+    if days_out <= 2:
+        return "#ef4444"
+    if days_out <= 7:
+        return "#eab308"
+    return "#3987e5"
+
+
+def _preview(text: str, max_length: int = 80) -> str:
+    return text if len(text) <= max_length else f"{text[:max_length - 3]}..."
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -32,7 +55,9 @@ def get_dashboard_summary(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    matters = MatterService(db).list_matters_for_firm(current_user.firm_id)
+    firm_id = current_user.firm_id
+    matter_repository = MatterRepository(db)
+    matters = MatterService(db).list_matters_for_firm(firm_id)
 
     total = len(matters)
     counts = {status: sum(1 for m in matters if m.status == status) for status, _, _ in STATUS_META}
@@ -43,6 +68,44 @@ def get_dashboard_summary(
 
     def pct(n: int) -> int:
         return round(n / total * 100) if total else 0
+
+    today = date.today()
+
+    upcoming_matters = sorted(
+        (m for m in matters if m.due_date is not None and m.status not in INACTIVE_STATUSES),
+        key=lambda m: m.due_date,
+    )[:ACTIVE_LIMIT]
+    key_deadlines = [
+        KeyDeadline(
+            title=m.title,
+            deadline=m.due_date.isoformat(),
+            flagColor=_deadline_flag_color(m.due_date, today),
+        )
+        for m in upcoming_matters
+    ]
+
+    open_tasks = sorted(
+        (
+            (task, matter)
+            for task, matter in matter_repository.list_tasks_for_firm(firm_id)
+            if task.status != TaskStatus.DONE and task.due_date is not None
+        ),
+        key=lambda pair: pair[0].due_date,
+    )[:ACTIVE_LIMIT]
+    tasks = [
+        TaskItem(title=f"{task.title} ({matter.title})", deadline=task.due_date.isoformat())
+        for task, matter in open_tasks
+    ]
+
+    recent_documents = [
+        RecentDocument(title=document.title, subtitle=f"{matter.title} · v{document.version}")
+        for document, matter in matter_repository.list_recent_documents_for_firm(firm_id, limit=ACTIVE_LIMIT)
+    ]
+
+    recent_communications = [
+        RecentCommunication(text=f'{message.author_name} on "{matter.title}": {_preview(message.body)}')
+        for message, matter in matter_repository.list_recent_messages_for_firm(firm_id, limit=ACTIVE_LIMIT)
+    ]
 
     return DashboardSummaryResponse(
         activeCases=ActiveCasesSummary(
@@ -58,9 +121,9 @@ def get_dashboard_summary(
             ],
             rings=[pct(closed + signed), pct(active), pct(counts[MatterStatus.INTAKE])],
         ),
-        keyDeadlines=[],
+        keyDeadlines=key_deadlines,
         financialSummary=FinancialSummary(billableHours=0, sparkline=[]),
-        tasks=[],
-        recentDocuments=[],
-        recentCommunications=[],
+        tasks=tasks,
+        recentDocuments=recent_documents,
+        recentCommunications=recent_communications,
     )

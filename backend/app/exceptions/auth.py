@@ -25,3 +25,6 @@ class StaffNotFound(Exception):
 
 class CannotDeactivateSelf(Exception):
     pass
+
+class InvalidRefreshToken(Exception):
+    pass
