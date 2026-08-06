@@ -1,0 +1,14 @@
+.settings-card {
+  max-width: 640px;
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.settings-saved {
+  color: #22c55e;
+  font-size: 12.5px;
+}

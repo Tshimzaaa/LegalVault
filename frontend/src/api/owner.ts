@@ -70,3 +70,77 @@ export async function createFirm(token: string, payload: CreateFirmPayload): Pro
 export async function deleteFirm(token: string, firmId: string): Promise<void> {
   await apiRequest(`/owner/firms/${firmId}`, { method: 'DELETE', token })
 }
+
+export interface FirmExportResponse {
+  exported_at: string
+  firm: Record<string, unknown>
+  staff: Record<string, unknown>[]
+  clients: Record<string, unknown>[]
+  matters: Record<string, unknown>[]
+  audit_log: Record<string, unknown>[]
+}
+
+export async function exportFirm(token: string, firmId: string): Promise<FirmExportResponse> {
+  return apiRequest<FirmExportResponse>(`/owner/firms/${firmId}/export`, { token })
+}
+
+export interface UsageMetrics {
+  total_firms: number
+  active_firms: number
+  inactive_firms: number
+  total_staff: number
+  total_clients: number
+  total_matters: number
+  matters_by_status: Record<string, number>
+  new_firms_last_7_days: number
+  new_firms_last_30_days: number
+}
+
+export interface TopErrorPath {
+  path: string
+  status_code: number
+  count: number
+}
+
+export interface RequestMetrics {
+  window_hours: number
+  total_requests: number
+  status_2xx: number
+  status_3xx: number
+  status_4xx: number
+  status_5xx: number
+  error_rate_percent: number
+  average_duration_ms: number | null
+  top_error_paths: TopErrorPath[]
+}
+
+export interface PlatformMetrics {
+  generated_at: string
+  usage: UsageMetrics
+  requests: RequestMetrics
+}
+
+export async function getPlatformMetrics(token: string, hours = 24): Promise<PlatformMetrics> {
+  return apiRequest<PlatformMetrics>(`/owner/metrics?hours=${hours}`, { token })
+}
+
+export interface RequestErrorEntry {
+  id: string
+  created_at: string
+  method: string
+  path: string
+  status_code: number
+  duration_ms: number
+  error_detail: string | null
+  actor_type: string | null
+  actor_id: string | null
+  actor_label: string | null
+}
+
+export async function listRecentErrors(
+  token: string,
+  { hours = 24, limit = 50, offset = 0 }: { hours?: number; limit?: number; offset?: number } = {},
+): Promise<RequestErrorEntry[]> {
+  const params = new URLSearchParams({ hours: String(hours), limit: String(limit), offset: String(offset) })
+  return apiRequest<RequestErrorEntry[]>(`/owner/errors?${params}`, { token })
+}

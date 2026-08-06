@@ -158,6 +158,26 @@ class MatterRepository:
         )
         return list(self.db.execute(statement).all())
 
+    def list_recent_documents_for_client(self, client_id, limit: int) -> list[tuple[MatterDocument, Matter]]:
+        statement = (
+            select(MatterDocument, Matter)
+            .join(Matter, MatterDocument.matter_id == Matter.id)
+            .where(Matter.client_id == client_id, Matter.is_visible_to_client.is_(True))
+            .order_by(MatterDocument.created_at.desc())
+            .limit(limit)
+        )
+        return list(self.db.execute(statement).all())
+
+    def list_recent_messages_for_client(self, client_id, limit: int) -> list[tuple[MatterMessage, Matter]]:
+        statement = (
+            select(MatterMessage, Matter)
+            .join(Matter, MatterMessage.matter_id == Matter.id)
+            .where(Matter.client_id == client_id, Matter.is_visible_to_client.is_(True))
+            .order_by(MatterMessage.created_at.desc())
+            .limit(limit)
+        )
+        return list(self.db.execute(statement).all())
+
     def list_visible_matters_with_deadline_in_range(self, client_id, start, end) -> list[Matter]:
         statement = select(Matter).where(
             Matter.client_id == client_id,

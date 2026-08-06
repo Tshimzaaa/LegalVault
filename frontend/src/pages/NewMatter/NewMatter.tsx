@@ -16,6 +16,7 @@ function NewMatter() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [clientId, setClientId] = useState('')
+  const [dueDate, setDueDate] = useState('')
   const [attorneyId, setAttorneyId] = useState('')
   const [caseManagerId, setCaseManagerId] = useState('')
   const [submitted, setSubmitted] = useState(false)
@@ -75,7 +76,12 @@ function NewMatter() {
 
     setSubmitting(true)
     try {
-      const matter = await createMatter(token, { client_id: clientId, title, description: description || null })
+      const matter = await createMatter(token, {
+        client_id: clientId,
+        title,
+        description: description || null,
+        due_date: dueDate || null,
+      })
 
       const assignmentFailures: string[] = []
       if (attorneyId) {
@@ -179,9 +185,9 @@ function NewMatter() {
                 </div>
               </label>
               <label className="field">
-                <span>Estimated Closing Date</span>
+                <span>Deadline</span>
                 <div className="input-with-icon">
-                  <input type="text" placeholder="Date Picker" />
+                  <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
                   <IconCalendar />
                 </div>
               </label>

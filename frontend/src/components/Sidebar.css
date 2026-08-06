@@ -67,6 +67,10 @@
   padding: 0 8px;
 }
 
+.sidebar-brand-bell {
+  margin-left: auto;
+}
+
 .brand-mark {
   width: 28px;
   height: 28px;

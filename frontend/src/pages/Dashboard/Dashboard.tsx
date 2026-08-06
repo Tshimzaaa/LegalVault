@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import type { FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './Dashboard.css'
 import {
   IconChevron,
@@ -13,6 +15,7 @@ import {
   IconMessageCircle,
   IconArrowUp,
   IconArrowDown,
+  IconSearch,
 } from '../../components/icons'
 import ProfileMenu from '../../components/ProfileMenu'
 import type { User } from '../../api/auth'
@@ -97,9 +100,17 @@ interface DashboardProps {
 type LoadState = 'loading' | 'error' | 'ready'
 
 function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
+  const navigate = useNavigate()
   const [summary, setSummary] = useState<DashboardSummary | null>(previewSummary ?? null)
   const [status, setStatus] = useState<LoadState>(previewSummary ? 'ready' : 'loading')
   const [attempt, setAttempt] = useState(0)
+  const [dashboardQuery, setDashboardQuery] = useState('')
+
+  function handleDashboardSearch(e: FormEvent) {
+    e.preventDefault()
+    if (!dashboardQuery.trim()) return
+    navigate(`/staff/search?q=${encodeURIComponent(dashboardQuery.trim())}`)
+  }
 
   useEffect(() => {
     if (previewSummary) return
@@ -133,7 +144,20 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
     <main className="dash-main">
       <header className="dash-topbar">
         <h1>Dashboard</h1>
-        <ProfileMenu user={user} onLogout={onLogout} />
+        <div className="topbar-actions">
+          {!previewSummary && (
+            <form onSubmit={handleDashboardSearch} className="dash-topbar-search">
+              <IconSearch />
+              <input
+                type="text"
+                placeholder="Search clients, matters, staff…"
+                value={dashboardQuery}
+                onChange={(e) => setDashboardQuery(e.target.value)}
+              />
+            </form>
+          )}
+          <ProfileMenu user={user} onLogout={onLogout} />
+        </div>
       </header>
 
       {status === 'loading' && (

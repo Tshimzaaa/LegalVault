@@ -1,14 +1,31 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import './OwnerPortal.css'
-import { IconDollar, IconLayers, IconPlus, IconUser, IconTrash } from '../../components/icons'
-import { listFirms, getFirm, updateFirmStatus, createFirm, deleteFirm } from '../../api/owner'
-import type { FirmDetail } from '../../api/owner'
+import { IconDollar, IconLayers, IconPlus, IconUser, IconTrash, IconDownload } from '../../components/icons'
+import {
+  listFirms,
+  getFirm,
+  updateFirmStatus,
+  createFirm,
+  deleteFirm,
+  exportFirm,
+  getPlatformMetrics,
+  listRecentErrors,
+} from '../../api/owner'
+import type { FirmDetail, PlatformMetrics, RequestErrorEntry } from '../../api/owner'
 import { listOwnerAuditLog, auditActionLabel, formatAuditDetails } from '../../api/auditLog'
 import type { AuditLogEntry } from '../../api/auditLog'
+import { listOwnerAnnouncements, createAnnouncement, updateAnnouncement, deleteAnnouncement } from '../../api/announcements'
+import type { Announcement, AnnouncementSeverity } from '../../api/announcements'
 
 type LoadState = 'loading' | 'error' | 'ready'
 const AUDIT_PAGE_SIZE = 50
+
+const severityColor: Record<AnnouncementSeverity, string> = {
+  info: '#3987e5',
+  warning: '#eab308',
+  critical: '#ef4444',
+}
 
 const emptyCreateForm = {
   firmName: '',
@@ -37,7 +54,27 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
   const [creating, setCreating] = useState(false)
 
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [exportingId, setExportingId] = useState<string | null>(null)
   const [firmActionError, setFirmActionError] = useState<string | null>(null)
+
+  const [metrics, setMetrics] = useState<PlatformMetrics | null>(null)
+  const [metricsStatus, setMetricsStatus] = useState<LoadState>('loading')
+
+  const [errorEntries, setErrorEntries] = useState<RequestErrorEntry[]>([])
+  const [errorsStatus, setErrorsStatus] = useState<LoadState>('loading')
+  const [errorsOffset, setErrorsOffset] = useState(0)
+  const [errorsHasMore, setErrorsHasMore] = useState(true)
+  const [errorsLoadingMore, setErrorsLoadingMore] = useState(false)
+
+  const [announcements, setAnnouncements] = useState<Announcement[]>([])
+  const [announcementsStatus, setAnnouncementsStatus] = useState<LoadState>('loading')
+  const [showAnnouncementForm, setShowAnnouncementForm] = useState(false)
+  const [announcementTitle, setAnnouncementTitle] = useState('')
+  const [announcementBody, setAnnouncementBody] = useState('')
+  const [announcementSeverity, setAnnouncementSeverity] = useState<AnnouncementSeverity>('info')
+  const [announcementSaving, setAnnouncementSaving] = useState(false)
+  const [announcementError, setAnnouncementError] = useState<string | null>(null)
+  const [announcementBusyId, setAnnouncementBusyId] = useState<string | null>(null)
 
   const [auditEntries, setAuditEntries] = useState<AuditLogEntry[]>([])
   const [auditStatus, setAuditStatus] = useState<LoadState>('loading')
@@ -83,6 +120,125 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
 
   useEffect(loadAudit, [auditFirmFilter]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  function loadMetrics() {
+    if (!token) {
+      setMetricsStatus('error')
+      return
+    }
+    setMetricsStatus('loading')
+    getPlatformMetrics(token, 24)
+      .then((data) => {
+        setMetrics(data)
+        setMetricsStatus('ready')
+      })
+      .catch(() => setMetricsStatus('error'))
+  }
+
+  useEffect(loadMetrics, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const ERROR_PAGE_SIZE = 50
+
+  function loadErrors() {
+    if (!token) {
+      setErrorsStatus('error')
+      return
+    }
+    setErrorsStatus('loading')
+    listRecentErrors(token, { hours: 24, limit: ERROR_PAGE_SIZE, offset: 0 })
+      .then((data) => {
+        setErrorEntries(data)
+        setErrorsOffset(data.length)
+        setErrorsHasMore(data.length === ERROR_PAGE_SIZE)
+        setErrorsStatus('ready')
+      })
+      .catch(() => setErrorsStatus('error'))
+  }
+
+  useEffect(loadErrors, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function handleLoadMoreErrors() {
+    if (!token) return
+    setErrorsLoadingMore(true)
+    try {
+      const data = await listRecentErrors(token, { hours: 24, limit: ERROR_PAGE_SIZE, offset: errorsOffset })
+      setErrorEntries((prev) => [...prev, ...data])
+      setErrorsOffset((prev) => prev + data.length)
+      setErrorsHasMore(data.length === ERROR_PAGE_SIZE)
+    } finally {
+      setErrorsLoadingMore(false)
+    }
+  }
+
+  function formatActor(e: RequestErrorEntry): string {
+    if (e.actor_label) return e.actor_label
+    if (e.actor_type === 'owner') return 'Owner'
+    if (e.actor_type) return `${e.actor_type} (unknown)`
+    return 'Anonymous'
+  }
+
+  function loadAnnouncements() {
+    if (!token) {
+      setAnnouncementsStatus('error')
+      return
+    }
+    setAnnouncementsStatus('loading')
+    listOwnerAnnouncements(token)
+      .then((data) => {
+        setAnnouncements(data)
+        setAnnouncementsStatus('ready')
+      })
+      .catch(() => setAnnouncementsStatus('error'))
+  }
+
+  useEffect(loadAnnouncements, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function handleCreateAnnouncement(e: FormEvent) {
+    e.preventDefault()
+    if (!token) return
+    setAnnouncementError(null)
+    setAnnouncementSaving(true)
+    try {
+      const created = await createAnnouncement(token, {
+        title: announcementTitle,
+        body: announcementBody,
+        severity: announcementSeverity,
+        is_active: true,
+      })
+      setAnnouncements((prev) => [created, ...prev])
+      setAnnouncementTitle('')
+      setAnnouncementBody('')
+      setAnnouncementSeverity('info')
+      setShowAnnouncementForm(false)
+    } catch (err) {
+      setAnnouncementError(err instanceof Error ? err.message : 'Could not create the announcement.')
+    } finally {
+      setAnnouncementSaving(false)
+    }
+  }
+
+  async function handleToggleAnnouncementActive(a: Announcement) {
+    if (!token) return
+    setAnnouncementBusyId(a.id)
+    try {
+      const updated = await updateAnnouncement(token, a.id, { is_active: !a.is_active })
+      setAnnouncements((prev) => prev.map((x) => (x.id === a.id ? updated : x)))
+    } finally {
+      setAnnouncementBusyId(null)
+    }
+  }
+
+  async function handleDeleteAnnouncement(a: Announcement) {
+    if (!token) return
+    if (!window.confirm(`Delete the announcement "${a.title}"?`)) return
+    setAnnouncementBusyId(a.id)
+    try {
+      await deleteAnnouncement(token, a.id)
+      setAnnouncements((prev) => prev.filter((x) => x.id !== a.id))
+    } finally {
+      setAnnouncementBusyId(null)
+    }
+  }
+
   async function handleLoadMoreAudit() {
     if (!token) return
     setAuditLoadingMore(true)
@@ -124,6 +280,26 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
       setFirmActionError(err instanceof Error ? err.message : 'Could not delete this firm.')
     } finally {
       setDeletingId(null)
+    }
+  }
+
+  async function handleExportFirm(firm: FirmDetail) {
+    if (!token) return
+    setFirmActionError(null)
+    setExportingId(firm.id)
+    try {
+      const data = await exportFirm(token, firm.id)
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${firm.name.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-export.json`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      setFirmActionError(err instanceof Error ? err.message : 'Could not export this firm.')
+    } finally {
+      setExportingId(null)
     }
   }
 
@@ -316,6 +492,282 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
             ))}
           </section>
 
+          <section className="card owner-monitoring-card">
+            <div className="card-header">
+              <span>Platform Health</span>
+              <span className="muted">last 24h</span>
+            </div>
+
+            {metricsStatus === 'loading' && (
+              <div className="dash-state">
+                <span className="dash-spinner" />
+                <p>Loading platform metrics…</p>
+              </div>
+            )}
+
+            {metricsStatus === 'error' && (
+              <div className="dash-state">
+                <p>Couldn&rsquo;t reach the backend for platform metrics.</p>
+                <button type="button" className="btn-ghost" onClick={loadMetrics}>
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {metricsStatus === 'ready' && metrics && (
+              <>
+                <div className="dash-row owner-monitoring-stats">
+                  <div className="owner-monitoring-stat">
+                    <span className="muted">Total requests</span>
+                    <span className="stat-big">{metrics.requests.total_requests}</span>
+                  </div>
+                  <div className="owner-monitoring-stat">
+                    <span className="muted">Error rate</span>
+                    <span
+                      className="stat-big"
+                      style={{ color: metrics.requests.error_rate_percent > 1 ? '#ef4444' : '#22c55e' }}
+                    >
+                      {metrics.requests.error_rate_percent.toFixed(2)}%
+                    </span>
+                  </div>
+                  <div className="owner-monitoring-stat">
+                    <span className="muted">Avg. response time</span>
+                    <span className="stat-big">
+                      {metrics.requests.average_duration_ms != null ? `${Math.round(metrics.requests.average_duration_ms)}ms` : '—'}
+                    </span>
+                  </div>
+                  <div className="owner-monitoring-stat">
+                    <span className="muted">2xx / 4xx / 5xx</span>
+                    <span className="stat-big">
+                      {metrics.requests.status_2xx} / {metrics.requests.status_4xx} / {metrics.requests.status_5xx}
+                    </span>
+                  </div>
+                  <div className="owner-monitoring-stat">
+                    <span className="muted">New firms (7d / 30d)</span>
+                    <span className="stat-big">
+                      {metrics.usage.new_firms_last_7_days} / {metrics.usage.new_firms_last_30_days}
+                    </span>
+                  </div>
+                </div>
+
+                {metrics.requests.top_error_paths.length > 0 && (
+                  <table className="data-table" style={{ marginTop: 16 }}>
+                    <thead>
+                      <tr>
+                        <th>Top error paths</th>
+                        <th>Status</th>
+                        <th>Errors</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {metrics.requests.top_error_paths.map((p) => (
+                        <tr key={`${p.path}-${p.status_code}`}>
+                          <td className="muted">{p.path}</td>
+                          <td>
+                            <span
+                              className="status-badge"
+                              style={{
+                                color: p.status_code >= 500 ? '#ef4444' : '#eab308',
+                                background: p.status_code >= 500 ? '#ef444422' : '#eab30822',
+                              }}
+                            >
+                              {p.status_code}
+                            </span>
+                          </td>
+                          <td className="tabular">{p.count}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </>
+            )}
+          </section>
+
+          <section className="card owner-errors-card">
+            <div className="card-header">
+              <span>Recent errors</span>
+              <span className="muted">last 24h — what kind, and for whom</span>
+            </div>
+
+            {errorsStatus === 'loading' && (
+              <div className="dash-state">
+                <span className="dash-spinner" />
+                <p>Loading recent errors…</p>
+              </div>
+            )}
+
+            {errorsStatus === 'error' && (
+              <div className="dash-state">
+                <p>Couldn&rsquo;t reach the backend for recent errors.</p>
+                <button type="button" className="btn-ghost" onClick={loadErrors}>
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {errorsStatus === 'ready' && (
+              <>
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>When</th>
+                      <th>Request</th>
+                      <th>Status</th>
+                      <th>For</th>
+                      <th>Detail</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {errorEntries.map((e) => (
+                      <tr key={e.id}>
+                        <td className="muted tabular">{new Date(e.created_at).toLocaleString()}</td>
+                        <td className="muted">
+                          {e.method} {e.path}
+                        </td>
+                        <td>
+                          <span
+                            className="status-badge"
+                            style={{
+                              color: e.status_code >= 500 ? '#ef4444' : '#eab308',
+                              background: e.status_code >= 500 ? '#ef444422' : '#eab30822',
+                            }}
+                          >
+                            {e.status_code}
+                          </span>
+                        </td>
+                        <td className="muted">{formatActor(e)}</td>
+                        <td className="muted audit-log-details">{e.error_detail ?? '—'}</td>
+                      </tr>
+                    ))}
+                    {errorEntries.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="muted">
+                          No errors in the last 24h.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+                {errorsHasMore && (
+                  <div className="audit-log-load-more">
+                    <button type="button" className="btn-ghost" disabled={errorsLoadingMore} onClick={handleLoadMoreErrors}>
+                      {errorsLoadingMore ? 'Loading…' : 'Load more'}
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </section>
+
+          <section className="card owner-announcements-card">
+            <div className="card-header">
+              <span>Platform Announcements</span>
+              <button type="button" className="btn-ghost" onClick={() => setShowAnnouncementForm((v) => !v)}>
+                <IconPlus /> New Announcement
+              </button>
+            </div>
+
+            {showAnnouncementForm && (
+              <form onSubmit={handleCreateAnnouncement} className="owner-announcement-form">
+                <div className="field-row">
+                  <label className="field">
+                    <span>Title</span>
+                    <input
+                      value={announcementTitle}
+                      onChange={(e) => setAnnouncementTitle(e.target.value)}
+                      required
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Severity</span>
+                    <select
+                      value={announcementSeverity}
+                      onChange={(e) => setAnnouncementSeverity(e.target.value as AnnouncementSeverity)}
+                    >
+                      <option value="info">Info</option>
+                      <option value="warning">Warning</option>
+                      <option value="critical">Critical</option>
+                    </select>
+                  </label>
+                </div>
+                <label className="field">
+                  <span>Body</span>
+                  <textarea rows={2} value={announcementBody} onChange={(e) => setAnnouncementBody(e.target.value)} required />
+                </label>
+                {announcementError && <p className="matter-error">{announcementError}</p>}
+                <div className="matter-actions">
+                  <button type="button" className="btn-ghost" onClick={() => setShowAnnouncementForm(false)}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn-solid" disabled={announcementSaving}>
+                    {announcementSaving ? 'Publishing…' : 'Publish'}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {announcementsStatus === 'loading' && (
+              <div className="dash-state">
+                <span className="dash-spinner" />
+                <p>Loading announcements…</p>
+              </div>
+            )}
+
+            {announcementsStatus === 'error' && (
+              <div className="dash-state">
+                <p>Couldn&rsquo;t reach the backend for announcements.</p>
+                <button type="button" className="btn-ghost" onClick={loadAnnouncements}>
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {announcementsStatus === 'ready' && (
+              <div className="list-rows">
+                {announcements.map((a) => (
+                  <div key={a.id} className="owner-announcement-row">
+                    <div>
+                      <span
+                        className="announcement-severity-badge"
+                        style={{
+                          color: severityColor[a.severity],
+                          background: `${severityColor[a.severity]}22`,
+                        }}
+                      >
+                        {a.severity}
+                      </span>
+                      <strong>{a.title}</strong>
+                      <p className="muted" style={{ margin: '4px 0 0' }}>
+                        {a.body}
+                      </p>
+                    </div>
+                    <div className="clients-row-actions">
+                      <button
+                        type="button"
+                        className="btn-ghost owner-firm-toggle"
+                        disabled={announcementBusyId === a.id}
+                        onClick={() => handleToggleAnnouncementActive(a)}
+                      >
+                        {a.is_active ? 'Deactivate' : 'Activate'}
+                      </button>
+                      <button
+                        type="button"
+                        className="icon-btn"
+                        disabled={announcementBusyId === a.id}
+                        onClick={() => handleDeleteAnnouncement(a)}
+                        aria-label={`Delete ${a.title}`}
+                      >
+                        <IconTrash />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {announcements.length === 0 && <p className="muted">No announcements yet.</p>}
+              </div>
+            )}
+          </section>
+
           <section className="card owner-firms-table-card">
             <div className="card-header">
               <span>Firms on the platform</span>
@@ -361,6 +813,16 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                           onClick={() => handleToggleStatus(f)}
                         >
                           {togglingId === f.id ? 'Saving…' : f.is_active ? 'Suspend' : 'Activate'}
+                        </button>
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          disabled={exportingId === f.id}
+                          onClick={() => handleExportFirm(f)}
+                          aria-label={`Export ${f.name} data`}
+                          title="Export firm data"
+                        >
+                          <IconDownload />
                         </button>
                         <button
                           type="button"

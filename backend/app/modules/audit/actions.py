@@ -28,3 +28,6 @@ ANNOUNCEMENT_DELETED = "announcement.deleted"
 
 TEMPLATE_UPLOADED = "template.uploaded"
 TEMPLATE_UPDATED = "template.updated"
+
+SIGNED_CONTRACT_UPLOADED = "signed_contract.uploaded"
+SIGNED_CONTRACT_STATUS_UPDATED = "signed_contract.status_updated"

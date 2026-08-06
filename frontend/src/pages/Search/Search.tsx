@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import './Search.css'
 import { IconSearch } from '../../components/icons'
 import { search } from '../../api/search'
@@ -18,23 +18,36 @@ const categories: { key: keyof SearchResponse; label: string }[] = [
 
 function Search() {
   const navigate = useNavigate()
-  const [query, setQuery] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [query, setQuery] = useState(searchParams.get('q') ?? '')
   const [state, setState] = useState<SearchState>('idle')
   const [results, setResults] = useState<SearchResponse | null>(null)
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
+  async function runSearch(q: string) {
     const token = localStorage.getItem('access_token')
-    if (!token || !query.trim()) return
+    if (!token || !q.trim()) return
 
     setState('loading')
     try {
-      const data = await search(token, query.trim())
+      const data = await search(token, q.trim())
       setResults(data)
       setState('ready')
     } catch {
       setState('error')
     }
+  }
+
+  // Lets other pages (e.g. the Dashboard search bar) link straight to results via ?q=.
+  useEffect(() => {
+    const initialQuery = searchParams.get('q')
+    if (initialQuery && initialQuery.trim()) runSearch(initialQuery)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    setSearchParams(query.trim() ? { q: query.trim() } : {})
+    await runSearch(query)
   }
 
   function handleResultClick(categoryKey: keyof SearchResponse, item: SearchResultItem) {
@@ -49,25 +62,24 @@ function Search() {
 
   return (
     <main className="dash-main">
-      <header className="dash-topbar">
+      <header className="dash-topbar search-glass-bar">
         <h1>Search</h1>
+        <form onSubmit={handleSubmit} className="search-bar-row">
+          <div className="input-with-icon leading search-input-wrap">
+            <IconSearch />
+            <input
+              type="text"
+              placeholder="Search clients, contacts, matters, staff, documents…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <button type="submit" className="btn-solid" disabled={!query.trim() || state === 'loading'}>
+            {state === 'loading' ? 'Searching…' : 'Search'}
+          </button>
+        </form>
       </header>
-
-      <form onSubmit={handleSubmit} className="search-bar-row">
-        <div className="input-with-icon leading search-input-wrap">
-          <IconSearch />
-          <input
-            type="text"
-            placeholder="Search clients, contacts, matters, staff, documents…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            autoFocus
-          />
-        </div>
-        <button type="submit" className="btn-solid" disabled={!query.trim() || state === 'loading'}>
-          {state === 'loading' ? 'Searching…' : 'Search'}
-        </button>
-      </form>
 
       {state === 'idle' && <div className="dash-state"><p>Search across your firm&rsquo;s data.</p></div>}
 

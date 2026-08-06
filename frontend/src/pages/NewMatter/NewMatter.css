@@ -178,12 +178,37 @@
 }
 
 .btn-solid {
-  background: #22c55e;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #4ade80, #16a34a);
   color: #06210f;
+  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.32);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
 }
 
-.btn-solid:hover {
-  background: #16a34a;
+.btn-solid svg {
+  width: 14px;
+  height: 14px;
+}
+
+.btn-solid:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 6px 22px rgba(34, 197, 94, 0.48);
+  transform: translateY(-1px);
+}
+
+.btn-solid:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 3px 10px rgba(34, 197, 94, 0.3);
+}
+
+.btn-solid:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
 }
 
 .matter-success {

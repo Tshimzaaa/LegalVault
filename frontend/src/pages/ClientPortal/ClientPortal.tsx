@@ -1,6 +1,8 @@
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import Sidebar from '../../components/Sidebar'
 import type { NavItem } from '../../components/Sidebar'
+import AnnouncementBanner from '../../components/AnnouncementBanner'
+import NotificationBell from '../../components/NotificationBell'
 import {
   IconGauge,
   IconFilePlus,
@@ -77,23 +79,27 @@ function ClientPortal({ contact, onLogout }: ClientPortalProps) {
         onLogout={onLogout}
         brandName="Legal"
         brandSub="client portal"
+        notificationBell={<NotificationBell scope="client" />}
       />
-      <Routes>
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<ClientDashboard contact={contact} onLogout={onLogout} />} />
-        <Route path="request-support" element={<RequestSupport contact={contact} onLogout={onLogout} />} />
-        <Route path="workflow" element={<ClientWorkflow contact={contact} onLogout={onLogout} />} />
-        <Route path="matters/:matterId" element={<ClientMatterDetail contact={contact} onLogout={onLogout} />} />
-        <Route path="signed-contracts" element={<ClientSignedContracts contact={contact} onLogout={onLogout} />} />
-        <Route path="reporting" element={<ClientReporting contact={contact} onLogout={onLogout} />} />
-        <Route path="resources" element={<Resources contact={contact} onLogout={onLogout} />} />
-        <Route path="learned-friend" element={<LearnedFriend contact={contact} onLogout={onLogout} />} />
-        <Route path="guide" element={<LegalGuide contact={contact} onLogout={onLogout} />} />
-        <Route path="matter-admin" element={<MatterAdmin contact={contact} onLogout={onLogout} />} />
-        <Route path="integrations" element={<Integrations contact={contact} onLogout={onLogout} />} />
-        <Route path="templates" element={<ClientTemplates contact={contact} onLogout={onLogout} />} />
-        <Route path="*" element={<Navigate to="dashboard" replace />} />
-      </Routes>
+      <div className="dash-content">
+        <AnnouncementBanner scope="client" />
+        <Routes>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<ClientDashboard contact={contact} onLogout={onLogout} />} />
+          <Route path="request-support" element={<RequestSupport contact={contact} onLogout={onLogout} />} />
+          <Route path="workflow" element={<ClientWorkflow contact={contact} onLogout={onLogout} />} />
+          <Route path="matters/:matterId" element={<ClientMatterDetail contact={contact} onLogout={onLogout} />} />
+          <Route path="signed-contracts" element={<ClientSignedContracts contact={contact} onLogout={onLogout} />} />
+          <Route path="reporting" element={<ClientReporting contact={contact} onLogout={onLogout} />} />
+          <Route path="resources" element={<Resources contact={contact} onLogout={onLogout} />} />
+          <Route path="learned-friend" element={<LearnedFriend contact={contact} onLogout={onLogout} />} />
+          <Route path="guide" element={<LegalGuide contact={contact} onLogout={onLogout} />} />
+          <Route path="matter-admin" element={<MatterAdmin contact={contact} onLogout={onLogout} />} />
+          <Route path="integrations" element={<Integrations contact={contact} onLogout={onLogout} />} />
+          <Route path="templates" element={<ClientTemplates contact={contact} onLogout={onLogout} />} />
+          <Route path="*" element={<Navigate to="dashboard" replace />} />
+        </Routes>
+      </div>
     </div>
   )
 }

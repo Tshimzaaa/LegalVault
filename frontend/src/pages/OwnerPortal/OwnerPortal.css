@@ -46,3 +46,58 @@
   font-size: 11.5px;
   font-family: inherit;
 }
+
+.owner-monitoring-card {
+  flex-shrink: 0;
+  margin-bottom: 16px;
+}
+
+.owner-monitoring-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.owner-monitoring-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.owner-announcements-card {
+  flex-shrink: 0;
+  margin-bottom: 16px;
+}
+
+.owner-announcement-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.owner-announcement-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.owner-announcement-row:last-child {
+  border-bottom: none;
+}
+
+.owner-announcement-row .clients-row-actions {
+  flex-shrink: 0;
+}
+
+.announcement-severity-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-right: 8px;
+  text-transform: uppercase;
+}

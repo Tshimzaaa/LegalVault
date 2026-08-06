@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import './Templates.css'
-import { IconPlus } from '../../components/icons'
-import { listTemplates, downloadTemplate, uploadTemplate } from '../../api/templates'
+import { IconPlus, IconEdit } from '../../components/icons'
+import { listTemplates, downloadTemplate, uploadTemplate, updateTemplate } from '../../api/templates'
 import type { Template } from '../../api/templates'
 import { getTemplateIcon } from '../../utils/templateIcon'
 
@@ -23,6 +23,13 @@ function Templates() {
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editDescription, setEditDescription] = useState('')
+  const [editCategory, setEditCategory] = useState('')
+  const [editSaving, setEditSaving] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -89,6 +96,37 @@ function Templates() {
       setUploadError('Could not upload the template. Please try again.')
     } finally {
       setUploading(false)
+    }
+  }
+
+  function startEdit(t: Template) {
+    setEditingId(t.id)
+    setEditTitle(t.title)
+    setEditDescription(t.description ?? '')
+    setEditCategory(t.category)
+    setEditError(null)
+  }
+
+  async function handleSaveEdit(e: FormEvent) {
+    e.preventDefault()
+    if (!editingId) return
+    const token = localStorage.getItem('access_token')
+    if (!token) return
+
+    setEditError(null)
+    setEditSaving(true)
+    try {
+      const updated = await updateTemplate(token, editingId, {
+        title: editTitle,
+        description: editDescription || null,
+        category: editCategory,
+      })
+      setTemplates((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
+      setEditingId(null)
+    } catch {
+      setEditError('Could not save changes. Please try again.')
+    } finally {
+      setEditSaving(false)
     }
   }
 
@@ -168,22 +206,60 @@ function Templates() {
 
       {status === 'ready' && (
         <section className="templates-grid">
-          {templates.map((t) => (
-            <div key={t.id} className="card template-card">
-              <span className="template-icon">{getTemplateIcon(t.category)}</span>
-              <span className="template-name">{t.title}</span>
-              <span className="template-category">{t.category}</span>
-              <p className="template-description">{t.description}</p>
-              <button
-                type="button"
-                className="btn-ghost template-use-btn"
-                disabled={downloadingId === t.id}
-                onClick={() => handleUseTemplate(t.id)}
-              >
-                {downloadingId === t.id ? 'Preparing…' : 'Use Template'}
-              </button>
-            </div>
-          ))}
+          {templates.map((t) =>
+            editingId === t.id ? (
+              <form key={t.id} onSubmit={handleSaveEdit} className="card template-card template-edit-form">
+                <label className="field">
+                  <span>Title</span>
+                  <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required />
+                </label>
+                <label className="field">
+                  <span>Category</span>
+                  <input value={editCategory} onChange={(e) => setEditCategory(e.target.value)} required />
+                </label>
+                <label className="field">
+                  <span>Description</span>
+                  <textarea rows={2} value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
+                </label>
+                {editError && <p className="matter-error">{editError}</p>}
+                <div className="matter-actions">
+                  <button type="button" className="btn-ghost" onClick={() => setEditingId(null)}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn-solid" disabled={editSaving}>
+                    {editSaving ? 'Saving…' : 'Save'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div key={t.id} className="card template-card">
+                <div className="template-card-top">
+                  <span className="template-icon">{getTemplateIcon(t.category)}</span>
+                  <button
+                    type="button"
+                    className="icon-btn"
+                    onClick={() => startEdit(t)}
+                    aria-label={`Edit ${t.title}`}
+                  >
+                    <IconEdit />
+                  </button>
+                </div>
+                <span className="template-name">{t.title}</span>
+                <span className="template-category">
+                  {t.category} <span className="chip small">v{t.version}</span>
+                </span>
+                <p className="template-description">{t.description}</p>
+                <button
+                  type="button"
+                  className="btn-ghost template-use-btn"
+                  disabled={downloadingId === t.id}
+                  onClick={() => handleUseTemplate(t.id)}
+                >
+                  {downloadingId === t.id ? 'Preparing…' : 'Use Template'}
+                </button>
+              </div>
+            ),
+          )}
           {templates.length === 0 && <p className="muted">No templates uploaded yet.</p>}
         </section>
       )}

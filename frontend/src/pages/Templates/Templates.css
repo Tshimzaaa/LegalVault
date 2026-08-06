@@ -59,3 +59,14 @@
   font-size: 12px;
   margin-top: 4px;
 }
+
+.template-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.template-edit-form {
+  gap: 10px;
+}
+

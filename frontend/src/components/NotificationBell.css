@@ -1,0 +1,135 @@
+.notification-bell-root {
+  position: relative;
+}
+
+.notification-bell-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #9ca3af;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.notification-bell-btn:hover {
+  color: #e5e7eb;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.notification-bell-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.notification-bell-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.notification-bell-panel {
+  position: fixed;
+  width: 320px;
+  max-height: 420px;
+  display: flex;
+  flex-direction: column;
+  background: #17181a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.notification-bell-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #e5e7eb;
+  flex-shrink: 0;
+}
+
+.notification-bell-mark-all {
+  background: none;
+  border: none;
+  color: #22c55e;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.notification-bell-list {
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.notification-bell-empty {
+  padding: 16px 14px;
+  font-size: 12px;
+}
+
+.notification-bell-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.notification-bell-item:last-child {
+  border-bottom: none;
+}
+
+.notification-bell-item.unread {
+  background: rgba(34, 197, 94, 0.06);
+}
+
+.notification-bell-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.notification-bell-item-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+.notification-bell-item-body {
+  font-size: 11.5px;
+  color: #9ca3af;
+}
+
+.notification-bell-item-time {
+  font-size: 10.5px;
+  color: #6b7280;
+  margin-top: 2px;
+}

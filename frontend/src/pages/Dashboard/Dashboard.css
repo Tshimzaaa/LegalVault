@@ -1,3 +1,41 @@
+.dash-topbar-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 260px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.dash-topbar-search:focus-within {
+  border-color: #22c55e;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.dash-topbar-search svg {
+  width: 14px;
+  height: 14px;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.dash-topbar-search input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 12.5px;
+  font-family: inherit;
+}
+
+.dash-topbar-search input:focus {
+  outline: none;
+}
+
 .dash-state {
   flex: 1;
   display: flex;

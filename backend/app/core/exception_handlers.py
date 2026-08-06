@@ -40,6 +40,7 @@ from app.exceptions.matters import (
 from app.exceptions.support_requests import SupportRequestNotFound
 from app.exceptions.announcements import AnnouncementNotFound
 from app.exceptions.notifications import NotificationNotFound
+from app.exceptions.signed_contracts import SignedContractNotFound
 
 def register_exception_handlers(app: FastAPI):
 
@@ -191,6 +192,10 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(NotificationNotFound)
     async def notification_not_found(_, __):
         raise HTTPException(status_code=404, detail="Notification not found.")
+
+    @app.exception_handler(SignedContractNotFound)
+    async def signed_contract_not_found(_, __):
+        raise HTTPException(status_code=404, detail="Signed contract not found.")
 
     @app.exception_handler(StaffInvalidRefreshToken)
     async def staff_invalid_refresh_token(_, __):

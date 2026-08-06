@@ -8,7 +8,14 @@ export interface Template {
   category: string
   original_filename: string
   content_type: string
+  version: number
   created_at: string
+}
+
+export interface UpdateTemplatePayload {
+  title?: string
+  description?: string | null
+  category?: string
 }
 
 export interface TemplateDownload {
@@ -22,6 +29,14 @@ export async function listTemplates(token: string): Promise<Template[]> {
 
 export async function downloadTemplate(token: string, templateId: string): Promise<TemplateDownload> {
   return apiRequest<TemplateDownload>(`/templates/${templateId}/download`, { token })
+}
+
+export async function updateTemplate(
+  token: string,
+  templateId: string,
+  payload: UpdateTemplatePayload,
+): Promise<Template> {
+  return apiRequest<Template>(`/templates/${templateId}`, { method: 'PATCH', body: payload, token })
 }
 
 export async function uploadTemplate(

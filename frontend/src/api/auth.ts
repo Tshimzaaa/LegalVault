@@ -106,3 +106,29 @@ export async function register(payload: RegisterPayload): Promise<RegisterRespon
     skipAuthRedirect: true,
   })
 }
+
+export interface FirmProfile {
+  id: string
+  name: string
+  email: string
+  phone: string | null
+  website: string | null
+  address: string | null
+  is_active: boolean
+}
+
+export interface UpdateFirmProfilePayload {
+  name?: string
+  email?: string
+  phone?: string | null
+  website?: string | null
+  address?: string | null
+}
+
+export async function getFirmProfile(token: string): Promise<FirmProfile> {
+  return apiRequest<FirmProfile>('/auth/firm', { token })
+}
+
+export async function updateFirmProfile(token: string, payload: UpdateFirmProfilePayload): Promise<FirmProfile> {
+  return apiRequest<FirmProfile>('/auth/firm', { method: 'PATCH', body: payload, token })
+}

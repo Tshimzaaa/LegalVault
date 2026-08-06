@@ -10,8 +10,23 @@
   overflow: hidden;
 }
 
-.dash-main {
+.dash-content {
   grid-area: main;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.dash-content > .announcement-banner-stack {
+  margin: 20px 28px 0;
+}
+
+.dash-content > .dash-main {
+  flex: 1;
+}
+
+.dash-main {
   display: flex;
   flex-direction: column;
   min-height: 0;

@@ -4,26 +4,26 @@ import './ClientDashboard.css'
 import { IconFolder, IconFilePlus, IconLearnedFriend } from '../../components/icons'
 import ProfileMenu from '../../components/ProfileMenu'
 import type { ClientContact } from '../../api/clientAuth'
-import { listClientMatters } from '../../api/clientMatters'
+import { getClientDashboardSummary } from '../../api/clientDashboard'
+import type { ClientDashboardSummary } from '../../api/clientDashboard'
 
-const contractBreakdown = [
-  { label: 'Signed', count: 31, color: '#22c55e' },
-  { label: 'Pending', count: 14, color: '#eab308' },
-  { label: 'Expired', count: 7, color: '#ef4444' },
-]
+const breakdownColor: Record<'signed' | 'pending' | 'expired', string> = {
+  signed: '#22c55e',
+  pending: '#eab308',
+  expired: '#ef4444',
+}
 
-const recentActions = [
-  { title: 'NDA Request submitted — Apex Corp', time: '11m ago' },
-  { title: 'Consultancy Agreement moved to In Progress', time: '48m ago' },
-  { title: 'Supplier Agreement signed via SigningHub', time: '2h ago' },
-  { title: 'Lease Review request created', time: '5h ago' },
-]
-
-const activeUsers = [
-  { initials: 'JM', name: 'J. Mokoena', role: 'Procurement Lead' },
-  { initials: 'TN', name: 'T. Ndlovu', role: 'Business Owner' },
-  { initials: 'RP', name: 'R. Patel', role: 'Team Member' },
-]
+function formatRelativeTime(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime()
+  const minutes = Math.round(diffMs / 60000)
+  if (minutes < 1) return 'just now'
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.round(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.round(hours / 24)
+  if (days < 30) return `${days}d ago`
+  return new Date(iso).toLocaleDateString()
+}
 
 interface ClientDashboardProps {
   contact: ClientContact
@@ -32,16 +32,25 @@ interface ClientDashboardProps {
 
 function ClientDashboard({ contact, onLogout }: ClientDashboardProps) {
   const navigate = useNavigate()
-  const [openMatters, setOpenMatters] = useState<number | null>(null)
+  const [summary, setSummary] = useState<ClientDashboardSummary | null>(null)
 
   useEffect(() => {
     const token = localStorage.getItem('access_token')
     if (!token) return
 
-    listClientMatters(token)
-      .then((matters) => setOpenMatters(matters.filter((m) => m.status !== 'closed' && m.status !== 'declined').length))
-      .catch(() => setOpenMatters(null))
+    getClientDashboardSummary(token)
+      .then(setSummary)
+      .catch(() => setSummary(null))
   }, [])
+
+  const breakdown = summary?.contractBreakdown
+  const breakdownRows = breakdown
+    ? [
+        { label: 'Signed', count: breakdown.signed, color: breakdownColor.signed },
+        { label: 'Pending', count: breakdown.pending, color: breakdownColor.pending },
+        { label: 'Expired', count: breakdown.expired, color: breakdownColor.expired },
+      ]
+    : []
 
   return (
     <main className="dash-main">
@@ -59,7 +68,7 @@ function ClientDashboard({ contact, onLogout }: ClientDashboardProps) {
             <span>Open Matters</span>
           </div>
           <div className="stat-line">
-            <span className="stat-big">{openMatters ?? '—'}</span>
+            <span className="stat-big">{summary?.openMatters ?? '—'}</span>
           </div>
         </div>
 
@@ -83,10 +92,10 @@ function ClientDashboard({ contact, onLogout }: ClientDashboardProps) {
             <span>Contract Breakdown</span>
           </div>
           <div className="stat-line">
-            <span className="stat-big">{contractBreakdown.reduce((s, c) => s + c.count, 0)}</span>
+            <span className="stat-big">{breakdown?.total ?? '—'}</span>
             <span className="stat-sub">total</span>
           </div>
-          {contractBreakdown.map((c) => (
+          {breakdownRows.map((c) => (
             <div key={c.label} className="status-row">
               <span className="status-dot" style={{ background: c.color }} />
               <span className="status-label">{c.label}</span>
@@ -102,31 +111,15 @@ function ClientDashboard({ contact, onLogout }: ClientDashboardProps) {
             <span>Recent Action History</span>
           </div>
           <div className="list-rows">
-            {recentActions.map((a) => (
-              <div key={a.title} className="deadline-row">
+            {summary?.recentActions.map((a, i) => (
+              <div key={`${a.occurred_at}-${i}`} className="deadline-row">
                 <div className="deadline-text">
-                  <span className="deadline-title">{a.title}</span>
-                  <span className="deadline-sub">{a.time}</span>
+                  <span className="deadline-title">{a.text}</span>
+                  <span className="deadline-sub">{formatRelativeTime(a.occurred_at)}</span>
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="card-header">
-            <span>Latest Active Users</span>
-          </div>
-          <div className="list-rows">
-            {activeUsers.map((u) => (
-              <div key={u.initials} className="feed-row">
-                <span className="feed-avatar">{u.initials}</span>
-                <div className="deadline-text">
-                  <span className="deadline-title">{u.name}</span>
-                  <span className="deadline-sub">{u.role}</span>
-                </div>
-              </div>
-            ))}
+            {summary && summary.recentActions.length === 0 && <p className="muted">No recent activity.</p>}
           </div>
         </div>
       </section>

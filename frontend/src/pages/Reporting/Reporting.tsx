@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react'
 import './Reporting.css'
 import { listMatters } from '../../api/matters'
+import { getDashboardSummary } from '../../api/dashboard'
+
+interface OutcomeSlice {
+  label: string
+  value: number
+  color: string
+}
 
 const revenueTrend = [
   { month: 'Jan', value: 620 },
@@ -11,7 +18,7 @@ const revenueTrend = [
   { month: 'Jun', value: 960 },
 ]
 
-const caseOutcomes = [
+const fallbackCaseOutcomes: OutcomeSlice[] = [
   { label: 'Won', value: 45, color: '#3987e5' },
   { label: 'Settled', value: 30, color: '#199e70' },
   { label: 'Ongoing', value: 15, color: '#c98500' },
@@ -123,16 +130,16 @@ function RevenueLineChart() {
   )
 }
 
-function CaseOutcomesDonut() {
+function CaseOutcomesDonut({ data }: { data: OutcomeSlice[] }) {
   const size = 148
   const stroke = 22
   const radius = (size - stroke) / 2
   const circumference = 2 * Math.PI * radius
-  const total = caseOutcomes.reduce((s, d) => s + d.value, 0)
+  const total = data.reduce((s, d) => s + d.value, 0) || 1
   const [hover, setHover] = useState<number | null>(null)
 
   let cumulative = 0
-  const segments = caseOutcomes.map((d) => {
+  const segments = data.map((d) => {
     const fraction = d.value / total
     const dash = Math.max(fraction * circumference - 2, 0)
     const rotate = (cumulative / total) * 360 - 90
@@ -170,11 +177,11 @@ function CaseOutcomesDonut() {
       </svg>
 
       <div className="donut-legend">
-        {caseOutcomes.map((d, i) => (
+        {data.map((d, i) => (
           <div key={d.label} className={`donut-legend-row${hover === i ? ' active' : ''}`}>
             <span className="status-dot" style={{ background: d.color }} />
             <span className="donut-legend-label">{d.label}</span>
-            <span className="donut-legend-value">{d.value}%</span>
+            <span className="donut-legend-value">{Math.round((d.value / total) * 100)}%</span>
           </div>
         ))}
       </div>
@@ -256,6 +263,7 @@ function BillableHoursBar() {
 
 function Reporting() {
   const [activeMatters, setActiveMatters] = useState<number | null>(null)
+  const [caseOutcomes, setCaseOutcomes] = useState<OutcomeSlice[]>(fallbackCaseOutcomes)
 
   useEffect(() => {
     const token = localStorage.getItem('access_token')
@@ -264,6 +272,15 @@ function Reporting() {
     listMatters(token)
       .then((matters) => setActiveMatters(matters.filter((m) => m.status !== 'closed' && m.status !== 'declined').length))
       .catch(() => setActiveMatters(null))
+
+    getDashboardSummary(token)
+      .then((summary) => {
+        const breakdown = summary.contractStatus.breakdown
+          .filter((b) => b.count > 0)
+          .map((b) => ({ label: b.label, value: b.count, color: b.color }))
+        if (breakdown.length > 0) setCaseOutcomes(breakdown)
+      })
+      .catch(() => {})
   }, [])
 
   return (
@@ -299,7 +316,7 @@ function Reporting() {
           <div className="card-header">
             <span>Revenue Trend</span>
           </div>
-          <span className="card-subtitle">last 6 months</span>
+          <span className="card-subtitle">last 6 months (demo data)</span>
           <RevenueLineChart />
         </div>
 
@@ -307,15 +324,15 @@ function Reporting() {
           <div className="card-header">
             <span>Case Outcomes</span>
           </div>
-          <span className="card-subtitle">closed &amp; ongoing matters</span>
-          <CaseOutcomesDonut />
+          <span className="card-subtitle">by matter status</span>
+          <CaseOutcomesDonut data={caseOutcomes} />
         </div>
 
         <div className="card reporting-chart-card">
           <div className="card-header">
             <span>Billable Hours</span>
           </div>
-          <span className="card-subtitle">by attorney, this week</span>
+          <span className="card-subtitle">by attorney, this week (demo data)</span>
           <BillableHoursBar />
         </div>
       </section>

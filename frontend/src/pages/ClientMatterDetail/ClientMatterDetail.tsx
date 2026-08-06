@@ -3,15 +3,18 @@ import type { ChangeEvent, FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import '../MatterDetail/MatterDetail.css'
 import ProfileMenu from '../../components/ProfileMenu'
-import { IconDownload } from '../../components/icons'
+import { IconDownload, IconSend, IconTrash } from '../../components/icons'
 import type { ClientContact } from '../../api/clientAuth'
 import {
   listClientMatters,
   listClientMatterDocuments,
   uploadClientMatterDocument,
   getClientMatterDocumentDownloadUrl,
+  listClientMessages,
+  createClientMessage,
+  deleteClientMessage,
 } from '../../api/clientMatters'
-import type { Matter, MatterStatus, MatterDocument } from '../../api/matters'
+import type { Matter, MatterStatus, MatterDocument, MatterMessage } from '../../api/matters'
 
 type LoadState = 'loading' | 'error' | 'ready'
 
@@ -52,6 +55,12 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
 
+  const [messages, setMessages] = useState<MatterMessage[]>([])
+  const [messageBody, setMessageBody] = useState('')
+  const [sendingMessage, setSendingMessage] = useState(false)
+  const [messageError, setMessageError] = useState<string | null>(null)
+  const [messageBusyId, setMessageBusyId] = useState<string | null>(null)
+
   const token = localStorage.getItem('access_token')
 
   function loadAll() {
@@ -60,8 +69,8 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
       return
     }
     setStatus('loading')
-    Promise.all([listClientMatters(token), listClientMatterDocuments(token, matterId)])
-      .then(([matters, docs]) => {
+    Promise.all([listClientMatters(token), listClientMatterDocuments(token, matterId), listClientMessages(token, matterId)])
+      .then(([matters, docs, msgs]) => {
         const found = matters.find((m) => m.id === matterId) ?? null
         if (!found) {
           setStatus('error')
@@ -69,9 +78,37 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
         }
         setMatter(found)
         setDocuments(docs)
+        setMessages(msgs)
         setStatus('ready')
       })
       .catch(() => setStatus('error'))
+  }
+
+  async function handleSendMessage(e: FormEvent) {
+    e.preventDefault()
+    if (!token || !matterId || !messageBody.trim()) return
+    setMessageError(null)
+    setSendingMessage(true)
+    try {
+      const created = await createClientMessage(token, matterId, messageBody.trim())
+      setMessages((prev) => [...prev, created])
+      setMessageBody('')
+    } catch (err) {
+      setMessageError(err instanceof Error ? err.message : 'Could not send the message.')
+    } finally {
+      setSendingMessage(false)
+    }
+  }
+
+  async function handleDeleteMessage(message: MatterMessage) {
+    if (!token || !matterId) return
+    setMessageBusyId(message.id)
+    try {
+      await deleteClientMessage(token, matterId, message.id)
+      setMessages((prev) => prev.filter((m) => m.id !== message.id))
+    } finally {
+      setMessageBusyId(null)
+    }
   }
 
   useEffect(() => {
@@ -249,6 +286,52 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
               </button>
             </form>
             {uploadError && <p className="matter-error">{uploadError}</p>}
+          </section>
+
+          <section className="card">
+            <div className="card-header">
+              <span>Messages</span>
+            </div>
+
+            <div className="matter-messages-list">
+              {messages.map((m) => (
+                <div key={m.id} className="matter-message-row">
+                  <div className="matter-message-meta">
+                    <span className="matter-message-author">
+                      {m.author_name}
+                      {m.author_type === 'staff' ? ' (firm)' : ''}
+                    </span>
+                    <span className="muted">{new Date(m.created_at).toLocaleString()}</span>
+                    {m.author_type === 'client_contact' && (
+                      <button
+                        type="button"
+                        className="icon-btn"
+                        disabled={messageBusyId === m.id}
+                        onClick={() => handleDeleteMessage(m)}
+                        aria-label="Delete message"
+                      >
+                        <IconTrash />
+                      </button>
+                    )}
+                  </div>
+                  <p className="matter-message-body">{m.body}</p>
+                </div>
+              ))}
+              {messages.length === 0 && <p className="muted">No messages yet.</p>}
+            </div>
+
+            <form onSubmit={handleSendMessage} className="matter-message-compose-row">
+              <input
+                type="text"
+                placeholder="Write a message to the firm…"
+                value={messageBody}
+                onChange={(e) => setMessageBody(e.target.value)}
+              />
+              <button type="submit" className="btn-ghost" disabled={sendingMessage || !messageBody.trim()}>
+                <IconSend /> {sendingMessage ? 'Sending…' : 'Send'}
+              </button>
+            </form>
+            {messageError && <p className="matter-error">{messageError}</p>}
           </section>
         </div>
       )}

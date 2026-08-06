@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import './Clients.css'
-import { IconPlus, IconChevron, IconTrash } from '../../components/icons'
+import { IconPlus, IconChevron, IconTrash, IconMail } from '../../components/icons'
 import {
   listClients,
   createClient,
@@ -450,7 +450,7 @@ function Clients({ user }: ClientsProps) {
                   <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
                 </label>
                 <button type="submit" className="btn-solid" disabled={inviting}>
-                  {inviting ? 'Sending…' : 'Send Invite'}
+                  <IconMail /> {inviting ? 'Sending…' : 'Send Invite'}
                 </button>
                 {inviteError && <p className="matter-error">{inviteError}</p>}
                 {inviteSent && <p className="clients-form-note">Invite sent.</p>}

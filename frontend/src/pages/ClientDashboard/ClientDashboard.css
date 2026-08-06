@@ -3,7 +3,7 @@
 }
 
 .client-dash-row-2 {
-  grid-template-columns: 1.2fr 1fr;
+  grid-template-columns: 1fr;
 }
 
 .quick-actions {

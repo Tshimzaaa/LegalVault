@@ -1,5 +1,5 @@
 import { apiRequest, apiUpload } from './client'
-import type { Matter, MatterDocument } from './matters'
+import type { Matter, MatterDocument, MatterMessage } from './matters'
 
 export async function listClientMatters(token: string): Promise<Matter[]> {
   return apiRequest<Matter[]>('/client-matters', { token })
@@ -31,4 +31,16 @@ export async function getClientMatterDocumentDownloadUrl(
     { token },
   )
   return data.download_url
+}
+
+export async function listClientMessages(token: string, matterId: string): Promise<MatterMessage[]> {
+  return apiRequest<MatterMessage[]>(`/client-matters/${matterId}/messages`, { token })
+}
+
+export async function createClientMessage(token: string, matterId: string, body: string): Promise<MatterMessage> {
+  return apiRequest<MatterMessage>(`/client-matters/${matterId}/messages`, { method: 'POST', body: { body }, token })
+}
+
+export async function deleteClientMessage(token: string, matterId: string, messageId: string): Promise<void> {
+  await apiRequest(`/client-matters/${matterId}/messages/${messageId}`, { method: 'DELETE', token })
 }

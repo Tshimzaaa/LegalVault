@@ -10,8 +10,18 @@ export interface Matter {
   description: string | null
   status: MatterStatus
   is_visible_to_client: boolean
+  due_date: string | null
   created_at: string
   updated_at: string
+}
+
+export interface CalendarEvent {
+  date: string
+  type: 'matter_deadline' | 'task_due'
+  title: string
+  matter_id: string
+  matter_title: string
+  task_id: string | null
 }
 
 export type MatterRole = 'lead_lawyer' | 'paralegal' | 'secretary' | 'reviewer'
@@ -39,6 +49,7 @@ export interface CreateMatterRequest {
   client_id: string
   title: string
   description?: string | null
+  due_date?: string | null
 }
 
 export type TaskStatus = 'todo' | 'in_progress' | 'done'
@@ -96,6 +107,22 @@ export async function updateMatterVisibility(
     body: { is_visible_to_client: isVisibleToClient },
     token,
   })
+}
+
+export async function updateMatterDeadline(token: string, matterId: string, dueDate: string | null): Promise<Matter> {
+  return apiRequest<Matter>(`/matters/${matterId}/deadline`, {
+    method: 'PATCH',
+    body: { due_date: dueDate },
+    token,
+  })
+}
+
+export async function getCalendar(token: string, start?: string, end?: string): Promise<CalendarEvent[]> {
+  const params = new URLSearchParams()
+  if (start) params.set('start', start)
+  if (end) params.set('end', end)
+  const qs = params.toString()
+  return apiRequest<CalendarEvent[]>(`/matters/calendar${qs ? `?${qs}` : ''}`, { token })
 }
 
 export async function listAssignments(token: string, matterId: string): Promise<MatterAssignment[]> {
@@ -161,4 +188,28 @@ export async function updateTask(
 
 export async function deleteTask(token: string, matterId: string, taskId: string): Promise<void> {
   await apiRequest(`/matters/${matterId}/tasks/${taskId}`, { method: 'DELETE', token })
+}
+
+export type MessageAuthorType = 'staff' | 'client_contact'
+
+export interface MatterMessage {
+  id: string
+  matter_id: string
+  author_type: MessageAuthorType
+  author_id: string
+  author_name: string
+  body: string
+  created_at: string
+}
+
+export async function listMessages(token: string, matterId: string): Promise<MatterMessage[]> {
+  return apiRequest<MatterMessage[]>(`/matters/${matterId}/messages`, { token })
+}
+
+export async function createMessage(token: string, matterId: string, body: string): Promise<MatterMessage> {
+  return apiRequest<MatterMessage>(`/matters/${matterId}/messages`, { method: 'POST', body: { body }, token })
+}
+
+export async function deleteMessage(token: string, matterId: string, messageId: string): Promise<void> {
+  await apiRequest(`/matters/${matterId}/messages/${messageId}`, { method: 'DELETE', token })
 }

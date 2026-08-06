@@ -21,6 +21,7 @@ interface SidebarProps {
   onLogout: () => void
   brandName?: string
   brandSub?: string
+  notificationBell?: React.ReactNode
 }
 
 function Sidebar({
@@ -31,6 +32,7 @@ function Sidebar({
   onLogout,
   brandName = 'LEGAL',
   brandSub = 'matter management platform',
+  notificationBell,
 }: SidebarProps) {
   return (
     <aside className="dash-sidebar">
@@ -42,6 +44,7 @@ function Sidebar({
           <span className="brand-name">{brandName}</span>
           <span className="brand-sub">{brandSub}</span>
         </span>
+        {notificationBell && <span className="sidebar-brand-bell">{notificationBell}</span>}
       </div>
 
       <nav className="sidebar-nav">
