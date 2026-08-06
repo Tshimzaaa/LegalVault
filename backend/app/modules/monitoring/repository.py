@@ -41,12 +41,22 @@ class RequestLogRepository:
             select(func.avg(RequestLog.duration_ms)).where(RequestLog.created_at >= since)
         )
 
-    def top_error_paths(self, since: datetime, limit: int = 10) -> list[tuple[str, int]]:
+    def top_error_paths(self, since: datetime, limit: int = 10) -> list[tuple[str, int, int]]:
         statement = (
-            select(RequestLog.path, func.count())
+            select(RequestLog.path, RequestLog.status_code, func.count())
             .where(RequestLog.created_at >= since, RequestLog.status_code >= 400)
-            .group_by(RequestLog.path)
+            .group_by(RequestLog.path, RequestLog.status_code)
             .order_by(func.count().desc())
             .limit(limit)
         )
         return list(self.db.execute(statement).all())
+
+    def list_errors(self, since: datetime, limit: int = 50, offset: int = 0) -> list[RequestLog]:
+        statement = (
+            select(RequestLog)
+            .where(RequestLog.created_at >= since, RequestLog.status_code >= 400)
+            .order_by(RequestLog.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        return list(self.db.scalars(statement).all())

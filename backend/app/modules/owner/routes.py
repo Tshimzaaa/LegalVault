@@ -31,6 +31,7 @@ from app.modules.owner.schemas import (
     UsageMetrics,
     PlatformMetricsResponse,
 )
+from app.modules.monitoring.schemas import RequestErrorEntry
 from app.exceptions.auth import LawFirmAlreadyExists  # reuse or add a FirmNotFound exception
 from app.modules.audit.service import AuditService
 from app.modules.audit.repository import AuditLogRepository
@@ -120,6 +121,17 @@ def get_platform_metrics(
         usage=usage,
         requests=requests,
     )
+
+
+@router.get("/errors", response_model=list[RequestErrorEntry])
+def list_recent_errors(
+    hours: int = Query(default=24, ge=1, le=720),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    db: Session = Depends(get_db),
+    _owner=Depends(get_current_owner),
+):
+    return MonitoringService(db).list_recent_errors(hours, limit, offset)
 
 
 @router.get("/firms/{firm_id}", response_model=FirmDetail)
