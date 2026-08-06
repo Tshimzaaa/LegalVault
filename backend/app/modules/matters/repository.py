@@ -122,6 +122,42 @@ class MatterRepository:
         )
         return list(self.db.execute(statement).all())
 
+    def list_assignments_for_firm(self, firm_id) -> list[tuple[MatterAssignment, Matter]]:
+        statement = (
+            select(MatterAssignment, Matter)
+            .join(Matter, MatterAssignment.matter_id == Matter.id)
+            .where(Matter.firm_id == firm_id)
+        )
+        return list(self.db.execute(statement).all())
+
+    def list_tasks_for_firm(self, firm_id) -> list[tuple[MatterTask, Matter]]:
+        statement = (
+            select(MatterTask, Matter)
+            .join(Matter, MatterTask.matter_id == Matter.id)
+            .where(Matter.firm_id == firm_id)
+        )
+        return list(self.db.execute(statement).all())
+
+    def list_recent_documents_for_firm(self, firm_id, limit: int) -> list[tuple[MatterDocument, Matter]]:
+        statement = (
+            select(MatterDocument, Matter)
+            .join(Matter, MatterDocument.matter_id == Matter.id)
+            .where(Matter.firm_id == firm_id)
+            .order_by(MatterDocument.created_at.desc())
+            .limit(limit)
+        )
+        return list(self.db.execute(statement).all())
+
+    def list_recent_messages_for_firm(self, firm_id, limit: int) -> list[tuple[MatterMessage, Matter]]:
+        statement = (
+            select(MatterMessage, Matter)
+            .join(Matter, MatterMessage.matter_id == Matter.id)
+            .where(Matter.firm_id == firm_id)
+            .order_by(MatterMessage.created_at.desc())
+            .limit(limit)
+        )
+        return list(self.db.execute(statement).all())
+
     def list_visible_matters_with_deadline_in_range(self, client_id, start, end) -> list[Matter]:
         statement = select(Matter).where(
             Matter.client_id == client_id,

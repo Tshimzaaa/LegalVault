@@ -21,3 +21,5 @@ class InvalidOrExpiredResetToken(Exception):
     pass
 class ClientHasMatters(Exception):
     pass
+class InvalidRefreshToken(Exception):
+    pass

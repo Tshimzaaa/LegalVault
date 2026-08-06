@@ -3,6 +3,8 @@ from datetime import datetime, timedelta, UTC
 from sqlalchemy.orm import Session
 
 from app.modules.auth.repository import AuthRepository
+from app.modules.auth.refresh_token_repository import RefreshTokenRepository
+from app.modules.auth.models.refresh_token import RefreshTokenActorType
 from app.modules.auth.schemas.password_reset import ForgotPasswordRequest, ResetPasswordRequest
 from app.core.security import hash_password
 from app.exceptions.auth import InvalidOrExpiredResetToken
@@ -28,10 +30,6 @@ def request_password_reset(db: Session, request: ForgotPasswordRequest):
 
 
 def reset_password(db: Session, request: ResetPasswordRequest):
-    user.password_hash = hash_password(request.new_password)
-    user.tokens_invalid_before = datetime.now(UTC)
-    repo.clear_reset_token(user)
-    db.commit()
     repo = AuthRepository(db)
     user = repo.get_user_by_reset_token(request.token)
 
@@ -39,5 +37,7 @@ def reset_password(db: Session, request: ResetPasswordRequest):
         raise InvalidOrExpiredResetToken()
 
     user.password_hash = hash_password(request.new_password)
+    user.tokens_invalid_before = datetime.now(UTC)
     repo.clear_reset_token(user)
+    RefreshTokenRepository(db).revoke_all_for_actor(RefreshTokenActorType.STAFF, user.id)
     db.commit()

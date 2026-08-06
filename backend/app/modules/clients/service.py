@@ -12,7 +12,16 @@ from app.modules.clients.schemas import (
     ClientLoginRequest,
     ClientTokenResponse,
 )
-from app.core.security import hash_password, verify_password, create_access_token
+from app.core.config import settings
+from app.core.security import (
+    hash_password,
+    verify_password,
+    create_access_token,
+    generate_refresh_token,
+    hash_refresh_token,
+)
+from app.modules.auth.refresh_token_repository import RefreshTokenRepository
+from app.modules.auth.models.refresh_token import RefreshTokenActorType
 from app.exceptions.clients import (
     ClientNotFound,
     ContactAlreadyExists,
@@ -22,6 +31,7 @@ from app.exceptions.clients import (
     InactiveContact,
     ContactNotFound,
     ClientHasMatters,
+    InvalidRefreshToken,
 )
 from app.modules.matters.repository import MatterRepository
 from app.modules.audit.service import AuditService
@@ -36,6 +46,7 @@ class ClientService:
         self.db = db
         self.repository = ClientRepository(db)
         self.audit = AuditService(db)
+        self.refresh_tokens = RefreshTokenRepository(db)
 
     def create_client(self, firm_id, request: CreateClientRequest) -> Client:
         client = Client(firm_id=firm_id, company_name=request.company_name)
@@ -97,13 +108,58 @@ class ClientService:
             raise InactiveContact()
 
         contact.last_login = datetime.now(UTC)
+
+        raw_refresh_token = generate_refresh_token()
+        self.refresh_tokens.create(
+            actor_type=RefreshTokenActorType.CLIENT,
+            actor_id=contact.id,
+            token_hash=hash_refresh_token(raw_refresh_token),
+            expires_at=datetime.now(UTC) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+        )
         self.db.commit()
 
         token = create_access_token(
             subject=str(contact.id),
             extra_claims={"type": "client", "client_id": str(contact.client_id)},
         )
-        return ClientTokenResponse(access_token=token)
+        return ClientTokenResponse(access_token=token, refresh_token=raw_refresh_token)
+
+    def refresh_token(self, raw_refresh_token: str) -> ClientTokenResponse:
+        record = self.refresh_tokens.get_valid_by_hash(
+            hash_refresh_token(raw_refresh_token), RefreshTokenActorType.CLIENT
+        )
+        if not record:
+            raise InvalidRefreshToken()
+
+        contact = self.repository.get_contact_by_id(record.actor_id)
+        if not contact or not contact.is_active:
+            raise InactiveContact()
+
+        # Rotate: the old token is single-use, so a leaked/replayed token can't be reused.
+        self.refresh_tokens.revoke(record)
+        raw_new_refresh_token = generate_refresh_token()
+        self.refresh_tokens.create(
+            actor_type=RefreshTokenActorType.CLIENT,
+            actor_id=contact.id,
+            token_hash=hash_refresh_token(raw_new_refresh_token),
+            expires_at=datetime.now(UTC) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+        )
+        self.db.commit()
+
+        access_token = create_access_token(
+            subject=str(contact.id),
+            extra_claims={"type": "client", "client_id": str(contact.client_id)},
+        )
+        return ClientTokenResponse(access_token=access_token, refresh_token=raw_new_refresh_token)
+
+    def logout(self, raw_refresh_token: str) -> None:
+        record = self.refresh_tokens.get_valid_by_hash(
+            hash_refresh_token(raw_refresh_token), RefreshTokenActorType.CLIENT
+        )
+        if record:
+            self.refresh_tokens.revoke(record)
+            self.db.commit()
+
     def list_clients(self, firm_id):
         return self.repository.list_by_firm(firm_id)
     def resend_invite(self, email: str, firm_id):
@@ -147,6 +203,7 @@ class ClientService:
 
         contact.password_hash = hash_password(new_password)
         self.repository.clear_reset_token(contact)
+        self.refresh_tokens.revoke_all_for_actor(RefreshTokenActorType.CLIENT, contact.id)
         self.db.commit()
 
     def update_client_status(self, client_id, firm_id, actor_id, is_active: bool) -> Client:
@@ -202,6 +259,8 @@ class ClientService:
             raise ContactNotFound()
 
         contact.is_active = is_active
+        if not is_active:
+            self.refresh_tokens.revoke_all_for_actor(RefreshTokenActorType.CLIENT, contact.id)
 
         self.audit.log(
             actor_type=ActorType.STAFF,

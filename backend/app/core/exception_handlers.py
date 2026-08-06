@@ -12,7 +12,8 @@ from app.exceptions.auth import (
     InvalidOrExpiredInvite as StaffInvalidOrExpiredInvite,
     InviteAlreadyAccepted as StaffInviteAlreadyAccepted,
     StaffNotFound,
-    CannotDeactivateSelf
+    CannotDeactivateSelf,
+    InvalidRefreshToken as StaffInvalidRefreshToken,
 )
 from app.exceptions.clients import (
     ClientNotFound,
@@ -23,6 +24,7 @@ from app.exceptions.clients import (
     InactiveContact,
     ContactNotFound,
     ClientHasMatters,
+    InvalidRefreshToken as ClientInvalidRefreshToken,
 )
 
 from app.exceptions.matters import (
@@ -189,3 +191,11 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(NotificationNotFound)
     async def notification_not_found(_, __):
         raise HTTPException(status_code=404, detail="Notification not found.")
+
+    @app.exception_handler(StaffInvalidRefreshToken)
+    async def staff_invalid_refresh_token(_, __):
+        raise HTTPException(status_code=401, detail="Invalid or expired refresh token.")
+
+    @app.exception_handler(ClientInvalidRefreshToken)
+    async def client_invalid_refresh_token(_, __):
+        raise HTTPException(status_code=401, detail="Invalid or expired refresh token.")

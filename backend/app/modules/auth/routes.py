@@ -3,10 +3,11 @@ from sqlalchemy.orm import Session
 from app.modules.auth.repository import AuthRepository
 from app.database.session import get_db
 from app.modules.auth.schemas.login import LoginRequest
-from app.modules.auth.schemas.token import TokenResponse
+from app.modules.auth.schemas.token import TokenResponse, RefreshTokenRequest
 from app.modules.auth.schemas.user import UserResponse, UpdateStaffStatusRequest
 from app.modules.auth.schemas.register import RegisterRequest, RegisterResponse
 from app.modules.auth.services.login import login_user
+from app.modules.auth.services.refresh import refresh_staff_token, logout_staff
 from app.modules.auth.services.register import RegisterService
 from app.modules.auth.dependencies import get_current_user
 from app.modules.auth.models import User
@@ -21,6 +22,8 @@ from app.modules.auth.schemas.firm import FirmProfileResponse, UpdateFirmProfile
 from app.modules.audit.service import AuditService
 from app.modules.audit.models import ActorType
 from app.modules.audit import actions as audit_actions
+from app.modules.auth.refresh_token_repository import RefreshTokenRepository
+from app.modules.auth.models.refresh_token import RefreshTokenActorType
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -28,6 +31,16 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @limiter.limit("5/minute")
 def login(request: Request, credentials: LoginRequest, db: Session = Depends(get_db)):
     return login_user(db, credentials)
+
+
+@router.post("/refresh", response_model=TokenResponse)
+def refresh(request: RefreshTokenRequest, db: Session = Depends(get_db)):
+    return refresh_staff_token(db, request.refresh_token)
+
+
+@router.post("/logout", status_code=204)
+def logout(request: RefreshTokenRequest, db: Session = Depends(get_db)):
+    logout_staff(db, request.refresh_token)
 
 
 @router.post("/register", response_model=RegisterResponse, status_code=201)
@@ -86,6 +99,8 @@ def update_staff_status(
         raise CannotDeactivateSelf()
 
     staff.is_active = request.is_active
+    if not request.is_active:
+        RefreshTokenRepository(db).revoke_all_for_actor(RefreshTokenActorType.STAFF, staff.id)
 
     AuditService(db).log(
         actor_type=ActorType.STAFF,

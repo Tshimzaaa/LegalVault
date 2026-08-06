@@ -13,6 +13,7 @@ from app.modules.clients.schemas import (
     AcceptInviteRequest,
     ClientLoginRequest,
     ClientTokenResponse,
+    ClientRefreshTokenRequest,
     ResendInviteRequest,
     UpdateClientStatusRequest,
     UpdateContactStatusRequest,
@@ -73,6 +74,18 @@ def client_login(request: ClientLoginRequest, db: Session = Depends(get_db)):
 @client_auth_router.get("/me", response_model=ContactResponse)
 def get_me(current_contact: ClientContact = Depends(get_current_contact)):
     return current_contact
+
+
+@client_auth_router.post("/refresh", response_model=ClientTokenResponse)
+def client_refresh(request: ClientRefreshTokenRequest, db: Session = Depends(get_db)):
+    service = ClientService(db)
+    return service.refresh_token(request.refresh_token)
+
+
+@client_auth_router.post("/logout", status_code=204)
+def client_logout(request: ClientRefreshTokenRequest, db: Session = Depends(get_db)):
+    service = ClientService(db)
+    service.logout(request.refresh_token)
 @router.get("", response_model=list[ClientResponse])
 def list_clients(
     db: Session = Depends(get_db),

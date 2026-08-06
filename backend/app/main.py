@@ -21,6 +21,7 @@ from app.modules.announcements.routes import (
 )
 from app.modules.monitoring.middleware import log_requests
 from app.modules.notifications.routes import router as notifications_router, client_notifications_router
+from app.modules.reporting.routes import router as reporting_router
 
 app = FastAPI(
     title="LegalHub API",
@@ -49,6 +50,7 @@ app.include_router(owner_announcements_router)
 app.include_router(client_announcements_router)
 app.include_router(notifications_router)
 app.include_router(client_notifications_router)
+app.include_router(reporting_router)
 
 # Register global exception handlers
 register_exception_handlers(app)
