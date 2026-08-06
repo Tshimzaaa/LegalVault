@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from datetime import date, datetime, timedelta, UTC
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi import UploadFile, File, Form
 from app.modules.matters.schemas import MatterDocumentResponse, MatterDocumentDownloadResponse
 
@@ -11,16 +13,21 @@ from app.modules.matters.schemas import (
     MatterResponse,
     UpdateMatterStatusRequest,
     UpdateMatterVisibilityRequest,
+    UpdateMatterDeadlineRequest,
     AssignStaffRequest,
     MatterAssignmentResponse,
     CreateMatterTaskRequest,
     UpdateMatterTaskRequest,
     MatterTaskResponse,
+    CalendarEvent,
+    CreateMatterMessageRequest,
+    MatterMessageResponse,
 )
 from app.modules.matters.service import MatterService
 
 from app.modules.auth.dependencies import get_current_user
 from app.modules.auth.models import User
+from app.modules.auth.models.role import UserRole
 
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
@@ -57,6 +64,32 @@ def list_matters(
     return service.list_matters_for_firm(current_user.firm_id)
 
 
+@router.get("/calendar", response_model=list[CalendarEvent])
+def get_calendar(
+    start: date | None = Query(default=None),
+    end: date | None = Query(default=None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    range_start = start or datetime.now(UTC).date()
+    range_end = end or (range_start + timedelta(days=30))
+    service = MatterService(db)
+    return service.get_calendar(current_user.firm_id, range_start, range_end)
+
+
+@client_matters_router.get("/calendar", response_model=list[CalendarEvent])
+def get_client_calendar(
+    start: date | None = Query(default=None),
+    end: date | None = Query(default=None),
+    db: Session = Depends(get_db),
+    current_contact: ClientContact = Depends(get_current_contact),
+):
+    range_start = start or datetime.now(UTC).date()
+    range_end = end or (range_start + timedelta(days=30))
+    service = MatterService(db)
+    return service.get_client_calendar(current_contact.client_id, range_start, range_end)
+
+
 @router.get("/{matter_id}", response_model=MatterResponse)
 def get_matter(
     matter_id: str,
@@ -87,6 +120,17 @@ def update_visibility(
 ):
     service = MatterService(db)
     return service.update_visibility(matter_id, current_user.firm_id, current_user.id, request)
+
+
+@router.patch("/{matter_id}/deadline", response_model=MatterResponse)
+def update_deadline(
+    matter_id: str,
+    request: UpdateMatterDeadlineRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    service = MatterService(db)
+    return service.update_deadline(matter_id, current_user.firm_id, current_user.id, request)
 
 
 @router.post("/{matter_id}/assignments", response_model=MatterAssignmentResponse, status_code=201)
@@ -200,6 +244,40 @@ def delete_task(
     service.delete_task(matter_id, task_id, current_user.firm_id, current_user.id)
 
 
+@router.post("/{matter_id}/messages", response_model=MatterMessageResponse, status_code=201)
+def post_message(
+    matter_id: str,
+    request: CreateMatterMessageRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    service = MatterService(db)
+    return service.post_message_as_staff(
+        matter_id, current_user.firm_id, current_user.id, f"{current_user.first_name} {current_user.last_name}", request
+    )
+
+
+@router.get("/{matter_id}/messages", response_model=list[MatterMessageResponse])
+def list_messages(
+    matter_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    service = MatterService(db)
+    return service.list_messages(matter_id, current_user.firm_id)
+
+
+@router.delete("/{matter_id}/messages/{message_id}", status_code=204)
+def delete_message(
+    matter_id: str,
+    message_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    service = MatterService(db)
+    service.delete_message(matter_id, message_id, current_user.firm_id, current_user.id, current_user.role == UserRole.ADMIN)
+
+
 @client_matters_router.get("/{matter_id}/documents", response_model=list[MatterDocumentResponse])
 def list_my_matter_documents(
     matter_id: str,
@@ -243,3 +321,37 @@ async def upload_my_matter_document(
         client_id=current_contact.client_id,
         uploaded_by_contact_id=current_contact.id,
     )
+
+
+@client_matters_router.post("/{matter_id}/messages", response_model=MatterMessageResponse, status_code=201)
+def post_client_message(
+    matter_id: str,
+    request: CreateMatterMessageRequest,
+    db: Session = Depends(get_db),
+    current_contact: ClientContact = Depends(get_current_contact),
+):
+    service = MatterService(db)
+    return service.post_message_as_client(
+        matter_id, current_contact.client_id, current_contact.id, f"{current_contact.first_name} {current_contact.last_name}", request
+    )
+
+
+@client_matters_router.get("/{matter_id}/messages", response_model=list[MatterMessageResponse])
+def list_client_messages(
+    matter_id: str,
+    db: Session = Depends(get_db),
+    current_contact: ClientContact = Depends(get_current_contact),
+):
+    service = MatterService(db)
+    return service.list_client_messages(matter_id, current_contact.client_id)
+
+
+@client_matters_router.delete("/{matter_id}/messages/{message_id}", status_code=204)
+def delete_client_message(
+    matter_id: str,
+    message_id: str,
+    db: Session = Depends(get_db),
+    current_contact: ClientContact = Depends(get_current_contact),
+):
+    service = MatterService(db)
+    service.delete_client_message(matter_id, message_id, current_contact.client_id, current_contact.id)

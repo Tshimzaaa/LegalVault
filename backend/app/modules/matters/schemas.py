@@ -2,13 +2,14 @@ from uuid import UUID
 from datetime import date, datetime
 from pydantic import BaseModel, Field
 
-from app.modules.matters.models import MatterStatus, MatterRole, TaskStatus
+from app.modules.matters.models import MatterStatus, MatterRole, TaskStatus, MessageAuthorType
 
 
 class CreateMatterRequest(BaseModel):
     client_id: UUID
     title: str = Field(min_length=2, max_length=200)
     description: str | None = None
+    due_date: date | None = None
 
 
 class UpdateMatterStatusRequest(BaseModel):
@@ -19,6 +20,10 @@ class UpdateMatterVisibilityRequest(BaseModel):
     is_visible_to_client: bool
 
 
+class UpdateMatterDeadlineRequest(BaseModel):
+    due_date: date | None = None
+
+
 class MatterResponse(BaseModel):
     id: UUID
     firm_id: UUID
@@ -27,6 +32,7 @@ class MatterResponse(BaseModel):
     description: str | None
     status: MatterStatus
     is_visible_to_client: bool
+    due_date: date | None
     created_at: datetime
     updated_at: datetime
 
@@ -93,6 +99,32 @@ class MatterTaskResponse(BaseModel):
     status: TaskStatus
     created_at: datetime
     updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class CalendarEvent(BaseModel):
+    date: date
+    type: str  # "matter_deadline" | "task_due"
+    title: str
+    matter_id: UUID
+    matter_title: str
+    task_id: UUID | None = None
+
+
+class CreateMatterMessageRequest(BaseModel):
+    body: str = Field(min_length=1, max_length=5000)
+
+
+class MatterMessageResponse(BaseModel):
+    id: UUID
+    matter_id: UUID
+    author_type: MessageAuthorType
+    author_id: UUID
+    author_name: str
+    body: str
+    created_at: datetime
 
     class Config:
         from_attributes = True

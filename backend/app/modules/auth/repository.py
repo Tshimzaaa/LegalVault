@@ -73,3 +73,23 @@ class AuthRepository:
     def delete_firm(self, law_firm: LawFirm):
         self.db.delete(law_firm)
         self.db.flush()
+
+    def count_all_firms(self) -> int:
+        from sqlalchemy import func
+        return self.db.scalar(select(func.count()).select_from(LawFirm))
+
+    def count_active_firms(self) -> int:
+        from sqlalchemy import func
+        return self.db.scalar(
+            select(func.count()).select_from(LawFirm).where(LawFirm.is_active.is_(True))
+        )
+
+    def count_all_users(self) -> int:
+        from sqlalchemy import func
+        return self.db.scalar(select(func.count()).select_from(User))
+
+    def count_firms_created_since(self, since) -> int:
+        from sqlalchemy import func
+        return self.db.scalar(
+            select(func.count()).select_from(LawFirm).where(LawFirm.created_at >= since)
+        )

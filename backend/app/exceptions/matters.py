@@ -15,3 +15,9 @@ class MatterDocumentNotFound(Exception):
 
 class MatterTaskNotFound(Exception):
     pass
+
+class MatterMessageNotFound(Exception):
+    pass
+
+class CannotDeleteOthersMessage(Exception):
+    pass

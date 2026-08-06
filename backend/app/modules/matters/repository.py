@@ -1,6 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from app.modules.matters.models import MatterDocument, MatterTask
+from app.modules.matters.models import MatterDocument, MatterTask, MatterMessage
 
 from app.modules.matters.models import Matter, MatterAssignment
 
@@ -89,4 +89,63 @@ class MatterRepository:
 
     def delete_task(self, task: MatterTask):
         self.db.delete(task)
+        self.db.flush()
+
+    def count_all_matters(self) -> int:
+        from sqlalchemy import func
+        return self.db.scalar(select(func.count()).select_from(Matter))
+
+    def count_all_matters_by_status(self) -> dict[str, int]:
+        from sqlalchemy import func
+        statement = select(Matter.status, func.count()).group_by(Matter.status)
+        return {status.value: count for status, count in self.db.execute(statement).all()}
+
+    def list_matters_with_deadline_in_range(self, firm_id, start, end) -> list[Matter]:
+        statement = select(Matter).where(
+            Matter.firm_id == firm_id,
+            Matter.due_date.is_not(None),
+            Matter.due_date >= start,
+            Matter.due_date <= end,
+        )
+        return list(self.db.scalars(statement))
+
+    def list_tasks_with_due_date_in_range(self, firm_id, start, end) -> list[tuple[MatterTask, Matter]]:
+        statement = (
+            select(MatterTask, Matter)
+            .join(Matter, MatterTask.matter_id == Matter.id)
+            .where(
+                Matter.firm_id == firm_id,
+                MatterTask.due_date.is_not(None),
+                MatterTask.due_date >= start,
+                MatterTask.due_date <= end,
+            )
+        )
+        return list(self.db.execute(statement).all())
+
+    def list_visible_matters_with_deadline_in_range(self, client_id, start, end) -> list[Matter]:
+        statement = select(Matter).where(
+            Matter.client_id == client_id,
+            Matter.is_visible_to_client.is_(True),
+            Matter.due_date.is_not(None),
+            Matter.due_date >= start,
+            Matter.due_date <= end,
+        )
+        return list(self.db.scalars(statement))
+
+    def create_message(self, message: MatterMessage) -> MatterMessage:
+        self.db.add(message)
+        self.db.flush()
+        return message
+
+    def get_message_by_id(self, message_id) -> MatterMessage | None:
+        return self.db.scalar(select(MatterMessage).where(MatterMessage.id == message_id))
+
+    def list_messages_for_matter(self, matter_id) -> list[MatterMessage]:
+        statement = select(MatterMessage).where(MatterMessage.matter_id == matter_id).order_by(
+            MatterMessage.created_at.asc()
+        )
+        return list(self.db.scalars(statement))
+
+    def delete_message(self, message: MatterMessage):
+        self.db.delete(message)
         self.db.flush()

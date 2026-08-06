@@ -1,6 +1,6 @@
 from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class TemplateResponse(BaseModel):
@@ -11,6 +11,7 @@ class TemplateResponse(BaseModel):
     category: str
     original_filename: str
     content_type: str
+    version: int
     created_at: datetime
 
     class Config:
@@ -20,3 +21,9 @@ class TemplateResponse(BaseModel):
 class TemplateDownloadResponse(BaseModel):
     download_url: str
     expires_in_seconds: int
+
+
+class UpdateTemplateRequest(BaseModel):
+    title: str | None = Field(default=None, min_length=2, max_length=200)
+    description: str | None = Field(default=None, max_length=1000)
+    category: str | None = Field(default=None, min_length=1, max_length=100)

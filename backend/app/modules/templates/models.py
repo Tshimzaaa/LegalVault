@@ -29,3 +29,5 @@ class Template(BaseModel):
     original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
 
     content_type: Mapped[str] = mapped_column(String(100), nullable=False)
+
+    version: Mapped[int] = mapped_column(nullable=False, default=1)

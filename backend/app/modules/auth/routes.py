@@ -16,7 +16,8 @@ from app.main import limiter  # or restructure to avoid circular import — flag
 from app.modules.auth.schemas.password_reset import ForgotPasswordRequest, ResetPasswordRequest
 from app.modules.auth.services.password_reset import request_password_reset, reset_password
 from app.modules.auth.dependencies import require_admin
-from app.exceptions.auth import StaffNotFound, CannotDeactivateSelf
+from app.exceptions.auth import StaffNotFound, CannotDeactivateSelf, LawFirmAlreadyExists
+from app.modules.auth.schemas.firm import FirmProfileResponse, UpdateFirmProfileRequest
 from app.modules.audit.service import AuditService
 from app.modules.audit.models import ActorType
 from app.modules.audit import actions as audit_actions
@@ -97,3 +98,44 @@ def update_staff_status(
     )
     db.commit()
     return staff
+
+
+@router.get("/firm", response_model=FirmProfileResponse)
+def get_firm_profile(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    repo = AuthRepository(db)
+    return repo.get_firm_by_id(current_user.firm_id)
+
+
+@router.patch("/firm", response_model=FirmProfileResponse)
+def update_firm_profile(
+    request: UpdateFirmProfileRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    repo = AuthRepository(db)
+    firm = repo.get_firm_by_id(current_user.firm_id)
+
+    updates = request.model_dump(exclude_unset=True)
+
+    if "email" in updates and updates["email"] != firm.email:
+        existing = repo.get_law_firm_by_email(updates["email"])
+        if existing and str(existing.id) != str(firm.id):
+            raise LawFirmAlreadyExists()
+
+    for field, value in updates.items():
+        setattr(firm, field, value)
+
+    AuditService(db).log(
+        actor_type=ActorType.STAFF,
+        actor_id=current_user.id,
+        firm_id=firm.id,
+        action=audit_actions.FIRM_PROFILE_UPDATED,
+        target_type="law_firm",
+        target_id=firm.id,
+        details=updates,
+    )
+    db.commit()
+    return firm

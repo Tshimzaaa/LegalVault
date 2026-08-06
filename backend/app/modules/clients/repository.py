@@ -88,3 +88,7 @@ class ClientRepository:
             .where(MatterDocument.uploaded_by_contact_id == contact_id)
             .values(uploaded_by_contact_id=None)
         )
+
+    def count_all_clients(self) -> int:
+        from sqlalchemy import func
+        return self.db.scalar(select(func.count()).select_from(Client))

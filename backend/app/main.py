@@ -14,6 +14,13 @@ from app.modules.dashboard.routes import router as dashboard_router
 from app.modules.support_requests.routes import router as support_requests_router, client_support_requests_router
 from app.modules.search.routes import router as search_router
 from app.modules.audit.routes import router as audit_router
+from app.modules.announcements.routes import (
+    router as announcements_router,
+    owner_announcements_router,
+    client_announcements_router,
+)
+from app.modules.monitoring.middleware import log_requests
+from app.modules.notifications.routes import router as notifications_router, client_notifications_router
 
 app = FastAPI(
     title="LegalHub API",
@@ -37,6 +44,11 @@ app.include_router(support_requests_router)
 app.include_router(client_support_requests_router)
 app.include_router(search_router)
 app.include_router(audit_router)
+app.include_router(announcements_router)
+app.include_router(owner_announcements_router)
+app.include_router(client_announcements_router)
+app.include_router(notifications_router)
+app.include_router(client_notifications_router)
 
 # Register global exception handlers
 register_exception_handlers(app)
@@ -48,6 +60,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.middleware("http")(log_requests)
 
 
 @app.get("/")

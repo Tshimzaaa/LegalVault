@@ -2,6 +2,7 @@ from datetime import date, datetime
 from uuid import UUID
 
 from sqlalchemy import Boolean, Date, DateTime, Enum, ForeignKey, String, Text
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import TYPE_CHECKING
 import enum
@@ -36,6 +37,11 @@ class TaskStatus(str, enum.Enum):
     DONE = "done"
 
 
+class MessageAuthorType(str, enum.Enum):
+    STAFF = "staff"
+    CLIENT_CONTACT = "client_contact"
+
+
 class Matter(BaseModel):
     __tablename__ = "matters"
 
@@ -65,6 +71,8 @@ class Matter(BaseModel):
         nullable=False,
     )
 
+    due_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+
     assignments: Mapped[list["MatterAssignment"]] = relationship(
         "MatterAssignment",
         back_populates="matter",
@@ -72,6 +80,11 @@ class Matter(BaseModel):
 
     tasks: Mapped[list["MatterTask"]] = relationship(
         "MatterTask",
+        back_populates="matter",
+    )
+
+    messages: Mapped[list["MatterMessage"]] = relationship(
+        "MatterMessage",
         back_populates="matter",
     )
 
@@ -157,4 +170,33 @@ class MatterTask(BaseModel):
     matter: Mapped["Matter"] = relationship(
         "Matter",
         back_populates="tasks",
+    )
+
+
+class MatterMessage(BaseModel):
+    __tablename__ = "matter_messages"
+
+    matter_id: Mapped[UUID] = mapped_column(
+        ForeignKey("matters.id"),
+        nullable=False,
+        index=True,
+    )
+
+    author_type: Mapped[MessageAuthorType] = mapped_column(
+        Enum(MessageAuthorType),
+        nullable=False,
+    )
+
+    # Not a ForeignKey — the author is a User or a ClientContact depending on
+    # author_type, and a message should outlive either account (author_name below
+    # keeps it displayable even after the author's account is gone).
+    author_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False)
+
+    author_name: Mapped[str] = mapped_column(String(200), nullable=False)
+
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+
+    matter: Mapped["Matter"] = relationship(
+        "Matter",
+        back_populates="messages",
     )

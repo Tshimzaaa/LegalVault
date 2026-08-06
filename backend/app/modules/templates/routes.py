@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
-from app.modules.templates.schemas import TemplateResponse, TemplateDownloadResponse
+from app.modules.templates.schemas import TemplateResponse, TemplateDownloadResponse, UpdateTemplateRequest
 from app.modules.templates.service import TemplateService
 
 from app.modules.auth.dependencies import get_current_user
@@ -34,6 +34,7 @@ async def upload_template(
     service = TemplateService(db)
     return service.upload_template(
         firm_id=current_user.firm_id,
+        actor_id=current_user.id,
         title=title,
         description=description,
         category=category,
@@ -50,6 +51,17 @@ def list_templates(
 ):
     service = TemplateService(db)
     return service.list_templates(current_user.firm_id)
+
+
+@router.patch("/{template_id}", response_model=TemplateResponse)
+def update_template(
+    template_id: str,
+    request: UpdateTemplateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    service = TemplateService(db)
+    return service.update_template(template_id, current_user.firm_id, current_user.id, request)
 
 
 @router.get("/{template_id}/download", response_model=TemplateDownloadResponse)

@@ -19,3 +19,11 @@ class TemplateRepository:
 
     def list_by_firm(self, firm_id) -> list[Template]:
         return list(self.db.scalars(select(Template).where(Template.firm_id == firm_id)))
+
+    def get_latest_version(self, firm_id, title: str) -> Template | None:
+        statement = (
+            select(Template)
+            .where(Template.firm_id == firm_id, Template.title == title)
+            .order_by(Template.version.desc())
+        )
+        return self.db.scalar(statement)

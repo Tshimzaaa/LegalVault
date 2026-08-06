@@ -3,8 +3,12 @@ from sqlalchemy.orm import Session
 
 from app.modules.templates.repository import TemplateRepository
 from app.modules.templates.models import Template
+from app.modules.templates.schemas import UpdateTemplateRequest
 from app.exceptions.templates import TemplateNotFound, UnsupportedFileType
 from app.core.storage import upload_file, get_download_url
+from app.modules.audit.service import AuditService
+from app.modules.audit.models import ActorType
+from app.modules.audit import actions as audit_actions
 
 ALLOWED_CONTENT_TYPES = {
     "application/pdf",
@@ -19,10 +23,12 @@ class TemplateService:
     def __init__(self, db: Session):
         self.db = db
         self.repository = TemplateRepository(db)
+        self.audit = AuditService(db)
 
     def upload_template(
         self,
         firm_id,
+        actor_id,
         title: str,
         description: str | None,
         category: str,
@@ -32,6 +38,9 @@ class TemplateService:
     ) -> Template:
         if content_type not in ALLOWED_CONTENT_TYPES:
             raise UnsupportedFileType()
+
+        latest = self.repository.get_latest_version(firm_id, title)
+        next_version = (latest.version + 1) if latest else 1
 
         file_key = f"templates/{firm_id}/{uuid.uuid4()}-{original_filename}"
         upload_file(file_bytes, file_key, content_type)
@@ -44,8 +53,19 @@ class TemplateService:
             file_key=file_key,
             original_filename=original_filename,
             content_type=content_type,
+            version=next_version,
         )
         self.repository.create(template)
+
+        self.audit.log(
+            actor_type=ActorType.STAFF,
+            actor_id=actor_id,
+            firm_id=firm_id,
+            action=audit_actions.TEMPLATE_UPLOADED,
+            target_type="template",
+            target_id=template.id,
+            details={"title": template.title, "version": template.version},
+        )
         self.db.commit()
         return template
 
@@ -57,3 +77,24 @@ class TemplateService:
         if not template or str(template.firm_id) != str(firm_id):
             raise TemplateNotFound()
         return get_download_url(template.file_key)
+
+    def update_template(self, template_id, firm_id, actor_id, request: UpdateTemplateRequest) -> Template:
+        template = self.repository.get_by_id(template_id)
+        if not template or str(template.firm_id) != str(firm_id):
+            raise TemplateNotFound()
+
+        updates = request.model_dump(exclude_unset=True)
+        for field, value in updates.items():
+            setattr(template, field, value)
+
+        self.audit.log(
+            actor_type=ActorType.STAFF,
+            actor_id=actor_id,
+            firm_id=firm_id,
+            action=audit_actions.TEMPLATE_UPDATED,
+            target_type="template",
+            target_id=template.id,
+            details=updates,
+        )
+        self.db.commit()
+        return template

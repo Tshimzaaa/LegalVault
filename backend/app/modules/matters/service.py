@@ -2,14 +2,17 @@ import uuid
 from sqlalchemy.orm import Session
 
 from app.modules.matters.repository import MatterRepository
-from app.modules.matters.models import Matter, MatterAssignment, MatterDocument, MatterTask
+from app.modules.matters.models import Matter, MatterAssignment, MatterDocument, MatterTask, MatterMessage, MessageAuthorType
 from app.modules.matters.schemas import (
     CreateMatterRequest,
     UpdateMatterStatusRequest,
     UpdateMatterVisibilityRequest,
+    UpdateMatterDeadlineRequest,
     AssignStaffRequest,
     CreateMatterTaskRequest,
     UpdateMatterTaskRequest,
+    CalendarEvent,
+    CreateMatterMessageRequest,
 )
 from app.exceptions.matters import (
     MatterNotFound,
@@ -18,6 +21,8 @@ from app.exceptions.matters import (
     MatterDocumentNotFound,
     UserNotFoundForAssignment,
     MatterTaskNotFound,
+    MatterMessageNotFound,
+    CannotDeleteOthersMessage,
 )
 from app.modules.clients.repository import ClientRepository
 from app.modules.auth.repository import AuthRepository
@@ -25,6 +30,8 @@ from app.core.storage import upload_file, get_download_url
 from app.modules.audit.service import AuditService
 from app.modules.audit.models import ActorType
 from app.modules.audit import actions as audit_actions
+from app.modules.notifications.service import NotificationService
+from app.modules.notifications.models import RecipientType
 
 
 ALLOWED_DOCUMENT_TYPES = {
@@ -43,6 +50,7 @@ class MatterService:
         self.client_repository = ClientRepository(db)
         self.auth_repository = AuthRepository(db)
         self.audit = AuditService(db)
+        self.notifications = NotificationService(db)
 
     def create_matter(self, firm_id, actor_id, request: CreateMatterRequest) -> Matter:
         client = self.client_repository.get_client_by_id(request.client_id)
@@ -54,6 +62,7 @@ class MatterService:
             client_id=request.client_id,
             title=request.title,
             description=request.description,
+            due_date=request.due_date,
         )
         self.repository.create(matter)
 
@@ -111,6 +120,26 @@ class MatterService:
         self.db.commit()
         return matter
 
+    def update_deadline(self, matter_id, firm_id, actor_id, request: UpdateMatterDeadlineRequest) -> Matter:
+        matter = self.get_matter(matter_id, firm_id)
+        previous_due_date = matter.due_date
+        matter.due_date = request.due_date
+
+        self.audit.log(
+            actor_type=ActorType.STAFF,
+            actor_id=actor_id,
+            firm_id=firm_id,
+            action=audit_actions.MATTER_DEADLINE_UPDATED,
+            target_type="matter",
+            target_id=matter.id,
+            details={
+                "from": previous_due_date.isoformat() if previous_due_date else None,
+                "to": request.due_date.isoformat() if request.due_date else None,
+            },
+        )
+        self.db.commit()
+        return matter
+
     def assign_staff(self, matter_id, firm_id, actor_id, request: AssignStaffRequest) -> MatterAssignment:
         matter = self.get_matter(matter_id, firm_id)  # also validates firm ownership
 
@@ -137,6 +166,15 @@ class MatterService:
             target_type="matter_assignment",
             target_id=assignment.id,
             details={"user_id": str(request.user_id), "role_on_matter": request.role_on_matter.value},
+        )
+        self.notifications.notify(
+            recipient_type=RecipientType.STAFF,
+            recipient_id=request.user_id,
+            type="matter.staff_assigned",
+            title=f'You were assigned to "{matter.title}"',
+            body=f"Role: {request.role_on_matter.value.replace('_', ' ').title()}",
+            target_type="matter",
+            target_id=matter.id,
         )
         self.db.commit()
         return assignment
@@ -202,6 +240,18 @@ class MatterService:
                 target_id=document.id,
                 details={"title": document.title, "version": document.version},
             )
+            for assignment in self.repository.list_assignments_for_matter(matter.id):
+                if str(assignment.user_id) == str(uploaded_by):
+                    continue
+                self.notifications.notify(
+                    recipient_type=RecipientType.STAFF,
+                    recipient_id=assignment.user_id,
+                    type="matter.document_uploaded",
+                    title=f'New document on "{matter.title}"',
+                    body=f"{document.title} (v{document.version}) was uploaded.",
+                    target_type="matter",
+                    target_id=matter.id,
+                )
         self.db.commit()
         return document
 
@@ -261,6 +311,16 @@ class MatterService:
             target_id=task.id,
             details={"title": task.title},
         )
+        if task.assigned_to is not None:
+            self.notifications.notify(
+                recipient_type=RecipientType.STAFF,
+                recipient_id=task.assigned_to,
+                type="matter.task_assigned",
+                title=f"New task: {task.title}",
+                body=f'Assigned to you on "{matter.title}".',
+                target_type="matter",
+                target_id=matter.id,
+            )
         self.db.commit()
         return task
 
@@ -269,7 +329,7 @@ class MatterService:
         return self.repository.list_tasks_for_matter(matter_id)
 
     def update_task(self, matter_id, task_id, firm_id, actor_id, request: UpdateMatterTaskRequest) -> MatterTask:
-        self.get_matter(matter_id, firm_id)  # ownership check
+        matter = self.get_matter(matter_id, firm_id)  # ownership check
 
         task = self.repository.get_task_by_id(task_id)
         if not task or str(task.matter_id) != str(matter_id):
@@ -294,8 +354,122 @@ class MatterService:
                 for k, v in updates.items()
             },
         )
+        if "assigned_to" in updates and updates["assigned_to"] is not None:
+            self.notifications.notify(
+                recipient_type=RecipientType.STAFF,
+                recipient_id=updates["assigned_to"],
+                type="matter.task_assigned",
+                title=f"Task assigned: {task.title}",
+                body=f'You were assigned to a task on "{matter.title}".',
+                target_type="matter",
+                target_id=matter.id,
+            )
         self.db.commit()
         return task
+
+    def _notify_new_message(self, matter, author_type: MessageAuthorType, author_id, author_name, body):
+        preview = body if len(body) <= 120 else f"{body[:117]}..."
+        title = f'New message on "{matter.title}"'
+        notif_body = f"{author_name}: {preview}"
+
+        for assignment in self.repository.list_assignments_for_matter(matter.id):
+            if author_type == MessageAuthorType.STAFF and str(assignment.user_id) == str(author_id):
+                continue
+            self.notifications.notify(
+                recipient_type=RecipientType.STAFF,
+                recipient_id=assignment.user_id,
+                type="matter.new_message",
+                title=title,
+                body=notif_body,
+                target_type="matter",
+                target_id=matter.id,
+            )
+
+        if author_type == MessageAuthorType.STAFF and matter.is_visible_to_client:
+            for contact in self.client_repository.list_contacts_for_client(matter.client_id):
+                self.notifications.notify(
+                    recipient_type=RecipientType.CLIENT_CONTACT,
+                    recipient_id=contact.id,
+                    type="matter.new_message",
+                    title=title,
+                    body=notif_body,
+                    target_type="matter",
+                    target_id=matter.id,
+                )
+
+    def post_message_as_staff(
+        self, matter_id, firm_id, actor_id, actor_name: str, request: CreateMatterMessageRequest
+    ) -> MatterMessage:
+        matter = self.get_matter(matter_id, firm_id)  # ownership check
+
+        message = MatterMessage(
+            matter_id=matter.id,
+            author_type=MessageAuthorType.STAFF,
+            author_id=actor_id,
+            author_name=actor_name,
+            body=request.body,
+        )
+        self.repository.create_message(message)
+        self._notify_new_message(matter, MessageAuthorType.STAFF, actor_id, actor_name, request.body)
+        self.db.commit()
+        return message
+
+    def list_messages(self, matter_id, firm_id) -> list[MatterMessage]:
+        self.get_matter(matter_id, firm_id)  # ownership check
+        return self.repository.list_messages_for_matter(matter_id)
+
+    def delete_message(self, matter_id, message_id, firm_id, actor_id, is_admin: bool):
+        self.get_matter(matter_id, firm_id)  # ownership check
+
+        message = self.repository.get_message_by_id(message_id)
+        if not message or str(message.matter_id) != str(matter_id):
+            raise MatterMessageNotFound()
+
+        if not is_admin and str(message.author_id) != str(actor_id):
+            raise CannotDeleteOthersMessage()
+
+        self.repository.delete_message(message)
+        self.db.commit()
+
+    def _get_visible_matter_for_client(self, matter_id, client_id) -> Matter:
+        matter = self.repository.get_by_id(matter_id)
+        if not matter or str(matter.client_id) != str(client_id) or not matter.is_visible_to_client:
+            raise MatterNotFound()
+        return matter
+
+    def post_message_as_client(
+        self, matter_id, client_id, actor_id, actor_name: str, request: CreateMatterMessageRequest
+    ) -> MatterMessage:
+        matter = self._get_visible_matter_for_client(matter_id, client_id)
+
+        message = MatterMessage(
+            matter_id=matter.id,
+            author_type=MessageAuthorType.CLIENT_CONTACT,
+            author_id=actor_id,
+            author_name=actor_name,
+            body=request.body,
+        )
+        self.repository.create_message(message)
+        self._notify_new_message(matter, MessageAuthorType.CLIENT_CONTACT, actor_id, actor_name, request.body)
+        self.db.commit()
+        return message
+
+    def list_client_messages(self, matter_id, client_id) -> list[MatterMessage]:
+        self._get_visible_matter_for_client(matter_id, client_id)
+        return self.repository.list_messages_for_matter(matter_id)
+
+    def delete_client_message(self, matter_id, message_id, client_id, actor_id):
+        self._get_visible_matter_for_client(matter_id, client_id)
+
+        message = self.repository.get_message_by_id(message_id)
+        if not message or str(message.matter_id) != str(matter_id):
+            raise MatterMessageNotFound()
+
+        if str(message.author_id) != str(actor_id):
+            raise CannotDeleteOthersMessage()
+
+        self.repository.delete_message(message)
+        self.db.commit()
 
     def delete_task(self, matter_id, task_id, firm_id, actor_id):
         self.get_matter(matter_id, firm_id)  # ownership check
@@ -316,3 +490,42 @@ class MatterService:
             details={"title": task.title},
         )
         self.db.commit()
+
+    def get_calendar(self, firm_id, start, end) -> list[CalendarEvent]:
+        events = [
+            CalendarEvent(
+                date=matter.due_date,
+                type="matter_deadline",
+                title=matter.title,
+                matter_id=matter.id,
+                matter_title=matter.title,
+            )
+            for matter in self.repository.list_matters_with_deadline_in_range(firm_id, start, end)
+        ]
+        events += [
+            CalendarEvent(
+                date=task.due_date,
+                type="task_due",
+                title=task.title,
+                matter_id=matter.id,
+                matter_title=matter.title,
+                task_id=task.id,
+            )
+            for task, matter in self.repository.list_tasks_with_due_date_in_range(firm_id, start, end)
+        ]
+        events.sort(key=lambda e: e.date)
+        return events
+
+    def get_client_calendar(self, client_id, start, end) -> list[CalendarEvent]:
+        events = [
+            CalendarEvent(
+                date=matter.due_date,
+                type="matter_deadline",
+                title=matter.title,
+                matter_id=matter.id,
+                matter_title=matter.title,
+            )
+            for matter in self.repository.list_visible_matters_with_deadline_in_range(client_id, start, end)
+        ]
+        events.sort(key=lambda e: e.date)
+        return events

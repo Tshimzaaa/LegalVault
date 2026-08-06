@@ -1,0 +1,2 @@
+class AnnouncementNotFound(Exception):
+    pass

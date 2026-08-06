@@ -32,8 +32,12 @@ from app.exceptions.matters import (
     MatterDocumentNotFound,
     UserNotFoundForAssignment,
     MatterTaskNotFound,
+    MatterMessageNotFound,
+    CannotDeleteOthersMessage,
 )
 from app.exceptions.support_requests import SupportRequestNotFound
+from app.exceptions.announcements import AnnouncementNotFound
+from app.exceptions.notifications import NotificationNotFound
 
 def register_exception_handlers(app: FastAPI):
 
@@ -169,3 +173,19 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(MatterTaskNotFound)
     async def matter_task_not_found(_, __):
         raise HTTPException(status_code=404, detail="Task not found.")
+
+    @app.exception_handler(MatterMessageNotFound)
+    async def matter_message_not_found(_, __):
+        raise HTTPException(status_code=404, detail="Message not found.")
+
+    @app.exception_handler(CannotDeleteOthersMessage)
+    async def cannot_delete_others_message(_, __):
+        raise HTTPException(status_code=403, detail="You can only delete your own messages.")
+
+    @app.exception_handler(AnnouncementNotFound)
+    async def announcement_not_found(_, __):
+        raise HTTPException(status_code=404, detail="Announcement not found.")
+
+    @app.exception_handler(NotificationNotFound)
+    async def notification_not_found(_, __):
+        raise HTTPException(status_code=404, detail="Notification not found.")
