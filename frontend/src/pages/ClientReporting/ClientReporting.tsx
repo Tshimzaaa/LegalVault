@@ -3,6 +3,7 @@ import './ClientReporting.css'
 import ProfileMenu from '../../components/ProfileMenu'
 import type { ClientContact } from '../../api/clientAuth'
 import { listClientMatters } from '../../api/clientMatters'
+import type { Matter } from '../../api/matters'
 import { listClientSignedContracts } from '../../api/clientSignedContracts'
 import type { ContractType } from '../../api/signedContracts'
 import { listMySupportRequests } from '../../api/supportRequests'
@@ -56,11 +57,39 @@ function lastMonths(count: number) {
   return months
 }
 
+/**
+ * Active-matter count at the end of each of the last 6 months. We don't keep status history, so
+ * this approximates "was it active then" from what we do have: a matter counts as active at a
+ * given cutoff if it existed by then, and — if it's currently closed/declined — only if it was
+ * still open at that point (using `updated_at` as a proxy for when it closed).
+ */
+function activeMattersTrend(matters: Matter[]): TrendPoint[] {
+  return lastMonths(6).map(({ year, month, label }) => {
+    const cutoff = new Date(year, month + 1, 1)
+    const count = matters.filter((m) => {
+      if (new Date(m.created_at) >= cutoff) return false
+      const isClosed = m.status === 'closed' || m.status === 'declined'
+      return !isClosed || new Date(m.updated_at) >= cutoff
+    }).length
+    return { month: label, value: count }
+  })
+}
+
 function ActiveMattersLineChart({ data }: { data: TrendPoint[] }) {
   const width = 300
   const height = 130
   const padding = 8
   const [hover, setHover] = useState<number | null>(null)
+
+  // Empty on first render, before the matters fetch resolves — every point[] access below
+  // assumes at least one entry, so bail out to an empty state rather than crash the page.
+  if (data.length === 0) {
+    return (
+      <div className="chart-wrap">
+        <p className="muted">No data yet.</p>
+      </div>
+    )
+  }
 
   const values = data.map((d) => d.value)
   const min = Math.min(...values)
@@ -272,15 +301,7 @@ function ClientReporting({ contact, onLogout }: ClientReportingProps) {
     listClientMatters(token)
       .then((matters) => {
         setActiveMatters(matters.filter((m) => m.status !== 'closed' && m.status !== 'declined').length)
-
-        const months = lastMonths(6)
-        setMattersTrend(
-          months.map(({ year, month, label }) => {
-            const cutoff = new Date(year, month + 1, 1)
-            const count = matters.filter((m) => new Date(m.created_at) < cutoff).length
-            return { month: label, value: count }
-          }),
-        )
+        setMattersTrend(activeMattersTrend(matters))
       })
       .catch(() => setActiveMatters(null))
 
