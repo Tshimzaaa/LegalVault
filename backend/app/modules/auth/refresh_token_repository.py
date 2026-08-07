@@ -45,3 +45,11 @@ class RefreshTokenRepository:
             )
             .values(revoked_at=datetime.now(UTC))
         )
+
+    def delete_all_for_actor(self, actor_type: RefreshTokenActorType, actor_id):
+        statement = select(RefreshToken).where(
+            RefreshToken.actor_type == actor_type,
+            RefreshToken.actor_id == actor_id,
+        )
+        for record in list(self.db.scalars(statement)):
+            self.db.delete(record)

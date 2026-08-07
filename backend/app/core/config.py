@@ -18,6 +18,7 @@ class Settings(BaseSettings):
 
     ENVIRONMENT: str = "development"
     REGISTER_SECRET: str = "change-me"
+    OWNER_SECRET: str = "change-me"
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -32,3 +33,9 @@ if settings.ENVIRONMENT == "production":
         sys.exit("SECRET_KEY must be set to a real random value before running in production.")
     if settings.REGISTER_SECRET in ("change-me", ""):
         sys.exit("REGISTER_SECRET must be set before running in production.")
+    if settings.OWNER_SECRET in ("change-me", ""):
+        sys.exit("OWNER_SECRET must be set before running in production.")
+    if settings.OWNER_SECRET == settings.REGISTER_SECRET:
+        sys.exit("OWNER_SECRET must differ from REGISTER_SECRET — sharing one secret between firm "
+                  "self-registration and full platform owner access lets anyone with the registration "
+                  "secret export or delete every firm's data.")

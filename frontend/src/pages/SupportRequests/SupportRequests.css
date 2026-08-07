@@ -1,0 +1,12 @@
+.support-requests-card {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.support-requests-description {
+  max-width: 320px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

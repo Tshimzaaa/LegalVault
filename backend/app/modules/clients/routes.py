@@ -30,12 +30,6 @@ router = APIRouter(prefix="/clients", tags=["clients"])
 client_auth_router = APIRouter(prefix="/client-auth", tags=["client-auth"])
 
 
-# --- Staff-facing routes (require staff login) ---
-@client_auth_router.post("/login", response_model=ClientTokenResponse)
-@limiter.limit("5/minute")
-def client_login(request: Request, credentials: ClientLoginRequest, db: Session = Depends(get_db)):
-    service = ClientService(db)
-    return service.login(credentials)
 @router.post("", response_model=ClientResponse, status_code=201)
 def create_client(
     request: CreateClientRequest,
@@ -76,9 +70,10 @@ def accept_invite(request: AcceptInviteRequest, db: Session = Depends(get_db)):
 
 
 @client_auth_router.post("/login", response_model=ClientTokenResponse)
-def client_login(request: ClientLoginRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def client_login(request: Request, credentials: ClientLoginRequest, db: Session = Depends(get_db)):
     service = ClientService(db)
-    return service.login(request)
+    return service.login(credentials)
 
 
 @client_auth_router.get("/me", response_model=ContactResponse)

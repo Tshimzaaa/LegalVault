@@ -89,7 +89,7 @@ Multi-tenant isolation (firm-scoped queries, cross-firm access returns 404 not 4
 ```
 cd backend
 pip install -r requirements.txt
-# configure .env — see app/core/config.py for required vars (DB URL, SECRET_KEY, REGISTER_SECRET, R2 credentials, etc.)
+# configure .env — see app/core/config.py for required vars (DB URL, SECRET_KEY, REGISTER_SECRET, OWNER_SECRET, R2 credentials, etc.)
 alembic upgrade head
 uvicorn app.main:app --reload
 ```

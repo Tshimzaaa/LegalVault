@@ -31,3 +31,7 @@ class SupportRequestRepository:
         self.db.add(support_request)
         self.db.flush()
         return support_request
+
+    def delete(self, support_request: SupportRequest):
+        self.db.delete(support_request)
+        self.db.flush()

@@ -39,3 +39,19 @@ export async function createSupportRequest(
 export async function listMySupportRequests(token: string): Promise<SupportRequest[]> {
   return apiRequest<SupportRequest[]>('/client-support-requests', { token })
 }
+
+export async function listSupportRequestsForFirm(token: string): Promise<SupportRequest[]> {
+  return apiRequest<SupportRequest[]>('/support-requests', { token })
+}
+
+export async function updateSupportRequestStatus(
+  token: string,
+  supportRequestId: string,
+  status: SupportRequestStatus,
+): Promise<SupportRequest> {
+  return apiRequest<SupportRequest>(`/support-requests/${supportRequestId}/status`, {
+    method: 'PATCH',
+    body: { status },
+    token,
+  })
+}

@@ -27,3 +27,7 @@ class TemplateRepository:
             .order_by(Template.version.desc())
         )
         return self.db.scalar(statement)
+
+    def delete(self, template: Template):
+        self.db.delete(template)
+        self.db.flush()

@@ -150,7 +150,11 @@ on the other's protected routes.
 - `POST /auth/register` — creates a law firm + its first admin user in one 
   call. **Gated** behind a shared secret (`admin_secret` in the request 
   body, checked against `REGISTER_SECRET` in environment config) since 
-  only the SaaS owner should be able to onboard new firms.
+  only the SaaS owner should be able to onboard new firms. `REGISTER_SECRET` 
+  is deliberately a *different* value from `OWNER_SECRET` (below) — this 
+  secret only unlocks "create one new firm," so it can be handed to an 
+  onboarding flow without also handing out full owner access to every 
+  existing firm's data.
 - `POST /auth/login` — email + password → JWT. Rate limited to 5 
   attempts/minute per IP.
 - `GET /auth/me` — returns the logged-in staff member's own profile.
@@ -261,9 +265,11 @@ has no free tier and is meant for rarely-accessed archival data).
 
 ### Environment-based safety checks
 `app/core/config.py` checks `ENVIRONMENT` on startup. If set to 
-`"production"`, the app refuses to start if `SECRET_KEY` or 
-`REGISTER_SECRET` are still set to placeholder values — a safeguard 
-against accidentally deploying with default secrets.
+`"production"`, the app refuses to start if `SECRET_KEY`, `REGISTER_SECRET`, 
+or `OWNER_SECRET` are still set to placeholder values, or if `OWNER_SECRET` 
+equals `REGISTER_SECRET` — safeguards against accidentally deploying with 
+default secrets or collapsing the owner/registration trust boundary back 
+into one shared value.
 
 ---
 

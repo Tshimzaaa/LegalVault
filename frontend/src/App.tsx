@@ -11,10 +11,10 @@ import AcceptInvite from './pages/AcceptInvite/AcceptInvite'
 import AcceptStaffInvite from './pages/AcceptStaffInvite/AcceptStaffInvite'
 import OwnerLogin from './pages/OwnerLogin/OwnerLogin'
 import OwnerPortal from './pages/OwnerPortal/OwnerPortal'
-import { login, getCurrentUser } from './api/auth'
-import { clientLogin, getCurrentContact } from './api/clientAuth'
+import { login, getCurrentUser, refreshStaffToken, logoutStaff } from './api/auth'
+import { clientLogin, getCurrentContact, refreshClientToken, logoutClient } from './api/clientAuth'
 import { ownerLogin, listFirms } from './api/owner'
-import { setUnauthorizedHandler } from './api/client'
+import { setUnauthorizedHandler, setRefreshHandler } from './api/client'
 import type { User } from './api/auth'
 import type { ClientContact } from './api/clientAuth'
 
@@ -31,17 +31,53 @@ function App() {
   const staffOnly = Boolean((location.state as { staffOnly?: boolean } | null)?.staffOnly)
 
   const handleLogout = useCallback(() => {
+    // Revoke the refresh token server-side so the session can't be silently resumed after
+    // logout. Best-effort: fire-and-forget, since the local session is cleared regardless.
+    const refreshToken = localStorage.getItem('refresh_token')
+    const actorKind = localStorage.getItem('actor_kind')
+    if (refreshToken && actorKind === 'staff') logoutStaff(refreshToken).catch(() => {})
+    if (refreshToken && actorKind === 'client') logoutClient(refreshToken).catch(() => {})
+
     localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
     localStorage.removeItem('actor_kind')
     setActor(null)
   }, [])
 
+  // Silently exchanges the stored refresh token for a fresh access token when a request 401s —
+  // without this, every session would die the moment the (short-lived) access token expires.
+  const refreshSession = useCallback(async (): Promise<string | null> => {
+    const refreshToken = localStorage.getItem('refresh_token')
+    const actorKind = localStorage.getItem('actor_kind')
+    if (!refreshToken) return null
+
+    try {
+      if (actorKind === 'staff') {
+        const tokens = await refreshStaffToken(refreshToken)
+        localStorage.setItem('access_token', tokens.accessToken)
+        localStorage.setItem('refresh_token', tokens.refreshToken)
+        return tokens.accessToken
+      }
+      if (actorKind === 'client') {
+        const tokens = await refreshClientToken(refreshToken)
+        localStorage.setItem('access_token', tokens.accessToken)
+        localStorage.setItem('refresh_token', tokens.refreshToken)
+        return tokens.accessToken
+      }
+    } catch {
+      return null
+    }
+    // Owner sessions have no refresh token — a 401 there just means log back in.
+    return null
+  }, [])
+
   useEffect(() => {
+    setRefreshHandler(refreshSession)
     setUnauthorizedHandler(() => {
       handleLogout()
       navigate('/login')
     })
-  }, [handleLogout, navigate])
+  }, [refreshSession, handleLogout, navigate])
 
   useEffect(() => {
     const token = localStorage.getItem('access_token')
@@ -62,6 +98,7 @@ function App() {
     restore
       .catch(() => {
         localStorage.removeItem('access_token')
+        localStorage.removeItem('refresh_token')
         localStorage.removeItem('actor_kind')
       })
       .finally(() => setCheckingSession(false))
@@ -70,20 +107,22 @@ function App() {
   async function handleLogin(email: string, password: string) {
     // Bottom "Staff Login" footer link — real staff backend login only.
     if (staffOnly) {
-      const staffToken = await login(email, password)
-      localStorage.setItem('access_token', staffToken)
+      const tokens = await login(email, password)
+      localStorage.setItem('access_token', tokens.accessToken)
+      localStorage.setItem('refresh_token', tokens.refreshToken)
       localStorage.setItem('actor_kind', 'staff')
-      const user = await getCurrentUser(staffToken)
+      const user = await getCurrentUser(tokens.accessToken)
       setActor({ kind: 'staff', user })
       navigate('/staff/dashboard')
       return
     }
 
     // Top-of-homepage Login — real client-auth backend login only.
-    const clientToken = await clientLogin(email, password)
-    localStorage.setItem('access_token', clientToken)
+    const tokens = await clientLogin(email, password)
+    localStorage.setItem('access_token', tokens.accessToken)
+    localStorage.setItem('refresh_token', tokens.refreshToken)
     localStorage.setItem('actor_kind', 'client')
-    const contact = await getCurrentContact(clientToken)
+    const contact = await getCurrentContact(tokens.accessToken)
     setActor({ kind: 'client', contact })
     navigate('/client/dashboard')
   }
@@ -91,6 +130,8 @@ function App() {
   async function handleOwnerLogin(secret: string) {
     const ownerToken = await ownerLogin(secret)
     localStorage.setItem('access_token', ownerToken)
+    // Owner sessions don't have a refresh token — drop any leftover from a prior staff/client login.
+    localStorage.removeItem('refresh_token')
     localStorage.setItem('actor_kind', 'owner')
     setActor({ kind: 'owner' })
     navigate('/owner')

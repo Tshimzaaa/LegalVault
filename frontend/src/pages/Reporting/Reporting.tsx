@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import './Reporting.css'
 import { listMatters } from '../../api/matters'
 import { getDashboardSummary } from '../../api/dashboard'
+import { getReportingOverview, downloadMattersCsv } from '../../api/reporting'
+import type { ReportingOverview } from '../../api/reporting'
 
 interface OutcomeSlice {
   label: string
@@ -25,15 +27,7 @@ const fallbackCaseOutcomes: OutcomeSlice[] = [
   { label: 'Dismissed', value: 10, color: '#008300' },
 ]
 
-const billableHours = [
-  { label: 'A. Dlamini', value: 62 },
-  { label: 'T. van Wyk', value: 54 },
-  { label: 'S. Mokoena', value: 47 },
-  { label: 'R. Naidoo', value: 39 },
-  { label: 'L. Botha', value: 28 },
-]
-
-const statTiles = [
+const demoStatTiles = [
   { label: 'Total revenue', value: 'R4.71M', delta: '+8% vs last period', up: true },
   { label: 'Win rate', value: '78%', delta: '+2pts vs last period', up: true },
   { label: 'Avg. case duration', value: '94 days', delta: '-6 days vs last period', up: true },
@@ -189,81 +183,48 @@ function CaseOutcomesDonut({ data }: { data: OutcomeSlice[] }) {
   )
 }
 
-function BillableHoursBar() {
-  const width = 300
-  const height = 140
-  const padding = 20
-  const [hover, setHover] = useState<number | null>(null)
-
-  const max = 80
-  const gridSteps = [0, 20, 40, 60, 80]
-  const barSlot = (width - padding) / billableHours.length
-  const barWidth = Math.min(barSlot - 14, 24)
+function StaffWorkloadTable({ overview }: { overview: ReportingOverview | null }) {
+  const rows = overview?.staff_workload ?? []
 
   return (
-    <div className="chart-wrap">
-      <svg width="100%" viewBox={`0 0 ${width} ${height}`} onMouseLeave={() => setHover(null)}>
-        {gridSteps.map((g) => {
-          const y = height - padding - (g / max) * (height - padding * 2)
-          return (
-            <line
-              key={g}
-              x1={padding}
-              x2={width}
-              y1={y}
-              y2={y}
-              stroke="rgba(255,255,255,0.08)"
-              strokeWidth="1"
-            />
-          )
-        })}
-        {gridSteps.map((g) => {
-          const y = height - padding - (g / max) * (height - padding * 2)
-          return (
-            <text key={g} x={padding - 6} y={y + 3} textAnchor="end" className="chart-axis-label">
-              {g}
-            </text>
-          )
-        })}
-
-        {billableHours.map((d, i) => {
-          const barHeight = (d.value / max) * (height - padding * 2)
-          const x = padding + i * barSlot + (barSlot - barWidth) / 2
-          const y = height - padding - barHeight
-          const isHover = hover === i
-          return (
-            <g key={d.label} onMouseEnter={() => setHover(i)}>
-              <rect x={x} y={padding} width={barWidth} height={height - padding * 2} fill="transparent" />
-              <rect
-                x={x}
-                y={y}
-                width={barWidth}
-                height={barHeight}
-                rx="4"
-                fill="#22c55e"
-                opacity={isHover ? 1 : 0.85}
-              />
-              {isHover && (
-                <text x={x + barWidth / 2} y={y - 6} textAnchor="middle" className="chart-bar-label">
-                  {d.value}h
-                </text>
-              )}
-            </g>
-          )
-        })}
-      </svg>
-      <div className="chart-x-axis bar-x-axis">
-        {billableHours.map((d) => (
-          <span key={d.label}>{d.label}</span>
+    <table className="data-table">
+      <thead>
+        <tr>
+          <th>Staff</th>
+          <th>Active</th>
+          <th>Open tasks</th>
+          <th>Overdue</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r) => (
+          <tr key={r.user_id}>
+            <td>{r.name}</td>
+            <td className="muted tabular">{r.active_matters}</td>
+            <td className="muted tabular">{r.open_tasks}</td>
+            <td className="muted tabular" style={{ color: r.overdue_tasks > 0 ? '#ef4444' : undefined }}>
+              {r.overdue_tasks}
+            </td>
+          </tr>
         ))}
-      </div>
-    </div>
+        {rows.length === 0 && (
+          <tr>
+            <td colSpan={4} className="muted">
+              No staff assigned to matters yet.
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
   )
 }
 
 function Reporting() {
   const [activeMatters, setActiveMatters] = useState<number | null>(null)
   const [caseOutcomes, setCaseOutcomes] = useState<OutcomeSlice[]>(fallbackCaseOutcomes)
+  const [overview, setOverview] = useState<ReportingOverview | null>(null)
+  const [exporting, setExporting] = useState(false)
+  const [exportError, setExportError] = useState<string | null>(null)
 
   useEffect(() => {
     const token = localStorage.getItem('access_token')
@@ -281,12 +242,34 @@ function Reporting() {
         if (breakdown.length > 0) setCaseOutcomes(breakdown)
       })
       .catch(() => {})
+
+    getReportingOverview(token).then(setOverview).catch(() => setOverview(null))
   }, [])
+
+  async function handleExport() {
+    const token = localStorage.getItem('access_token')
+    if (!token) return
+    setExportError(null)
+    setExporting(true)
+    try {
+      await downloadMattersCsv(token)
+    } catch {
+      setExportError('Could not export matters.')
+    } finally {
+      setExporting(false)
+    }
+  }
 
   return (
     <main className="dash-main">
       <header className="dash-topbar">
         <h1>Reporting</h1>
+        <div className="topbar-actions">
+          {exportError && <span className="matter-error">{exportError}</span>}
+          <button type="button" className="btn-ghost" onClick={handleExport} disabled={exporting}>
+            {exporting ? 'Exporting…' : 'Export matters (CSV)'}
+          </button>
+        </div>
       </header>
 
       <section className="dash-row reporting-stats">
@@ -298,7 +281,41 @@ function Reporting() {
             <span className="stat-big">{activeMatters ?? '—'}</span>
           </div>
         </div>
-        {statTiles.map((t) => (
+        <div className="card">
+          <div className="card-header">
+            <span>Unassigned active matters</span>
+          </div>
+          <div className="stat-line">
+            <span className="stat-big">{overview?.unassigned_active_matters ?? '—'}</span>
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-header">
+            <span>Open tasks</span>
+          </div>
+          <div className="stat-line">
+            <span className="stat-big">{overview?.open_tasks ?? '—'}</span>
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-header">
+            <span>Overdue tasks</span>
+          </div>
+          <div className="stat-line">
+            <span className="stat-big" style={{ color: overview && overview.overdue_tasks > 0 ? '#ef4444' : undefined }}>
+              {overview?.overdue_tasks ?? '—'}
+            </span>
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-header">
+            <span>Deadlines (7 days)</span>
+          </div>
+          <div className="stat-line">
+            <span className="stat-big">{overview?.upcoming_deadlines_7_days ?? '—'}</span>
+          </div>
+        </div>
+        {demoStatTiles.map((t) => (
           <div key={t.label} className="card">
             <div className="card-header">
               <span>{t.label}</span>
@@ -306,7 +323,7 @@ function Reporting() {
             <div className="stat-line">
               <span className="stat-big">{t.value}</span>
             </div>
-            <span className={`stat-delta${t.up ? ' up' : ' down'}`}>{t.delta}</span>
+            <span className={`stat-delta${t.up ? ' up' : ' down'}`}>{t.delta} (demo data)</span>
           </div>
         ))}
       </section>
@@ -330,10 +347,10 @@ function Reporting() {
 
         <div className="card reporting-chart-card">
           <div className="card-header">
-            <span>Billable Hours</span>
+            <span>Staff Workload</span>
           </div>
-          <span className="card-subtitle">by attorney, this week (demo data)</span>
-          <BillableHoursBar />
+          <span className="card-subtitle">active matters &amp; tasks, by assignee</span>
+          <StaffWorkloadTable overview={overview} />
         </div>
       </section>
     </main>

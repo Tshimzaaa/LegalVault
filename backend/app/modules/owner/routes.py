@@ -41,6 +41,11 @@ from app.modules.audit import actions as audit_actions
 from app.modules.monitoring.service import MonitoringService
 from app.modules.notifications.repository import NotificationRepository
 from app.modules.notifications.models import RecipientType
+from app.modules.signed_contracts.repository import SignedContractRepository
+from app.modules.templates.repository import TemplateRepository
+from app.modules.support_requests.repository import SupportRequestRepository
+from app.modules.auth.refresh_token_repository import RefreshTokenRepository
+from app.modules.auth.models.refresh_token import RefreshTokenActorType
 from datetime import timedelta
 
 
@@ -63,7 +68,7 @@ def create_firm(
 
 @router.post("/login", response_model=OwnerTokenResponse)
 def owner_login(request: OwnerLoginRequest):
-    if request.secret != settings.REGISTER_SECRET:
+    if request.secret != settings.OWNER_SECRET:
         raise HTTPException(status_code=401, detail="Invalid secret.")
 
     token = create_access_token(
@@ -300,6 +305,22 @@ def delete_firm(
     client_repo = ClientRepository(db)
     matter_repo = MatterRepository(db)
     notification_repo = NotificationRepository(db)
+    signed_contract_repo = SignedContractRepository(db)
+    template_repo = TemplateRepository(db)
+    support_request_repo = SupportRequestRepository(db)
+    refresh_token_repo = RefreshTokenRepository(db)
+
+    # Signed contracts and support requests hold their own FKs into matters/clients/contacts,
+    # so they must go before those rows are deleted below or the delete fails with an
+    # IntegrityError (this was the bug — firm delete 500'd for any firm with real usage data).
+    for contract in signed_contract_repo.list_plain_by_firm(firm.id):
+        signed_contract_repo.delete(contract)
+
+    for support_request in support_request_repo.list_by_firm(firm.id):
+        support_request_repo.delete(support_request)
+
+    for template in template_repo.list_by_firm(firm.id):
+        template_repo.delete(template)
 
     for matter in matter_repo.list_by_firm(firm.id):
         for document in matter_repo.list_documents_for_matter(matter.id):
@@ -315,11 +336,13 @@ def delete_firm(
     for client in client_repo.list_by_firm(firm.id):
         for contact in client_repo.list_contacts_for_client(client.id):
             notification_repo.delete_for_recipient(RecipientType.CLIENT_CONTACT, contact.id)
+            refresh_token_repo.delete_all_for_actor(RefreshTokenActorType.CLIENT, contact.id)
             client_repo.delete_contact(contact)
         client_repo.delete_client(client)
 
     for user in auth_repo.list_by_firm(firm.id):
         notification_repo.delete_for_recipient(RecipientType.STAFF, user.id)
+        refresh_token_repo.delete_all_for_actor(RefreshTokenActorType.STAFF, user.id)
         auth_repo.delete_user(user)
 
     auth_repo.delete_firm(firm)

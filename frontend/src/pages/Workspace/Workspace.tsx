@@ -19,6 +19,7 @@ import {
   IconClock,
   IconCalendar,
   IconGear,
+  IconInbox,
 } from '../../components/icons'
 import Dashboard from '../Dashboard/Dashboard'
 import NewMatter from '../NewMatter/NewMatter'
@@ -34,6 +35,7 @@ import Staff from '../Staff/Staff'
 import Search from '../Search/Search'
 import AuditLog from '../AuditLog/AuditLog'
 import Calendar from '../Calendar/Calendar'
+import SupportRequests from '../SupportRequests/SupportRequests'
 import Settings from '../Settings/Settings'
 import type { User } from '../../api/auth'
 
@@ -51,6 +53,7 @@ export type StaffPage =
   | 'search'
   | 'audit-log'
   | 'calendar'
+  | 'support-requests'
   | 'settings'
 
 export const staffNavItems: NavItem[] = [
@@ -60,6 +63,7 @@ export const staffNavItems: NavItem[] = [
   { label: 'Clients', icon: <IconUser />, page: 'clients' },
   { label: 'Calendar', icon: <IconCalendar />, page: 'calendar' },
   { label: 'Workflow', icon: <IconWorkflow />, page: 'workflow' },
+  { label: 'Support Requests', icon: <IconInbox />, page: 'support-requests' },
   { label: 'Signed Contracts', icon: <IconSignedContract />, page: 'signed-contracts' },
   { label: 'Reporting', icon: <IconReport />, page: 'reporting' },
   { label: 'Contract Data', icon: <IconContractData />, page: 'contract-data' },
@@ -109,6 +113,7 @@ function Workspace({ user, onLogout }: WorkspaceProps) {
           <Route path="templates" element={<Templates />} />
           <Route path="search" element={<Search />} />
           <Route path="calendar" element={<Calendar />} />
+          <Route path="support-requests" element={<SupportRequests />} />
           <Route path="settings" element={<Settings user={user} />} />
           <Route path="staff" element={<Staff user={user} />} />
           <Route path="audit-log" element={<AuditLog user={user} />} />

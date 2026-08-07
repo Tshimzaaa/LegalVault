@@ -35,3 +35,10 @@ class SignedContractRepository:
             .order_by(SignedContract.signed_date.desc())
         )
         return list(self.db.execute(statement).all())
+
+    def list_plain_by_firm(self, firm_id) -> list[SignedContract]:
+        return list(self.db.scalars(select(SignedContract).where(SignedContract.firm_id == firm_id)))
+
+    def delete(self, contract: SignedContract):
+        self.db.delete(contract)
+        self.db.flush()
