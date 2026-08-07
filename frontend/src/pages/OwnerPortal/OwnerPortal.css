@@ -1,3 +1,33 @@
+/* The owner portal has too many sections to fit one screen — unlike other dashboard pages
+   (which pin a header and let a single flex:1 card scroll internally), this page just scrolls
+   as a whole, and every section keeps its natural height instead of being squeezed into a
+   fixed-height flex slot. */
+.owner-portal-main {
+  overflow-y: auto;
+}
+
+.owner-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 4px;
+}
+
+.owner-section-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.owner-section-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #6b7280;
+  margin: 0;
+}
+
 .owner-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -10,15 +40,9 @@
   height: 18px;
 }
 
-.owner-firms-table-card {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-}
-
-.owner-create-firm-card {
-  margin-bottom: 16px;
-  flex-shrink: 0;
+.owner-collapse-toggle {
+  padding: 5px 12px;
+  font-size: 11.5px;
 }
 
 .owner-create-firm-form .field-row {
@@ -28,13 +52,6 @@
 .owner-firm-toggle {
   padding: 6px 14px;
   font-size: 12px;
-}
-
-.owner-audit-card {
-  flex-shrink: 0;
-  max-height: 40%;
-  overflow-y: auto;
-  margin-top: 16px;
 }
 
 .owner-audit-card .card-header select {
@@ -47,11 +64,6 @@
   font-family: inherit;
 }
 
-.owner-monitoring-card {
-  flex-shrink: 0;
-  margin-bottom: 16px;
-}
-
 .owner-monitoring-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -62,11 +74,6 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-}
-
-.owner-announcements-card {
-  flex-shrink: 0;
-  margin-bottom: 16px;
 }
 
 .owner-announcement-form {

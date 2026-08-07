@@ -3,50 +3,72 @@ import './ClientReporting.css'
 import ProfileMenu from '../../components/ProfileMenu'
 import type { ClientContact } from '../../api/clientAuth'
 import { listClientMatters } from '../../api/clientMatters'
+import { listClientSignedContracts } from '../../api/clientSignedContracts'
+import type { ContractType } from '../../api/signedContracts'
+import { listMySupportRequests } from '../../api/supportRequests'
+import type { SupportRequest, SupportRequestType } from '../../api/supportRequests'
 
-const activeMattersTrend = [
-  { month: 'Feb', value: 24 },
-  { month: 'Mar', value: 28 },
-  { month: 'Apr', value: 31 },
-  { month: 'May', value: 35 },
-  { month: 'Jun', value: 38 },
-  { month: 'Jul', value: 42 },
-]
+interface TrendPoint {
+  month: string
+  value: number
+}
 
-const contractDistribution = [
-  { label: 'NDA', value: 38, color: '#3987e5' },
-  { label: 'Consultancy', value: 27, color: '#199e70' },
-  { label: 'Supplier', value: 22, color: '#c98500' },
-  { label: 'Other', value: 13, color: '#008300' },
-]
+interface OutcomeSlice {
+  label: string
+  value: number
+  color: string
+}
 
-const turnaroundByType = [
-  { label: 'NDA', value: 3 },
-  { label: 'Consultancy', value: 5 },
-  { label: 'Supplier', value: 7 },
-  { label: 'General', value: 4 },
-  { label: 'Lease', value: 6 },
-]
+interface BarPoint {
+  label: string
+  value: number
+}
 
-const statTiles = [
-  { label: 'Avg. turnaround', value: '4.8 days', delta: '-1.2 days vs last period', up: true },
-  { label: 'Requests this month', value: '19', delta: '+4 vs last period', up: true },
-  { label: 'Completion rate', value: '91%', delta: '+3pts vs last period', up: true },
-]
+const contractTypeLabel: Record<ContractType, string> = {
+  nda: 'NDA',
+  consultancy: 'Consultancy',
+  supplier: 'Supplier',
+  general: 'General',
+}
 
-function ActiveMattersLineChart() {
+const contractTypeColor: Record<ContractType, string> = {
+  nda: '#3987e5',
+  consultancy: '#199e70',
+  supplier: '#c98500',
+  general: '#008300',
+}
+
+const requestTypeLabel: Record<SupportRequestType, string> = {
+  nda: 'NDA',
+  consultancy: 'Consultancy',
+  supplier: 'Supplier',
+  general: 'General',
+}
+
+/** Last `count` calendar months, oldest first, as {year, month, label} — used to bucket real records. */
+function lastMonths(count: number) {
+  const now = new Date()
+  const months = []
+  for (let i = count - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    months.push({ year: d.getFullYear(), month: d.getMonth(), label: d.toLocaleString('en-US', { month: 'short' }) })
+  }
+  return months
+}
+
+function ActiveMattersLineChart({ data }: { data: TrendPoint[] }) {
   const width = 300
   const height = 130
   const padding = 8
   const [hover, setHover] = useState<number | null>(null)
 
-  const values = activeMattersTrend.map((d) => d.value)
+  const values = data.map((d) => d.value)
   const min = Math.min(...values)
   const max = Math.max(...values)
   const span = max - min || 1
-  const stepX = (width - padding * 2) / (activeMattersTrend.length - 1)
+  const stepX = (width - padding * 2) / Math.max(data.length - 1, 1)
 
-  const points = activeMattersTrend.map((d, i) => {
+  const points = data.map((d, i) => {
     const x = padding + i * stepX
     const y = height - padding - ((d.value - min) / span) * (height - padding * 2)
     return { x, y, ...d }
@@ -99,7 +121,7 @@ function ActiveMattersLineChart() {
       </svg>
 
       <div className="chart-x-axis">
-        {activeMattersTrend.map((d) => (
+        {data.map((d) => (
           <span key={d.month}>{d.month}</span>
         ))}
       </div>
@@ -114,16 +136,16 @@ function ActiveMattersLineChart() {
   )
 }
 
-function ContractDistributionDonut() {
+function ContractDistributionDonut({ data }: { data: OutcomeSlice[] }) {
   const size = 148
   const stroke = 22
   const radius = (size - stroke) / 2
   const circumference = 2 * Math.PI * radius
-  const total = contractDistribution.reduce((s, d) => s + d.value, 0)
+  const total = data.reduce((s, d) => s + d.value, 0) || 1
   const [hover, setHover] = useState<number | null>(null)
 
   let cumulative = 0
-  const segments = contractDistribution.map((d) => {
+  const segments = data.map((d) => {
     const fraction = d.value / total
     const dash = Math.max(fraction * circumference - 2, 0)
     const rotate = (cumulative / total) * 360 - 90
@@ -153,7 +175,7 @@ function ContractDistributionDonut() {
           />
         ))}
         <text x="50%" y="46%" textAnchor="middle" className="donut-center-value">
-          {total}
+          {data.length > 0 ? total : 0}
         </text>
         <text x="50%" y="62%" textAnchor="middle" className="donut-center-label">
           contracts
@@ -161,27 +183,28 @@ function ContractDistributionDonut() {
       </svg>
 
       <div className="donut-legend">
-        {contractDistribution.map((d, i) => (
+        {data.map((d, i) => (
           <div key={d.label} className={`donut-legend-row${hover === i ? ' active' : ''}`}>
             <span className="status-dot" style={{ background: d.color }} />
             <span className="donut-legend-label">{d.label}</span>
-            <span className="donut-legend-value">{d.value}%</span>
+            <span className="donut-legend-value">{Math.round((d.value / total) * 100)}%</span>
           </div>
         ))}
+        {data.length === 0 && <p className="muted">No signed contracts yet.</p>}
       </div>
     </div>
   )
 }
 
-function TurnaroundBarChart() {
+function TurnaroundBarChart({ data }: { data: BarPoint[] }) {
   const width = 300
   const height = 140
   const padding = 20
   const [hover, setHover] = useState<number | null>(null)
 
-  const max = 8
-  const gridSteps = [0, 2, 4, 6, 8]
-  const barSlot = (width - padding) / turnaroundByType.length
+  const max = Math.max(1, Math.ceil(Math.max(...data.map((d) => d.value), 0)))
+  const gridSteps = [0, max / 4, max / 2, (3 * max) / 4, max]
+  const barSlot = (width - padding) / Math.max(data.length, 1)
   const barWidth = Math.min(barSlot - 14, 24)
 
   return (
@@ -195,12 +218,12 @@ function TurnaroundBarChart() {
           const y = height - padding - (g / max) * (height - padding * 2)
           return (
             <text key={g} x={padding - 6} y={y + 3} textAnchor="end" className="chart-axis-label">
-              {g}
+              {g.toFixed(g < 1 ? 1 : 0)}
             </text>
           )
         })}
 
-        {turnaroundByType.map((d, i) => {
+        {data.map((d, i) => {
           const barHeight = (d.value / max) * (height - padding * 2)
           const x = padding + i * barSlot + (barSlot - barWidth) / 2
           const y = height - padding - barHeight
@@ -211,7 +234,7 @@ function TurnaroundBarChart() {
               <rect x={x} y={y} width={barWidth} height={barHeight} rx="4" fill="#22c55e" opacity={isHover ? 1 : 0.85} />
               {isHover && (
                 <text x={x + barWidth / 2} y={y - 6} textAnchor="middle" className="chart-bar-label">
-                  {d.value}d
+                  {d.value.toFixed(1)}d
                 </text>
               )}
             </g>
@@ -219,9 +242,10 @@ function TurnaroundBarChart() {
         })}
       </svg>
       <div className="chart-x-axis bar-x-axis">
-        {turnaroundByType.map((d) => (
+        {data.map((d) => (
           <span key={d.label}>{d.label}</span>
         ))}
+        {data.length === 0 && <span>No resolved requests yet</span>}
       </div>
     </div>
   )
@@ -234,14 +258,69 @@ interface ClientReportingProps {
 
 function ClientReporting({ contact, onLogout }: ClientReportingProps) {
   const [activeMatters, setActiveMatters] = useState<number | null>(null)
+  const [mattersTrend, setMattersTrend] = useState<TrendPoint[]>([])
+  const [contractDistribution, setContractDistribution] = useState<OutcomeSlice[]>([])
+  const [turnaroundByType, setTurnaroundByType] = useState<BarPoint[]>([])
+  const [avgTurnaroundDays, setAvgTurnaroundDays] = useState<number | null>(null)
+  const [requestsThisMonth, setRequestsThisMonth] = useState<number | null>(null)
+  const [completionRate, setCompletionRate] = useState<number | null>(null)
 
   useEffect(() => {
     const token = localStorage.getItem('access_token')
     if (!token) return
 
     listClientMatters(token)
-      .then((matters) => setActiveMatters(matters.filter((m) => m.status !== 'closed' && m.status !== 'declined').length))
+      .then((matters) => {
+        setActiveMatters(matters.filter((m) => m.status !== 'closed' && m.status !== 'declined').length)
+
+        const months = lastMonths(6)
+        setMattersTrend(
+          months.map(({ year, month, label }) => {
+            const cutoff = new Date(year, month + 1, 1)
+            const count = matters.filter((m) => new Date(m.created_at) < cutoff).length
+            return { month: label, value: count }
+          }),
+        )
+      })
       .catch(() => setActiveMatters(null))
+
+    listClientSignedContracts(token)
+      .then((contracts) => {
+        const counts = contracts.reduce(
+          (acc, c) => ({ ...acc, [c.agreement_type]: (acc[c.agreement_type] ?? 0) + 1 }),
+          {} as Record<ContractType, number>,
+        )
+        setContractDistribution(
+          (Object.keys(counts) as ContractType[]).map((type) => ({
+            label: contractTypeLabel[type],
+            value: counts[type],
+            color: contractTypeColor[type],
+          })),
+        )
+      })
+      .catch(() => setContractDistribution([]))
+
+    listMySupportRequests(token)
+      .then((requests) => {
+        const now = new Date()
+        setRequestsThisMonth(
+          requests.filter((r) => {
+            const created = new Date(r.created_at)
+            return created.getFullYear() === now.getFullYear() && created.getMonth() === now.getMonth()
+          }).length,
+        )
+
+        const resolved = requests.filter((r) => r.status === 'resolved')
+        setCompletionRate(requests.length > 0 ? Math.round((resolved.length / requests.length) * 100) : null)
+        setAvgTurnaroundDays(resolved.length > 0 ? avgDays(resolved) : null)
+        setTurnaroundByType(turnaroundByRequestType(resolved))
+      })
+      .catch(() => {
+        setRequestsThisMonth(null)
+        setCompletionRate(null)
+        setAvgTurnaroundDays(null)
+        setTurnaroundByType([])
+      })
   }, [])
 
   return (
@@ -260,17 +339,30 @@ function ClientReporting({ contact, onLogout }: ClientReportingProps) {
             <span className="stat-big">{activeMatters ?? '—'}</span>
           </div>
         </div>
-        {statTiles.map((t) => (
-          <div key={t.label} className="card">
-            <div className="card-header">
-              <span>{t.label}</span>
-            </div>
-            <div className="stat-line">
-              <span className="stat-big">{t.value}</span>
-            </div>
-            <span className={`stat-delta${t.up ? ' up' : ' down'}`}>{t.delta}</span>
+        <div className="card">
+          <div className="card-header">
+            <span>Avg. turnaround</span>
           </div>
-        ))}
+          <div className="stat-line">
+            <span className="stat-big">{avgTurnaroundDays !== null ? `${avgTurnaroundDays.toFixed(1)} days` : '—'}</span>
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-header">
+            <span>Requests this month</span>
+          </div>
+          <div className="stat-line">
+            <span className="stat-big">{requestsThisMonth ?? '—'}</span>
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-header">
+            <span>Completion rate</span>
+          </div>
+          <div className="stat-line">
+            <span className="stat-big">{completionRate !== null ? `${completionRate}%` : '—'}</span>
+          </div>
+        </div>
       </section>
 
       <section className="dash-row reporting-charts">
@@ -279,7 +371,7 @@ function ClientReporting({ contact, onLogout }: ClientReportingProps) {
             <span>Active Matters</span>
           </div>
           <span className="card-subtitle">last 6 months</span>
-          <ActiveMattersLineChart />
+          <ActiveMattersLineChart data={mattersTrend} />
         </div>
 
         <div className="card reporting-chart-card">
@@ -287,19 +379,46 @@ function ClientReporting({ contact, onLogout }: ClientReportingProps) {
             <span>Contract Distribution</span>
           </div>
           <span className="card-subtitle">by agreement type</span>
-          <ContractDistributionDonut />
+          <ContractDistributionDonut data={contractDistribution} />
         </div>
 
         <div className="card reporting-chart-card">
           <div className="card-header">
             <span>Turnaround Time</span>
           </div>
-          <span className="card-subtitle">days, by request type</span>
-          <TurnaroundBarChart />
+          <span className="card-subtitle">days, by request type (resolved requests)</span>
+          <TurnaroundBarChart data={turnaroundByType} />
         </div>
       </section>
     </main>
   )
+}
+
+function avgDays(requests: SupportRequest[]): number {
+  const totalDays = requests.reduce((sum, r) => sum + daysBetween(r.created_at, r.updated_at), 0)
+  return totalDays / requests.length
+}
+
+function daysBetween(start: string, end: string): number {
+  return Math.max(0, (new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24))
+}
+
+function turnaroundByRequestType(resolved: SupportRequest[]): BarPoint[] {
+  const byType = resolved.reduce(
+    (acc, r) => {
+      const bucket = acc[r.request_type] ?? { total: 0, count: 0 }
+      bucket.total += daysBetween(r.created_at, r.updated_at)
+      bucket.count += 1
+      acc[r.request_type] = bucket
+      return acc
+    },
+    {} as Record<SupportRequestType, { total: number; count: number }>,
+  )
+
+  return (Object.keys(byType) as SupportRequestType[]).map((type) => ({
+    label: requestTypeLabel[type],
+    value: byType[type].total / byType[type].count,
+  }))
 }
 
 export default ClientReporting

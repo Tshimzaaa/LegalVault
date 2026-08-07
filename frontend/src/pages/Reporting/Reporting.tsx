@@ -11,119 +11,6 @@ interface OutcomeSlice {
   color: string
 }
 
-const revenueTrend = [
-  { month: 'Jan', value: 620 },
-  { month: 'Feb', value: 680 },
-  { month: 'Mar', value: 750 },
-  { month: 'Apr', value: 810 },
-  { month: 'May', value: 890 },
-  { month: 'Jun', value: 960 },
-]
-
-const fallbackCaseOutcomes: OutcomeSlice[] = [
-  { label: 'Won', value: 45, color: '#3987e5' },
-  { label: 'Settled', value: 30, color: '#199e70' },
-  { label: 'Ongoing', value: 15, color: '#c98500' },
-  { label: 'Dismissed', value: 10, color: '#008300' },
-]
-
-const demoStatTiles = [
-  { label: 'Total revenue', value: 'R4.71M', delta: '+8% vs last period', up: true },
-  { label: 'Win rate', value: '78%', delta: '+2pts vs last period', up: true },
-  { label: 'Avg. case duration', value: '94 days', delta: '-6 days vs last period', up: true },
-]
-
-function RevenueLineChart() {
-  const width = 300
-  const height = 130
-  const padding = 8
-  const [hover, setHover] = useState<number | null>(null)
-
-  const values = revenueTrend.map((d) => d.value)
-  const min = Math.min(...values)
-  const max = Math.max(...values)
-  const span = max - min || 1
-  const stepX = (width - padding * 2) / (revenueTrend.length - 1)
-
-  const points = revenueTrend.map((d, i) => {
-    const x = padding + i * stepX
-    const y = height - padding - ((d.value - min) / span) * (height - padding * 2)
-    return { x, y, ...d }
-  })
-
-  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
-  const areaPath = `${linePath} L ${points[points.length - 1].x} ${height - padding} L ${points[0].x} ${height - padding} Z`
-
-  return (
-    <div className="chart-wrap">
-      <svg
-        width="100%"
-        viewBox={`0 0 ${width} ${height}`}
-        onMouseLeave={() => setHover(null)}
-      >
-        {[0.25, 0.5, 0.75].map((f) => (
-          <line
-            key={f}
-            x1={padding}
-            x2={width - padding}
-            y1={padding + f * (height - padding * 2)}
-            y2={padding + f * (height - padding * 2)}
-            stroke="rgba(255,255,255,0.08)"
-            strokeWidth="1"
-          />
-        ))}
-
-        <path d={areaPath} fill="#22c55e" opacity="0.1" stroke="none" />
-        <path d={linePath} fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-
-        {points.map((p, i) => (
-          <g key={p.month}>
-            <rect
-              x={p.x - stepX / 2}
-              y={0}
-              width={stepX}
-              height={height}
-              fill="transparent"
-              onMouseEnter={() => setHover(i)}
-            />
-            {(hover === i || i === points.length - 1) && (
-              <circle cx={p.x} cy={p.y} r="4" fill="#22c55e" stroke="#0b0b0d" strokeWidth="2" />
-            )}
-          </g>
-        ))}
-
-        {hover !== null && (
-          <line
-            x1={points[hover].x}
-            x2={points[hover].x}
-            y1={padding}
-            y2={height - padding}
-            stroke="rgba(255,255,255,0.2)"
-            strokeWidth="1"
-          />
-        )}
-
-        <text x={points[points.length - 1].x} y={points[points.length - 1].y - 10} textAnchor="end" className="chart-end-label">
-          R{points[points.length - 1].value}k
-        </text>
-      </svg>
-
-      <div className="chart-x-axis">
-        {revenueTrend.map((d) => (
-          <span key={d.month}>{d.month}</span>
-        ))}
-      </div>
-
-      {hover !== null && (
-        <div className="chart-tooltip" style={{ left: `${(points[hover].x / width) * 100}%` }}>
-          <strong>R{points[hover].value}k</strong>
-          <span>{points[hover].month}</span>
-        </div>
-      )}
-    </div>
-  )
-}
-
 function CaseOutcomesDonut({ data }: { data: OutcomeSlice[] }) {
   const size = 148
   const stroke = 22
@@ -163,7 +50,7 @@ function CaseOutcomesDonut({ data }: { data: OutcomeSlice[] }) {
           />
         ))}
         <text x="50%" y="46%" textAnchor="middle" className="donut-center-value">
-          {total}
+          {data.length > 0 ? total : 0}
         </text>
         <text x="50%" y="62%" textAnchor="middle" className="donut-center-label">
           cases
@@ -178,6 +65,7 @@ function CaseOutcomesDonut({ data }: { data: OutcomeSlice[] }) {
             <span className="donut-legend-value">{Math.round((d.value / total) * 100)}%</span>
           </div>
         ))}
+        {data.length === 0 && <p className="muted">No matters yet.</p>}
       </div>
     </div>
   )
@@ -221,7 +109,7 @@ function StaffWorkloadTable({ overview }: { overview: ReportingOverview | null }
 
 function Reporting() {
   const [activeMatters, setActiveMatters] = useState<number | null>(null)
-  const [caseOutcomes, setCaseOutcomes] = useState<OutcomeSlice[]>(fallbackCaseOutcomes)
+  const [caseOutcomes, setCaseOutcomes] = useState<OutcomeSlice[]>([])
   const [overview, setOverview] = useState<ReportingOverview | null>(null)
   const [exporting, setExporting] = useState(false)
   const [exportError, setExportError] = useState<string | null>(null)
@@ -315,28 +203,9 @@ function Reporting() {
             <span className="stat-big">{overview?.upcoming_deadlines_7_days ?? '—'}</span>
           </div>
         </div>
-        {demoStatTiles.map((t) => (
-          <div key={t.label} className="card">
-            <div className="card-header">
-              <span>{t.label}</span>
-            </div>
-            <div className="stat-line">
-              <span className="stat-big">{t.value}</span>
-            </div>
-            <span className={`stat-delta${t.up ? ' up' : ' down'}`}>{t.delta} (demo data)</span>
-          </div>
-        ))}
       </section>
 
       <section className="dash-row reporting-charts">
-        <div className="card reporting-chart-card">
-          <div className="card-header">
-            <span>Revenue Trend</span>
-          </div>
-          <span className="card-subtitle">last 6 months (demo data)</span>
-          <RevenueLineChart />
-        </div>
-
         <div className="card reporting-chart-card">
           <div className="card-header">
             <span>Case Outcomes</span>

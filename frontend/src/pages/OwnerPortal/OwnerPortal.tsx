@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import './OwnerPortal.css'
-import { IconDollar, IconLayers, IconPlus, IconUser, IconTrash, IconDownload } from '../../components/icons'
+import { IconDollar, IconLayers, IconPlus, IconUser, IconTrash, IconDownload, IconChevron } from '../../components/icons'
 import {
   listFirms,
   getFirm,
@@ -65,6 +65,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
   const [errorsOffset, setErrorsOffset] = useState(0)
   const [errorsHasMore, setErrorsHasMore] = useState(true)
   const [errorsLoadingMore, setErrorsLoadingMore] = useState(false)
+  const [showErrors, setShowErrors] = useState(false)
 
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [announcementsStatus, setAnnouncementsStatus] = useState<LoadState>('loading')
@@ -82,6 +83,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
   const [auditOffset, setAuditOffset] = useState(0)
   const [auditHasMore, setAuditHasMore] = useState(true)
   const [auditLoadingMore, setAuditLoadingMore] = useState(false)
+  const [showAuditLog, setShowAuditLog] = useState(false)
 
   const token = localStorage.getItem('access_token')
 
@@ -354,7 +356,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
   ]
 
   return (
-    <main className="dash-main">
+    <main className="dash-main owner-portal-main">
       <header className="dash-topbar">
         <h1>Owner Portal</h1>
         <div className="topbar-actions">
@@ -477,7 +479,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
       )}
 
       {status === 'ready' && (
-        <>
+        <div className="owner-sections">
           <section className="dash-row owner-stats">
             {platformStats.map((s) => (
               <div key={s.label} className="card owner-stat-card">
@@ -491,6 +493,90 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
               </div>
             ))}
           </section>
+
+          <section className="card owner-firms-table-card">
+            <div className="card-header">
+              <span>Firms on the platform</span>
+            </div>
+            {firmActionError && <p className="matter-error">{firmActionError}</p>}
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Firm</th>
+                  <th>Email</th>
+                  <th>Staff</th>
+                  <th>Clients</th>
+                  <th>Matters</th>
+                  <th>Status</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {firms.map((f) => (
+                  <tr key={f.id}>
+                    <td>{f.name}</td>
+                    <td className="muted">{f.email}</td>
+                    <td className="muted tabular">{f.staff_count}</td>
+                    <td className="muted tabular">{f.client_count}</td>
+                    <td className="muted tabular">{f.matter_count}</td>
+                    <td>
+                      <span
+                        className="status-badge"
+                        style={{
+                          color: f.is_active ? '#22c55e' : '#ef4444',
+                          background: f.is_active ? '#22c55e22' : '#ef444422',
+                        }}
+                      >
+                        {f.is_active ? 'Active' : 'Suspended'}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="clients-row-actions">
+                        <button
+                          type="button"
+                          className="btn-ghost owner-firm-toggle"
+                          disabled={togglingId === f.id}
+                          onClick={() => handleToggleStatus(f)}
+                        >
+                          {togglingId === f.id ? 'Saving…' : f.is_active ? 'Suspend' : 'Activate'}
+                        </button>
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          disabled={exportingId === f.id}
+                          onClick={() => handleExportFirm(f)}
+                          aria-label={`Export ${f.name} data`}
+                          title="Export firm data"
+                        >
+                          <IconDownload />
+                        </button>
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          disabled={f.is_active || deletingId === f.id}
+                          onClick={() => handleDeleteFirm(f)}
+                          aria-label={`Delete ${f.name}`}
+                          title={f.is_active ? 'Suspend the firm before deleting it' : 'Delete permanently'}
+                        >
+                          <IconTrash />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {firms.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="muted">
+                      No firms yet. Onboard one with New Firm.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </section>
+
+          <div className="owner-section-group">
+            <h2 className="owner-section-title">System Health</h2>
 
           <section className="card owner-monitoring-card">
             <div className="card-header">
@@ -587,83 +673,105 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
           <section className="card owner-errors-card">
             <div className="card-header">
               <span>Recent errors</span>
-              <span className="muted">last 24h — what kind, and for whom</span>
-            </div>
-
-            {errorsStatus === 'loading' && (
-              <div className="dash-state">
-                <span className="dash-spinner" />
-                <p>Loading recent errors…</p>
-              </div>
-            )}
-
-            {errorsStatus === 'error' && (
-              <div className="dash-state">
-                <p>Couldn&rsquo;t reach the backend for recent errors.</p>
-                <button type="button" className="btn-ghost" onClick={loadErrors}>
-                  Retry
+              <div className="topbar-actions">
+                <span className="muted">
+                  {errorsStatus === 'ready' ? `${errorEntries.length}${errorsHasMore ? '+' : ''} in last 24h` : 'last 24h'}
+                </span>
+                <button
+                  type="button"
+                  className="icon-btn"
+                  onClick={() => setShowErrors((v) => !v)}
+                  aria-label={showErrors ? 'Collapse recent errors' : 'Expand recent errors'}
+                  title={showErrors ? 'Collapse' : 'Expand'}
+                  style={{ transform: showErrors ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }}
+                >
+                  <IconChevron />
                 </button>
               </div>
-            )}
+            </div>
 
-            {errorsStatus === 'ready' && (
+            {showErrors && (
               <>
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>When</th>
-                      <th>Request</th>
-                      <th>Status</th>
-                      <th>For</th>
-                      <th>Detail</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {errorEntries.map((e) => (
-                      <tr key={e.id}>
-                        <td className="muted tabular">{new Date(e.created_at).toLocaleString()}</td>
-                        <td className="muted">
-                          {e.method} {e.path}
-                        </td>
-                        <td>
-                          <span
-                            className="status-badge"
-                            style={{
-                              color: e.status_code >= 500 ? '#ef4444' : '#eab308',
-                              background: e.status_code >= 500 ? '#ef444422' : '#eab30822',
-                            }}
-                          >
-                            {e.status_code}
-                          </span>
-                        </td>
-                        <td className="muted">{formatActor(e)}</td>
-                        <td className="muted audit-log-details">{e.error_detail ?? '—'}</td>
-                      </tr>
-                    ))}
-                    {errorEntries.length === 0 && (
-                      <tr>
-                        <td colSpan={5} className="muted">
-                          No errors in the last 24h.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-                {errorsHasMore && (
-                  <div className="audit-log-load-more">
-                    <button type="button" className="btn-ghost" disabled={errorsLoadingMore} onClick={handleLoadMoreErrors}>
-                      {errorsLoadingMore ? 'Loading…' : 'Load more'}
+                {errorsStatus === 'loading' && (
+                  <div className="dash-state">
+                    <span className="dash-spinner" />
+                    <p>Loading recent errors…</p>
+                  </div>
+                )}
+
+                {errorsStatus === 'error' && (
+                  <div className="dash-state">
+                    <p>Couldn&rsquo;t reach the backend for recent errors.</p>
+                    <button type="button" className="btn-ghost" onClick={loadErrors}>
+                      Retry
                     </button>
                   </div>
+                )}
+
+                {errorsStatus === 'ready' && (
+                  <>
+                    <table className="data-table">
+                      <thead>
+                        <tr>
+                          <th>When</th>
+                          <th>Request</th>
+                          <th>Status</th>
+                          <th>For</th>
+                          <th>Detail</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {errorEntries.map((e) => (
+                          <tr key={e.id}>
+                            <td className="muted tabular">{new Date(e.created_at).toLocaleString()}</td>
+                            <td className="muted">
+                              {e.method} {e.path}
+                            </td>
+                            <td>
+                              <span
+                                className="status-badge"
+                                style={{
+                                  color: e.status_code >= 500 ? '#ef4444' : '#eab308',
+                                  background: e.status_code >= 500 ? '#ef444422' : '#eab30822',
+                                }}
+                              >
+                                {e.status_code}
+                              </span>
+                            </td>
+                            <td className="muted">{formatActor(e)}</td>
+                            <td className="muted audit-log-details">{e.error_detail ?? '—'}</td>
+                          </tr>
+                        ))}
+                        {errorEntries.length === 0 && (
+                          <tr>
+                            <td colSpan={5} className="muted">
+                              No errors in the last 24h.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                    {errorsHasMore && (
+                      <div className="audit-log-load-more">
+                        <button type="button" className="btn-ghost" disabled={errorsLoadingMore} onClick={handleLoadMoreErrors}>
+                          {errorsLoadingMore ? 'Loading…' : 'Load more'}
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             )}
           </section>
+          </div>
+
+          <div className="owner-section-group">
+            <h2 className="owner-section-title">Communications</h2>
 
           <section className="card owner-announcements-card">
             <div className="card-header">
               <span>Platform Announcements</span>
-              <button type="button" className="btn-ghost" onClick={() => setShowAnnouncementForm((v) => !v)}>
+              <button type="button" className="btn-solid" onClick={() => setShowAnnouncementForm((v) => !v)}>
                 <IconPlus /> New Announcement
               </button>
             </div>
@@ -767,87 +875,10 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
               </div>
             )}
           </section>
+          </div>
 
-          <section className="card owner-firms-table-card">
-            <div className="card-header">
-              <span>Firms on the platform</span>
-            </div>
-            {firmActionError && <p className="matter-error">{firmActionError}</p>}
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Firm</th>
-                  <th>Email</th>
-                  <th>Staff</th>
-                  <th>Clients</th>
-                  <th>Matters</th>
-                  <th>Status</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {firms.map((f) => (
-                  <tr key={f.id}>
-                    <td>{f.name}</td>
-                    <td className="muted">{f.email}</td>
-                    <td className="muted tabular">{f.staff_count}</td>
-                    <td className="muted tabular">{f.client_count}</td>
-                    <td className="muted tabular">{f.matter_count}</td>
-                    <td>
-                      <span
-                        className="status-badge"
-                        style={{
-                          color: f.is_active ? '#22c55e' : '#ef4444',
-                          background: f.is_active ? '#22c55e22' : '#ef444422',
-                        }}
-                      >
-                        {f.is_active ? 'Active' : 'Suspended'}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="clients-row-actions">
-                        <button
-                          type="button"
-                          className="btn-ghost owner-firm-toggle"
-                          disabled={togglingId === f.id}
-                          onClick={() => handleToggleStatus(f)}
-                        >
-                          {togglingId === f.id ? 'Saving…' : f.is_active ? 'Suspend' : 'Activate'}
-                        </button>
-                        <button
-                          type="button"
-                          className="icon-btn"
-                          disabled={exportingId === f.id}
-                          onClick={() => handleExportFirm(f)}
-                          aria-label={`Export ${f.name} data`}
-                          title="Export firm data"
-                        >
-                          <IconDownload />
-                        </button>
-                        <button
-                          type="button"
-                          className="icon-btn"
-                          disabled={f.is_active || deletingId === f.id}
-                          onClick={() => handleDeleteFirm(f)}
-                          aria-label={`Delete ${f.name}`}
-                          title={f.is_active ? 'Suspend the firm before deleting it' : 'Delete permanently'}
-                        >
-                          <IconTrash />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {firms.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="muted">
-                      No firms yet. Onboard one with New Firm.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </section>
+          <div className="owner-section-group">
+            <h2 className="owner-section-title">Governance</h2>
 
           <section className="card owner-audit-card">
             <div className="card-header">
@@ -860,66 +891,81 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                   </option>
                 ))}
               </select>
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={() => setShowAuditLog((v) => !v)}
+                aria-label={showAuditLog ? 'Collapse audit log' : 'Expand audit log'}
+                title={showAuditLog ? 'Collapse' : 'Expand'}
+                style={{ transform: showAuditLog ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }}
+              >
+                <IconChevron />
+              </button>
             </div>
 
-            {auditStatus === 'loading' && (
-              <div className="dash-state">
-                <span className="dash-spinner" />
-                <p>Loading audit log…</p>
-              </div>
-            )}
-
-            {auditStatus === 'error' && (
-              <div className="dash-state">
-                <p>Couldn&rsquo;t reach the backend for the audit log.</p>
-                <button type="button" className="btn-ghost" onClick={loadAudit}>
-                  Retry
-                </button>
-              </div>
-            )}
-
-            {auditStatus === 'ready' && (
+            {showAuditLog && (
               <>
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>When</th>
-                      <th>Actor</th>
-                      <th>Action</th>
-                      <th>Target</th>
-                      <th>Details</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {auditEntries.map((e) => (
-                      <tr key={e.id}>
-                        <td className="muted tabular">{new Date(e.created_at).toLocaleString()}</td>
-                        <td className="muted">{e.actor_type}</td>
-                        <td>{auditActionLabel[e.action] ?? e.action}</td>
-                        <td className="muted">{e.target_type}</td>
-                        <td className="muted audit-log-details">{formatAuditDetails(e.details)}</td>
-                      </tr>
-                    ))}
-                    {auditEntries.length === 0 && (
-                      <tr>
-                        <td colSpan={5} className="muted">
-                          No audit log entries yet.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-                {auditHasMore && (
-                  <div className="audit-log-load-more">
-                    <button type="button" className="btn-ghost" disabled={auditLoadingMore} onClick={handleLoadMoreAudit}>
-                      {auditLoadingMore ? 'Loading…' : 'Load more'}
+                {auditStatus === 'loading' && (
+                  <div className="dash-state">
+                    <span className="dash-spinner" />
+                    <p>Loading audit log…</p>
+                  </div>
+                )}
+
+                {auditStatus === 'error' && (
+                  <div className="dash-state">
+                    <p>Couldn&rsquo;t reach the backend for the audit log.</p>
+                    <button type="button" className="btn-ghost" onClick={loadAudit}>
+                      Retry
                     </button>
                   </div>
+                )}
+
+                {auditStatus === 'ready' && (
+                  <>
+                    <table className="data-table">
+                      <thead>
+                        <tr>
+                          <th>When</th>
+                          <th>Actor</th>
+                          <th>Action</th>
+                          <th>Target</th>
+                          <th>Details</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {auditEntries.map((e) => (
+                          <tr key={e.id}>
+                            <td className="muted tabular">{new Date(e.created_at).toLocaleString()}</td>
+                            <td className="muted">{e.actor_type}</td>
+                            <td>{auditActionLabel[e.action] ?? e.action}</td>
+                            <td className="muted">{e.target_type}</td>
+                            <td className="muted audit-log-details">{formatAuditDetails(e.details)}</td>
+                          </tr>
+                        ))}
+                        {auditEntries.length === 0 && (
+                          <tr>
+                            <td colSpan={5} className="muted">
+                              No audit log entries yet.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                    {auditHasMore && (
+                      <div className="audit-log-load-more">
+                        <button type="button" className="btn-ghost" disabled={auditLoadingMore} onClick={handleLoadMoreAudit}>
+                          {auditLoadingMore ? 'Loading…' : 'Load more'}
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             )}
           </section>
-        </>
+          </div>
+        </div>
       )}
     </main>
   )
