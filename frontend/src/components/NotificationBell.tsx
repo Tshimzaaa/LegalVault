@@ -15,6 +15,7 @@ function NotificationBell({ scope }: NotificationBellProps) {
   const [unreadCount, setUnreadCount] = useState(0)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loaded, setLoaded] = useState(false)
+  const [markError, setMarkError] = useState<string | null>(null)
   const [panelPos, setPanelPos] = useState<{ top: number; left: number } | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
   const btnRef = useRef<HTMLButtonElement>(null)
@@ -65,23 +66,39 @@ function NotificationBell({ scope }: NotificationBellProps) {
 
   async function handleMarkRead(n: Notification) {
     if (!token || n.is_read) return
+
+    const previousNotifications = notifications
+    const previousCount = unreadCount
+    setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, is_read: true } : x)))
+    setUnreadCount((c) => Math.max(0, c - 1))
+    setMarkError(null)
+
     try {
       const updated = await markNotificationRead(token, scope, n.id)
       setNotifications((prev) => prev.map((x) => (x.id === n.id ? updated : x)))
-      setUnreadCount((c) => Math.max(0, c - 1))
     } catch {
-      // ignore
+      // Roll back — the read receipt didn't actually save server-side.
+      setNotifications(previousNotifications)
+      setUnreadCount(previousCount)
+      setMarkError('Could not mark as read. Try again.')
     }
   }
 
   async function handleMarkAllRead() {
     if (!token) return
+
+    const previousNotifications = notifications
+    const previousCount = unreadCount
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
+    setUnreadCount(0)
+    setMarkError(null)
+
     try {
       await markAllNotificationsRead(token, scope)
-      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
-      setUnreadCount(0)
     } catch {
-      // ignore
+      setNotifications(previousNotifications)
+      setUnreadCount(previousCount)
+      setMarkError('Could not mark all as read. Try again.')
     }
   }
 
@@ -109,6 +126,7 @@ function NotificationBell({ scope }: NotificationBellProps) {
               </button>
             )}
           </div>
+          {markError && <p className="notification-bell-error">{markError}</p>}
           <div className="notification-bell-list">
             {!loaded && <p className="muted notification-bell-empty">Loading…</p>}
             {loaded && notifications.length === 0 && <p className="muted notification-bell-empty">No notifications yet.</p>}

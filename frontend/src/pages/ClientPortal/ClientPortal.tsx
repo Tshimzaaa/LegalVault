@@ -15,6 +15,7 @@ import {
   IconShield,
   IconGear,
   IconTemplates,
+  IconUser,
 } from '../../components/icons'
 import ClientDashboard from '../ClientDashboard/ClientDashboard'
 import RequestSupport from '../RequestSupport/RequestSupport'
@@ -28,6 +29,7 @@ import LegalGuide from '../LightHubGuide/LightHubGuide'
 import MatterAdmin from '../MatterAdmin/MatterAdmin'
 import Integrations from '../Integrations/Integrations'
 import ClientTemplates from '../ClientTemplates/ClientTemplates'
+import ClientAccountSettings from '../ClientAccountSettings/ClientAccountSettings'
 import type { ClientContact } from '../../api/clientAuth'
 
 export type ClientPage =
@@ -42,6 +44,7 @@ export type ClientPage =
   | 'matter-admin'
   | 'integrations'
   | 'templates'
+  | 'account-settings'
 
 export const clientNavItems: NavItem[] = [
   { label: 'Dashboard', icon: <IconGauge />, page: 'dashboard' },
@@ -55,14 +58,16 @@ export const clientNavItems: NavItem[] = [
   { label: 'Matter Admin', icon: <IconShield />, page: 'matter-admin' },
   { label: 'Integrations', icon: <IconGear />, page: 'integrations' },
   { label: 'Templates', icon: <IconTemplates />, page: 'templates' },
+  { label: 'Account Settings', icon: <IconUser />, page: 'account-settings' },
 ]
 
 interface ClientPortalProps {
   contact: ClientContact
   onLogout: () => void
+  onContactUpdate: (contact: ClientContact) => void
 }
 
-function ClientPortal({ contact, onLogout }: ClientPortalProps) {
+function ClientPortal({ contact, onLogout, onContactUpdate }: ClientPortalProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const rawPage = location.pathname.split('/')[2]
@@ -97,6 +102,10 @@ function ClientPortal({ contact, onLogout }: ClientPortalProps) {
           <Route path="matter-admin" element={<MatterAdmin contact={contact} onLogout={onLogout} />} />
           <Route path="integrations" element={<Integrations contact={contact} onLogout={onLogout} />} />
           <Route path="templates" element={<ClientTemplates contact={contact} onLogout={onLogout} />} />
+          <Route
+            path="account-settings"
+            element={<ClientAccountSettings contact={contact} onLogout={onLogout} onContactUpdate={onContactUpdate} />}
+          />
           <Route path="*" element={<Navigate to="dashboard" replace />} />
         </Routes>
       </div>

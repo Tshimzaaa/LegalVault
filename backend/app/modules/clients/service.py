@@ -11,6 +11,8 @@ from app.modules.clients.schemas import (
     AcceptInviteRequest,
     ClientLoginRequest,
     ClientTokenResponse,
+    UpdateContactProfileRequest,
+    ChangeContactPasswordRequest,
 )
 from app.core.config import settings
 from app.core.security import (
@@ -32,6 +34,7 @@ from app.exceptions.clients import (
     ContactNotFound,
     ClientHasMatters,
     InvalidRefreshToken,
+    IncorrectPassword,
 )
 from app.modules.matters.repository import MatterRepository
 from app.modules.audit.service import AuditService
@@ -209,6 +212,28 @@ class ClientService:
 
         contact.password_hash = hash_password(new_password)
         self.repository.clear_reset_token(contact)
+        self.refresh_tokens.revoke_all_for_actor(RefreshTokenActorType.CLIENT, contact.id)
+        self.db.commit()
+
+    def update_profile(self, contact: ClientContact, request: UpdateContactProfileRequest) -> ClientContact:
+        if request.email != contact.email:
+            existing = self.repository.get_contact_by_email(request.email)
+            if existing and str(existing.id) != str(contact.id):
+                raise ContactAlreadyExists()
+            contact.email = request.email
+
+        contact.first_name = request.first_name
+        contact.last_name = request.last_name
+        self.db.commit()
+        return contact
+
+    def change_password(self, contact: ClientContact, request: ChangeContactPasswordRequest) -> None:
+        if not contact.password_hash or not verify_password(request.current_password, contact.password_hash):
+            raise IncorrectPassword()
+
+        contact.password_hash = hash_password(request.new_password)
+        # Revoke every other session so a change made after a suspected compromise actually locks
+        # out anyone using the old password's refresh token — only this login stays valid.
         self.refresh_tokens.revoke_all_for_actor(RefreshTokenActorType.CLIENT, contact.id)
         self.db.commit()
 

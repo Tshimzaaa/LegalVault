@@ -12,6 +12,7 @@ import {
   listMatterDocuments,
   uploadMatterDocument,
   getMatterDocumentDownloadUrl,
+  deleteMatterDocument,
   listTasks,
   createTask,
   updateTask,
@@ -102,6 +103,7 @@ function MatterDetail() {
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
+  const [docBusyId, setDocBusyId] = useState<string | null>(null)
 
   const [tasks, setTasks] = useState<MatterTask[]>([])
   const [taskTitle, setTaskTitle] = useState('')
@@ -242,6 +244,27 @@ function MatterDetail() {
     }
   }
 
+  async function handleDeleteDocument(doc: MatterDocument) {
+    if (!token || !matterId) return
+    setUploadError(null)
+    setDocBusyId(doc.id)
+    const index = documents.findIndex((d) => d.id === doc.id)
+    // Optimistic: remove immediately, put it back at its original position if the delete fails.
+    setDocuments((prev) => prev.filter((d) => d.id !== doc.id))
+    try {
+      await deleteMatterDocument(token, matterId, doc.id)
+    } catch (err) {
+      setDocuments((prev) => {
+        const next = [...prev]
+        next.splice(index, 0, doc)
+        return next
+      })
+      setUploadError(err instanceof Error ? err.message : 'Could not delete the document.')
+    } finally {
+      setDocBusyId(null)
+    }
+  }
+
   async function handleCreateTask(e: FormEvent) {
     e.preventDefault()
     if (!token || !matterId || !taskTitle) {
@@ -269,10 +292,17 @@ function MatterDetail() {
 
   async function handleTaskStatusChange(task: MatterTask, nextStatus: TaskStatus) {
     if (!token || !matterId) return
+    setTaskError(null)
     setTaskBusyId(task.id)
+    // Optimistic: flip the status immediately, reconcile with the server's copy after, and
+    // put the original status back if the request fails.
+    setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, status: nextStatus } : t)))
     try {
       const updated = await updateTask(token, matterId, task.id, { status: nextStatus })
       setTasks((prev) => prev.map((t) => (t.id === task.id ? updated : t)))
+    } catch (err) {
+      setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)))
+      setTaskError(err instanceof Error ? err.message : 'Could not update the task status.')
     } finally {
       setTaskBusyId(null)
     }
@@ -280,10 +310,20 @@ function MatterDetail() {
 
   async function handleDeleteTask(task: MatterTask) {
     if (!token || !matterId) return
+    setTaskError(null)
     setTaskBusyId(task.id)
+    const index = tasks.findIndex((t) => t.id === task.id)
+    // Optimistic: remove immediately, put it back at its original position if the delete fails.
+    setTasks((prev) => prev.filter((t) => t.id !== task.id))
     try {
       await deleteTask(token, matterId, task.id)
-      setTasks((prev) => prev.filter((t) => t.id !== task.id))
+    } catch (err) {
+      setTasks((prev) => {
+        const next = [...prev]
+        next.splice(index, 0, task)
+        return next
+      })
+      setTaskError(err instanceof Error ? err.message : 'Could not delete the task.')
     } finally {
       setTaskBusyId(null)
     }
@@ -307,10 +347,20 @@ function MatterDetail() {
 
   async function handleDeleteMessage(message: MatterMessage) {
     if (!token || !matterId) return
+    setMessageError(null)
     setMessageBusyId(message.id)
+    const index = messages.findIndex((m) => m.id === message.id)
+    // Optimistic: remove immediately, put it back at its original position if the delete fails.
+    setMessages((prev) => prev.filter((m) => m.id !== message.id))
     try {
       await deleteMessage(token, matterId, message.id)
-      setMessages((prev) => prev.filter((m) => m.id !== message.id))
+    } catch (err) {
+      setMessages((prev) => {
+        const next = [...prev]
+        next.splice(index, 0, message)
+        return next
+      })
+      setMessageError(err instanceof Error ? err.message : 'Could not delete the message.')
     } finally {
       setMessageBusyId(null)
     }
@@ -466,6 +516,15 @@ function MatterDetail() {
                         >
                           <IconDownload />
                         </button>
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          disabled={docBusyId === latest.id}
+                          onClick={() => handleDeleteDocument(latest)}
+                          aria-label={`Delete ${latest.title}`}
+                        >
+                          <IconTrash />
+                        </button>
                       </div>
                       {versions.length > 1 && (
                         <div className="matter-doc-history">
@@ -482,6 +541,15 @@ function MatterDetail() {
                                 aria-label={`Download ${v.title} v${v.version}`}
                               >
                                 <IconDownload />
+                              </button>
+                              <button
+                                type="button"
+                                className="icon-btn"
+                                disabled={docBusyId === v.id}
+                                onClick={() => handleDeleteDocument(v)}
+                                aria-label={`Delete ${v.title} v${v.version}`}
+                              >
+                                <IconTrash />
                               </button>
                             </div>
                           ))}

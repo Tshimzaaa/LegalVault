@@ -2,6 +2,7 @@ import json
 import time
 
 from fastapi import Request
+from starlette.background import BackgroundTask
 from starlette.responses import Response
 
 from app.core.security import decode_access_token
@@ -55,11 +56,22 @@ async def _consume_error_body(response: Response) -> tuple[Response, str | None]
     return rebuilt, detail
 
 
+def _write_log(log: RequestLog) -> None:
+    db = SessionLocal()
+    try:
+        RequestLogRepository(db).create(log)
+    except Exception:
+        db.rollback()
+    finally:
+        db.close()
+
+
 async def log_requests(request: Request, call_next):
     start = time.perf_counter()
     status_code = 500
     error_detail: str | None = None
     actor_type, actor_id = _decode_actor(request)
+    response: Response | None = None
 
     try:
         response = await call_next(request)
@@ -81,18 +93,20 @@ async def log_requests(request: Request, call_next):
         route = request.scope.get("route")
         path = route.path if route else request.url.path
 
-        db = SessionLocal()
-        try:
-            RequestLogRepository(db).create(RequestLog(
-                method=request.method,
-                path=path,
-                status_code=status_code,
-                duration_ms=duration_ms,
-                actor_type=actor_type,
-                actor_id=actor_id,
-                error_detail=error_detail,
-            ))
-        except Exception:
-            db.rollback()
-        finally:
-            db.close()
+        log = RequestLog(
+            method=request.method,
+            path=path,
+            status_code=status_code,
+            duration_ms=duration_ms,
+            actor_type=actor_type,
+            actor_id=actor_id,
+            error_detail=error_detail,
+        )
+        if response is not None:
+            # Defer the write until after the response bytes are on the wire, so
+            # logging never adds a DB round-trip to every request's latency.
+            response.background = BackgroundTask(_write_log, log)
+        else:
+            # No response was produced (unhandled crash) — nothing to attach a
+            # background task to, so write synchronously before re-raising.
+            _write_log(log)

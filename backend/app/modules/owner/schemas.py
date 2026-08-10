@@ -5,7 +5,13 @@ from datetime import date, datetime
 from app.modules.auth.models.role import UserRole
 from app.modules.matters.models import MatterStatus, MatterRole, TaskStatus
 from app.modules.audit.schemas import AuditLogResponse
-from app.modules.monitoring.schemas import RequestMetrics
+from app.modules.monitoring.schemas import (
+    RequestMetrics,
+    ServiceHealthEntry,
+    DependencyHealth,
+    EndpointStat,
+    RequestTimeseriesPoint,
+)
 
 
 class FirmSummary(BaseModel):
@@ -160,3 +166,17 @@ class PlatformMetricsResponse(BaseModel):
     generated_at: datetime
     usage: UsageMetrics
     requests: RequestMetrics
+
+
+class SystemHealthResponse(BaseModel):
+    generated_at: datetime
+    status: str  # "operational" | "degraded" | "down"
+    uptime_seconds: float
+    window_hours: int
+    requests: RequestMetrics
+    active_users: int
+    online_firms: int
+    dependencies: list[DependencyHealth]
+    services: list[ServiceHealthEntry]
+    worst_endpoints: list[EndpointStat]
+    timeseries: list[RequestTimeseriesPoint]

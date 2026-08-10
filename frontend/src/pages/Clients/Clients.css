@@ -36,10 +36,6 @@
   margin: 8px 0 0;
 }
 
-.clients-expand-btn {
-  width: 20px;
-  height: 20px;
-}
 
 .clients-chevron {
   display: flex;
@@ -60,7 +56,7 @@
 
 .clients-action-btn {
   padding: 5px 12px;
-  font-size: 11.5px;
+  font-size: 12px;
 }
 
 .clients-contacts-cell {

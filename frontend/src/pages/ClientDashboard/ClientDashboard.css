@@ -6,10 +6,6 @@
   grid-template-columns: 1fr;
 }
 
-.quick-actions {
-  gap: 8px;
-}
-
 .quick-action-btn {
   display: flex;
   align-items: center;
@@ -24,6 +20,10 @@
   font-family: inherit;
   cursor: pointer;
   text-align: left;
+}
+
+.quick-action-btn + .quick-action-btn {
+  margin-top: 8px;
 }
 
 .quick-action-btn:hover {

@@ -17,6 +17,11 @@ class ClientRepository:
     def get_client_by_id(self, client_id) -> Client | None:
         return self.db.scalar(select(Client).where(Client.id == client_id))
 
+    def list_clients_by_ids(self, client_ids) -> list[Client]:
+        if not client_ids:
+            return []
+        return list(self.db.scalars(select(Client).where(Client.id.in_(client_ids))))
+
     def create_client(self, client: Client) -> Client:
         self.db.add(client)
         self.db.flush()
@@ -73,6 +78,11 @@ class ClientRepository:
 
     def list_contacts_for_client(self, client_id) -> list[ClientContact]:
         return list(self.db.scalars(select(ClientContact).where(ClientContact.client_id == client_id)))
+
+    def list_contacts_by_ids(self, contact_ids) -> list[ClientContact]:
+        if not contact_ids:
+            return []
+        return list(self.db.scalars(select(ClientContact).where(ClientContact.id.in_(contact_ids))))
 
     def delete_client(self, client: Client):
         self.db.delete(client)

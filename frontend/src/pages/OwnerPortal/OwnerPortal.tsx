@@ -11,12 +11,14 @@ import {
   exportFirm,
   getPlatformMetrics,
   listRecentErrors,
+  getSystemHealth,
 } from '../../api/owner'
-import type { FirmDetail, PlatformMetrics, RequestErrorEntry } from '../../api/owner'
+import type { FirmDetail, PlatformMetrics, RequestErrorEntry, SystemHealth } from '../../api/owner'
 import { listOwnerAuditLog, auditActionLabel, formatAuditDetails } from '../../api/auditLog'
 import type { AuditLogEntry } from '../../api/auditLog'
 import { listOwnerAnnouncements, createAnnouncement, updateAnnouncement, deleteAnnouncement } from '../../api/announcements'
 import type { Announcement, AnnouncementSeverity } from '../../api/announcements'
+import MiniChart from '../../components/MiniChart'
 
 type LoadState = 'loading' | 'error' | 'ready'
 const AUDIT_PAGE_SIZE = 50
@@ -25,6 +27,34 @@ const severityColor: Record<AnnouncementSeverity, string> = {
   info: '#3987e5',
   warning: '#eab308',
   critical: '#ef4444',
+}
+
+const healthStatusColor: Record<'operational' | 'degraded' | 'down' | 'healthy', string> = {
+  operational: '#22c55e',
+  healthy: '#22c55e',
+  degraded: '#eab308',
+  down: '#ef4444',
+}
+
+const healthStatusLabel: Record<'operational' | 'degraded' | 'down' | 'healthy', string> = {
+  operational: 'Operational',
+  healthy: 'Healthy',
+  degraded: 'Degraded',
+  down: 'Down',
+}
+
+function formatUptime(seconds: number): string {
+  const days = Math.floor(seconds / 86400)
+  const hours = Math.floor((seconds % 86400) / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  if (days > 0) return `${days}d ${hours}h`
+  if (hours > 0) return `${hours}h ${minutes}m`
+  if (minutes > 0) return `${minutes}m`
+  return `${Math.floor(seconds)}s`
+}
+
+function formatHour(iso: string): string {
+  return new Date(iso).toLocaleTimeString([], { hour: '2-digit' })
 }
 
 const emptyCreateForm = {
@@ -60,6 +90,9 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
   const [metrics, setMetrics] = useState<PlatformMetrics | null>(null)
   const [metricsStatus, setMetricsStatus] = useState<LoadState>('loading')
 
+  const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null)
+  const [systemHealthStatus, setSystemHealthStatus] = useState<LoadState>('loading')
+
   const [errorEntries, setErrorEntries] = useState<RequestErrorEntry[]>([])
   const [errorsStatus, setErrorsStatus] = useState<LoadState>('loading')
   const [errorsOffset, setErrorsOffset] = useState(0)
@@ -76,6 +109,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
   const [announcementSaving, setAnnouncementSaving] = useState(false)
   const [announcementError, setAnnouncementError] = useState<string | null>(null)
   const [announcementBusyId, setAnnouncementBusyId] = useState<string | null>(null)
+  const [announcementActionError, setAnnouncementActionError] = useState<string | null>(null)
 
   const [auditEntries, setAuditEntries] = useState<AuditLogEntry[]>([])
   const [auditStatus, setAuditStatus] = useState<LoadState>('loading')
@@ -137,6 +171,22 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
   }
 
   useEffect(loadMetrics, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function loadSystemHealth() {
+    if (!token) {
+      setSystemHealthStatus('error')
+      return
+    }
+    setSystemHealthStatus('loading')
+    getSystemHealth(token, 24)
+      .then((data) => {
+        setSystemHealth(data)
+        setSystemHealthStatus('ready')
+      })
+      .catch(() => setSystemHealthStatus('error'))
+  }
+
+  useEffect(loadSystemHealth, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const ERROR_PAGE_SIZE = 50
 
@@ -220,10 +270,17 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
 
   async function handleToggleAnnouncementActive(a: Announcement) {
     if (!token) return
+    setAnnouncementActionError(null)
     setAnnouncementBusyId(a.id)
+    // Optimistic: flip it immediately, reconcile with the server's copy after, and put the
+    // original value back if the request fails.
+    setAnnouncements((prev) => prev.map((x) => (x.id === a.id ? { ...x, is_active: !a.is_active } : x)))
     try {
       const updated = await updateAnnouncement(token, a.id, { is_active: !a.is_active })
       setAnnouncements((prev) => prev.map((x) => (x.id === a.id ? updated : x)))
+    } catch (err) {
+      setAnnouncements((prev) => prev.map((x) => (x.id === a.id ? a : x)))
+      setAnnouncementActionError(err instanceof Error ? err.message : 'Could not update the announcement.')
     } finally {
       setAnnouncementBusyId(null)
     }
@@ -584,88 +641,211 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
               <span className="muted">last 24h</span>
             </div>
 
-            {metricsStatus === 'loading' && (
+            {systemHealthStatus === 'loading' && (
               <div className="dash-state">
                 <span className="dash-spinner" />
-                <p>Loading platform metrics…</p>
+                <p>Loading platform health…</p>
               </div>
             )}
 
-            {metricsStatus === 'error' && (
+            {systemHealthStatus === 'error' && (
               <div className="dash-state">
-                <p>Couldn&rsquo;t reach the backend for platform metrics.</p>
-                <button type="button" className="btn-ghost" onClick={loadMetrics}>
+                <p>Couldn&rsquo;t reach the backend for platform health.</p>
+                <button type="button" className="btn-ghost" onClick={loadSystemHealth}>
                   Retry
                 </button>
               </div>
             )}
 
-            {metricsStatus === 'ready' && metrics && (
+            {systemHealthStatus === 'ready' && systemHealth && (
               <>
+                <div className="owner-health-banner">
+                  <span
+                    className="owner-health-dot"
+                    style={{ background: healthStatusColor[systemHealth.status] }}
+                  />
+                  <div className="owner-health-summary">
+                    <strong style={{ color: healthStatusColor[systemHealth.status] }}>
+                      {healthStatusLabel[systemHealth.status]}
+                    </strong>
+                    <span className="muted">
+                      Uptime {formatUptime(systemHealth.uptime_seconds)} · checked{' '}
+                      {new Date(systemHealth.generated_at).toLocaleTimeString()}
+                    </span>
+                  </div>
+                  <div className="owner-health-deps">
+                    {systemHealth.dependencies.map((d) => (
+                      <span
+                        key={d.name}
+                        className="status-badge"
+                        style={{ color: healthStatusColor[d.status], background: `${healthStatusColor[d.status]}22` }}
+                      >
+                        {d.name}: {healthStatusLabel[d.status]}
+                        {d.latency_ms != null ? ` · ${Math.round(d.latency_ms)}ms` : ''}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="dash-row owner-monitoring-stats">
                   <div className="owner-monitoring-stat">
                     <span className="muted">Total requests</span>
-                    <span className="stat-big">{metrics.requests.total_requests}</span>
+                    <span className="stat-big">{systemHealth.requests.total_requests}</span>
+                  </div>
+                  <div className="owner-monitoring-stat">
+                    <span className="muted">Success rate</span>
+                    <span className="stat-big">
+                      {(100 - systemHealth.requests.error_rate_percent).toFixed(2)}%
+                    </span>
                   </div>
                   <div className="owner-monitoring-stat">
                     <span className="muted">Error rate</span>
                     <span
                       className="stat-big"
-                      style={{ color: metrics.requests.error_rate_percent > 1 ? '#ef4444' : '#22c55e' }}
+                      style={{ color: systemHealth.requests.error_rate_percent > 1 ? '#ef4444' : '#22c55e' }}
                     >
-                      {metrics.requests.error_rate_percent.toFixed(2)}%
+                      {systemHealth.requests.error_rate_percent.toFixed(2)}%
                     </span>
                   </div>
                   <div className="owner-monitoring-stat">
-                    <span className="muted">Avg. response time</span>
+                    <span className="muted">Avg. response</span>
                     <span className="stat-big">
-                      {metrics.requests.average_duration_ms != null ? `${Math.round(metrics.requests.average_duration_ms)}ms` : '—'}
+                      {systemHealth.requests.average_duration_ms != null
+                        ? `${Math.round(systemHealth.requests.average_duration_ms)}ms`
+                        : '—'}
                     </span>
                   </div>
                   <div className="owner-monitoring-stat">
-                    <span className="muted">2xx / 4xx / 5xx</span>
+                    <span className="muted">P95 response</span>
                     <span className="stat-big">
-                      {metrics.requests.status_2xx} / {metrics.requests.status_4xx} / {metrics.requests.status_5xx}
+                      {systemHealth.requests.p95_duration_ms != null
+                        ? `${Math.round(systemHealth.requests.p95_duration_ms)}ms`
+                        : '—'}
                     </span>
                   </div>
                   <div className="owner-monitoring-stat">
-                    <span className="muted">New firms (7d / 30d)</span>
-                    <span className="stat-big">
-                      {metrics.usage.new_firms_last_7_days} / {metrics.usage.new_firms_last_30_days}
-                    </span>
+                    <span className="muted">Active users</span>
+                    <span className="stat-big">{systemHealth.active_users}</span>
+                  </div>
+                  <div className="owner-monitoring-stat">
+                    <span className="muted">Online firms</span>
+                    <span className="stat-big">{systemHealth.online_firms}</span>
+                  </div>
+                  {metricsStatus === 'ready' && metrics && (
+                    <div className="owner-monitoring-stat">
+                      <span className="muted">New firms (7d / 30d)</span>
+                      <span className="stat-big">
+                        {metrics.usage.new_firms_last_7_days} / {metrics.usage.new_firms_last_30_days}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="owner-health-charts">
+                  <div className="owner-chart-card">
+                    <span className="muted owner-health-table-title">Requests per hour</span>
+                    <MiniChart
+                      points={systemHealth.timeseries.map((t) => ({
+                        label: formatHour(t.bucket),
+                        value: t.request_count,
+                      }))}
+                      color="#3987e5"
+                    />
+                  </div>
+                  <div className="owner-chart-card">
+                    <span className="muted owner-health-table-title">Avg. response time per hour</span>
+                    <MiniChart
+                      points={systemHealth.timeseries.map((t) => ({
+                        label: formatHour(t.bucket),
+                        value: t.average_duration_ms ?? 0,
+                      }))}
+                      color="#eab308"
+                      formatValue={(v) => `${Math.round(v)}ms`}
+                    />
                   </div>
                 </div>
 
-                {metrics.requests.top_error_paths.length > 0 && (
-                  <table className="data-table" style={{ marginTop: 16 }}>
-                    <thead>
-                      <tr>
-                        <th>Top error paths</th>
-                        <th>Status</th>
-                        <th>Errors</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {metrics.requests.top_error_paths.map((p) => (
-                        <tr key={`${p.path}-${p.status_code}`}>
-                          <td className="muted">{p.path}</td>
-                          <td>
-                            <span
-                              className="status-badge"
-                              style={{
-                                color: p.status_code >= 500 ? '#ef4444' : '#eab308',
-                                background: p.status_code >= 500 ? '#ef444422' : '#eab30822',
-                              }}
-                            >
-                              {p.status_code}
-                            </span>
-                          </td>
-                          <td className="tabular">{p.count}</td>
+                <div className="owner-health-tables">
+                  <div>
+                    <span className="muted owner-health-table-title">Services</span>
+                    <table className="data-table">
+                      <thead>
+                        <tr>
+                          <th>Service</th>
+                          <th>Status</th>
+                          <th>Requests</th>
+                          <th>Error %</th>
+                          <th>Avg latency</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
+                      </thead>
+                      <tbody>
+                        {systemHealth.services.map((s) => (
+                          <tr key={s.name}>
+                            <td>{s.name}</td>
+                            <td>
+                              <span
+                                className="status-badge"
+                                style={{
+                                  color: healthStatusColor[s.status],
+                                  background: `${healthStatusColor[s.status]}22`,
+                                }}
+                              >
+                                {healthStatusLabel[s.status]}
+                              </span>
+                            </td>
+                            <td className="tabular">{s.request_count}</td>
+                            <td className="tabular">{s.error_rate_percent.toFixed(2)}%</td>
+                            <td className="tabular">
+                              {s.avg_duration_ms != null ? `${Math.round(s.avg_duration_ms)}ms` : '—'}
+                            </td>
+                          </tr>
+                        ))}
+                        {systemHealth.services.length === 0 && (
+                          <tr>
+                            <td colSpan={5} className="muted">
+                              No traffic in this window.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div>
+                    <span className="muted owner-health-table-title">Worst-performing endpoints</span>
+                    <table className="data-table">
+                      <thead>
+                        <tr>
+                          <th>Endpoint</th>
+                          <th>Requests</th>
+                          <th>Errors</th>
+                          <th>Error %</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {systemHealth.worst_endpoints.map((e) => (
+                          <tr key={`${e.method}-${e.path}`}>
+                            <td className="muted">
+                              {e.method} {e.path}
+                            </td>
+                            <td className="tabular">{e.request_count}</td>
+                            <td className="tabular">{e.error_count}</td>
+                            <td className="tabular" style={{ color: e.error_rate_percent > 5 ? '#ef4444' : '#22c55e' }}>
+                              {e.error_rate_percent.toFixed(2)}%
+                            </td>
+                          </tr>
+                        ))}
+                        {systemHealth.worst_endpoints.length === 0 && (
+                          <tr>
+                            <td colSpan={4} className="muted">
+                              No errors in this window.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </>
             )}
           </section>
@@ -831,6 +1011,8 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
               </div>
             )}
 
+            {announcementActionError && <p className="matter-error">{announcementActionError}</p>}
+
             {announcementsStatus === 'ready' && (
               <div className="list-rows">
                 {announcements.map((a) => (
@@ -883,24 +1065,26 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
           <section className="card owner-audit-card">
             <div className="card-header">
               <span>Platform Audit Log</span>
-              <select value={auditFirmFilter} onChange={(e) => setAuditFirmFilter(e.target.value)}>
-                <option value="">All firms</option>
-                {firms.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                className="icon-btn"
-                onClick={() => setShowAuditLog((v) => !v)}
-                aria-label={showAuditLog ? 'Collapse audit log' : 'Expand audit log'}
-                title={showAuditLog ? 'Collapse' : 'Expand'}
-                style={{ transform: showAuditLog ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }}
-              >
-                <IconChevron />
-              </button>
+              <div className="topbar-actions">
+                <select className="select-input" value={auditFirmFilter} onChange={(e) => setAuditFirmFilter(e.target.value)}>
+                  <option value="">All firms</option>
+                  {firms.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="icon-btn"
+                  onClick={() => setShowAuditLog((v) => !v)}
+                  aria-label={showAuditLog ? 'Collapse audit log' : 'Expand audit log'}
+                  title={showAuditLog ? 'Collapse' : 'Expand'}
+                  style={{ transform: showAuditLog ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }}
+                >
+                  <IconChevron />
+                </button>
+              </div>
             </div>
 
             {showAuditLog && (

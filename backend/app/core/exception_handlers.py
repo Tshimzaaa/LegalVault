@@ -25,6 +25,7 @@ from app.exceptions.clients import (
     ContactNotFound,
     ClientHasMatters,
     InvalidRefreshToken as ClientInvalidRefreshToken,
+    IncorrectPassword as ClientIncorrectPassword,
 )
 
 from app.exceptions.matters import (
@@ -41,6 +42,7 @@ from app.exceptions.support_requests import SupportRequestNotFound
 from app.exceptions.announcements import AnnouncementNotFound
 from app.exceptions.notifications import NotificationNotFound
 from app.exceptions.signed_contracts import SignedContractNotFound
+from app.exceptions.storage import StorageUnavailable
 
 def register_exception_handlers(app: FastAPI):
 
@@ -204,3 +206,11 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(ClientInvalidRefreshToken)
     async def client_invalid_refresh_token(_, __):
         raise HTTPException(status_code=401, detail="Invalid or expired refresh token.")
+
+    @app.exception_handler(ClientIncorrectPassword)
+    async def client_incorrect_password(_, __):
+        raise HTTPException(status_code=400, detail="Current password is incorrect.")
+
+    @app.exception_handler(StorageUnavailable)
+    async def storage_unavailable(_, __):
+        raise HTTPException(status_code=503, detail="File storage is temporarily unavailable — please try again shortly.")

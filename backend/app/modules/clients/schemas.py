@@ -76,3 +76,14 @@ class ClientForgotPasswordRequest(BaseModel):
 class ClientResetPasswordRequest(BaseModel):
     token: str
     new_password: str = Field(min_length=8, max_length=128)
+
+
+class UpdateContactProfileRequest(BaseModel):
+    first_name: str = Field(min_length=2, max_length=100)
+    last_name: str = Field(min_length=2, max_length=100)
+    email: EmailStr
+
+
+class ChangeContactPasswordRequest(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=8, max_length=128)

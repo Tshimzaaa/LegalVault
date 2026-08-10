@@ -32,6 +32,14 @@ class NotificationService:
         )
         return self.repository.create(notification)
 
+    def notify_many(self, entries: list[dict]) -> list[Notification]:
+        """Same as notify(), but for fanning a notification out to many recipients at once —
+        one bulk insert instead of one flush per recipient. Each entry takes the same keyword
+        arguments as notify() (recipient_type, recipient_id, type, title, body, target_type,
+        target_id)."""
+        notifications = [Notification(**entry) for entry in entries]
+        return self.repository.create_many(notifications)
+
     def list_for_recipient(
         self, recipient_type: RecipientType, recipient_id, unread_only: bool, limit: int, offset: int
     ) -> list[Notification]:

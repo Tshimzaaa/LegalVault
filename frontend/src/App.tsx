@@ -199,7 +199,11 @@ function App() {
         path="/client/*"
         element={
           actor?.kind === 'client' ? (
-            <ClientPortal contact={actor.contact} onLogout={handleLogout} />
+            <ClientPortal
+              contact={actor.contact}
+              onLogout={handleLogout}
+              onContactUpdate={(contact) => setActor({ kind: 'client', contact })}
+            />
           ) : (
             <Navigate to="/login" replace />
           )

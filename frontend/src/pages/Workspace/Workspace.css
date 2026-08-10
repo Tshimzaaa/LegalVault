@@ -97,7 +97,7 @@
 .card-subtitle {
   display: block;
   font-size: 11px;
-  color: #6b7280;
+  color: #9ca3af;
   margin-bottom: 10px;
   margin-top: -8px;
 }
@@ -164,7 +164,7 @@
 
 .stat-sub {
   font-size: 11.5px;
-  color: #6b7280;
+  color: #9ca3af;
 }
 
 .stat-sub.top {
@@ -198,7 +198,7 @@
   text-align: left;
   font-size: 11px;
   font-weight: 600;
-  color: #6b7280;
+  color: #9ca3af;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   padding: 0 10px 10px;
@@ -213,5 +213,24 @@
 
 .data-table tr:last-child td {
   border-bottom: none;
+}
+
+/* Styling for a bare <select> used outside a .field wrapper (e.g. a table-cell or topbar
+   filter) — same visual treatment as .field select, without requiring the label/wrapper markup. */
+.select-input {
+  background: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 7px;
+  padding: 7px 10px;
+  color: #fff;
+  font-size: 12.5px;
+  font-family: inherit;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 14px;
+  padding-right: 28px;
+  cursor: pointer;
 }
 

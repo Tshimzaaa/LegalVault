@@ -200,6 +200,17 @@ def download_matter_document(
     return MatterDocumentDownloadResponse(download_url=url, expires_in_seconds=3600)
 
 
+@router.delete("/{matter_id}/documents/{document_id}", status_code=204)
+def delete_matter_document(
+    matter_id: str,
+    document_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    service = MatterService(db)
+    service.delete_matter_document(matter_id, document_id, current_user.firm_id, current_user.id)
+
+
 @router.post("/{matter_id}/tasks", response_model=MatterTaskResponse, status_code=201)
 def create_task(
     matter_id: str,

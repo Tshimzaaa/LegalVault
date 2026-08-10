@@ -14,6 +14,14 @@ class NotificationRepository:
         self.db.flush()
         return notification
 
+    def create_many(self, notifications: list[Notification]) -> list[Notification]:
+        """Insert every notification in one round trip instead of one flush per row."""
+        if not notifications:
+            return []
+        self.db.add_all(notifications)
+        self.db.flush()
+        return notifications
+
     def get_by_id(self, notification_id) -> Notification | None:
         return self.db.scalar(select(Notification).where(Notification.id == notification_id))
 

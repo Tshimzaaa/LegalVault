@@ -165,6 +165,10 @@ export async function getMatterDocumentDownloadUrl(
   return data.download_url
 }
 
+export async function deleteMatterDocument(token: string, matterId: string, documentId: string): Promise<void> {
+  await apiRequest(`/matters/${matterId}/documents/${documentId}`, { method: 'DELETE', token })
+}
+
 export async function listTasks(token: string, matterId: string): Promise<MatterTask[]> {
   return apiRequest<MatterTask[]>(`/matters/${matterId}/tasks`, { token })
 }

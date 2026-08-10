@@ -17,6 +17,7 @@ class Client(BaseModel):
     firm_id: Mapped[UUID] = mapped_column(
         ForeignKey("law_firms.id"),
         nullable=False,
+        index=True,
     )
 
     company_name: Mapped[str] = mapped_column(

@@ -111,6 +111,7 @@ export interface RequestMetrics {
   status_5xx: number
   error_rate_percent: number
   average_duration_ms: number | null
+  p95_duration_ms: number | null
   top_error_paths: TopErrorPath[]
 }
 
@@ -143,4 +144,50 @@ export async function listRecentErrors(
 ): Promise<RequestErrorEntry[]> {
   const params = new URLSearchParams({ hours: String(hours), limit: String(limit), offset: String(offset) })
   return apiRequest<RequestErrorEntry[]>(`/owner/errors?${params}`, { token })
+}
+
+export interface ServiceHealthEntry {
+  name: string
+  status: 'healthy' | 'degraded'
+  request_count: number
+  error_rate_percent: number
+  avg_duration_ms: number | null
+}
+
+export interface DependencyHealth {
+  name: string
+  status: 'healthy' | 'degraded' | 'down'
+  latency_ms: number | null
+}
+
+export interface EndpointStat {
+  method: string
+  path: string
+  request_count: number
+  error_count: number
+  error_rate_percent: number
+}
+
+export interface RequestTimeseriesPoint {
+  bucket: string
+  request_count: number
+  average_duration_ms: number | null
+}
+
+export interface SystemHealth {
+  generated_at: string
+  status: 'operational' | 'degraded' | 'down'
+  uptime_seconds: number
+  window_hours: number
+  requests: RequestMetrics
+  active_users: number
+  online_firms: number
+  dependencies: DependencyHealth[]
+  services: ServiceHealthEntry[]
+  worst_endpoints: EndpointStat[]
+  timeseries: RequestTimeseriesPoint[]
+}
+
+export async function getSystemHealth(token: string, hours = 24): Promise<SystemHealth> {
+  return apiRequest<SystemHealth>(`/owner/system-health?hours=${hours}`, { token })
 }

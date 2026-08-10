@@ -203,7 +203,7 @@
 
 .deadline-sub {
   font-size: 11px;
-  color: #6b7280;
+  color: #9ca3af;
 }
 
 /* Row 2 shared */
@@ -263,9 +263,9 @@
 }
 
 .card-subtitle-inline {
-  font-size: 10px;
-  font-weight: 500;
-  color: #6b7280;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }

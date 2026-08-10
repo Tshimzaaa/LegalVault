@@ -311,8 +311,8 @@ function Clients({ user }: ClientsProps) {
                         <span
                           className="status-badge"
                           style={{
-                            color: c.is_active ? '#22c55e' : '#9ca3af',
-                            background: c.is_active ? '#22c55e22' : '#9ca3af22',
+                            color: c.is_active ? '#22c55e' : '#ef4444',
+                            background: c.is_active ? '#22c55e22' : '#ef444422',
                           }}
                         >
                           {c.is_active ? 'Active' : 'Inactive'}

@@ -48,11 +48,13 @@ class Matter(BaseModel):
     firm_id: Mapped[UUID] = mapped_column(
         ForeignKey("law_firms.id"),
         nullable=False,
+        index=True,
     )
 
     client_id: Mapped[UUID] = mapped_column(
         ForeignKey("clients.id"),
         nullable=False,
+        index=True,
     )
 
     title: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -95,6 +97,7 @@ class MatterAssignment(BaseModel):
     matter_id: Mapped[UUID] = mapped_column(
         ForeignKey("matters.id"),
         nullable=False,
+        index=True,
     )
 
     user_id: Mapped[UUID] = mapped_column(
@@ -119,6 +122,7 @@ class MatterDocument(BaseModel):
     matter_id: Mapped[UUID] = mapped_column(
         ForeignKey("matters.id"),
         nullable=False,
+        index=True,
     )
 
     uploaded_by: Mapped[UUID | None] = mapped_column(
@@ -148,6 +152,7 @@ class MatterTask(BaseModel):
     matter_id: Mapped[UUID] = mapped_column(
         ForeignKey("matters.id"),
         nullable=False,
+        index=True,
     )
 
     title: Mapped[str] = mapped_column(String(200), nullable=False)

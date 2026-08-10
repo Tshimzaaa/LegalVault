@@ -1,8 +1,12 @@
+from time import perf_counter
+
 from fastapi import APIRouter, HTTPException
+from sqlalchemy import text
 from app.modules.owner.schemas import OwnerLoginRequest, OwnerTokenResponse
 from app.core.security import create_access_token
 from app.core.config import settings
-from app.core.storage import get_download_url
+from app.core.storage import get_download_url, get_r2_client
+from app.core.uptime import STARTED_AT
 from datetime import datetime, UTC
 
 from fastapi import Depends, Query
@@ -30,8 +34,9 @@ from app.modules.owner.schemas import (
     FirmExportMatter,
     UsageMetrics,
     PlatformMetricsResponse,
+    SystemHealthResponse,
 )
-from app.modules.monitoring.schemas import RequestErrorEntry
+from app.modules.monitoring.schemas import RequestErrorEntry, DependencyHealth
 from app.exceptions.auth import LawFirmAlreadyExists  # reuse or add a FirmNotFound exception
 from app.modules.audit.service import AuditService
 from app.modules.audit.repository import AuditLogRepository
@@ -50,6 +55,40 @@ from datetime import timedelta
 
 
 router = APIRouter(prefix="/owner", tags=["owner"])
+
+# Latency above which a reachable dependency is still flagged "degraded" rather than "healthy".
+DB_LATENCY_DEGRADED_MS = 500.0
+STORAGE_LATENCY_DEGRADED_MS = 1000.0
+
+
+def _check_database(db: Session) -> DependencyHealth:
+    start = perf_counter()
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception:
+        return DependencyHealth(name="Database", status="down", latency_ms=None)
+    latency_ms = (perf_counter() - start) * 1000
+    status = "degraded" if latency_ms > DB_LATENCY_DEGRADED_MS else "healthy"
+    return DependencyHealth(name="Database", status=status, latency_ms=round(latency_ms, 1))
+
+
+def _check_storage() -> DependencyHealth:
+    start = perf_counter()
+    try:
+        get_r2_client().head_bucket(Bucket=settings.R2_BUCKET_NAME)
+    except Exception:
+        return DependencyHealth(name="Storage", status="down", latency_ms=None)
+    latency_ms = (perf_counter() - start) * 1000
+    status = "degraded" if latency_ms > STORAGE_LATENCY_DEGRADED_MS else "healthy"
+    return DependencyHealth(name="Storage", status=status, latency_ms=round(latency_ms, 1))
+
+
+def _overall_status(dependencies: list[DependencyHealth], error_rate_percent: float) -> str:
+    if any(d.status == "down" for d in dependencies):
+        return "down"
+    if any(d.status == "degraded" for d in dependencies) or error_rate_percent > 5:
+        return "degraded"
+    return "operational"
 
 class OwnerCreateFirmRequest(BaseModel):
     law_firm: RegisterLawFirmRequest
@@ -137,6 +176,33 @@ def list_recent_errors(
     _owner=Depends(get_current_owner),
 ):
     return MonitoringService(db).list_recent_errors(hours, limit, offset)
+
+
+@router.get("/system-health", response_model=SystemHealthResponse)
+def get_system_health(
+    hours: int = Query(default=24, ge=1, le=720),
+    db: Session = Depends(get_db),
+    _owner=Depends(get_current_owner),
+):
+    monitoring = MonitoringService(db)
+    requests = monitoring.get_request_metrics(hours)
+    active_users, online_firms = monitoring.get_active_usage(hours)
+
+    dependencies = [_check_database(db), _check_storage()]
+
+    return SystemHealthResponse(
+        generated_at=datetime.now(UTC),
+        status=_overall_status(dependencies, requests.error_rate_percent),
+        uptime_seconds=(datetime.now(UTC) - STARTED_AT).total_seconds(),
+        window_hours=hours,
+        requests=requests,
+        active_users=active_users,
+        online_firms=online_firms,
+        dependencies=dependencies,
+        services=monitoring.get_service_health(hours),
+        worst_endpoints=monitoring.get_worst_endpoints(hours),
+        timeseries=monitoring.get_request_timeseries(hours),
+    )
 
 
 @router.get("/firms/{firm_id}", response_model=FirmDetail)

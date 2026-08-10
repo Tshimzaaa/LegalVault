@@ -52,7 +52,7 @@ function Integrations({ contact, onLogout }: IntegrationsProps) {
                 className="status-badge"
                 style={{
                   color: i.connected ? '#22c55e' : '#9ca3af',
-                  background: i.connected ? 'rgba(34,197,94,0.15)' : 'rgba(156,163,175,0.15)',
+                  background: i.connected ? '#22c55e22' : '#9ca3af22',
                 }}
               >
                 {i.connected ? 'Connected' : 'Not Connected'}

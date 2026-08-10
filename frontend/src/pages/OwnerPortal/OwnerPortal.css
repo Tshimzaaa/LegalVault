@@ -36,8 +36,8 @@
 
 .owner-stat-icon {
   opacity: 0.6;
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
 }
 
 .owner-collapse-toggle {
@@ -54,26 +54,88 @@
   font-size: 12px;
 }
 
-.owner-audit-card .card-header select {
-  background: #18181b;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 7px;
-  padding: 5px 8px;
-  color: #d1d5db;
-  font-size: 11.5px;
-  font-family: inherit;
-}
-
 .owner-monitoring-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 16px;
+  margin-top: 16px;
 }
 
 .owner-monitoring-stat {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.owner-health-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.owner-health-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.owner-health-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-right: auto;
+}
+
+.owner-health-deps {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.owner-health-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.owner-chart-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mini-chart {
+  width: 100%;
+  height: 70px;
+  display: block;
+}
+
+.owner-health-tables {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+  align-items: start;
+}
+
+.owner-health-table-title {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .owner-announcement-form {

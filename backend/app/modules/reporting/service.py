@@ -117,9 +117,15 @@ class ReportingService:
         assignments = self.matter_repository.list_assignments_for_firm(firm_id)
         tasks = self.matter_repository.list_tasks_for_firm(firm_id)
 
+        users_by_id = {
+            user.id: user
+            for user in self.auth_repository.list_users_by_ids(
+                {assignment.user_id for assignment, _matter in assignments}
+            )
+        }
         assignee_names_by_matter = defaultdict(list)
         for assignment, matter in assignments:
-            user = self.auth_repository.get_user_by_id(assignment.user_id)
+            user = users_by_id.get(assignment.user_id)
             if user:
                 assignee_names_by_matter[matter.id].append(f"{user.first_name} {user.last_name}")
 
@@ -130,7 +136,12 @@ class ReportingService:
             if task.status != TaskStatus.DONE:
                 open_task_counts_by_matter[matter.id] += 1
 
-        client_names = {}
+        client_names = {
+            client.id: client.company_name
+            for client in self.client_repository.list_clients_by_ids(
+                {matter.client_id for matter in matters}
+            )
+        }
 
         buffer = io.StringIO()
         writer = csv.writer(buffer)
@@ -139,13 +150,9 @@ class ReportingService:
             "Open Tasks", "Total Tasks", "Visible to Client", "Created At",
         ])
         for matter in matters:
-            if matter.client_id not in client_names:
-                client = self.client_repository.get_client_by_id(matter.client_id)
-                client_names[matter.client_id] = client.company_name if client else ""
-
             writer.writerow([
                 matter.title,
-                client_names[matter.client_id],
+                client_names.get(matter.client_id, ""),
                 STATUS_LABELS[matter.status],
                 matter.due_date.isoformat() if matter.due_date else "",
                 "; ".join(assignee_names_by_matter.get(matter.id, [])),

@@ -69,3 +69,22 @@ export async function acceptInvite(token: string, password: string): Promise<Cli
     skipAuthRedirect: true,
   })
 }
+
+export async function updateContactProfile(
+  token: string,
+  profile: { first_name: string; last_name: string; email: string },
+): Promise<ClientContact> {
+  return apiRequest<ClientContact>('/client-auth/me', { method: 'PATCH', body: profile, token })
+}
+
+export async function changeContactPassword(
+  token: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<void> {
+  await apiRequest('/client-auth/me/change-password', {
+    method: 'POST',
+    body: { current_password: currentPassword, new_password: newPassword },
+    token,
+  })
+}

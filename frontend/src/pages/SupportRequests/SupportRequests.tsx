@@ -94,7 +94,11 @@ function SupportRequests() {
           <span className="chip">
             Open <span className="chip-badge">{openCount}</span>
           </span>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as SupportRequestStatus | 'all')}>
+          <select
+            className="select-input"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as SupportRequestStatus | 'all')}
+          >
             <option value="all">All statuses</option>
             <option value="open">Open</option>
             <option value="in_progress">In Progress</option>
@@ -158,6 +162,7 @@ function SupportRequests() {
                     </td>
                     <td>
                       <select
+                        className="select-input"
                         value={r.status}
                         disabled={savingId === r.id}
                         onChange={(e) => handleStatusChange(r, e.target.value as SupportRequestStatus)}

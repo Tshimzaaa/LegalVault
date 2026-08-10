@@ -10,14 +10,14 @@
 .matter-form {
   display: grid;
   grid-template-columns: 1.05fr 1fr 0.95fr;
-  gap: 14px;
+  gap: 16px;
   align-items: start;
 }
 
 .matter-col {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   min-width: 0;
 }
 
@@ -27,7 +27,7 @@
 
 .form-section h3 {
   margin: 0 0 10px;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 600;
   color: #4ade80;
 }

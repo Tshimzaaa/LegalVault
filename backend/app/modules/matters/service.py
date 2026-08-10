@@ -26,7 +26,7 @@ from app.exceptions.matters import (
 )
 from app.modules.clients.repository import ClientRepository
 from app.modules.auth.repository import AuthRepository
-from app.core.storage import upload_file, get_download_url
+from app.core.storage import upload_file, get_download_url, delete_file
 from app.modules.audit.service import AuditService
 from app.modules.audit.models import ActorType
 from app.modules.audit import actions as audit_actions
@@ -240,18 +240,19 @@ class MatterService:
                 target_id=document.id,
                 details={"title": document.title, "version": document.version},
             )
-            for assignment in self.repository.list_assignments_for_matter(matter.id):
-                if str(assignment.user_id) == str(uploaded_by):
-                    continue
-                self.notifications.notify(
-                    recipient_type=RecipientType.STAFF,
-                    recipient_id=assignment.user_id,
-                    type="matter.document_uploaded",
-                    title=f'New document on "{matter.title}"',
-                    body=f"{document.title} (v{document.version}) was uploaded.",
-                    target_type="matter",
-                    target_id=matter.id,
-                )
+            self.notifications.notify_many([
+                {
+                    "recipient_type": RecipientType.STAFF,
+                    "recipient_id": assignment.user_id,
+                    "type": "matter.document_uploaded",
+                    "title": f'New document on "{matter.title}"',
+                    "body": f"{document.title} (v{document.version}) was uploaded.",
+                    "target_type": "matter",
+                    "target_id": matter.id,
+                }
+                for assignment in self.repository.list_assignments_for_matter(matter.id)
+                if str(assignment.user_id) != str(uploaded_by)
+            ])
         self.db.commit()
         return document
 
@@ -265,6 +266,26 @@ class MatterService:
         if not document or str(document.matter_id) != str(matter_id):
             raise MatterDocumentNotFound()
         return get_download_url(document.file_key)
+
+    def delete_matter_document(self, matter_id, document_id, firm_id, actor_id) -> None:
+        self.get_matter(matter_id, firm_id)  # ownership check
+        document = self.repository.get_document_by_id(document_id)
+        if not document or str(document.matter_id) != str(matter_id):
+            raise MatterDocumentNotFound()
+
+        delete_file(document.file_key)
+        self.repository.delete_document(document)
+
+        self.audit.log(
+            actor_type=ActorType.STAFF,
+            actor_id=actor_id,
+            firm_id=firm_id,
+            action=audit_actions.MATTER_DOCUMENT_DELETED,
+            target_type="matter_document",
+            target_id=document.id,
+            details={"title": document.title, "version": document.version},
+        )
+        self.db.commit()
 
     def list_client_matter_documents(self, matter_id, client_id) -> list[MatterDocument]:
         matter = self.repository.get_by_id(matter_id)
@@ -372,30 +393,35 @@ class MatterService:
         title = f'New message on "{matter.title}"'
         notif_body = f"{author_name}: {preview}"
 
-        for assignment in self.repository.list_assignments_for_matter(matter.id):
-            if author_type == MessageAuthorType.STAFF and str(assignment.user_id) == str(author_id):
-                continue
-            self.notifications.notify(
-                recipient_type=RecipientType.STAFF,
-                recipient_id=assignment.user_id,
-                type="matter.new_message",
-                title=title,
-                body=notif_body,
-                target_type="matter",
-                target_id=matter.id,
-            )
+        entries = [
+            {
+                "recipient_type": RecipientType.STAFF,
+                "recipient_id": assignment.user_id,
+                "type": "matter.new_message",
+                "title": title,
+                "body": notif_body,
+                "target_type": "matter",
+                "target_id": matter.id,
+            }
+            for assignment in self.repository.list_assignments_for_matter(matter.id)
+            if not (author_type == MessageAuthorType.STAFF and str(assignment.user_id) == str(author_id))
+        ]
 
         if author_type == MessageAuthorType.STAFF and matter.is_visible_to_client:
-            for contact in self.client_repository.list_contacts_for_client(matter.client_id):
-                self.notifications.notify(
-                    recipient_type=RecipientType.CLIENT_CONTACT,
-                    recipient_id=contact.id,
-                    type="matter.new_message",
-                    title=title,
-                    body=notif_body,
-                    target_type="matter",
-                    target_id=matter.id,
-                )
+            entries += [
+                {
+                    "recipient_type": RecipientType.CLIENT_CONTACT,
+                    "recipient_id": contact.id,
+                    "type": "matter.new_message",
+                    "title": title,
+                    "body": notif_body,
+                    "target_type": "matter",
+                    "target_id": matter.id,
+                }
+                for contact in self.client_repository.list_contacts_for_client(matter.client_id)
+            ]
+
+        self.notifications.notify_many(entries)
 
     def post_message_as_staff(
         self, matter_id, firm_id, actor_id, actor_name: str, request: CreateMatterMessageRequest

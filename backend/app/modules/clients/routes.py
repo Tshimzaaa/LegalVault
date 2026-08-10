@@ -17,6 +17,8 @@ from app.modules.clients.schemas import (
     ResendInviteRequest,
     UpdateClientStatusRequest,
     UpdateContactStatusRequest,
+    UpdateContactProfileRequest,
+    ChangeContactPasswordRequest,
 )
 from app.modules.clients.service import ClientService
 from app.modules.clients.dependencies import get_current_contact
@@ -79,6 +81,27 @@ def client_login(request: Request, credentials: ClientLoginRequest, db: Session 
 @client_auth_router.get("/me", response_model=ContactResponse)
 def get_me(current_contact: ClientContact = Depends(get_current_contact)):
     return current_contact
+
+
+@client_auth_router.patch("/me", response_model=ContactResponse)
+def update_me(
+    request: UpdateContactProfileRequest,
+    db: Session = Depends(get_db),
+    current_contact: ClientContact = Depends(get_current_contact),
+):
+    service = ClientService(db)
+    return service.update_profile(current_contact, request)
+
+
+@client_auth_router.post("/me/change-password", status_code=200)
+def change_my_password(
+    request: ChangeContactPasswordRequest,
+    db: Session = Depends(get_db),
+    current_contact: ClientContact = Depends(get_current_contact),
+):
+    service = ClientService(db)
+    service.change_password(current_contact, request)
+    return {"message": "Password changed. Please log in again."}
 
 
 @client_auth_router.post("/refresh", response_model=ClientTokenResponse)

@@ -23,3 +23,5 @@ class ClientHasMatters(Exception):
     pass
 class InvalidRefreshToken(Exception):
     pass
+class IncorrectPassword(Exception):
+    pass

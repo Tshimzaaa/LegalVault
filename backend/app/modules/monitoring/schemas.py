@@ -19,7 +19,36 @@ class RequestMetrics(BaseModel):
     status_5xx: int
     error_rate_percent: float
     average_duration_ms: float | None
+    p95_duration_ms: float | None
     top_error_paths: list[TopErrorPath]
+
+
+class ServiceHealthEntry(BaseModel):
+    name: str
+    status: str  # "healthy" | "degraded"
+    request_count: int
+    error_rate_percent: float
+    avg_duration_ms: float | None
+
+
+class DependencyHealth(BaseModel):
+    name: str
+    status: str  # "healthy" | "degraded" | "down"
+    latency_ms: float | None
+
+
+class EndpointStat(BaseModel):
+    method: str
+    path: str
+    request_count: int
+    error_count: int
+    error_rate_percent: float
+
+
+class RequestTimeseriesPoint(BaseModel):
+    bucket: datetime
+    request_count: int
+    average_duration_ms: float | None
 
 
 class RequestErrorEntry(BaseModel):
