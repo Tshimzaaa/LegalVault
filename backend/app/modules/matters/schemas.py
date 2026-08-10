@@ -12,6 +12,11 @@ class CreateMatterRequest(BaseModel):
     due_date: date | None = None
 
 
+class UpdateMatterDetailsRequest(BaseModel):
+    title: str = Field(min_length=2, max_length=200)
+    description: str | None = None
+
+
 class UpdateMatterStatusRequest(BaseModel):
     status: MatterStatus
 

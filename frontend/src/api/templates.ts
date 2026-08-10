@@ -39,6 +39,10 @@ export async function updateTemplate(
   return apiRequest<Template>(`/templates/${templateId}`, { method: 'PATCH', body: payload, token })
 }
 
+export async function deleteTemplate(token: string, templateId: string): Promise<void> {
+  return apiRequest<void>(`/templates/${templateId}`, { method: 'DELETE', token })
+}
+
 export async function uploadTemplate(
   token: string,
   fields: { title: string; description?: string; category: string; file: File },

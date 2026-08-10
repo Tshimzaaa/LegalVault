@@ -13,6 +13,7 @@ FIRM_DATA_EXPORTED = "firm.data_exported"
 FIRM_PROFILE_UPDATED = "firm.profile_updated"
 
 MATTER_CREATED = "matter.created"
+MATTER_DETAILS_UPDATED = "matter.details_updated"
 MATTER_STATUS_UPDATED = "matter.status_updated"
 MATTER_VISIBILITY_UPDATED = "matter.visibility_updated"
 MATTER_DEADLINE_UPDATED = "matter.deadline_updated"
@@ -29,6 +30,7 @@ ANNOUNCEMENT_DELETED = "announcement.deleted"
 
 TEMPLATE_UPLOADED = "template.uploaded"
 TEMPLATE_UPDATED = "template.updated"
+TEMPLATE_DELETED = "template.deleted"
 
 SIGNED_CONTRACT_UPLOADED = "signed_contract.uploaded"
 SIGNED_CONTRACT_STATUS_UPDATED = "signed_contract.status_updated"

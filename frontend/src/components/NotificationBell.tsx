@@ -20,11 +20,12 @@ function NotificationBell({ scope }: NotificationBellProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   const btnRef = useRef<HTMLButtonElement>(null)
 
-  const token = localStorage.getItem('access_token')
-
   useEffect(() => {
-    if (!token) return
+    // Read the token fresh on every tick — capturing it once above would freeze this
+    // closure on the token from mount time, so once it expired every poll thereafter
+    // would need a refresh-and-retry round trip instead of a plain 200.
     function poll() {
+      const token = localStorage.getItem('access_token')
       if (!token) return
       getUnreadCount(token, scope)
         .then(setUnreadCount)
@@ -33,7 +34,6 @@ function NotificationBell({ scope }: NotificationBellProps) {
     poll()
     const interval = setInterval(poll, POLL_INTERVAL_MS)
     return () => clearInterval(interval)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scope])
 
   useEffect(() => {
@@ -48,6 +48,7 @@ function NotificationBell({ scope }: NotificationBellProps) {
   }, [open])
 
   function handleToggle() {
+    const token = localStorage.getItem('access_token')
     const next = !open
     setOpen(next)
     if (next && btnRef.current) {
@@ -65,6 +66,7 @@ function NotificationBell({ scope }: NotificationBellProps) {
   }
 
   async function handleMarkRead(n: Notification) {
+    const token = localStorage.getItem('access_token')
     if (!token || n.is_read) return
 
     const previousNotifications = notifications
@@ -85,6 +87,7 @@ function NotificationBell({ scope }: NotificationBellProps) {
   }
 
   async function handleMarkAllRead() {
+    const token = localStorage.getItem('access_token')
     if (!token) return
 
     const previousNotifications = notifications

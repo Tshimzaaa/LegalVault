@@ -7,6 +7,9 @@ from app.modules.support_requests.schemas import (
     UpdateSupportRequestStatusRequest,
 )
 from app.exceptions.support_requests import SupportRequestNotFound
+from app.modules.auth.repository import AuthRepository
+from app.modules.notifications.service import NotificationService
+from app.modules.notifications.models import RecipientType
 
 
 class SupportRequestService:
@@ -14,6 +17,8 @@ class SupportRequestService:
     def __init__(self, db: Session):
         self.db = db
         self.repository = SupportRequestRepository(db)
+        self.auth_repository = AuthRepository(db)
+        self.notifications = NotificationService(db)
 
     def create_support_request(
         self, firm_id, client_id, contact_id, request: CreateSupportRequestRequest
@@ -30,6 +35,21 @@ class SupportRequestService:
             reference_documents=request.reference_documents,
         )
         self.repository.create(support_request)
+
+        preview = request.description if len(request.description) <= 120 else f"{request.description[:117]}..."
+        self.notifications.notify_many([
+            {
+                "recipient_type": RecipientType.STAFF,
+                "recipient_id": staff.id,
+                "type": "support_request.created",
+                "title": f"New support request: {request.request_type.value.replace('_', ' ').title()}",
+                "body": preview,
+                "target_type": "support_request",
+                "target_id": support_request.id,
+            }
+            for staff in self.auth_repository.list_by_firm(firm_id)
+            if staff.is_active
+        ])
         self.db.commit()
         return support_request
 

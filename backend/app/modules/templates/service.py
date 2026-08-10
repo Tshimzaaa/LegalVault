@@ -5,7 +5,7 @@ from app.modules.templates.repository import TemplateRepository
 from app.modules.templates.models import Template
 from app.modules.templates.schemas import UpdateTemplateRequest
 from app.exceptions.templates import TemplateNotFound, UnsupportedFileType
-from app.core.storage import upload_file, get_download_url
+from app.core.storage import upload_file, get_download_url, delete_file
 from app.modules.audit.service import AuditService
 from app.modules.audit.models import ActorType
 from app.modules.audit import actions as audit_actions
@@ -98,3 +98,22 @@ class TemplateService:
         )
         self.db.commit()
         return template
+
+    def delete_template(self, template_id, firm_id, actor_id) -> None:
+        template = self.repository.get_by_id(template_id)
+        if not template or str(template.firm_id) != str(firm_id):
+            raise TemplateNotFound()
+
+        delete_file(template.file_key)
+        self.repository.delete(template)
+
+        self.audit.log(
+            actor_type=ActorType.STAFF,
+            actor_id=actor_id,
+            firm_id=firm_id,
+            action=audit_actions.TEMPLATE_DELETED,
+            target_type="template",
+            target_id=template.id,
+            details={"title": template.title, "version": template.version},
+        )
+        self.db.commit()

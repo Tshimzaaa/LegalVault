@@ -5,6 +5,7 @@ from app.modules.matters.repository import MatterRepository
 from app.modules.matters.models import Matter, MatterAssignment, MatterDocument, MatterTask, MatterMessage, MessageAuthorType
 from app.modules.matters.schemas import (
     CreateMatterRequest,
+    UpdateMatterDetailsRequest,
     UpdateMatterStatusRequest,
     UpdateMatterVisibilityRequest,
     UpdateMatterDeadlineRequest,
@@ -86,6 +87,23 @@ class MatterService:
 
     def list_matters_for_firm(self, firm_id) -> list[Matter]:
         return self.repository.list_by_firm(firm_id)
+
+    def update_details(self, matter_id, firm_id, actor_id, request: UpdateMatterDetailsRequest) -> Matter:
+        matter = self.get_matter(matter_id, firm_id)
+        matter.title = request.title
+        matter.description = request.description
+
+        self.audit.log(
+            actor_type=ActorType.STAFF,
+            actor_id=actor_id,
+            firm_id=firm_id,
+            action=audit_actions.MATTER_DETAILS_UPDATED,
+            target_type="matter",
+            target_id=matter.id,
+            details={"title": request.title},
+        )
+        self.db.commit()
+        return matter
 
     def update_status(self, matter_id, firm_id, actor_id, request: UpdateMatterStatusRequest) -> Matter:
         matter = self.get_matter(matter_id, firm_id)
@@ -252,6 +270,19 @@ class MatterService:
                 }
                 for assignment in self.repository.list_assignments_for_matter(matter.id)
                 if str(assignment.user_id) != str(uploaded_by)
+            ])
+        else:
+            self.notifications.notify_many([
+                {
+                    "recipient_type": RecipientType.STAFF,
+                    "recipient_id": assignment.user_id,
+                    "type": "matter.document_uploaded",
+                    "title": f'New document on "{matter.title}"',
+                    "body": f"{document.title} (v{document.version}) was uploaded by the client.",
+                    "target_type": "matter",
+                    "target_id": matter.id,
+                }
+                for assignment in self.repository.list_assignments_for_matter(matter.id)
             ])
         self.db.commit()
         return document

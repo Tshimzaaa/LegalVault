@@ -93,6 +93,14 @@ export async function createMatter(token: string, body: CreateMatterRequest): Pr
   return apiRequest<Matter>('/matters', { method: 'POST', body, token })
 }
 
+export async function updateMatterDetails(
+  token: string,
+  matterId: string,
+  body: { title: string; description?: string | null },
+): Promise<Matter> {
+  return apiRequest<Matter>(`/matters/${matterId}`, { method: 'PATCH', body, token })
+}
+
 export async function updateMatterStatus(token: string, matterId: string, status: MatterStatus): Promise<Matter> {
   return apiRequest<Matter>(`/matters/${matterId}/status`, { method: 'PATCH', body: { status }, token })
 }

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import './Templates.css'
-import { IconPlus, IconEdit } from '../../components/icons'
-import { listTemplates, downloadTemplate, uploadTemplate, updateTemplate } from '../../api/templates'
+import { IconPlus, IconEdit, IconTrash } from '../../components/icons'
+import { listTemplates, downloadTemplate, uploadTemplate, updateTemplate, deleteTemplate } from '../../api/templates'
 import type { Template } from '../../api/templates'
 import { getTemplateIcon } from '../../utils/templateIcon'
 
@@ -14,6 +14,8 @@ function Templates() {
   const [attempt, setAttempt] = useState(0)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [downloadError, setDownloadError] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const [showUpload, setShowUpload] = useState(false)
   const [title, setTitle] = useState('')
@@ -96,6 +98,23 @@ function Templates() {
       setUploadError('Could not upload the template. Please try again.')
     } finally {
       setUploading(false)
+    }
+  }
+
+  async function handleDelete(t: Template) {
+    const token = localStorage.getItem('access_token')
+    if (!token) return
+    if (!window.confirm(`Delete "${t.title}"? This cannot be undone.`)) return
+
+    setDeleteError(null)
+    setDeletingId(t.id)
+    try {
+      await deleteTemplate(token, t.id)
+      setTemplates((prev) => prev.filter((item) => item.id !== t.id))
+    } catch {
+      setDeleteError('Could not delete that template. Please try again.')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -203,6 +222,7 @@ function Templates() {
       )}
 
       {downloadError && <p className="matter-error">{downloadError}</p>}
+      {deleteError && <p className="matter-error">{deleteError}</p>}
 
       {status === 'ready' && (
         <section className="templates-grid">
@@ -235,14 +255,25 @@ function Templates() {
               <div key={t.id} className="card template-card">
                 <div className="template-card-top">
                   <span className="template-icon">{getTemplateIcon(t.category)}</span>
-                  <button
-                    type="button"
-                    className="icon-btn"
-                    onClick={() => startEdit(t)}
-                    aria-label={`Edit ${t.title}`}
-                  >
-                    <IconEdit />
-                  </button>
+                  <div className="template-card-actions">
+                    <button
+                      type="button"
+                      className="icon-btn"
+                      onClick={() => startEdit(t)}
+                      aria-label={`Edit ${t.title}`}
+                    >
+                      <IconEdit />
+                    </button>
+                    <button
+                      type="button"
+                      className="icon-btn"
+                      onClick={() => handleDelete(t)}
+                      disabled={deletingId === t.id}
+                      aria-label={`Delete ${t.title}`}
+                    >
+                      <IconTrash />
+                    </button>
+                  </div>
                 </div>
                 <span className="template-name">{t.title}</span>
                 <span className="template-category">

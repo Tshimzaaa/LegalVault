@@ -11,6 +11,7 @@ from app.database.session import get_db
 from app.modules.matters.schemas import (
     CreateMatterRequest,
     MatterResponse,
+    UpdateMatterDetailsRequest,
     UpdateMatterStatusRequest,
     UpdateMatterVisibilityRequest,
     UpdateMatterDeadlineRequest,
@@ -98,6 +99,17 @@ def get_matter(
 ):
     service = MatterService(db)
     return service.get_matter(matter_id, current_user.firm_id)
+
+
+@router.patch("/{matter_id}", response_model=MatterResponse)
+def update_details(
+    matter_id: str,
+    request: UpdateMatterDetailsRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    service = MatterService(db)
+    return service.update_details(matter_id, current_user.firm_id, current_user.id, request)
 
 
 @router.patch("/{matter_id}/status", response_model=MatterResponse)

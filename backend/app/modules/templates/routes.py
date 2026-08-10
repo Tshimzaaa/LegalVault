@@ -64,6 +64,16 @@ def update_template(
     return service.update_template(template_id, current_user.firm_id, current_user.id, request)
 
 
+@router.delete("/{template_id}", status_code=204)
+def delete_template(
+    template_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    service = TemplateService(db)
+    service.delete_template(template_id, current_user.firm_id, current_user.id)
+
+
 @router.get("/{template_id}/download", response_model=TemplateDownloadResponse)
 def download_template(
     template_id: str,

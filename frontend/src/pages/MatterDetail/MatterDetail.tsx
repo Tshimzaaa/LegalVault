@@ -6,6 +6,7 @@ import {
   getMatter,
   listAssignments,
   assignStaff,
+  updateMatterDetails,
   updateMatterStatus,
   updateMatterVisibility,
   updateMatterDeadline,
@@ -34,7 +35,7 @@ import { listClients } from '../../api/clients'
 import type { Client } from '../../api/clients'
 import { listUsers } from '../../api/auth'
 import type { User } from '../../api/auth'
-import { IconDownload, IconTrash, IconSend } from '../../components/icons'
+import { IconDownload, IconTrash, IconSend, IconEdit } from '../../components/icons'
 
 type LoadState = 'loading' | 'error' | 'ready'
 
@@ -84,6 +85,12 @@ function MatterDetail() {
   const [users, setUsers] = useState<User[]>([])
   const [assignments, setAssignments] = useState<MatterAssignment[]>([])
   const [status, setStatus] = useState<LoadState>('loading')
+
+  const [editingDetails, setEditingDetails] = useState(false)
+  const [editTitle, setEditTitle] = useState('')
+  const [editDescription, setEditDescription] = useState('')
+  const [detailsSaving, setDetailsSaving] = useState(false)
+  const [detailsError, setDetailsError] = useState<string | null>(null)
 
   const [statusValue, setStatusValue] = useState<Matter['status']>('intake')
   const [statusSaving, setStatusSaving] = useState(false)
@@ -155,6 +162,33 @@ function MatterDetail() {
     loadAll()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matterId])
+
+  function startEditDetails() {
+    if (!matter) return
+    setEditTitle(matter.title)
+    setEditDescription(matter.description ?? '')
+    setDetailsError(null)
+    setEditingDetails(true)
+  }
+
+  async function handleSaveDetails(e: FormEvent) {
+    e.preventDefault()
+    if (!token || !matterId) return
+    setDetailsError(null)
+    setDetailsSaving(true)
+    try {
+      const updated = await updateMatterDetails(token, matterId, {
+        title: editTitle,
+        description: editDescription || null,
+      })
+      setMatter(updated)
+      setEditingDetails(false)
+    } catch (err) {
+      setDetailsError(err instanceof Error ? err.message : 'Could not save changes.')
+    } finally {
+      setDetailsSaving(false)
+    }
+  }
 
   async function handleStatusSave() {
     if (!token || !matterId) return
@@ -401,12 +435,17 @@ function MatterDetail() {
           <h1>{matter?.title ?? 'Matter'}</h1>
         </div>
         {matter && (
-          <span
-            className="status-badge"
-            style={{ color: statusColor[matter.status], background: `${statusColor[matter.status]}22` }}
-          >
-            {statusOptions.find((o) => o.value === matter.status)?.label}
-          </span>
+          <div className="topbar-actions">
+            <button type="button" className="icon-btn" onClick={startEditDetails} aria-label="Edit matter details">
+              <IconEdit />
+            </button>
+            <span
+              className="status-badge"
+              style={{ color: statusColor[matter.status], background: `${statusColor[matter.status]}22` }}
+            >
+              {statusOptions.find((o) => o.value === matter.status)?.label}
+            </span>
+          </div>
         )}
       </header>
 
@@ -433,9 +472,33 @@ function MatterDetail() {
               <div className="card-header">
                 <span>Details</span>
               </div>
-              <p className="muted">Client: {clientName(matter.client_id)}</p>
-              <p className="muted">Opened: {new Date(matter.created_at).toLocaleDateString()}</p>
-              <p className="matter-detail-description">{matter.description || 'No description provided.'}</p>
+              {editingDetails ? (
+                <form onSubmit={handleSaveDetails}>
+                  <label className="field">
+                    <span>Title</span>
+                    <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required minLength={2} />
+                  </label>
+                  <label className="field" style={{ marginTop: 8 }}>
+                    <span>Description</span>
+                    <textarea rows={3} value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
+                  </label>
+                  {detailsError && <p className="matter-error">{detailsError}</p>}
+                  <div className="matter-actions" style={{ marginTop: 8 }}>
+                    <button type="button" className="btn-ghost" onClick={() => setEditingDetails(false)}>
+                      Cancel
+                    </button>
+                    <button type="submit" className="btn-solid" disabled={detailsSaving}>
+                      {detailsSaving ? 'Saving…' : 'Save'}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <p className="muted">Client: {clientName(matter.client_id)}</p>
+                  <p className="muted">Opened: {new Date(matter.created_at).toLocaleDateString()}</p>
+                  <p className="matter-detail-description">{matter.description || 'No description provided.'}</p>
+                </>
+              )}
             </section>
 
             <section className="card" style={{ marginTop: 16 }}>
