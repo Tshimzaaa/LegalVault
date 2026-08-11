@@ -146,6 +146,13 @@ def make_matter(db_session, firm: LawFirm, client_company: Client, **overrides) 
     return matter
 
 
+def owner_headers() -> dict:
+    """The owner console has no DB-backed identity — the token's "owner" type
+    claim alone is what get_current_owner checks (see owner/dependencies.py)."""
+    token = create_access_token(subject="owner", extra_claims={"type": "owner"})
+    return {"Authorization": f"Bearer {token}"}
+
+
 def auth_headers(actor) -> dict:
     """actor is a User (staff) or a ClientContact (client portal) — mirrors the
     extra_claims each login flow actually puts on the token (see

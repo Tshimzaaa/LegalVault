@@ -2,7 +2,17 @@
 Matter CRUD smoke tests: create, status/visibility/deadline/title updates,
 staff assignment, and the task/document/message sub-resources.
 """
+import pytest
+
 from tests.conftest import auth_headers, make_client_company, make_firm, make_matter, make_staff
+
+
+@pytest.fixture(autouse=True)
+def _stub_r2_and_scanner(monkeypatch):
+    monkeypatch.setattr("app.modules.matters.service.upload_file", lambda *a, **k: "matter_documents/fake-key")
+    monkeypatch.setattr("app.modules.matters.service.get_download_url", lambda *a, **k: "https://example.com/fake-url")
+    monkeypatch.setattr("app.modules.matters.service.delete_file", lambda *a, **k: None)
+    monkeypatch.setattr("app.modules.matters.service.scan_file", lambda *a, **k: None)
 
 
 def test_create_and_get_matter(client, db_session):
@@ -119,3 +129,32 @@ def test_matter_messages(client, db_session):
 
     list_res = client.get(f"/matters/{matter.id}/messages", headers=auth_headers(admin))
     assert len(list_res.json()) == 1
+
+
+def test_matter_document_upload_download_delete(client, db_session):
+    firm = make_firm(db_session)
+    admin, _ = make_staff(db_session, firm)
+    client_company = make_client_company(db_session, firm)
+    matter = make_matter(db_session, firm, client_company)
+
+    upload_res = client.post(
+        f"/matters/{matter.id}/documents",
+        data={"title": "Signed NDA"},
+        files={"file": ("nda.pdf", b"fake pdf content", "application/pdf")},
+        headers=auth_headers(admin),
+    )
+    assert upload_res.status_code == 201
+    document_id = upload_res.json()["id"]
+    assert upload_res.json()["version"] == 1
+
+    list_res = client.get(f"/matters/{matter.id}/documents", headers=auth_headers(admin))
+    assert len(list_res.json()) == 1
+
+    download_res = client.get(f"/matters/{matter.id}/documents/{document_id}/download", headers=auth_headers(admin))
+    assert download_res.status_code == 200
+    assert download_res.json()["download_url"]
+
+    delete_res = client.delete(f"/matters/{matter.id}/documents/{document_id}", headers=auth_headers(admin))
+    assert delete_res.status_code == 204
+
+    assert client.get(f"/matters/{matter.id}/documents", headers=auth_headers(admin)).json() == []

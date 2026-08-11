@@ -91,4 +91,6 @@ jobs:
 
       - run: npx oxlint
 
+      - run: npm test
+
       - run: npm run build
