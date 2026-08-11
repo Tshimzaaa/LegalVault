@@ -5,7 +5,9 @@ from app.modules.templates.repository import TemplateRepository
 from app.modules.templates.models import Template
 from app.modules.templates.schemas import UpdateTemplateRequest
 from app.exceptions.templates import TemplateNotFound, UnsupportedFileType
+from app.exceptions.malware import MalwareDetected
 from app.core.storage import upload_file, get_download_url, delete_file
+from app.core.malware_scan import scan_file
 from app.modules.audit.service import AuditService
 from app.modules.audit.models import ActorType
 from app.modules.audit import actions as audit_actions
@@ -38,6 +40,21 @@ class TemplateService:
     ) -> Template:
         if content_type not in ALLOWED_CONTENT_TYPES:
             raise UnsupportedFileType()
+
+        try:
+            scan_file(file_bytes)
+        except MalwareDetected:
+            self.audit.log(
+                actor_type=ActorType.STAFF,
+                actor_id=actor_id,
+                firm_id=firm_id,
+                action=audit_actions.FILE_UPLOAD_BLOCKED_MALWARE,
+                target_type="template",
+                target_id=None,
+                details={"title": title, "original_filename": original_filename},
+            )
+            self.db.commit()
+            raise
 
         latest = self.repository.get_latest_version(firm_id, title)
         next_version = (latest.version + 1) if latest else 1

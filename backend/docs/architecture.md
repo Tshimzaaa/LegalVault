@@ -269,7 +269,53 @@ has no free tier and is meant for rarely-accessed archival data).
 or `OWNER_SECRET` are still set to placeholder values, or if `OWNER_SECRET` 
 equals `REGISTER_SECRET` — safeguards against accidentally deploying with 
 default secrets or collapsing the owner/registration trust boundary back 
-into one shared value.
+into one shared value. The same check also requires `RUNTIME_DATABASE_URL` 
+to be set (see below) — without it, RLS is silently a no-op in production.
+
+### Row-level security (defense in depth)
+Every tenant-data table (`clients`, `matters`, `templates`, 
+`signed_contracts`, `support_requests`, `audit_logs`, and the matter-child 
+tables) has Postgres row-level security enabled as a second, DB-level 
+enforcement layer on top of the application-level `firm_id` filtering that 
+already exists in every repository — see the `add_row_level_security` 
+Alembic migration for the exact policies. `users`, `law_firms`, and 
+`client_contacts` are deliberately excluded (see that migration's docstring) 
+since staff/client login and invite-acceptance have to look someone up with 
+no firm context yet.
+
+**This requires a second, restricted database role.** Postgres RLS — even 
+with `FORCE ROW LEVEL SECURITY` — has no effect on a role with the 
+`BYPASSRLS` attribute, and Neon's default project-owner role (e.g. 
+`neondb_owner`) has it. That role stays the migration-time connection 
+(`DATABASE_URL` — it needs to own the tables to run `ALTER TABLE`/
+`CREATE POLICY`), while the app's actual request-serving connection 
+(`RUNTIME_DATABASE_URL`) must be a separate role without `BYPASSRLS`. Set up 
+once per database (dev/staging/production each need their own), run as the 
+owner role:
+
+```sql
+CREATE ROLE app_runtime WITH LOGIN PASSWORD '<a real generated password>'
+  NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS;
+
+GRANT CONNECT ON DATABASE neondb TO app_runtime;
+GRANT USAGE ON SCHEMA public TO app_runtime;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_runtime;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO app_runtime;
+
+-- so tables added by future migrations (run as the owner role) are
+-- automatically usable by app_runtime without a manual grant each time
+ALTER DEFAULT PRIVILEGES FOR ROLE neondb_owner IN SCHEMA public
+  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app_runtime;
+ALTER DEFAULT PRIVILEGES FOR ROLE neondb_owner IN SCHEMA public
+  GRANT USAGE, SELECT ON SEQUENCES TO app_runtime;
+```
+
+Then set `RUNTIME_DATABASE_URL` to a connection string using `app_runtime` 
+instead of the owner role (same host/database, different user/password). 
+Session-local tenant context (`app.current_firm_id`, `app.is_owner`) is set 
+per-request by `app/database/rls.py`'s `set_tenant_context()`, called from 
+`get_current_user`, `get_current_contact`, and `get_current_owner` once each 
+has resolved who's making the request.
 
 ---
 

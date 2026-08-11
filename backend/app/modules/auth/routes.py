@@ -1,3 +1,5 @@
+from datetime import datetime, UTC
+
 from fastapi import Request, APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.modules.auth.repository import AuthRepository
@@ -113,6 +115,37 @@ def update_staff_status(
     )
     db.commit()
     return staff
+
+
+@router.post("/users/{staff_id}/force-logout", status_code=204)
+def force_logout_staff(
+    staff_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    """Kills a staff member's active sessions right now — every live access
+    token stops working immediately (tokens_invalid_before) and every refresh
+    token is revoked — without deactivating the account. Useful for a
+    lost/compromised device, where the account itself is still fine."""
+    repo = AuthRepository(db)
+    staff = repo.get_user_by_id(staff_id)
+
+    if not staff or str(staff.firm_id) != str(current_user.firm_id):
+        raise StaffNotFound()
+
+    staff.tokens_invalid_before = datetime.now(UTC)
+    RefreshTokenRepository(db).revoke_all_for_actor(RefreshTokenActorType.STAFF, staff.id)
+
+    AuditService(db).log(
+        actor_type=ActorType.STAFF,
+        actor_id=current_user.id,
+        firm_id=current_user.firm_id,
+        action=audit_actions.STAFF_FORCE_LOGOUT,
+        target_type="user",
+        target_id=staff.id,
+        details={"email": staff.email},
+    )
+    db.commit()
 
 
 @router.get("/firm", response_model=FirmProfileResponse)

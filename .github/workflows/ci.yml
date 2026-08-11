@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: legalhub_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # Owner role (postgres superuser in the service container) — used for
+      # migrations, which need to ALTER TABLE / CREATE POLICY.
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/legalhub_test
+      # A Postgres superuser always bypasses row-level security, same as
+      # Neon's default owner role does in real environments (see
+      # backend/docs/architecture.md) — so tests need a separate, restricted
+      # role for RLS to mean anything here. Created by the step below.
+      RUNTIME_DATABASE_URL: postgresql://app_runtime:app_runtime_ci_password@localhost:5432/legalhub_test
+      SECRET_KEY: ci-only-secret-not-for-production
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      REGISTER_SECRET: ci-register-secret
+      OWNER_SECRET: ci-owner-secret
+      ENVIRONMENT: development
+      R2_ACCESS_KEY_ID: ci-placeholder
+      R2_SECRET_ACCESS_KEY: ci-placeholder
+      R2_ENDPOINT_URL: https://example.invalid
+      R2_BUCKET_NAME: ci-placeholder
+      CLAMD_HOST: localhost
+      CLAMD_PORT: "3310"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt
+
+      - run: python -m alembic upgrade head
+
+      - name: Create restricted app_runtime role (RLS only applies to non-BYPASSRLS roles)
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d legalhub_test <<'SQL'
+          CREATE ROLE app_runtime WITH LOGIN PASSWORD 'app_runtime_ci_password'
+            NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS;
+          GRANT CONNECT ON DATABASE legalhub_test TO app_runtime;
+          GRANT USAGE ON SCHEMA public TO app_runtime;
+          GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_runtime;
+          GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO app_runtime;
+          SQL
+
+      - run: python -m pytest -v
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+
+      - run: npx oxlint
+
+      - run: npm run build

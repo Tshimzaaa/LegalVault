@@ -88,6 +88,10 @@ export async function updateStaffStatus(token: string, staffId: string, isActive
   })
 }
 
+export async function forceLogoutStaff(token: string, staffId: string): Promise<void> {
+  await apiRequest(`/auth/users/${staffId}/force-logout`, { method: 'POST', token })
+}
+
 export async function forgotPassword(email: string): Promise<void> {
   await apiRequest('/auth/forgot-password', { method: 'POST', body: { email }, skipAuthRedirect: true })
 }

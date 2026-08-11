@@ -12,6 +12,7 @@ import {
   deleteClient,
   updateContactStatus,
   deleteContact,
+  forceLogoutContact,
 } from '../../api/clients'
 import type { Client, Contact } from '../../api/clients'
 import type { User } from '../../api/auth'
@@ -212,6 +213,17 @@ function Clients({ user }: ClientsProps) {
     }
   }
 
+  async function handleForceLogoutContact(clientId: string, contact: Contact) {
+    if (!token) return
+    if (!window.confirm(`Log ${contact.first_name} ${contact.last_name} out of all sessions right now?`)) return
+    setContactActionId(contact.id)
+    try {
+      await forceLogoutContact(token, clientId, contact.id)
+    } finally {
+      setContactActionId(null)
+    }
+  }
+
   async function handleDeleteContact(clientId: string, contact: Contact) {
     if (!token) return
     if (!window.confirm(`Remove ${contact.first_name} ${contact.last_name} from this client?`)) return
@@ -384,6 +396,16 @@ function Clients({ user }: ClientsProps) {
                                             ? 'Deactivate'
                                             : 'Reactivate'}
                                       </button>
+                                      {contact.is_active && contact.invitation_status !== 'pending' && (
+                                        <button
+                                          type="button"
+                                          className="btn-ghost clients-action-btn"
+                                          disabled={contactActionId === contact.id}
+                                          onClick={() => handleForceLogoutContact(c.id, contact)}
+                                        >
+                                          Force logout
+                                        </button>
+                                      )}
                                       <button
                                         type="button"
                                         className="icon-btn"

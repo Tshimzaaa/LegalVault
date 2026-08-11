@@ -13,7 +13,9 @@ from app.exceptions.clients import ClientNotFound
 from app.exceptions.matters import MatterNotFound
 from app.modules.clients.repository import ClientRepository
 from app.modules.matters.repository import MatterRepository
+from app.exceptions.malware import MalwareDetected
 from app.core.storage import upload_file, get_download_url
+from app.core.malware_scan import scan_file
 from app.modules.audit.service import AuditService
 from app.modules.audit.models import ActorType
 from app.modules.audit import actions as audit_actions
@@ -73,6 +75,21 @@ class SignedContractService:
         from app.exceptions.templates import UnsupportedFileType
         if content_type not in ALLOWED_CONTENT_TYPES:
             raise UnsupportedFileType()
+
+        try:
+            scan_file(file_bytes)
+        except MalwareDetected:
+            self.audit.log(
+                actor_type=ActorType.STAFF,
+                actor_id=actor_id,
+                firm_id=firm_id,
+                action=audit_actions.FILE_UPLOAD_BLOCKED_MALWARE,
+                target_type="signed_contract",
+                target_id=None,
+                details={"title": title, "original_filename": original_filename},
+            )
+            self.db.commit()
+            raise
 
         file_key = f"signed_contracts/{firm_id}/{uuid.uuid4()}-{original_filename}"
         upload_file(file_bytes, file_key, content_type)

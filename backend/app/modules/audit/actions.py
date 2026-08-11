@@ -1,5 +1,10 @@
 STAFF_INVITED = "staff.invited"
 STAFF_STATUS_UPDATED = "staff.status_updated"
+STAFF_FORCE_LOGOUT = "staff.force_logout"
+
+CONTACT_FORCE_LOGOUT = "contact.force_logout"
+
+FILE_UPLOAD_BLOCKED_MALWARE = "file.upload_blocked_malware"
 
 CLIENT_STATUS_UPDATED = "client.status_updated"
 CLIENT_DELETED = "client.deleted"

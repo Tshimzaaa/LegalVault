@@ -211,6 +211,7 @@ class ClientService:
             raise InvalidOrExpiredResetToken()
 
         contact.password_hash = hash_password(new_password)
+        contact.tokens_invalid_before = datetime.now(UTC)
         self.repository.clear_reset_token(contact)
         self.refresh_tokens.revoke_all_for_actor(RefreshTokenActorType.CLIENT, contact.id)
         self.db.commit()
@@ -301,6 +302,32 @@ class ClientService:
             target_type="client_contact",
             target_id=contact.id,
             details={"email": contact.email, "is_active": is_active},
+        )
+        self.db.commit()
+        return contact
+
+    def force_logout_contact(self, client_id, contact_id, firm_id, actor_id) -> ClientContact:
+        """Kills a contact's active sessions right now, without deactivating the
+        account — same rationale as force_logout_staff in auth/routes.py."""
+        client = self.repository.get_client_by_id(client_id)
+        if not client or str(client.firm_id) != str(firm_id):
+            raise ClientNotFound()
+
+        contact = self.repository.get_contact_by_id(contact_id)
+        if not contact or str(contact.client_id) != str(client_id):
+            raise ContactNotFound()
+
+        contact.tokens_invalid_before = datetime.now(UTC)
+        self.refresh_tokens.revoke_all_for_actor(RefreshTokenActorType.CLIENT, contact.id)
+
+        self.audit.log(
+            actor_type=ActorType.STAFF,
+            actor_id=actor_id,
+            firm_id=firm_id,
+            action=audit_actions.CONTACT_FORCE_LOGOUT,
+            target_type="client_contact",
+            target_id=contact.id,
+            details={"email": contact.email},
         )
         self.db.commit()
         return contact

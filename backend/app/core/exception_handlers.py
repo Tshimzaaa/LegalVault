@@ -43,6 +43,7 @@ from app.exceptions.announcements import AnnouncementNotFound
 from app.exceptions.notifications import NotificationNotFound
 from app.exceptions.signed_contracts import SignedContractNotFound
 from app.exceptions.storage import StorageUnavailable
+from app.exceptions.malware import MalwareDetected, ScannerUnavailable
 
 def register_exception_handlers(app: FastAPI):
 
@@ -214,3 +215,11 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(StorageUnavailable)
     async def storage_unavailable(_, __):
         raise HTTPException(status_code=503, detail="File storage is temporarily unavailable — please try again shortly.")
+
+    @app.exception_handler(MalwareDetected)
+    async def malware_detected(_, __):
+        raise HTTPException(status_code=422, detail="This file failed a security scan and was not uploaded.")
+
+    @app.exception_handler(ScannerUnavailable)
+    async def scanner_unavailable(_, __):
+        raise HTTPException(status_code=503, detail="File security scanning is temporarily unavailable — please try again shortly.")

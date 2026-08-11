@@ -1,7 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.gzip import GZipMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from app.core.config import settings
 from app.core.limiter import limiter
 from app.core.exception_handlers import register_exception_handlers
 from app.modules.auth.routes import router as auth_router
@@ -64,9 +65,16 @@ app.include_router(client_signed_contracts_router)
 # Register global exception handlers
 register_exception_handlers(app)
 
+# In production this must be the deployed frontend's real origin (see config.py's
+# startup check) — the local dev origin is only added when not running in production,
+# so a misconfigured deploy can't silently fall back to trusting localhost.
+_allowed_origins = [settings.FRONTEND_URL]
+if settings.ENVIRONMENT != "production" and "http://localhost:5173" not in _allowed_origins:
+    _allowed_origins.append("http://localhost:5173")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -75,6 +83,17 @@ app.add_middleware(
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 app.middleware("http")(log_requests)
+
+
+@app.middleware("http")
+async def add_hsts_header(request: Request, call_next):
+    response = await call_next(request)
+    # Only meaningful (and only sent) once the app is actually served over HTTPS —
+    # sending it over plain HTTP in local dev would be a no-op at best and confusing
+    # at worst, so it's gated on ENVIRONMENT rather than always-on.
+    if settings.ENVIRONMENT == "production":
+        response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
+    return response
 
 
 @app.get("/")

@@ -27,7 +27,9 @@ from app.exceptions.matters import (
 )
 from app.modules.clients.repository import ClientRepository
 from app.modules.auth.repository import AuthRepository
+from app.exceptions.malware import MalwareDetected
 from app.core.storage import upload_file, get_download_url, delete_file
+from app.core.malware_scan import scan_file
 from app.modules.audit.service import AuditService
 from app.modules.audit.models import ActorType
 from app.modules.audit import actions as audit_actions
@@ -229,6 +231,22 @@ class MatterService:
         if content_type not in ALLOWED_DOCUMENT_TYPES:
             from app.exceptions.templates import UnsupportedFileType
             raise UnsupportedFileType()
+
+        try:
+            scan_file(file_bytes)
+        except MalwareDetected:
+            if firm_id is not None:
+                self.audit.log(
+                    actor_type=ActorType.STAFF,
+                    actor_id=uploaded_by,
+                    firm_id=firm_id,
+                    action=audit_actions.FILE_UPLOAD_BLOCKED_MALWARE,
+                    target_type="matter_document",
+                    target_id=None,
+                    details={"matter_id": str(matter.id), "title": title, "original_filename": original_filename},
+                )
+                self.db.commit()
+            raise
 
         latest = self.repository.get_latest_version(matter.id, title)
         next_version = (latest.version + 1) if latest else 1

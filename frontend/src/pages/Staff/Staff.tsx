@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import './Staff.css'
 import { IconPlus } from '../../components/icons'
-import { listUsers, inviteStaff, updateStaffStatus } from '../../api/auth'
+import { listUsers, inviteStaff, updateStaffStatus, forceLogoutStaff } from '../../api/auth'
 import type { User, UserRole } from '../../api/auth'
 
 type LoadState = 'loading' | 'error' | 'ready'
@@ -33,6 +33,8 @@ function Staff({ user }: StaffProps) {
   const [users, setUsers] = useState<User[]>([])
   const [status, setStatus] = useState<LoadState>('loading')
   const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [forceLogoutId, setForceLogoutId] = useState<string | null>(null)
+  const [forceLogoutError, setForceLogoutError] = useState<string | null>(null)
 
   const [showInviteForm, setShowInviteForm] = useState(false)
   const [inviteForm, setInviteForm] = useState(emptyInviteForm)
@@ -67,6 +69,20 @@ function Staff({ user }: StaffProps) {
       setUsers((prev) => prev.map((u) => (u.id === target.id ? updated : u)))
     } finally {
       setTogglingId(null)
+    }
+  }
+
+  async function handleForceLogout(target: User) {
+    if (!token) return
+    if (!window.confirm(`Log ${target.first_name} ${target.last_name} out of all sessions right now?`)) return
+    setForceLogoutError(null)
+    setForceLogoutId(target.id)
+    try {
+      await forceLogoutStaff(token, target.id)
+    } catch (err) {
+      setForceLogoutError(err instanceof Error ? err.message : 'Could not force logout.')
+    } finally {
+      setForceLogoutId(null)
     }
   }
 
@@ -244,6 +260,7 @@ function Staff({ user }: StaffProps) {
 
       {status === 'ready' && (
         <section className="card staff-table-card">
+          {forceLogoutError && <p className="matter-error">{forceLogoutError}</p>}
           <table className="data-table">
             <thead>
               <tr>
@@ -251,6 +268,7 @@ function Staff({ user }: StaffProps) {
                 <th>Email</th>
                 <th>Role</th>
                 <th>Status</th>
+                <th />
                 <th />
               </tr>
             </thead>
@@ -290,11 +308,23 @@ function Staff({ user }: StaffProps) {
                       {togglingId === u.id ? 'Saving…' : u.is_active ? 'Deactivate' : 'Reactivate'}
                     </button>
                   </td>
+                  <td>
+                    {u.invitation_status !== 'pending' && u.is_active && (
+                      <button
+                        type="button"
+                        className="btn-ghost staff-toggle-btn"
+                        disabled={forceLogoutId === u.id}
+                        onClick={() => handleForceLogout(u)}
+                      >
+                        {forceLogoutId === u.id ? 'Logging out…' : 'Force logout'}
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="muted">
+                  <td colSpan={6} className="muted">
                     No staff yet.
                   </td>
                 </tr>

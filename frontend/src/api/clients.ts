@@ -70,3 +70,7 @@ export async function updateContactStatus(
 export async function deleteContact(token: string, clientId: string, contactId: string): Promise<void> {
   await apiRequest(`/clients/${clientId}/contacts/${contactId}`, { method: 'DELETE', token })
 }
+
+export async function forceLogoutContact(token: string, clientId: string, contactId: string): Promise<Contact> {
+  return apiRequest<Contact>(`/clients/${clientId}/contacts/${contactId}/force-logout`, { method: 'POST', token })
+}

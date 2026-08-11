@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime, UTC
 
 from app.database.session import get_db
+from app.database.rls import set_tenant_context
 from app.modules.auth.repository import AuthRepository
 from app.core.security import decode_access_token
 from app.exceptions.auth import InvalidCredentials, InactiveUser
@@ -36,6 +37,8 @@ def get_current_user(
     firm = repo.get_firm_by_id(user.firm_id)
     if not firm or not firm.is_active:
         raise InactiveUser()
+
+    set_tenant_context(db, firm_id=user.firm_id)
 
     return user
 

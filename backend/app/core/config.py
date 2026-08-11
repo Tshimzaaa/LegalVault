@@ -3,7 +3,20 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    # The migration-time connection — must be a role that owns the tables (so
+    # alembic can ALTER TABLE / CREATE POLICY etc).
     DATABASE_URL: str
+
+    # The app's actual request-serving connection. Row-level security (see the
+    # add_row_level_security migration) only applies to roles without the
+    # BYPASSRLS attribute — table-owning roles (including Neon's default
+    # "<project>_owner" role) typically have it, which makes RLS policies
+    # silently inert for them regardless of FORCE ROW LEVEL SECURITY. This must
+    # be a separate, least-privilege role (see backend/docs/architecture.md for
+    # the exact CREATE ROLE / GRANT statements). Falls back to DATABASE_URL so
+    # existing .env files keep working — but RLS has no real effect until this
+    # is set to a proper restricted role.
+    RUNTIME_DATABASE_URL: str | None = None
 
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
@@ -11,10 +24,20 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
+    # The deployed frontend origin CORS should trust in production. Defaults to the
+    # local Vite dev server so existing .env files keep working unchanged; deployments
+    # must set this to the real frontend URL (see main.py's CORS setup).
+    FRONTEND_URL: str = "http://localhost:5173"
+
     R2_ACCESS_KEY_ID: str
     R2_SECRET_ACCESS_KEY: str
     R2_ENDPOINT_URL: str
     R2_BUCKET_NAME: str
+
+    # ClamAV daemon for malware-scanning uploads — see docker-compose.yml for local
+    # dev; in production this points at a private-network ClamAV service.
+    CLAMD_HOST: str = "localhost"
+    CLAMD_PORT: int = 3310
 
     ENVIRONMENT: str = "development"
     REGISTER_SECRET: str = "change-me"
@@ -39,3 +62,11 @@ if settings.ENVIRONMENT == "production":
         sys.exit("OWNER_SECRET must differ from REGISTER_SECRET — sharing one secret between firm "
                   "self-registration and full platform owner access lets anyone with the registration "
                   "secret export or delete every firm's data.")
+    if settings.FRONTEND_URL == "http://localhost:5173":
+        sys.exit("FRONTEND_URL must be set to the deployed frontend's real origin before running in "
+                  "production — otherwise CORS falls back to a dev-only origin and the deployed "
+                  "frontend won't be able to call the API at all.")
+    if settings.RUNTIME_DATABASE_URL is None:
+        sys.exit("RUNTIME_DATABASE_URL must be set before running in production — without it the app "
+                  "connects as the table-owning (BYPASSRLS) role and the row-level-security policies "
+                  "silently have no effect. See backend/docs/architecture.md for the role setup.")

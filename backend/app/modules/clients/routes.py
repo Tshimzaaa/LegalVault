@@ -178,6 +178,17 @@ def update_contact_status(
     )
 
 
+@router.post("/{client_id}/contacts/{contact_id}/force-logout", response_model=ContactResponse)
+def force_logout_contact(
+    client_id: str,
+    contact_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    service = ClientService(db)
+    return service.force_logout_contact(client_id, contact_id, current_user.firm_id, current_user.id)
+
+
 @router.delete("/{client_id}/contacts/{contact_id}", status_code=204)
 def delete_contact(
     client_id: str,

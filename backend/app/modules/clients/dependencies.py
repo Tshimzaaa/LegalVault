@@ -1,8 +1,11 @@
+from datetime import datetime, UTC
+
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
+from app.database.rls import set_tenant_context
 from app.modules.clients.repository import ClientRepository
 from app.core.security import decode_access_token
 from app.exceptions.clients import InvalidClientCredentials, InactiveContact
@@ -17,7 +20,7 @@ def get_current_contact(
 ) -> ClientContact:
     payload = decode_access_token(token)
 
-    if not payload or payload.get("type") != "client" or "sub" not in payload:
+    if not payload or payload.get("type") != "client" or "sub" not in payload or "iat" not in payload:
         raise InvalidClientCredentials()
 
     repo = ClientRepository(db)
@@ -27,5 +30,12 @@ def get_current_contact(
         raise InvalidClientCredentials()
     if not contact.is_active:
         raise InactiveContact()
+
+    if contact.tokens_invalid_before:
+        token_issued_at = datetime.fromtimestamp(payload["iat"], tz=UTC)
+        if token_issued_at < contact.tokens_invalid_before:
+            raise InvalidClientCredentials()
+
+    set_tenant_context(db, firm_id=contact.client.firm_id)
 
     return contact
