@@ -28,7 +28,6 @@ function Footer() {
             <span className="site-footer-heading">Product</span>
             <a href="#home">Home</a>
             <a href="#about">About</a>
-            <a href="#pricing">Pricing</a>
           </div>
           <div className="site-footer-col">
             <span className="site-footer-heading">Company</span>

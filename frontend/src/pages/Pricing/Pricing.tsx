@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import './Pricing.css'
 
 interface Plan {
@@ -8,6 +9,7 @@ interface Plan {
   features: string[]
   highlighted?: boolean
   cta: string
+  ctaHref: string
 }
 
 const plans: Plan[] = [
@@ -24,6 +26,7 @@ const plans: Plan[] = [
       'Email support',
     ],
     cta: 'Start free trial',
+    ctaHref: '/register',
   },
   {
     name: 'Professional',
@@ -40,6 +43,7 @@ const plans: Plan[] = [
     ],
     highlighted: true,
     cta: 'Start free trial',
+    ctaHref: '/register',
   },
   {
     name: 'Firm',
@@ -55,6 +59,7 @@ const plans: Plan[] = [
       'SSO & SLA',
     ],
     cta: 'Talk to sales',
+    ctaHref: '#contact',
   },
 ]
 
@@ -96,9 +101,15 @@ function Pricing() {
                 <li key={f}>{f}</li>
               ))}
             </ul>
-            <a href="#get-started" className={`btn ${plan.highlighted ? 'btn-primary' : 'btn-secondary'} pricing-cta`}>
-              {plan.cta}
-            </a>
+            {plan.ctaHref.startsWith('#') ? (
+              <a href={plan.ctaHref} className={`btn ${plan.highlighted ? 'btn-primary' : 'btn-secondary'} pricing-cta`}>
+                {plan.cta}
+              </a>
+            ) : (
+              <Link to={plan.ctaHref} className={`btn ${plan.highlighted ? 'btn-primary' : 'btn-secondary'} pricing-cta`}>
+                {plan.cta}
+              </Link>
+            )}
           </div>
         ))}
       </div>

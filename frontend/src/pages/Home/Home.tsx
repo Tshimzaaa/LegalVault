@@ -15,7 +15,6 @@ import Reporting from '../Reporting/Reporting'
 import ContractData from '../ContractData/ContractData'
 import Templates from '../Templates/Templates'
 import About from '../About/About'
-import Pricing from '../Pricing/Pricing'
 import Blog from '../Blog/Blog'
 import Contact from '../Contact/Contact'
 
@@ -201,7 +200,6 @@ function Home() {
       </section>
 
       <About />
-      <Pricing />
       <Blog />
       <Contact />
       <Footer />
