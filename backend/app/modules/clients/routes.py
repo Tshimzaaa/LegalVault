@@ -36,7 +36,7 @@ client_auth_router = APIRouter(prefix="/client-auth", tags=["client-auth"])
 def create_client(
     request: CreateClientRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_admin),
 ):
     service = ClientService(db)
     return service.create_client(current_user.firm_id, request)
@@ -47,7 +47,7 @@ def invite_contact(
     client_id: str,
     request: InviteContactRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_admin),
 ):
     service = ClientService(db)
     return service.invite_contact(client_id, request, staff_firm_id=current_user.firm_id)
@@ -125,7 +125,7 @@ def list_clients(
 def resend_invite(
     request: ResendInviteRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_admin),
 ):
     service = ClientService(db)
     service.resend_invite(request.email, current_user.firm_id)

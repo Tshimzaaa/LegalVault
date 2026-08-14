@@ -1,0 +1,2 @@
+class KnowledgeArticleNotFound(Exception):
+    pass

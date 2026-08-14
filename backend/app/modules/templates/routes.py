@@ -5,8 +5,9 @@ from app.database.session import get_db
 from app.modules.templates.schemas import TemplateResponse, TemplateDownloadResponse, UpdateTemplateRequest
 from app.modules.templates.service import TemplateService
 
-from app.modules.auth.dependencies import get_current_user
+from app.modules.auth.dependencies import get_current_user, require_role
 from app.modules.auth.models import User
+from app.modules.auth.models.role import UserRole
 from app.modules.clients.dependencies import get_current_contact
 from app.modules.clients.models import ClientContact
 from app.modules.clients.repository import ClientRepository
@@ -24,7 +25,7 @@ async def upload_template(
     category: str = Form(...),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.LAWYER])),
 ):
     file_bytes = await file.read()
 
@@ -58,7 +59,7 @@ def update_template(
     template_id: str,
     request: UpdateTemplateRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.LAWYER])),
 ):
     service = TemplateService(db)
     return service.update_template(template_id, current_user.firm_id, current_user.id, request)
@@ -68,7 +69,7 @@ def update_template(
 def delete_template(
     template_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_role([UserRole.ADMIN])),
 ):
     service = TemplateService(db)
     service.delete_template(template_id, current_user.firm_id, current_user.id)

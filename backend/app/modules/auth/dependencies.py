@@ -7,7 +7,7 @@ from app.database.session import get_db
 from app.database.rls import set_tenant_context
 from app.modules.auth.repository import AuthRepository
 from app.core.security import decode_access_token
-from app.exceptions.auth import InvalidCredentials, InactiveUser
+from app.exceptions.auth import InvalidCredentials, InactiveUser, InsufficientPermissions
 from app.modules.auth.models import User
 from app.modules.auth.models.role import UserRole
 
@@ -47,3 +47,11 @@ def require_admin(user: User = Depends(get_current_user)) -> User:
     if user.role != UserRole.ADMIN:
         raise InvalidCredentials()
     return user
+
+
+def require_role(allowed: list[UserRole]):
+    def _dependency(user: User = Depends(get_current_user)) -> User:
+        if user.role not in allowed:
+            raise InsufficientPermissions()
+        return user
+    return _dependency

@@ -29,6 +29,13 @@ from app.modules.signed_contracts.routes import (
     router as signed_contracts_router,
     client_signed_contracts_router,
 )
+from app.modules.intake.routes import (
+    router as intake_forms_router,
+    submissions_router as intake_submissions_router,
+    client_intake_router,
+)
+from app.modules.knowledge.routes import router as knowledge_router, client_knowledge_router
+from app.modules.integrations.routes import router as integrations_router
 
 app = FastAPI(
     title="LegalHub API",
@@ -61,6 +68,12 @@ app.include_router(client_notifications_router)
 app.include_router(reporting_router)
 app.include_router(signed_contracts_router)
 app.include_router(client_signed_contracts_router)
+app.include_router(intake_forms_router)
+app.include_router(intake_submissions_router)
+app.include_router(client_intake_router)
+app.include_router(knowledge_router)
+app.include_router(client_knowledge_router)
+app.include_router(integrations_router)
 
 # Register global exception handlers
 register_exception_handlers(app)

@@ -1,4 +1,5 @@
 import sys
+from cryptography.fernet import Fernet
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -43,6 +44,13 @@ class Settings(BaseSettings):
     REGISTER_SECRET: str = "change-me"
     OWNER_SECRET: str = "change-me"
 
+    # Fernet key used to encrypt third-party integration credentials at rest
+    # (see app/core/encryption.py). Required in every environment, including
+    # dev, so a missing key fails loudly at startup rather than as a confusing
+    # base64-decode error the first time something is encrypted. Generate with:
+    #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    ENCRYPTION_KEY: str
+
     model_config = SettingsConfigDict(
         env_file=".env",
         extra="ignore"
@@ -70,3 +78,10 @@ if settings.ENVIRONMENT == "production":
         sys.exit("RUNTIME_DATABASE_URL must be set before running in production — without it the app "
                   "connects as the table-owning (BYPASSRLS) role and the row-level-security policies "
                   "silently have no effect. See backend/docs/architecture.md for the role setup.")
+    if settings.ENCRYPTION_KEY in ("change-me", ""):
+        sys.exit("ENCRYPTION_KEY must be set to a real Fernet key before running in production.")
+    try:
+        Fernet(settings.ENCRYPTION_KEY.encode())
+    except Exception:
+        sys.exit("ENCRYPTION_KEY must be a valid urlsafe-base64-encoded 32-byte key "
+                  "(generate with Fernet.generate_key()).")

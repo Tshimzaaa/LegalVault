@@ -36,6 +36,13 @@ def get_current_contact(
         if token_issued_at < contact.tokens_invalid_before:
             raise InvalidClientCredentials()
 
-    set_tenant_context(db, firm_id=contact.client.firm_id)
+    # No tenant context is set yet at this point, and `clients` is RLS-protected,
+    # so resolving the contact's firm has to briefly bypass RLS (is_owner=True)
+    # before the real per-request context can be set.
+    set_tenant_context(db, firm_id=None, is_owner=True)
+    client = repo.get_client_by_id(contact.client_id)
+    if not client:
+        raise InvalidClientCredentials()
+    set_tenant_context(db, firm_id=client.firm_id)
 
     return contact

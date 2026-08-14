@@ -1,0 +1,2 @@
+class DecryptionFailed(Exception):
+    pass

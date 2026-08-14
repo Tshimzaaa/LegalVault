@@ -13,8 +13,9 @@ from app.modules.signed_contracts.schemas import (
 from app.modules.signed_contracts.models import ContractType
 from app.modules.signed_contracts.service import SignedContractService
 
-from app.modules.auth.dependencies import get_current_user
+from app.modules.auth.dependencies import get_current_user, require_role
 from app.modules.auth.models import User
+from app.modules.auth.models.role import UserRole
 from app.modules.clients.dependencies import get_current_contact
 from app.modules.clients.models import ClientContact
 
@@ -36,7 +37,7 @@ async def upload_signed_contract(
     matter_id: str | None = Form(None),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.LAWYER, UserRole.PARALEGAL])),
 ):
     file_bytes = await file.read()
     if len(file_bytes) > MAX_FILE_SIZE:
@@ -94,7 +95,9 @@ def update_signed_contract_status(
     contract_id: str,
     request: UpdateSignedContractStatusRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+        require_role([UserRole.ADMIN, UserRole.LAWYER, UserRole.PARALEGAL, UserRole.SECRETARY])
+    ),
 ):
     service = SignedContractService(db)
     return service.update_status(contract_id, current_user.firm_id, current_user.id, request.status)

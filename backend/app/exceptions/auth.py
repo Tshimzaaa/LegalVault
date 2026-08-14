@@ -12,6 +12,9 @@ class UserAlreadyExists(Exception):
 
 class InactiveUser(Exception):
     pass
+
+class InsufficientPermissions(Exception):
+    pass
 class InvalidOrExpiredResetToken(Exception):
     pass
 

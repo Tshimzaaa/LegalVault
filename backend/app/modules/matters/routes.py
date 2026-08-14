@@ -26,11 +26,16 @@ from app.modules.matters.schemas import (
 )
 from app.modules.matters.service import MatterService
 
-from app.modules.auth.dependencies import get_current_user
+from app.modules.auth.dependencies import get_current_user, require_role
 from app.modules.auth.models import User
 from app.modules.auth.models.role import UserRole
 
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+
+# Core case work: create/update matters, assign staff, manage documents.
+_CASE_WORK = [UserRole.ADMIN, UserRole.LAWYER, UserRole.PARALEGAL]
+# Coordination: tasks/messages secretaries routinely handle day to day.
+_COORDINATION = [UserRole.ADMIN, UserRole.LAWYER, UserRole.PARALEGAL, UserRole.SECRETARY]
 
 
 router = APIRouter(prefix="/matters", tags=["matters"])
@@ -50,7 +55,7 @@ def list_my_matters(
 def create_matter(
     request: CreateMatterRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     service = MatterService(db)
     return service.create_matter(current_user.firm_id, current_user.id, request)
@@ -106,7 +111,7 @@ def update_details(
     matter_id: str,
     request: UpdateMatterDetailsRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     service = MatterService(db)
     return service.update_details(matter_id, current_user.firm_id, current_user.id, request)
@@ -117,7 +122,7 @@ def update_status(
     matter_id: str,
     request: UpdateMatterStatusRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     service = MatterService(db)
     return service.update_status(matter_id, current_user.firm_id, current_user.id, request)
@@ -128,7 +133,7 @@ def update_visibility(
     matter_id: str,
     request: UpdateMatterVisibilityRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     service = MatterService(db)
     return service.update_visibility(matter_id, current_user.firm_id, current_user.id, request)
@@ -139,7 +144,7 @@ def update_deadline(
     matter_id: str,
     request: UpdateMatterDeadlineRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     service = MatterService(db)
     return service.update_deadline(matter_id, current_user.firm_id, current_user.id, request)
@@ -150,7 +155,7 @@ def assign_staff(
     matter_id: str,
     request: AssignStaffRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     service = MatterService(db)
     return service.assign_staff(matter_id, current_user.firm_id, current_user.id, request)
@@ -172,7 +177,7 @@ async def upload_matter_document(
     title: str = Form(...),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     file_bytes = await file.read()
     if len(file_bytes) > MAX_FILE_SIZE:
@@ -217,7 +222,7 @@ def delete_matter_document(
     matter_id: str,
     document_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     service = MatterService(db)
     service.delete_matter_document(matter_id, document_id, current_user.firm_id, current_user.id)
@@ -228,7 +233,7 @@ def create_task(
     matter_id: str,
     request: CreateMatterTaskRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_role(_COORDINATION)),
 ):
     service = MatterService(db)
     return service.create_task(matter_id, current_user.firm_id, current_user.id, request)
@@ -250,7 +255,7 @@ def update_task(
     task_id: str,
     request: UpdateMatterTaskRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_role(_COORDINATION)),
 ):
     service = MatterService(db)
     return service.update_task(matter_id, task_id, current_user.firm_id, current_user.id, request)
@@ -261,7 +266,7 @@ def delete_task(
     matter_id: str,
     task_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     service = MatterService(db)
     service.delete_task(matter_id, task_id, current_user.firm_id, current_user.id)
@@ -272,7 +277,7 @@ def post_message(
     matter_id: str,
     request: CreateMatterMessageRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_role(_COORDINATION)),
 ):
     service = MatterService(db)
     return service.post_message_as_staff(
@@ -295,7 +300,7 @@ def delete_message(
     matter_id: str,
     message_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_role(_COORDINATION)),
 ):
     service = MatterService(db)
     service.delete_message(matter_id, message_id, current_user.firm_id, current_user.id, current_user.role == UserRole.ADMIN)

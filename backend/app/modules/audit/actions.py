@@ -39,3 +39,20 @@ TEMPLATE_DELETED = "template.deleted"
 
 SIGNED_CONTRACT_UPLOADED = "signed_contract.uploaded"
 SIGNED_CONTRACT_STATUS_UPDATED = "signed_contract.status_updated"
+
+INTAKE_FORM_CREATED = "intake_form.created"
+INTAKE_FORM_UPDATED = "intake_form.updated"
+INTAKE_FORM_DELETED = "intake_form.deleted"
+INTAKE_FIELD_ADDED = "intake_field.added"
+INTAKE_FIELD_UPDATED = "intake_field.updated"
+INTAKE_FIELD_REMOVED = "intake_field.removed"
+INTAKE_SUBMISSION_STATUS_UPDATED = "intake_submission.status_updated"
+INTAKE_SUBMISSION_CONVERTED = "intake_submission.converted"
+
+KNOWLEDGE_ARTICLE_CREATED = "knowledge_article.created"
+KNOWLEDGE_ARTICLE_UPDATED = "knowledge_article.updated"
+KNOWLEDGE_ARTICLE_DELETED = "knowledge_article.deleted"
+
+INTEGRATION_CONFIGURED = "integration.configured"
+INTEGRATION_DISABLED = "integration.disabled"
+INTEGRATION_DISCONNECTED = "integration.disconnected"
