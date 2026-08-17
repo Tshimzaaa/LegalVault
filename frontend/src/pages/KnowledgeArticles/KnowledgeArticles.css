@@ -1,0 +1,73 @@
+.knowledge-form {
+  margin-bottom: 16px;
+  flex-shrink: 0;
+  gap: 10px;
+}
+
+.knowledge-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  overflow-y: auto;
+  align-content: start;
+}
+
+.knowledge-edit-form {
+  grid-column: 1 / -1;
+}
+
+.knowledge-card {
+  gap: 10px;
+}
+
+.knowledge-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.knowledge-card-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.knowledge-markdown {
+  flex: 1;
+  overflow-y: auto;
+  font-size: 12.5px;
+  color: #d1d5db;
+  line-height: 1.5;
+}
+
+.knowledge-markdown p:first-child {
+  margin-top: 0;
+}
+
+.knowledge-markdown h1,
+.knowledge-markdown h2,
+.knowledge-markdown h3 {
+  color: #e5e7eb;
+  font-size: 13px;
+  margin: 10px 0 6px;
+}
+
+.knowledge-markdown ul,
+.knowledge-markdown ol {
+  margin: 6px 0;
+  padding-left: 18px;
+}
+
+.knowledge-excerpt {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.knowledge-card-footer {
+  display: flex;
+  gap: 8px;
+}

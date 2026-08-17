@@ -13,9 +13,9 @@ import {
   IconLearnedFriend,
   IconGrid,
   IconShield,
-  IconGear,
   IconTemplates,
   IconUser,
+  IconInbox,
 } from '../../components/icons'
 import ClientDashboard from '../ClientDashboard/ClientDashboard'
 import RequestSupport from '../RequestSupport/RequestSupport'
@@ -27,9 +27,14 @@ import Resources from '../Resources/Resources'
 import LearnedFriend from '../LearnedFriend/LearnedFriend'
 import LegalGuide from '../LightHubGuide/LightHubGuide'
 import MatterAdmin from '../MatterAdmin/MatterAdmin'
-import Integrations from '../Integrations/Integrations'
 import ClientTemplates from '../ClientTemplates/ClientTemplates'
 import ClientAccountSettings from '../ClientAccountSettings/ClientAccountSettings'
+import ClientIntakeForms from '../ClientIntakeForms/ClientIntakeForms'
+import ClientIntakeFormDetail from '../ClientIntakeForms/ClientIntakeFormDetail'
+import ClientMyIntakeSubmissions from '../ClientMyIntakeSubmissions/ClientMyIntakeSubmissions'
+import ClientIntakeSubmissionDetail from '../ClientMyIntakeSubmissions/ClientIntakeSubmissionDetail'
+import ClientKnowledgeBase from '../ClientKnowledgeBase/ClientKnowledgeBase'
+import ClientKnowledgeArticleDetail from '../ClientKnowledgeBase/ClientKnowledgeArticleDetail'
 import type { ClientContact } from '../../api/clientAuth'
 
 export type ClientPage =
@@ -42,21 +47,25 @@ export type ClientPage =
   | 'learned-friend'
   | 'guide'
   | 'matter-admin'
-  | 'integrations'
   | 'templates'
   | 'account-settings'
+  | 'intake-forms'
+  | 'my-intake-submissions'
+  | 'knowledge-base'
 
 export const clientNavItems: NavItem[] = [
   { label: 'Dashboard', icon: <IconGauge />, page: 'dashboard' },
   { label: 'Request Support', icon: <IconFilePlus />, page: 'request-support' },
   { label: 'Workflow', icon: <IconWorkflow />, page: 'workflow' },
+  { label: 'Intake Forms', icon: <IconFilePlus />, page: 'intake-forms' },
+  { label: 'My Requests', icon: <IconInbox />, page: 'my-intake-submissions' },
   { label: 'Signed Contracts', icon: <IconSignedContract />, page: 'signed-contracts' },
   { label: 'Data & Reporting', icon: <IconReport />, page: 'reporting' },
   { label: 'Resources', icon: <IconHelp />, page: 'resources' },
+  { label: 'Knowledge Base', icon: <IconHelp />, page: 'knowledge-base' },
   { label: 'My Learned Friend', icon: <IconLearnedFriend />, page: 'learned-friend' },
   { label: 'How to use LightHub', icon: <IconGrid />, page: 'guide' },
   { label: 'Matter Admin', icon: <IconShield />, page: 'matter-admin' },
-  { label: 'Integrations', icon: <IconGear />, page: 'integrations' },
   { label: 'Templates', icon: <IconTemplates />, page: 'templates' },
   { label: 'Account Settings', icon: <IconUser />, page: 'account-settings' },
 ]
@@ -100,7 +109,24 @@ function ClientPortal({ contact, onLogout, onContactUpdate }: ClientPortalProps)
           <Route path="learned-friend" element={<LearnedFriend contact={contact} onLogout={onLogout} />} />
           <Route path="guide" element={<LegalGuide contact={contact} onLogout={onLogout} />} />
           <Route path="matter-admin" element={<MatterAdmin contact={contact} onLogout={onLogout} />} />
-          <Route path="integrations" element={<Integrations contact={contact} onLogout={onLogout} />} />
+          <Route path="intake-forms" element={<ClientIntakeForms contact={contact} onLogout={onLogout} />} />
+          <Route
+            path="intake-forms/:formId"
+            element={<ClientIntakeFormDetail contact={contact} onLogout={onLogout} />}
+          />
+          <Route
+            path="my-intake-submissions"
+            element={<ClientMyIntakeSubmissions contact={contact} onLogout={onLogout} />}
+          />
+          <Route
+            path="my-intake-submissions/:submissionId"
+            element={<ClientIntakeSubmissionDetail contact={contact} onLogout={onLogout} />}
+          />
+          <Route path="knowledge-base" element={<ClientKnowledgeBase contact={contact} onLogout={onLogout} />} />
+          <Route
+            path="knowledge-base/:articleId"
+            element={<ClientKnowledgeArticleDetail contact={contact} onLogout={onLogout} />}
+          />
           <Route path="templates" element={<ClientTemplates contact={contact} onLogout={onLogout} />} />
           <Route
             path="account-settings"

@@ -51,6 +51,9 @@ from app.modules.templates.repository import TemplateRepository
 from app.modules.support_requests.repository import SupportRequestRepository
 from app.modules.auth.refresh_token_repository import RefreshTokenRepository
 from app.modules.auth.models.refresh_token import RefreshTokenActorType
+from app.modules.intake.repository import IntakeRepository
+from app.modules.knowledge.repository import KnowledgeRepository
+from app.modules.integrations.repository import IntegrationRepository
 from datetime import timedelta
 
 
@@ -375,6 +378,9 @@ def delete_firm(
     template_repo = TemplateRepository(db)
     support_request_repo = SupportRequestRepository(db)
     refresh_token_repo = RefreshTokenRepository(db)
+    intake_repo = IntakeRepository(db)
+    knowledge_repo = KnowledgeRepository(db)
+    integration_repo = IntegrationRepository(db)
 
     # Signed contracts and support requests hold their own FKs into matters/clients/contacts,
     # so they must go before those rows are deleted below or the delete fails with an
@@ -387,6 +393,25 @@ def delete_firm(
 
     for template in template_repo.list_by_firm(firm.id):
         template_repo.delete(template)
+
+    # Intake submissions carry their own FKs into matters/clients/contacts (same class of bug
+    # as above), so their answers and the submissions themselves must go before those rows —
+    # and before the fields/forms they reference.
+    for submission in intake_repo.list_submissions_by_firm(firm.id):
+        for answer in submission.answers:
+            intake_repo.delete_answer(answer)
+        intake_repo.delete_submission(submission)
+
+    for form in intake_repo.list_forms_by_firm(firm.id):
+        for field in form.fields:
+            intake_repo.delete_field(field)
+        intake_repo.delete_form(form)
+
+    for article in knowledge_repo.list_by_firm(firm.id):
+        knowledge_repo.delete(article)
+
+    for integration in integration_repo.list_by_firm(firm.id):
+        integration_repo.delete(integration)
 
     for matter in matter_repo.list_by_firm(firm.id):
         for document in matter_repo.list_documents_for_matter(matter.id):

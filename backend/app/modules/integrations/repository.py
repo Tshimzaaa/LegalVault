@@ -24,3 +24,7 @@ class IntegrationRepository:
         self.db.add(integration)
         self.db.flush()
         return integration
+
+    def delete(self, integration: FirmIntegration):
+        self.db.delete(integration)
+        self.db.flush()

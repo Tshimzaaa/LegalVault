@@ -1,0 +1,11 @@
+.intake-submissions-card {
+  overflow-y: auto;
+}
+
+.intake-submission-row {
+  cursor: pointer;
+}
+
+.intake-submission-row:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
