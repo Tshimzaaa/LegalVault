@@ -119,3 +119,11 @@ class IntakeRepository:
 
     def get_answer_by_id(self, answer_id) -> IntakeSubmissionAnswer | None:
         return self.db.scalar(select(IntakeSubmissionAnswer).where(IntakeSubmissionAnswer.id == answer_id))
+
+    def delete_answer(self, answer: IntakeSubmissionAnswer):
+        self.db.delete(answer)
+        self.db.flush()
+
+    def delete_submission(self, submission: IntakeSubmission):
+        self.db.delete(submission)
+        self.db.flush()
