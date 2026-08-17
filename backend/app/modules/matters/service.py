@@ -1,5 +1,6 @@
 import uuid
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import ObjectDeletedError
 
 from app.modules.matters.repository import MatterRepository
 from app.modules.matters.models import Matter, MatterAssignment, MatterDocument, MatterTask, MatterMessage, MessageAuthorType
@@ -81,6 +82,18 @@ class MatterService:
         self.db.commit()
         return matter
 
+    def _commit_and_refresh(self, matter: Matter) -> Matter:
+        # expire_on_commit means the next attribute access re-SELECTs matter;
+        # if it was deleted by a concurrent request (e.g. firm deletion) in
+        # between our read and this commit, that SELECT returns no rows and
+        # raises ObjectDeletedError instead of a normal 404.
+        self.db.commit()
+        try:
+            self.db.refresh(matter)
+        except ObjectDeletedError:
+            raise MatterNotFound()
+        return matter
+
     def get_matter(self, matter_id, firm_id) -> Matter:
         matter = self.repository.get_by_id(matter_id)
         if not matter or str(matter.firm_id) != str(firm_id):
@@ -104,8 +117,7 @@ class MatterService:
             target_id=matter.id,
             details={"title": request.title},
         )
-        self.db.commit()
-        return matter
+        return self._commit_and_refresh(matter)
 
     def update_status(self, matter_id, firm_id, actor_id, request: UpdateMatterStatusRequest) -> Matter:
         matter = self.get_matter(matter_id, firm_id)
@@ -121,8 +133,7 @@ class MatterService:
             target_id=matter.id,
             details={"from": previous_status.value, "to": request.status.value},
         )
-        self.db.commit()
-        return matter
+        return self._commit_and_refresh(matter)
 
     def update_visibility(self, matter_id, firm_id, actor_id, request: UpdateMatterVisibilityRequest) -> Matter:
         matter = self.get_matter(matter_id, firm_id)
@@ -137,8 +148,7 @@ class MatterService:
             target_id=matter.id,
             details={"is_visible_to_client": request.is_visible_to_client},
         )
-        self.db.commit()
-        return matter
+        return self._commit_and_refresh(matter)
 
     def update_deadline(self, matter_id, firm_id, actor_id, request: UpdateMatterDeadlineRequest) -> Matter:
         matter = self.get_matter(matter_id, firm_id)
@@ -157,8 +167,7 @@ class MatterService:
                 "to": request.due_date.isoformat() if request.due_date else None,
             },
         )
-        self.db.commit()
-        return matter
+        return self._commit_and_refresh(matter)
 
     def assign_staff(self, matter_id, firm_id, actor_id, request: AssignStaffRequest) -> MatterAssignment:
         matter = self.get_matter(matter_id, firm_id)  # also validates firm ownership

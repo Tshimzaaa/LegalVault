@@ -57,6 +57,7 @@ from app.exceptions.intake import (
     UnsupportedIntakeFileType,
 )
 from app.exceptions.knowledge import KnowledgeArticleNotFound
+from app.exceptions.signatures import SignatureRequestNotFound, InvalidSignatureRecipient, SigningProviderUnavailable
 
 def register_exception_handlers(app: FastAPI):
 
@@ -286,3 +287,18 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(KnowledgeArticleNotFound)
     async def knowledge_article_not_found(_, __):
         raise HTTPException(status_code=404, detail="Knowledge article not found.")
+
+    @app.exception_handler(SignatureRequestNotFound)
+    async def signature_request_not_found(_, __):
+        raise HTTPException(status_code=404, detail="Signature request not found.")
+
+    @app.exception_handler(InvalidSignatureRecipient)
+    async def invalid_signature_recipient(_, __):
+        raise HTTPException(status_code=400, detail="One or more recipients are invalid for this matter.")
+
+    @app.exception_handler(SigningProviderUnavailable)
+    async def signing_provider_unavailable(_, __):
+        raise HTTPException(
+            status_code=503,
+            detail="The e-signature service is temporarily unavailable — please try again shortly.",
+        )

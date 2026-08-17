@@ -56,3 +56,8 @@ KNOWLEDGE_ARTICLE_DELETED = "knowledge_article.deleted"
 INTEGRATION_CONFIGURED = "integration.configured"
 INTEGRATION_DISABLED = "integration.disabled"
 INTEGRATION_DISCONNECTED = "integration.disconnected"
+
+SIGNATURE_REQUEST_SENT = "signature_request.sent"
+SIGNATURE_REQUEST_VOIDED = "signature_request.voided"
+SIGNATURE_REQUEST_DECLINED = "signature_request.declined"
+SIGNATURE_COMPLETED = "signature_request.completed"

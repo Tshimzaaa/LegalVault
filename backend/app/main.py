@@ -36,6 +36,12 @@ from app.modules.intake.routes import (
 )
 from app.modules.knowledge.routes import router as knowledge_router, client_knowledge_router
 from app.modules.integrations.routes import router as integrations_router
+from app.modules.signatures.routes import (
+    router as signatures_router,
+    my_signatures_router,
+    client_signatures_router,
+    webhook_router as documenso_webhook_router,
+)
 
 app = FastAPI(
     title="LegalHub API",
@@ -74,6 +80,10 @@ app.include_router(client_intake_router)
 app.include_router(knowledge_router)
 app.include_router(client_knowledge_router)
 app.include_router(integrations_router)
+app.include_router(signatures_router)
+app.include_router(my_signatures_router)
+app.include_router(client_signatures_router)
+app.include_router(documenso_webhook_router)
 
 # Register global exception handlers
 register_exception_handlers(app)

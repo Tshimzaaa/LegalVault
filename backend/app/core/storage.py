@@ -65,6 +65,13 @@ def get_download_url(key: str, expires_in: int = 3600) -> str:
     )
 
 
+def download_file(key: str) -> bytes:
+    def _do_download():
+        return get_r2_client().get_object(Bucket=settings.R2_BUCKET_NAME, Key=key)["Body"].read()
+
+    return _call_through_breaker(_do_download)
+
+
 def delete_file(key: str) -> None:
     def _do_delete():
         get_r2_client().delete_object(Bucket=settings.R2_BUCKET_NAME, Key=key)

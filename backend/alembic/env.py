@@ -31,6 +31,7 @@ from app.modules.signed_contracts.models import SignedContract  # noqa: F401
 from app.modules.intake.models import IntakeForm, IntakeFormField, IntakeSubmission, IntakeSubmissionAnswer  # noqa: F401
 from app.modules.knowledge.models import KnowledgeArticle  # noqa: F401
 from app.modules.integrations.models import FirmIntegration  # noqa: F401
+from app.modules.signatures.models import SignatureRequest, SignatureRecipient  # noqa: F401
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

@@ -51,6 +51,18 @@ class Settings(BaseSettings):
     #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
     ENCRYPTION_KEY: str
 
+    # Self-hosted Documenso instance (e-signature) shared by every firm on the
+    # platform — see docker-compose.yml's `documenso` service for local dev.
+    # Firms never see or configure these; it's a platform-level dependency,
+    # not a per-firm integration (unlike app/modules/integrations).
+    DOCUMENSO_API_URL: str = "http://localhost:3000/api/v1"
+    DOCUMENSO_API_KEY: str = "change-me"
+
+    # Shared secret Documenso signs its webhook payloads with (HMAC-SHA256 over
+    # the raw request body) — see app/modules/signatures/routes.py's webhook
+    # handler. Configured on the Documenso side as the webhook's "secret".
+    DOCUMENSO_WEBHOOK_SECRET: str = "change-me"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         extra="ignore"
@@ -80,6 +92,12 @@ if settings.ENVIRONMENT == "production":
                   "silently have no effect. See backend/docs/architecture.md for the role setup.")
     if settings.ENCRYPTION_KEY in ("change-me", ""):
         sys.exit("ENCRYPTION_KEY must be set to a real Fernet key before running in production.")
+    if settings.DOCUMENSO_API_KEY in ("change-me", ""):
+        sys.exit("DOCUMENSO_API_KEY must be set before running in production.")
+    if settings.DOCUMENSO_WEBHOOK_SECRET in ("change-me", ""):
+        sys.exit("DOCUMENSO_WEBHOOK_SECRET must be set before running in production — without it, "
+                  "incoming webhook requests can't be verified and anyone could forge a "
+                  "'document completed' event.")
     try:
         Fernet(settings.ENCRYPTION_KEY.encode())
     except Exception:
