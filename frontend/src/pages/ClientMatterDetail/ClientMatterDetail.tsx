@@ -15,6 +15,8 @@ import {
   deleteClientMessage,
 } from '../../api/clientMatters'
 import type { Matter, MatterStatus, MatterDocument, MatterMessage } from '../../api/matters'
+import { listMyPendingClientSignatures } from '../../api/signatures'
+import type { SignatureRequest } from '../../api/signatures'
 
 type LoadState = 'loading' | 'error' | 'ready'
 
@@ -47,6 +49,7 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
 
   const [matter, setMatter] = useState<Matter | null>(null)
   const [documents, setDocuments] = useState<MatterDocument[]>([])
+  const [pendingSignatures, setPendingSignatures] = useState<SignatureRequest[]>([])
   const [status, setStatus] = useState<LoadState>('loading')
 
   const [docTitle, setDocTitle] = useState('')
@@ -69,8 +72,13 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
       return
     }
     setStatus('loading')
-    Promise.all([listClientMatters(token), listClientMatterDocuments(token, matterId), listClientMessages(token, matterId)])
-      .then(([matters, docs, msgs]) => {
+    Promise.all([
+      listClientMatters(token),
+      listClientMatterDocuments(token, matterId),
+      listClientMessages(token, matterId),
+      listMyPendingClientSignatures(token).catch(() => []),
+    ])
+      .then(([matters, docs, msgs, sigs]) => {
         const found = matters.find((m) => m.id === matterId) ?? null
         if (!found) {
           setStatus('error')
@@ -79,6 +87,7 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
         setMatter(found)
         setDocuments(docs)
         setMessages(msgs)
+        setPendingSignatures(sigs.filter((s) => s.matter_id === matterId))
         setStatus('ready')
       })
       .catch(() => setStatus('error'))
@@ -209,6 +218,34 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
             <p className="muted">Opened: {new Date(matter.created_at).toLocaleDateString()}</p>
             <p className="matter-detail-description">{matter.description || 'No description provided.'}</p>
           </section>
+
+          {pendingSignatures.length > 0 && (
+            <section className="card">
+              <div className="card-header">
+                <span>Awaiting Your Signature</span>
+              </div>
+              <div className="list-rows">
+                {pendingSignatures.map((sr) => {
+                  const myRecipient = sr.recipients.find((r) => r.recipient_type === 'client_contact' && r.recipient_id === contact.id)
+                  return (
+                    <div key={sr.id} className="matter-doc-row">
+                      <span className="matter-doc-title">{sr.title}</span>
+                      {myRecipient && myRecipient.status === 'pending' && (
+                        <a
+                          className="btn-ghost"
+                          href={myRecipient.signing_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Sign now
+                        </a>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
+          )}
 
           <section className="card">
             <div className="card-header">

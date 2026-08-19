@@ -31,10 +31,12 @@ import type {
   TaskStatus,
   MatterMessage,
 } from '../../api/matters'
-import { listClients } from '../../api/clients'
-import type { Client } from '../../api/clients'
+import { listClients, listContacts } from '../../api/clients'
+import type { Client, Contact } from '../../api/clients'
 import { listUsers } from '../../api/auth'
 import type { User } from '../../api/auth'
+import { listSignatureRequests, sendForSignature, voidSignatureRequest } from '../../api/signatures'
+import type { SignatureRequest, SignatureRecipientType } from '../../api/signatures'
 import { IconDownload, IconTrash, IconSend, IconEdit } from '../../components/icons'
 
 type LoadState = 'loading' | 'error' | 'ready'
@@ -67,6 +69,13 @@ const roleOptions: { value: MatterRole; label: string }[] = [
   { value: 'reviewer', label: 'Reviewer' },
 ]
 
+const sigStatusColor: Record<SignatureRequest['status'], string> = {
+  pending: '#eab308',
+  completed: '#22c55e',
+  declined: '#ef4444',
+  voided: '#9ca3af',
+}
+
 const statusColor: Record<Matter['status'], string> = {
   intake: '#eab308',
   in_review: '#3987e5',
@@ -83,6 +92,7 @@ function MatterDetail() {
   const [matter, setMatter] = useState<Matter | null>(null)
   const [clients, setClients] = useState<Client[]>([])
   const [users, setUsers] = useState<User[]>([])
+  const [contacts, setContacts] = useState<Contact[]>([])
   const [assignments, setAssignments] = useState<MatterAssignment[]>([])
   const [status, setStatus] = useState<LoadState>('loading')
 
@@ -126,6 +136,14 @@ function MatterDetail() {
   const [messageError, setMessageError] = useState<string | null>(null)
   const [messageBusyId, setMessageBusyId] = useState<string | null>(null)
 
+  const [signatureRequests, setSignatureRequests] = useState<SignatureRequest[]>([])
+  const [sigDocId, setSigDocId] = useState('')
+  const [sigTitle, setSigTitle] = useState('')
+  const [sigRecipientKeys, setSigRecipientKeys] = useState<string[]>([])
+  const [sending, setSending] = useState(false)
+  const [sigError, setSigError] = useState<string | null>(null)
+  const [sigBusyId, setSigBusyId] = useState<string | null>(null)
+
   const token = localStorage.getItem('access_token')
 
   function loadAll() {
@@ -142,8 +160,9 @@ function MatterDetail() {
       listMatterDocuments(token, matterId),
       listTasks(token, matterId),
       listMessages(token, matterId),
+      listSignatureRequests(token, matterId),
     ])
-      .then(([m, a, c, u, docs, t, msgs]) => {
+      .then(([m, a, c, u, docs, t, msgs, sigs]) => {
         setMatter(m)
         setStatusValue(m.status)
         setDeadlineValue(m.due_date ?? '')
@@ -153,7 +172,11 @@ function MatterDetail() {
         setDocuments(docs)
         setTasks(t)
         setMessages(msgs)
+        setSignatureRequests(sigs)
         setStatus('ready')
+        listContacts(token, m.client_id)
+          .then((contactList) => setContacts(contactList))
+          .catch(() => setContacts([]))
       })
       .catch(() => setStatus('error'))
   }
@@ -397,6 +420,61 @@ function MatterDetail() {
       setMessageError(err instanceof Error ? err.message : 'Could not delete the message.')
     } finally {
       setMessageBusyId(null)
+    }
+  }
+
+  function recipientKey(type: SignatureRecipientType, id: string) {
+    return `${type}:${id}`
+  }
+
+  function toggleSigRecipient(key: string) {
+    setSigRecipientKeys((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]))
+  }
+
+  async function handleSendForSignature(e: FormEvent) {
+    e.preventDefault()
+    if (!token || !matterId) return
+    if (!sigDocId) {
+      setSigError('Choose a document to send.')
+      return
+    }
+    if (sigRecipientKeys.length === 0) {
+      setSigError('Select at least one recipient.')
+      return
+    }
+    setSigError(null)
+    setSending(true)
+    try {
+      const created = await sendForSignature(token, matterId, {
+        source_document_id: sigDocId,
+        title: sigTitle || documentGroups.find((v) => v[0].id === sigDocId)?.[0].title || 'Untitled document',
+        recipients: sigRecipientKeys.map((key) => {
+          const [recipient_type, recipient_id] = key.split(':') as [SignatureRecipientType, string]
+          return { recipient_type, recipient_id }
+        }),
+      })
+      setSignatureRequests((prev) => [created, ...prev])
+      setSigDocId('')
+      setSigTitle('')
+      setSigRecipientKeys([])
+    } catch (err) {
+      setSigError(err instanceof Error ? err.message : 'Could not send the document for signature.')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  async function handleVoidSignature(request: SignatureRequest) {
+    if (!token || !matterId) return
+    setSigError(null)
+    setSigBusyId(request.id)
+    try {
+      const updated = await voidSignatureRequest(token, matterId, request.id)
+      setSignatureRequests((prev) => prev.map((r) => (r.id === updated.id ? updated : r)))
+    } catch (err) {
+      setSigError(err instanceof Error ? err.message : 'Could not void the signature request.')
+    } finally {
+      setSigBusyId(null)
     }
   }
 
@@ -644,6 +722,103 @@ function MatterDetail() {
                 </button>
               </form>
               {uploadError && <p className="matter-error">{uploadError}</p>}
+            </section>
+
+            <section className="card" style={{ marginTop: 16 }}>
+              <div className="card-header">
+                <span>Signatures</span>
+              </div>
+
+              <div className="list-rows">
+                {signatureRequests.map((sr) => (
+                  <div key={sr.id} className="matter-doc-group">
+                    <div className="matter-doc-row">
+                      <span className="matter-doc-title">{sr.title}</span>
+                      <span
+                        className="status-badge"
+                        style={{ color: sigStatusColor[sr.status], background: `${sigStatusColor[sr.status]}22` }}
+                      >
+                        {sr.status}
+                      </span>
+                      {sr.status === 'pending' && (
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          disabled={sigBusyId === sr.id}
+                          onClick={() => handleVoidSignature(sr)}
+                          aria-label={`Void ${sr.title}`}
+                        >
+                          <IconTrash />
+                        </button>
+                      )}
+                    </div>
+                    <div className="matter-doc-history">
+                      {sr.recipients.map((r) => (
+                        <div key={r.id} className="matter-doc-row muted">
+                          <span className="matter-doc-title">
+                            {r.name} {r.recipient_type === 'client_contact' ? '(client)' : ''}
+                          </span>
+                          <span className="chip small">{r.status}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                {signatureRequests.length === 0 && <p className="muted">No signature requests sent yet.</p>}
+              </div>
+
+              <form onSubmit={handleSendForSignature} className="matter-doc-upload-row">
+                <select value={sigDocId} onChange={(e) => setSigDocId(e.target.value)} aria-label="Document to send">
+                  <option value="">Choose a document…</option>
+                  {documentGroups.map((versions) => (
+                    <option key={versions[0].id} value={versions[0].id}>
+                      {versions[0].title} (v{versions[0].version})
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  placeholder="Signature request title (defaults to document title)"
+                  value={sigTitle}
+                  onChange={(e) => setSigTitle(e.target.value)}
+                />
+                <button type="submit" className="btn-ghost" disabled={sending}>
+                  {sending ? 'Sending…' : 'Send for Signature'}
+                </button>
+              </form>
+
+              <div className="matter-doc-history" style={{ marginTop: 8 }}>
+                <span className="muted matter-doc-meta">Recipients:</span>
+                {assignments.map((a) => {
+                  const key = recipientKey('staff', a.user_id)
+                  return (
+                    <label key={key} className="field" style={{ display: 'inline-flex', gap: 4, marginRight: 12 }}>
+                      <input
+                        type="checkbox"
+                        checked={sigRecipientKeys.includes(key)}
+                        onChange={() => toggleSigRecipient(key)}
+                      />
+                      <span>{userName(a.user_id)}</span>
+                    </label>
+                  )
+                })}
+                {contacts.map((c) => {
+                  const key = recipientKey('client_contact', c.id)
+                  return (
+                    <label key={key} className="field" style={{ display: 'inline-flex', gap: 4, marginRight: 12 }}>
+                      <input
+                        type="checkbox"
+                        checked={sigRecipientKeys.includes(key)}
+                        onChange={() => toggleSigRecipient(key)}
+                      />
+                      <span>
+                        {c.first_name} {c.last_name} (client)
+                      </span>
+                    </label>
+                  )
+                })}
+              </div>
+              {sigError && <p className="matter-error">{sigError}</p>}
             </section>
 
             <section className="card" style={{ marginTop: 16 }}>
