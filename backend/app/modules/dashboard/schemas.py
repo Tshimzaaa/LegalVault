@@ -16,18 +16,12 @@ class ContractStatusBreakdownItem(BaseModel):
 class ContractStatusSummary(BaseModel):
     total: int
     breakdown: list[ContractStatusBreakdownItem]
-    rings: list[int]
 
 
 class KeyDeadline(BaseModel):
     title: str
     deadline: str
     flagColor: str
-
-
-class FinancialSummary(BaseModel):
-    billableHours: int
-    sparkline: list[int]
 
 
 class TaskItem(BaseModel):
@@ -48,7 +42,6 @@ class DashboardSummaryResponse(BaseModel):
     activeCases: ActiveCasesSummary
     contractStatus: ContractStatusSummary
     keyDeadlines: list[KeyDeadline]
-    financialSummary: FinancialSummary
     tasks: list[TaskItem]
     recentDocuments: list[RecentDocument]
     recentCommunications: list[RecentCommunication]

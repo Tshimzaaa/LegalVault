@@ -11,84 +11,12 @@ import {
   IconCheckCircle,
   IconMail,
   IconHelp,
-  IconInbox,
-  IconMessageCircle,
-  IconArrowUp,
-  IconArrowDown,
   IconSearch,
 } from '../../components/icons'
 import ProfileMenu from '../../components/ProfileMenu'
 import type { User } from '../../api/auth'
 import { getDashboardSummary } from '../../api/dashboard'
 import type { DashboardSummary } from '../../api/dashboard'
-
-function Ring({ value, size = 46 }: { value: number; size?: number }) {
-  const stroke = 5
-  const radius = (size - stroke) / 2
-  const circumference = 2 * Math.PI * radius
-  const offset = circumference * (1 - value / 100)
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="ring">
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        fill="none"
-        stroke="rgba(255,255,255,0.08)"
-        strokeWidth={stroke}
-      />
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        fill="none"
-        stroke="#22c55e"
-        strokeWidth={stroke}
-        strokeLinecap="round"
-        strokeDasharray={circumference}
-        strokeDashoffset={offset}
-        transform={`rotate(-90 ${size / 2} ${size / 2})`}
-      />
-      <text x="50%" y="53%" textAnchor="middle" dominantBaseline="middle" className="ring-label">
-        {value}
-      </text>
-    </svg>
-  )
-}
-
-function sparklinePoints(values: number[]) {
-  if (values.length === 0) return ''
-  const max = Math.max(...values)
-  const min = Math.min(...values)
-  const span = max - min || 1
-  const stepX = 120 / (values.length - 1 || 1)
-  return values
-    .map((v, i) => `${i * stepX},${40 - ((v - min) / span) * 40}`)
-    .join(' ')
-}
-
-// Mock data — no backend endpoint for firm-wide intake/staff/turnaround metrics yet.
-const intakeQueue = [
-  { title: 'NDA Request (Apex Corp)', meta: 'High Priority • Awaiting Review', status: 'Assigned' },
-  { title: 'Lease Review (John Doe)', meta: 'Medium Priority • Attorney Assigned', status: 'Assigned' },
-  { title: 'General Inquiry (Jane Smith)', meta: 'Low Priority • Conflict Check', status: 'Status' },
-]
-
-const staffFeed = [
-  { who: 'A. Deff', initials: 'AD', task: 'Completed Contract Drafting (High Vol.)', time: '11m ago', tag: 'High Vol.' },
-  { who: 'E. Adenike', initials: 'EA', task: 'Reviewed SOW (Completed)', time: '26m ago', tag: 'Completed' },
-  { who: 'Portal', initials: null, task: 'Received e-sign [SA-2024-101] (Apex Corp)', time: '1h ago', tag: 'Complete' },
-]
-
-const turnaround: { label: string; sub?: string; value: string; change: string; dir: 'up' | 'down' }[] = [
-  { label: 'NDA Intake Turnaround Time', value: '3 days', change: '12%', dir: 'down' },
-  { label: 'Lease Approval Time', sub: '(27 tasks)', value: '2.1 days', change: '8%', dir: 'down' },
-  { label: 'Client Doc Response Time', value: '1.6 days', change: '15%', dir: 'down' },
-]
-
-function Avatar({ initials }: { initials: string }) {
-  return <span className="feed-avatar">{initials}</span>
-}
 
 interface DashboardProps {
   user: User
@@ -206,25 +134,18 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
                   <IconPlus />
                 </button>
               </div>
-              <div className="contract-status-body">
-                <div className="contract-status-list">
-                  <div className="stat-line">
-                    <span className="stat-big">{summary.contractStatus.total}</span>
-                    <span className="stat-sub">Total</span>
+              <div className="contract-status-list">
+                <div className="stat-line">
+                  <span className="stat-big">{summary.contractStatus.total}</span>
+                  <span className="stat-sub">Total</span>
+                </div>
+                {summary.contractStatus.breakdown.map((s) => (
+                  <div key={s.label} className="status-row">
+                    <span className="status-dot" style={{ background: s.color }} />
+                    <span className="status-label">{s.label}</span>
+                    <span className="status-count">{s.count}</span>
                   </div>
-                  {summary.contractStatus.breakdown.map((s) => (
-                    <div key={s.label} className="status-row">
-                      <span className="status-dot" style={{ background: s.color }} />
-                      <span className="status-label">{s.label}</span>
-                      <span className="status-count">{s.count}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="contract-status-rings">
-                  {summary.contractStatus.rings.map((r, i) => (
-                    <Ring key={i} value={r} />
-                  ))}
-                </div>
+                ))}
               </div>
             </div>
 
@@ -258,34 +179,6 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
           </section>
 
           <section className="dash-row row-2">
-            <div className="card financial-summary">
-              <div className="card-header">
-                <span>Financial Summary</span>
-                <button className="icon-btn" type="button" aria-label="Add">
-                  <IconPlus />
-                </button>
-              </div>
-              <span className="stat-sub top">Billable Hours</span>
-              <div className="stat-line">
-                <span className="stat-big">{summary.financialSummary.billableHours}</span>
-                <span className="stat-sub">R-value</span>
-              </div>
-              {summary.financialSummary.sparkline.length > 0 ? (
-                <svg className="sparkline" viewBox="0 0 120 40" preserveAspectRatio="none">
-                  <polyline
-                    points={sparklinePoints(summary.financialSummary.sparkline)}
-                    fill="none"
-                    stroke="#22c55e"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              ) : (
-                <p className="muted">No billing data yet.</p>
-              )}
-            </div>
-
             <div className="card recent-documents">
               <div className="card-header">
                 <span>Recent Documents</span>
@@ -350,79 +243,6 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
                   </div>
                 ))}
                 {summary.recentCommunications.length === 0 && <p className="muted">No recent communication.</p>}
-              </div>
-            </div>
-          </section>
-
-          <section className="dash-row row-3">
-            <div className="card intake-queue">
-              <div className="card-header">
-                <span>Matter Intake Review Queue</span>
-                <span className="card-subtitle-inline">mock — pending backend</span>
-              </div>
-              <div className="list-rows">
-                {intakeQueue.map((item) => (
-                  <div key={item.title} className="intake-row">
-                    <span className="doc-icon">
-                      <IconInbox />
-                    </span>
-                    <div className="deadline-text">
-                      <span className="deadline-title">{item.title}</span>
-                      <span className="deadline-sub">{item.meta}</span>
-                    </div>
-                    <span className="status-badge intake-status">{item.status}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="card staff-feed">
-              <div className="card-header">
-                <span>Staff Task &amp; Bottleneck Feed</span>
-                <span className="card-subtitle-inline">mock — pending backend</span>
-              </div>
-              <div className="list-rows">
-                {staffFeed.map((f) => (
-                  <div key={f.who} className="feed-row">
-                    {f.initials ? <Avatar initials={f.initials} /> : (
-                      <span className="doc-icon">
-                        <IconMessageCircle />
-                      </span>
-                    )}
-                    <div className="deadline-text">
-                      <span className="deadline-title">{f.who}</span>
-                      <span className="deadline-sub">{f.task}</span>
-                    </div>
-                    <span className="feed-right">
-                      <span className="deadline-sub">{f.time}</span>
-                      <span className="status-badge feed-tag">{f.tag}</span>
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="card turnaround">
-              <div className="card-header">
-                <span>Turnaround Metrics</span>
-                <span className="card-subtitle-inline">mock — pending backend</span>
-              </div>
-              <div className="list-rows">
-                {turnaround.map((t) => (
-                  <div key={t.label} className="turnaround-row">
-                    <div className="deadline-text">
-                      <span className="deadline-title">{t.label}</span>
-                      {t.sub && <span className="deadline-sub">{t.sub}</span>}
-                    </div>
-                    <span className="turnaround-value-col">
-                      <span className="stat-sub tabular">{t.value}</span>
-                      <span className={`turnaround-change ${t.dir}`}>
-                        {t.dir === 'up' ? <IconArrowUp /> : <IconArrowDown />}
-                        {t.change}
-                      </span>
-                    </span>
-                  </div>
-                ))}
               </div>
             </div>
           </section>

@@ -79,7 +79,7 @@
 }
 
 .row-2 {
-  grid-template-columns: 0.85fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   align-items: stretch;
 }
 
@@ -99,16 +99,6 @@
 }
 
 /* Contract status */
-
-.contract-status-body {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.contract-status-list {
-  flex: 1;
-}
 
 .status-row {
   display: flex;
@@ -132,19 +122,6 @@
 
 .status-count {
   color: #9ca3af;
-}
-
-.contract-status-rings {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: center;
-}
-
-.ring-label {
-  fill: #fff;
-  font-size: 11px;
-  font-weight: 600;
 }
 
 /* Key deadlines */
@@ -214,12 +191,6 @@
   gap: 9px;
 }
 
-.sparkline {
-  width: 100%;
-  height: 40px;
-  margin-top: 10px;
-}
-
 .doc-row,
 .task-row,
 .comm-row {
@@ -253,93 +224,6 @@
   font-size: 11.5px;
   color: #9ca3af;
   line-height: 1.4;
-}
-
-/* Row 3: intake queue / staff feed / turnaround metrics */
-
-.row-3 {
-  grid-template-columns: 1.1fr 1fr 1fr;
-  align-items: stretch;
-}
-
-.card-subtitle-inline {
-  font-size: 11px;
-  font-weight: 600;
-  color: #9ca3af;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.intake-row,
-.feed-row,
-.turnaround-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.intake-status {
-  margin-left: auto;
-  background: rgba(255, 255, 255, 0.08);
-  color: #d1d5db;
-}
-
-.feed-avatar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: rgba(34, 197, 94, 0.16);
-  color: #22c55e;
-  font-size: 10.5px;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.feed-right {
-  margin-left: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-}
-
-.feed-tag {
-  background: rgba(34, 197, 94, 0.16);
-  color: #22c55e;
-}
-
-.turnaround-row {
-  justify-content: space-between;
-}
-
-.turnaround-value-col {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-}
-
-.turnaround-change {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 11px;
-}
-
-.turnaround-change svg {
-  width: 11px;
-  height: 11px;
-}
-
-.turnaround-change.down {
-  color: #22c55e;
-}
-
-.turnaround-change.up {
-  color: #ef4444;
 }
 
 /* Need help */

@@ -14,7 +14,6 @@ from app.modules.dashboard.schemas import (
     ContractStatusBreakdownItem,
     ContractStatusSummary,
     DashboardSummaryResponse,
-    FinancialSummary,
     KeyDeadline,
     TaskItem,
     RecentDocument,
@@ -119,10 +118,8 @@ def get_dashboard_summary(
                 ContractStatusBreakdownItem(label=label, count=counts[status], color=color)
                 for status, label, color in STATUS_META
             ],
-            rings=[pct(closed + signed), pct(active), pct(counts[MatterStatus.INTAKE])],
         ),
         keyDeadlines=key_deadlines,
-        financialSummary=FinancialSummary(billableHours=0, sparkline=[]),
         tasks=tasks,
         recentDocuments=recent_documents,
         recentCommunications=recent_communications,

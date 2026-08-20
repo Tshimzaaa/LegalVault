@@ -41,14 +41,12 @@ const demoSummary: DashboardSummary = {
       { label: 'Pending', count: 14, color: '#eab308' },
       { label: 'Expired', count: 7, color: '#ef4444' },
     ],
-    rings: [82, 61],
   },
   keyDeadlines: [
     { title: 'Pleadings cut-off — Case 2024-101', deadline: '15 Mar', flagColor: '#ef4444' },
     { title: 'Discovery close — Case 2024-105', deadline: '18 Mar', flagColor: '#f97316' },
     { title: 'Contract renewal — MSA-2022-051', deadline: '10 Apr', flagColor: '#9ca3af' },
   ],
-  financialSummary: { billableHours: 186, sparkline: [120, 140, 135, 160, 172, 168, 186] },
   tasks: [
     { title: 'Review NDA — Apex Corp', deadline: '15 Mar' },
     { title: 'File motion — Estate of J. Botha', deadline: '18 Mar' },
