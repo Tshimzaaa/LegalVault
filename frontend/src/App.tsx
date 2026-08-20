@@ -1,22 +1,43 @@
-import { useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import LoginModal from './components/LoginModal'
 import Home from './pages/Home/Home'
-import Workspace from './pages/Workspace/Workspace'
-import ClientPortal from './pages/ClientPortal/ClientPortal'
-import Register from './pages/Register/Register'
-import ResetPassword from './pages/ResetPassword/ResetPassword'
-import AcceptInvite from './pages/AcceptInvite/AcceptInvite'
-import AcceptStaffInvite from './pages/AcceptStaffInvite/AcceptStaffInvite'
-import OwnerLogin from './pages/OwnerLogin/OwnerLogin'
-import OwnerPortal from './pages/OwnerPortal/OwnerPortal'
 import { login, getCurrentUser, refreshStaffToken, logoutStaff } from './api/auth'
 import { clientLogin, getCurrentContact, refreshClientToken, logoutClient } from './api/clientAuth'
 import { ownerLogin, listFirms } from './api/owner'
 import { setUnauthorizedHandler, setRefreshHandler } from './api/client'
 import type { User } from './api/auth'
 import type { ClientContact } from './api/clientAuth'
+
+const Workspace = lazy(() => import('./pages/Workspace/Workspace'))
+const ClientPortal = lazy(() => import('./pages/ClientPortal/ClientPortal'))
+const OwnerPortal = lazy(() => import('./pages/OwnerPortal/OwnerPortal'))
+const Register = lazy(() => import('./pages/Register/Register'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword/ResetPassword'))
+const AcceptInvite = lazy(() => import('./pages/AcceptInvite/AcceptInvite'))
+const AcceptStaffInvite = lazy(() => import('./pages/AcceptStaffInvite/AcceptStaffInvite'))
+const OwnerLogin = lazy(() => import('./pages/OwnerLogin/OwnerLogin'))
+
+// Self-contained (no page-specific CSS dependency) — this renders while a lazy route
+// chunk is still downloading, before that chunk's own stylesheet is available.
+function RouteFallback() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+      <div
+        style={{
+          width: 32,
+          height: 32,
+          border: '3px solid rgba(0,0,0,0.1)',
+          borderTopColor: '#22c55e',
+          borderRadius: '50%',
+          animation: 'route-fallback-spin 0.8s linear infinite',
+        }}
+      />
+      <style>{'@keyframes route-fallback-spin { to { transform: rotate(360deg); } }'}</style>
+    </div>
+  )
+}
 
 type Actor =
   | { kind: 'staff'; user: User }
@@ -149,68 +170,70 @@ function App() {
   const alreadyInExpectedPortal = actor?.kind === expectedKind
 
   return (
-    <Routes>
-      <Route path="/" element={<><Navbar onLoginClick={() => navigate('/login')} /><Home /></>} />
-      <Route
-        path="/login"
-        element={
-          alreadyInExpectedPortal ? (
-            <Navigate to={homePath} replace />
-          ) : (
-            <>
-              <Navbar onLoginClick={() => {}} />
-              <Home />
-              <LoginModal onClose={() => navigate('/')} onSubmit={handleLogin} staffOnly={staffOnly} />
-            </>
-          )
-        }
-      />
-      <Route path="/register" element={<Register />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/accept-invite" element={<AcceptInvite />} />
-      <Route path="/accept-staff-invite" element={<AcceptStaffInvite />} />
-      <Route
-        path="/owner/login"
-        element={
-          actor?.kind === 'owner' ? <Navigate to="/owner" replace /> : <OwnerLogin onSubmit={handleOwnerLogin} />
-        }
-      />
-      <Route
-        path="/owner/*"
-        element={
-          actor?.kind === 'owner' ? (
-            <OwnerPortal onLogout={handleLogout} />
-          ) : (
-            <Navigate to="/owner/login" replace />
-          )
-        }
-      />
-      <Route
-        path="/staff/*"
-        element={
-          actor?.kind === 'staff' ? (
-            <Workspace user={actor.user} onLogout={handleLogout} />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
-      <Route
-        path="/client/*"
-        element={
-          actor?.kind === 'client' ? (
-            <ClientPortal
-              contact={actor.contact}
-              onLogout={handleLogout}
-              onContactUpdate={(contact) => setActor({ kind: 'client', contact })}
-            />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <Suspense fallback={<RouteFallback />}>
+      <Routes>
+        <Route path="/" element={<><Navbar onLoginClick={() => navigate('/login')} /><Home /></>} />
+        <Route
+          path="/login"
+          element={
+            alreadyInExpectedPortal ? (
+              <Navigate to={homePath} replace />
+            ) : (
+              <>
+                <Navbar onLoginClick={() => {}} />
+                <Home />
+                <LoginModal onClose={() => navigate('/')} onSubmit={handleLogin} staffOnly={staffOnly} />
+              </>
+            )
+          }
+        />
+        <Route path="/register" element={<Register />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/accept-invite" element={<AcceptInvite />} />
+        <Route path="/accept-staff-invite" element={<AcceptStaffInvite />} />
+        <Route
+          path="/owner/login"
+          element={
+            actor?.kind === 'owner' ? <Navigate to="/owner" replace /> : <OwnerLogin onSubmit={handleOwnerLogin} />
+          }
+        />
+        <Route
+          path="/owner/*"
+          element={
+            actor?.kind === 'owner' ? (
+              <OwnerPortal onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/owner/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/staff/*"
+          element={
+            actor?.kind === 'staff' ? (
+              <Workspace user={actor.user} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/client/*"
+          element={
+            actor?.kind === 'client' ? (
+              <ClientPortal
+                contact={actor.contact}
+                onLogout={handleLogout}
+                onContactUpdate={(contact) => setActor({ kind: 'client', contact })}
+              />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   )
 }
 

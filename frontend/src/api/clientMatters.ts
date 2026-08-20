@@ -1,8 +1,26 @@
 import { apiRequest, apiUpload } from './client'
 import type { Matter, MatterDocument, MatterMessage } from './matters'
 
+export type ContactPermissionLevel = 'owner' | 'editor' | 'viewer'
+
+export interface MatterContactPermission {
+  id: string
+  matter_id: string
+  matter_title: string
+  client_contact_id: string
+  contact_name: string
+  contact_email: string
+  permission_level: ContactPermissionLevel
+  created_at: string
+  updated_at: string
+}
+
 export async function listClientMatters(token: string): Promise<Matter[]> {
   return apiRequest<Matter[]>('/client-matters', { token })
+}
+
+export async function listMyContactPermissions(token: string): Promise<MatterContactPermission[]> {
+  return apiRequest<MatterContactPermission[]>('/client-matters/contact-permissions', { token })
 }
 
 export async function listClientMatterDocuments(token: string, matterId: string): Promise<MatterDocument[]> {

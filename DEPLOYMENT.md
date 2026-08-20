@@ -30,6 +30,11 @@ copy them to `.env` and fill in.
    to the connection string it prints. **Without this, `ENVIRONMENT=production` refuses to
    start at all** — see `app/core/config.py`'s startup checks.
 3. Run migrations against it: `cd backend && alembic upgrade head`.
+4. **Check compute size/autoscaling before launch.** The current dev branch has been
+   consistently taking 3–8s per API call in manual testing — plausibly a free-tier/minimum
+   compute size cold-starting on every request rather than anything in the app code. Confirm
+   the production branch's compute tier (and autoscaling settings) in the Neon dashboard
+   before assuming this won't recur for real users; this checklist can't verify that for you.
 
 ## 3. Documenso + ClamAV **[manual — needs a persistent host]**
 

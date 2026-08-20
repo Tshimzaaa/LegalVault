@@ -1,27 +1,22 @@
+import { useEffect, useState } from 'react'
 import './MatterAdmin.css'
-import { IconChevron } from '../../components/icons'
 import ProfileMenu from '../../components/ProfileMenu'
 import type { ClientContact } from '../../api/clientAuth'
+import { listMyContactPermissions } from '../../api/clientMatters'
+import type { ContactPermissionLevel, MatterContactPermission } from '../../api/clientMatters'
 
-interface MatterRow {
-  matter: string
-  owner: string
-  permissionLevel: 'Owner' | 'Editor' | 'Viewer'
-  teamMembers: number
+type LoadState = 'loading' | 'error' | 'ready'
+
+const permissionLabel: Record<ContactPermissionLevel, string> = {
+  owner: 'Owner',
+  editor: 'Editor',
+  viewer: 'Viewer',
 }
 
-const rows: MatterRow[] = [
-  { matter: 'NDA Request — Company C', owner: 'J. Mokoena', permissionLevel: 'Owner', teamMembers: 3 },
-  { matter: 'Consultancy Agreement Review', owner: 'T. Ndlovu', permissionLevel: 'Owner', teamMembers: 2 },
-  { matter: 'Supplier Onboarding — Coastal Retail', owner: 'J. Mokoena', permissionLevel: 'Editor', teamMembers: 4 },
-  { matter: 'Vendor NDA — Vantage Logistics', owner: 'R. Patel', permissionLevel: 'Viewer', teamMembers: 1 },
-  { matter: 'Mutual NDA — Company C', owner: 'T. Ndlovu', permissionLevel: 'Owner', teamMembers: 2 },
-]
-
-const permissionColor: Record<MatterRow['permissionLevel'], string> = {
-  Owner: '#22c55e',
-  Editor: '#3987e5',
-  Viewer: '#9ca3af',
+const permissionColor: Record<ContactPermissionLevel, string> = {
+  owner: '#22c55e',
+  editor: '#3987e5',
+  viewer: '#9ca3af',
 }
 
 interface MatterAdminProps {
@@ -30,47 +25,103 @@ interface MatterAdminProps {
 }
 
 function MatterAdmin({ contact, onLogout }: MatterAdminProps) {
+  const [permissions, setPermissions] = useState<MatterContactPermission[]>([])
+  const [status, setStatus] = useState<LoadState>('loading')
+  const [attempt, setAttempt] = useState(0)
+
+  useEffect(() => {
+    let cancelled = false
+    setStatus('loading')
+
+    const token = localStorage.getItem('access_token')
+    if (!token) {
+      setStatus('error')
+      return
+    }
+
+    listMyContactPermissions(token)
+      .then((data) => {
+        if (cancelled) return
+        setPermissions(data)
+        setStatus('ready')
+      })
+      .catch(() => {
+        if (cancelled) return
+        setStatus('error')
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [attempt])
+
   return (
     <main className="dash-main">
       <header className="dash-topbar">
         <h1>Matter Admin</h1>
         <div className="topbar-actions">
-          <button className="chip">
-            Filter <IconChevron /> <span className="chip-badge">{rows.length}</span>
-          </button>
+          <span className="chip">
+            Access grants <span className="chip-badge">{permissions.length}</span>
+          </span>
           <ProfileMenu user={contact} onLogout={onLogout} />
         </div>
       </header>
 
-      <section className="card matter-admin-table-card">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Matter</th>
-              <th>Owner</th>
-              <th>Permission</th>
-              <th>Team Members</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.matter}>
-                <td>{r.matter}</td>
-                <td className="muted">{r.owner}</td>
-                <td>
-                  <span
-                    className="status-badge"
-                    style={{ color: permissionColor[r.permissionLevel], background: `${permissionColor[r.permissionLevel]}22` }}
-                  >
-                    {r.permissionLevel}
-                  </span>
-                </td>
-                <td className="muted tabular">{r.teamMembers}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+      {status === 'loading' && (
+        <div className="dash-state">
+          <span className="dash-spinner" />
+          <p>Loading matter access…</p>
+        </div>
+      )}
+
+      {status === 'error' && (
+        <div className="dash-state">
+          <p>Couldn&rsquo;t reach the backend for matter access data.</p>
+          <button type="button" className="btn-ghost" onClick={() => setAttempt((n) => n + 1)}>
+            Retry
+          </button>
+        </div>
+      )}
+
+      {status === 'ready' && (
+        <section className="card matter-admin-table-card">
+          {permissions.length === 0 ? (
+            <p className="muted">No matter access has been granted to anyone at your company yet.</p>
+          ) : (
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Matter</th>
+                  <th>Contact</th>
+                  <th>Permission</th>
+                </tr>
+              </thead>
+              <tbody>
+                {permissions.map((p) => (
+                  <tr key={p.id}>
+                    <td>{p.matter_title}</td>
+                    <td className="muted">
+                      {p.contact_name}
+                      {p.client_contact_id === contact.id ? ' (you)' : ''}
+                    </td>
+                    <td>
+                      <span
+                        className="status-badge"
+                        style={{
+                          color: permissionColor[p.permission_level],
+                          background: `${permissionColor[p.permission_level]}22`,
+                        }}
+                      >
+                        {permissionLabel[p.permission_level]}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+      )}
     </main>
   )
 }
