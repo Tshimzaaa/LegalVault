@@ -3,7 +3,15 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import ObjectDeletedError
 
 from app.modules.matters.repository import MatterRepository
-from app.modules.matters.models import Matter, MatterAssignment, MatterDocument, MatterTask, MatterMessage, MessageAuthorType
+from app.modules.matters.models import (
+    Matter,
+    MatterAssignment,
+    MatterDocument,
+    MatterTask,
+    MatterMessage,
+    MessageAuthorType,
+    MatterContactPermission,
+)
 from app.modules.matters.schemas import (
     CreateMatterRequest,
     UpdateMatterDetailsRequest,
@@ -15,6 +23,8 @@ from app.modules.matters.schemas import (
     UpdateMatterTaskRequest,
     CalendarEvent,
     CreateMatterMessageRequest,
+    SetContactPermissionRequest,
+    MatterContactPermissionResponse,
 )
 from app.exceptions.matters import (
     MatterNotFound,
@@ -25,6 +35,8 @@ from app.exceptions.matters import (
     MatterTaskNotFound,
     MatterMessageNotFound,
     CannotDeleteOthersMessage,
+    MatterContactPermissionNotFound,
+    ContactNotFoundForMatterPermission,
 )
 from app.modules.clients.repository import ClientRepository
 from app.modules.auth.repository import AuthRepository
@@ -613,3 +625,98 @@ class MatterService:
         ]
         events.sort(key=lambda e: e.date)
         return events
+
+    def _to_permission_response(self, permission: MatterContactPermission, matter: Matter, contact) -> MatterContactPermissionResponse:
+        return MatterContactPermissionResponse(
+            id=permission.id,
+            matter_id=matter.id,
+            matter_title=matter.title,
+            client_contact_id=contact.id,
+            contact_name=f"{contact.first_name} {contact.last_name}",
+            contact_email=contact.email,
+            permission_level=permission.permission_level,
+            created_at=permission.created_at,
+            updated_at=permission.updated_at,
+        )
+
+    def set_contact_permission(
+        self, matter_id, firm_id, actor_id, request: SetContactPermissionRequest
+    ) -> MatterContactPermissionResponse:
+        matter = self.get_matter(matter_id, firm_id)  # ownership check
+
+        contact = self.client_repository.get_contact_by_id(request.client_contact_id)
+        if not contact or str(contact.client_id) != str(matter.client_id):
+            raise ContactNotFoundForMatterPermission()
+
+        permission = self.repository.get_contact_permission(matter_id, request.client_contact_id)
+        if permission:
+            permission.permission_level = request.permission_level
+        else:
+            permission = MatterContactPermission(
+                matter_id=matter.id,
+                client_contact_id=request.client_contact_id,
+                permission_level=request.permission_level,
+            )
+            self.repository.create_contact_permission(permission)
+
+        self.audit.log(
+            actor_type=ActorType.STAFF,
+            actor_id=actor_id,
+            firm_id=firm_id,
+            action=audit_actions.MATTER_CONTACT_PERMISSION_SET,
+            target_type="matter_contact_permission",
+            target_id=permission.id,
+            details={"client_contact_id": str(contact.id), "permission_level": request.permission_level.value},
+        )
+        self.notifications.notify(
+            recipient_type=RecipientType.CLIENT_CONTACT,
+            recipient_id=contact.id,
+            type="matter.permission_updated",
+            title=f'Your access on "{matter.title}" was updated',
+            body=f"You now have {request.permission_level.value} access.",
+            target_type="matter",
+            target_id=matter.id,
+        )
+        self.db.commit()
+        self.db.refresh(permission)
+        return self._to_permission_response(permission, matter, contact)
+
+    def list_contact_permissions(self, matter_id, firm_id) -> list[MatterContactPermissionResponse]:
+        matter = self.get_matter(matter_id, firm_id)  # ownership check
+        permissions = self.repository.list_contact_permissions_for_matter(matter_id)
+        contacts_by_id = {c.id: c for c in self.client_repository.list_contacts_for_client(matter.client_id)}
+        return [
+            self._to_permission_response(p, matter, contacts_by_id[p.client_contact_id])
+            for p in permissions
+            if p.client_contact_id in contacts_by_id
+        ]
+
+    def remove_contact_permission(self, matter_id, firm_id, actor_id, client_contact_id) -> None:
+        matter = self.get_matter(matter_id, firm_id)  # ownership check
+        permission = self.repository.get_contact_permission(matter_id, client_contact_id)
+        if not permission:
+            raise MatterContactPermissionNotFound()
+
+        self.repository.delete_contact_permission(permission)
+
+        self.audit.log(
+            actor_type=ActorType.STAFF,
+            actor_id=actor_id,
+            firm_id=firm_id,
+            action=audit_actions.MATTER_CONTACT_PERMISSION_REMOVED,
+            target_type="matter_contact_permission",
+            target_id=permission.id,
+            details={"client_contact_id": str(client_contact_id), "matter_id": str(matter.id)},
+        )
+        self.db.commit()
+
+    def list_my_contact_permissions(self, client_id) -> list[MatterContactPermissionResponse]:
+        rows = self.repository.list_contact_permissions_for_client(client_id)
+        if not rows:
+            return []
+        contacts_by_id = {c.id: c for c in self.client_repository.list_contacts_for_client(client_id)}
+        return [
+            self._to_permission_response(p, matter, contacts_by_id[p.client_contact_id])
+            for p, matter in rows
+            if p.client_contact_id in contacts_by_id
+        ]

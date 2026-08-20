@@ -38,6 +38,8 @@ from app.exceptions.matters import (
     MatterTaskNotFound,
     MatterMessageNotFound,
     CannotDeleteOthersMessage,
+    MatterContactPermissionNotFound,
+    ContactNotFoundForMatterPermission,
 )
 from app.exceptions.support_requests import SupportRequestNotFound
 from app.exceptions.announcements import AnnouncementNotFound
@@ -152,6 +154,14 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(UserNotFoundForAssignment)
     async def user_not_found_for_assignment(_, __):
         raise HTTPException(status_code=404, detail="Staff member not found.")
+
+    @app.exception_handler(MatterContactPermissionNotFound)
+    async def matter_contact_permission_not_found(_, __):
+        raise HTTPException(status_code=404, detail="This contact has no access level set on this matter.")
+
+    @app.exception_handler(ContactNotFoundForMatterPermission)
+    async def contact_not_found_for_matter_permission(_, __):
+        raise HTTPException(status_code=404, detail="Contact not found for this matter's client.")
     @app.exception_handler(TemplateNotFound)
     async def template_not_found(_, __):
         raise HTTPException(status_code=404, detail="Template not found.")

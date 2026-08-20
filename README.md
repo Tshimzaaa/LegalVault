@@ -8,7 +8,7 @@ Three tiers of users, each with its own auth system and JWT token type:
 2. **Firm Staff** — lawyers, admins, paralegals, secretaries, receptionists who manage clients/matters
 3. **Firm Clients** — the firm's own clients, who log into a restricted portal to view case status, documents, templates, intake forms, and the knowledge base
 
-See [`backend/docs/architecture.md`](backend/docs/architecture.md) for the original design doc (staff/client auth, schema, RLS setup — note it predates several modules listed below and hasn't been kept current) and [`ROADMAP.md`](ROADMAP.md) for a feature-parity comparison against lighthub.law (also out of date as of this edit — treat both as historical context, not a live spec).
+See [`backend/docs/architecture.md`](backend/docs/architecture.md) for the original design doc (staff/client auth, schema, RLS setup — note it predates several modules listed below and hasn't been kept current) and [`ROADMAP.md`](ROADMAP.md) for a feature-parity comparison against lighthub.law (also out of date as of this edit — treat both as historical context, not a live spec). See [`DEPLOYMENT.md`](DEPLOYMENT.md) before deploying anywhere beyond local dev.
 
 ---
 
@@ -119,5 +119,5 @@ cd frontend && npm test
 ## Known gaps
 
 - **Real email sending** — invite links and notification emails are still stubbed (printed to the server console); no email provider is wired up yet (nothing email-related in `backend/requirements.txt`).
-- **HTTPS / production deployment** — not yet addressed; `docker-compose.yml`'s Documenso config uses dev-only secrets that must be regenerated for any shared or production environment.
+- **No hosting chosen / no deploy pipeline** — `ci.yml` runs tests, lint, and build on every push, but nothing deploys automatically. See [`DEPLOYMENT.md`](DEPLOYMENT.md) for what's already in place (production safety checks, CORS/HSTS gating, RLS role setup, secret-generation scripts) versus what still needs a host picked.
 - Frontend automated test coverage is thin relative to the number of pages — most pages have no test file yet.

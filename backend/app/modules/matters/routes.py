@@ -23,6 +23,8 @@ from app.modules.matters.schemas import (
     CalendarEvent,
     CreateMatterMessageRequest,
     MatterMessageResponse,
+    SetContactPermissionRequest,
+    MatterContactPermissionResponse,
 )
 from app.modules.matters.service import MatterService
 
@@ -383,3 +385,44 @@ def delete_client_message(
 ):
     service = MatterService(db)
     service.delete_client_message(matter_id, message_id, current_contact.client_id, current_contact.id)
+
+
+@router.post("/{matter_id}/contact-permissions", response_model=MatterContactPermissionResponse, status_code=201)
+def set_contact_permission(
+    matter_id: str,
+    request: SetContactPermissionRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(_CASE_WORK)),
+):
+    service = MatterService(db)
+    return service.set_contact_permission(matter_id, current_user.firm_id, current_user.id, request)
+
+
+@router.get("/{matter_id}/contact-permissions", response_model=list[MatterContactPermissionResponse])
+def list_contact_permissions(
+    matter_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    service = MatterService(db)
+    return service.list_contact_permissions(matter_id, current_user.firm_id)
+
+
+@router.delete("/{matter_id}/contact-permissions/{client_contact_id}", status_code=204)
+def remove_contact_permission(
+    matter_id: str,
+    client_contact_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(_CASE_WORK)),
+):
+    service = MatterService(db)
+    service.remove_contact_permission(matter_id, current_user.firm_id, current_user.id, client_contact_id)
+
+
+@client_matters_router.get("/contact-permissions", response_model=list[MatterContactPermissionResponse])
+def list_my_contact_permissions(
+    db: Session = Depends(get_db),
+    current_contact: ClientContact = Depends(get_current_contact),
+):
+    service = MatterService(db)
+    return service.list_my_contact_permissions(current_contact.client_id)

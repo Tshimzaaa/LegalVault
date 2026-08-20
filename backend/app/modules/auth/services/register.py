@@ -23,6 +23,7 @@ from app.modules.auth.schemas.register import (
 from app.modules.audit.service import AuditService
 from app.modules.audit.models import ActorType
 from app.modules.audit import actions as audit_actions
+from app.database.rls import set_tenant_context
 
 class RegisterService:
 
@@ -56,6 +57,13 @@ class RegisterService:
             website=request.law_firm.website,
             address=request.law_firm.address,
         )
+
+        # No auth dependency has run before this endpoint (it's the public, secret-gated
+        # bootstrap flow, and the firm being created doesn't exist yet to scope to) — so
+        # unlike every other write path, tenant context was never set. Without this, the
+        # audit-log insert below is rejected outright by RLS the moment the runtime role
+        # lacks BYPASSRLS, same rationale as get_current_contact's owner-mode bootstrap.
+        set_tenant_context(self.db, firm_id=None, is_owner=True)
 
         try:
             self.repository.create_law_firm(law_firm)

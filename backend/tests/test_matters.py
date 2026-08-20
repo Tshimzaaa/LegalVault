@@ -4,7 +4,7 @@ staff assignment, and the task/document/message sub-resources.
 """
 import pytest
 
-from tests.conftest import auth_headers, make_client_company, make_firm, make_matter, make_staff
+from tests.conftest import auth_headers, make_client_company, make_contact, make_firm, make_matter, make_staff
 
 
 @pytest.fixture(autouse=True)
@@ -158,3 +158,61 @@ def test_matter_document_upload_download_delete(client, db_session):
     assert delete_res.status_code == 204
 
     assert client.get(f"/matters/{matter.id}/documents", headers=auth_headers(admin)).json() == []
+
+
+def test_set_list_and_remove_contact_permission(client, db_session):
+    firm = make_firm(db_session)
+    admin, _ = make_staff(db_session, firm)
+    client_company = make_client_company(db_session, firm)
+    contact, contact_password = make_contact(db_session, client_company)
+    matter = make_matter(db_session, firm, client_company, is_visible_to_client=True)
+
+    set_res = client.post(
+        f"/matters/{matter.id}/contact-permissions",
+        json={"client_contact_id": str(contact.id), "permission_level": "editor"},
+        headers=auth_headers(admin),
+    )
+    assert set_res.status_code == 201
+    body = set_res.json()
+    assert body["permission_level"] == "editor"
+    assert body["contact_email"] == contact.email
+    assert body["matter_title"] == matter.title
+
+    # Setting again for the same contact updates in place rather than duplicating.
+    update_res = client.post(
+        f"/matters/{matter.id}/contact-permissions",
+        json={"client_contact_id": str(contact.id), "permission_level": "owner"},
+        headers=auth_headers(admin),
+    )
+    assert update_res.status_code == 201
+    assert update_res.json()["permission_level"] == "owner"
+
+    list_res = client.get(f"/matters/{matter.id}/contact-permissions", headers=auth_headers(admin))
+    assert len(list_res.json()) == 1
+    assert list_res.json()[0]["permission_level"] == "owner"
+
+    client_list_res = client.get("/client-matters/contact-permissions", headers=auth_headers(contact))
+    assert len(client_list_res.json()) == 1
+    assert client_list_res.json()[0]["matter_id"] == str(matter.id)
+
+    remove_res = client.delete(
+        f"/matters/{matter.id}/contact-permissions/{contact.id}", headers=auth_headers(admin)
+    )
+    assert remove_res.status_code == 204
+    assert client.get(f"/matters/{matter.id}/contact-permissions", headers=auth_headers(admin)).json() == []
+
+
+def test_contact_permission_rejects_contact_from_another_client(client, db_session):
+    firm = make_firm(db_session)
+    admin, _ = make_staff(db_session, firm)
+    client_company = make_client_company(db_session, firm)
+    other_client_company = make_client_company(db_session, firm)
+    other_contact, _ = make_contact(db_session, other_client_company)
+    matter = make_matter(db_session, firm, client_company)
+
+    res = client.post(
+        f"/matters/{matter.id}/contact-permissions",
+        json={"client_contact_id": str(other_contact.id), "permission_level": "viewer"},
+        headers=auth_headers(admin),
+    )
+    assert res.status_code == 404

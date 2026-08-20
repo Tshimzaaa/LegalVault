@@ -1,6 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from app.modules.matters.models import MatterDocument, MatterTask, MatterMessage
+from app.modules.matters.models import MatterDocument, MatterTask, MatterMessage, MatterContactPermission
 
 from app.modules.matters.models import Matter, MatterAssignment
 
@@ -205,3 +205,33 @@ class MatterRepository:
     def delete_message(self, message: MatterMessage):
         self.db.delete(message)
         self.db.flush()
+
+    def get_contact_permission(self, matter_id, client_contact_id) -> MatterContactPermission | None:
+        return self.db.scalar(
+            select(MatterContactPermission).where(
+                MatterContactPermission.matter_id == matter_id,
+                MatterContactPermission.client_contact_id == client_contact_id,
+            )
+        )
+
+    def create_contact_permission(self, permission: MatterContactPermission) -> MatterContactPermission:
+        self.db.add(permission)
+        self.db.flush()
+        return permission
+
+    def list_contact_permissions_for_matter(self, matter_id) -> list[MatterContactPermission]:
+        return list(
+            self.db.scalars(select(MatterContactPermission).where(MatterContactPermission.matter_id == matter_id))
+        )
+
+    def delete_contact_permission(self, permission: MatterContactPermission):
+        self.db.delete(permission)
+        self.db.flush()
+
+    def list_contact_permissions_for_client(self, client_id) -> list[tuple[MatterContactPermission, Matter]]:
+        statement = (
+            select(MatterContactPermission, Matter)
+            .join(Matter, MatterContactPermission.matter_id == Matter.id)
+            .where(Matter.client_id == client_id, Matter.is_visible_to_client.is_(True))
+        )
+        return list(self.db.execute(statement).all())

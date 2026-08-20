@@ -28,6 +28,8 @@ MATTER_DOCUMENT_DELETED = "matter.document_deleted"
 MATTER_TASK_CREATED = "matter.task_created"
 MATTER_TASK_UPDATED = "matter.task_updated"
 MATTER_TASK_DELETED = "matter.task_deleted"
+MATTER_CONTACT_PERMISSION_SET = "matter_contact_permission.set"
+MATTER_CONTACT_PERMISSION_REMOVED = "matter_contact_permission.removed"
 
 ANNOUNCEMENT_CREATED = "announcement.created"
 ANNOUNCEMENT_UPDATED = "announcement.updated"

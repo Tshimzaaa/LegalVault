@@ -21,3 +21,9 @@ class MatterMessageNotFound(Exception):
 
 class CannotDeleteOthersMessage(Exception):
     pass
+
+class MatterContactPermissionNotFound(Exception):
+    pass
+
+class ContactNotFoundForMatterPermission(Exception):
+    pass

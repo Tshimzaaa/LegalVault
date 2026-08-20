@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from uuid import UUID
 
-from sqlalchemy import Boolean, Date, DateTime, Enum, ForeignKey, String, Text
+from sqlalchemy import Boolean, Date, DateTime, Enum, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import TYPE_CHECKING
@@ -11,7 +11,7 @@ from app.database.base import BaseModel
 
 if TYPE_CHECKING:
     from app.modules.auth.models.law_firm import LawFirm
-    from app.modules.clients.models import Client
+    from app.modules.clients.models import Client, ClientContact
     from app.modules.auth.models.user import User
 
 
@@ -40,6 +40,12 @@ class TaskStatus(str, enum.Enum):
 class MessageAuthorType(str, enum.Enum):
     STAFF = "staff"
     CLIENT_CONTACT = "client_contact"
+
+
+class ContactPermissionLevel(str, enum.Enum):
+    OWNER = "owner"
+    EDITOR = "editor"
+    VIEWER = "viewer"
 
 
 class Matter(BaseModel):
@@ -204,4 +210,27 @@ class MatterMessage(BaseModel):
     matter: Mapped["Matter"] = relationship(
         "Matter",
         back_populates="messages",
+    )
+
+
+class MatterContactPermission(BaseModel):
+    __tablename__ = "matter_contact_permissions"
+    __table_args__ = (UniqueConstraint("matter_id", "client_contact_id"),)
+
+    matter_id: Mapped[UUID] = mapped_column(
+        ForeignKey("matters.id"),
+        nullable=False,
+        index=True,
+    )
+
+    client_contact_id: Mapped[UUID] = mapped_column(
+        ForeignKey("client_contacts.id"),
+        nullable=False,
+        index=True,
+    )
+
+    permission_level: Mapped[ContactPermissionLevel] = mapped_column(
+        Enum(ContactPermissionLevel),
+        default=ContactPermissionLevel.VIEWER,
+        nullable=False,
     )

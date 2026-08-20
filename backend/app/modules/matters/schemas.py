@@ -2,7 +2,7 @@ from uuid import UUID
 from datetime import date, datetime
 from pydantic import BaseModel, Field
 
-from app.modules.matters.models import MatterStatus, MatterRole, TaskStatus, MessageAuthorType
+from app.modules.matters.models import MatterStatus, MatterRole, TaskStatus, MessageAuthorType, ContactPermissionLevel
 
 
 class CreateMatterRequest(BaseModel):
@@ -133,3 +133,20 @@ class MatterMessageResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class SetContactPermissionRequest(BaseModel):
+    client_contact_id: UUID
+    permission_level: ContactPermissionLevel
+
+
+class MatterContactPermissionResponse(BaseModel):
+    id: UUID
+    matter_id: UUID
+    matter_title: str
+    client_contact_id: UUID
+    contact_name: str
+    contact_email: str
+    permission_level: ContactPermissionLevel
+    created_at: datetime
+    updated_at: datetime
