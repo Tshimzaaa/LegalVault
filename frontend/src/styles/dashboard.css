@@ -1,3 +1,10 @@
+/* Shared shell + generic component styles for both dashboard-style portals — the staff
+   Workspace and the client ClientPortal render the same .dash-layout/<Sidebar>/.dash-content
+   structure and the same generic classes (.card, .chip, .muted, .status-badge, etc.) used
+   throughout their child pages. Lives here, not in either portal's own CSS file, so both
+   actually load it — it used to live in Workspace.css alone, which meant the client portal
+   (mounted without ever importing that file) rendered with none of this applied. */
+
 .dash-layout {
   display: grid;
   grid-template-columns: 260px 1fr;
@@ -233,4 +240,3 @@
   padding-right: 28px;
   cursor: pointer;
 }
-

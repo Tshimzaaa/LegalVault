@@ -21,6 +21,12 @@ import {
   listMessages,
   createMessage,
   deleteMessage,
+  listMatterApprovals,
+  requestMatterApproval,
+  decideMatterApproval,
+  generateMatterDocument,
+  isGatedTransition,
+  MATTER_STATUS_TRANSITIONS,
 } from '../../api/matters'
 import type {
   Matter,
@@ -30,13 +36,18 @@ import type {
   MatterTask,
   TaskStatus,
   MatterMessage,
+  MatterApproval,
 } from '../../api/matters'
 import { listClients, listContacts } from '../../api/clients'
 import type { Client, Contact } from '../../api/clients'
-import { listUsers } from '../../api/auth'
+import { listUsers, getCurrentUser } from '../../api/auth'
 import type { User } from '../../api/auth'
 import { listSignatureRequests, sendForSignature, voidSignatureRequest } from '../../api/signatures'
 import type { SignatureRequest, SignatureRecipientType } from '../../api/signatures'
+import { listTemplates } from '../../api/templates'
+import type { Template } from '../../api/templates'
+import { listIntakeSubmissions } from '../../api/intakeSubmissions'
+import type { IntakeSubmission } from '../../api/intakeSubmissions'
 import { IconDownload, IconTrash, IconSend, IconEdit } from '../../components/icons'
 
 type LoadState = 'loading' | 'error' | 'ready'
@@ -94,6 +105,10 @@ function MatterDetail() {
   const [users, setUsers] = useState<User[]>([])
   const [contacts, setContacts] = useState<Contact[]>([])
   const [assignments, setAssignments] = useState<MatterAssignment[]>([])
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
+  const [approvals, setApprovals] = useState<MatterApproval[]>([])
+  const [approvalError, setApprovalError] = useState<string | null>(null)
+  const [decidingApproval, setDecidingApproval] = useState(false)
   const [status, setStatus] = useState<LoadState>('loading')
 
   const [editingDetails, setEditingDetails] = useState(false)
@@ -121,6 +136,14 @@ function MatterDetail() {
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [docBusyId, setDocBusyId] = useState<string | null>(null)
+
+  const [templates, setTemplates] = useState<Template[]>([])
+  const [intakeSubmissions, setIntakeSubmissions] = useState<IntakeSubmission[]>([])
+  const [genTemplateId, setGenTemplateId] = useState('')
+  const [genSubmissionId, setGenSubmissionId] = useState('')
+  const [genTitle, setGenTitle] = useState('')
+  const [generating, setGenerating] = useState(false)
+  const [generateError, setGenerateError] = useState<string | null>(null)
 
   const [tasks, setTasks] = useState<MatterTask[]>([])
   const [taskTitle, setTaskTitle] = useState('')
@@ -161,8 +184,12 @@ function MatterDetail() {
       listTasks(token, matterId),
       listMessages(token, matterId),
       listSignatureRequests(token, matterId),
+      getCurrentUser(token),
+      listMatterApprovals(token, matterId),
+      listTemplates(token),
+      listIntakeSubmissions(token),
     ])
-      .then(([m, a, c, u, docs, t, msgs, sigs]) => {
+      .then(([m, a, c, u, docs, t, msgs, sigs, me, appr, tmpls, submissions]) => {
         setMatter(m)
         setStatusValue(m.status)
         setDeadlineValue(m.due_date ?? '')
@@ -173,6 +200,10 @@ function MatterDetail() {
         setTasks(t)
         setMessages(msgs)
         setSignatureRequests(sigs)
+        setCurrentUser(me)
+        setApprovals(appr)
+        setTemplates(tmpls)
+        setIntakeSubmissions(submissions.filter((s) => s.client_id === m.client_id))
         setStatus('ready')
         listContacts(token, m.client_id)
           .then((contactList) => setContacts(contactList))
@@ -221,6 +252,39 @@ function MatterDetail() {
       setMatter(updated)
     } finally {
       setStatusSaving(false)
+    }
+  }
+
+  async function handleRequestApproval() {
+    if (!token || !matterId || !matter) return
+    setApprovalError(null)
+    setStatusSaving(true)
+    try {
+      const approval = await requestMatterApproval(token, matterId, statusValue)
+      setApprovals((prev) => [approval, ...prev])
+    } catch (err) {
+      setApprovalError(err instanceof Error ? err.message : 'Could not request approval.')
+    } finally {
+      setStatusSaving(false)
+    }
+  }
+
+  async function handleDecideApproval(approval: MatterApproval, decision: 'approved' | 'rejected') {
+    if (!token || !matterId) return
+    setApprovalError(null)
+    setDecidingApproval(true)
+    try {
+      const updated = await decideMatterApproval(token, matterId, approval.id, decision)
+      setApprovals((prev) => prev.map((a) => (a.id === updated.id ? updated : a)))
+      if (updated.status === 'approved') {
+        const refreshed = await getMatter(token, matterId)
+        setMatter(refreshed)
+        setStatusValue(refreshed.status)
+      }
+    } catch (err) {
+      setApprovalError(err instanceof Error ? err.message : 'Could not record the decision.')
+    } finally {
+      setDecidingApproval(false)
     }
   }
 
@@ -287,6 +351,29 @@ function MatterDetail() {
       setUploadError(err instanceof Error ? err.message : 'Could not upload the document.')
     } finally {
       setUploading(false)
+    }
+  }
+
+  async function handleGenerate(e: FormEvent) {
+    e.preventDefault()
+    if (!token || !matterId || !genTemplateId || !genSubmissionId) {
+      setGenerateError('Choose a template and an intake submission.')
+      return
+    }
+    setGenerateError(null)
+    setGenerating(true)
+    try {
+      const generated = await generateMatterDocument(token, matterId, {
+        template_id: genTemplateId,
+        intake_submission_id: genSubmissionId,
+        title: genTitle || undefined,
+      })
+      setDocuments((prev) => [...prev, generated])
+      setGenTitle('')
+    } catch (err) {
+      setGenerateError(err instanceof Error ? err.message : 'Could not generate the document.')
+    } finally {
+      setGenerating(false)
     }
   }
 
@@ -494,6 +581,28 @@ function MatterDetail() {
   )
   const assignableUsers = users.filter((u) => !userIdsWithSelectedRole.has(u.id))
 
+  const pendingApproval = approvals.find((a) => a.status === 'pending')
+  const canDecideApprovals = Boolean(
+    currentUser &&
+      (currentUser.role === 'admin' ||
+        assignments.some((a) => a.user_id === currentUser.id && a.role_on_matter === 'lead_lawyer')),
+  )
+  const availableStatusOptions = matter
+    ? statusOptions.filter((o) => o.value === matter.status || MATTER_STATUS_TRANSITIONS[matter.status].includes(o.value))
+    : statusOptions
+  const statusChangeIsGated = matter ? isGatedTransition(matter.status, statusValue) : false
+
+  const generatableTemplates = templates.filter((t) => t.body)
+
+  function uploaderName(doc: MatterDocument): string {
+    if (doc.uploaded_by) return userName(doc.uploaded_by)
+    if (doc.uploaded_by_contact_id) {
+      const contact = contacts.find((c) => c.id === doc.uploaded_by_contact_id)
+      return contact ? `${contact.first_name} ${contact.last_name} (client)` : 'Client'
+    }
+    return '—'
+  }
+
   const documentGroups = Object.values(
     documents.reduce<Record<string, MatterDocument[]>>((groups, doc) => {
       ;(groups[doc.title] ??= []).push(doc)
@@ -585,7 +694,7 @@ function MatterDetail() {
               </div>
               <div className="matter-detail-field-row">
                 <select value={statusValue} onChange={(e) => setStatusValue(e.target.value as Matter['status'])}>
-                  {statusOptions.map((o) => (
+                  {availableStatusOptions.map((o) => (
                     <option key={o.value} value={o.value}>
                       {o.label}
                     </option>
@@ -594,12 +703,57 @@ function MatterDetail() {
                 <button
                   type="button"
                   className="btn-solid"
-                  disabled={statusSaving || statusValue === matter.status}
-                  onClick={handleStatusSave}
+                  disabled={statusSaving || statusValue === matter.status || Boolean(pendingApproval)}
+                  onClick={statusChangeIsGated ? handleRequestApproval : handleStatusSave}
                 >
-                  {statusSaving ? 'Saving…' : 'Save'}
+                  {statusSaving ? 'Saving…' : statusChangeIsGated ? 'Request Approval' : 'Save'}
                 </button>
               </div>
+              {approvalError && <p className="matter-error">{approvalError}</p>}
+
+              {pendingApproval && (
+                <div className="matter-detail-toggle-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 6 }}>
+                  <span className="muted">
+                    Approval pending: {pendingApproval.from_status} &rarr; {pendingApproval.to_status}, requested by{' '}
+                    {userName(pendingApproval.requested_by)} on {new Date(pendingApproval.created_at).toLocaleDateString()}
+                  </span>
+                  {canDecideApprovals && (
+                    <div className="matter-actions">
+                      <button
+                        type="button"
+                        className="btn-solid"
+                        disabled={decidingApproval}
+                        onClick={() => handleDecideApproval(pendingApproval, 'approved')}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-ghost"
+                        disabled={decidingApproval}
+                        onClick={() => handleDecideApproval(pendingApproval, 'rejected')}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {approvals.filter((a) => a.status !== 'pending').length > 0 && (
+                <div className="list-rows" style={{ marginTop: 8 }}>
+                  {approvals
+                    .filter((a) => a.status !== 'pending')
+                    .map((a) => (
+                      <div key={a.id} className="assignment-row">
+                        <span className="muted">
+                          {a.from_status} &rarr; {a.to_status}
+                        </span>
+                        <span className={`chip small ${a.status === 'approved' ? '' : 'muted'}`}>{a.status}</span>
+                      </div>
+                    ))}
+                </div>
+              )}
 
               <p className="muted" style={{ margin: '12px 0 4px' }}>
                 Deadline
@@ -647,7 +801,9 @@ function MatterDetail() {
                       <div className="matter-doc-row">
                         <span className="matter-doc-title">{latest.title}</span>
                         <span className="chip small">v{latest.version}</span>
-                        <span className="muted matter-doc-meta">{new Date(latest.created_at).toLocaleDateString()}</span>
+                        <span className="muted matter-doc-meta">
+                          {uploaderName(latest)} · {new Date(latest.created_at).toLocaleDateString()}
+                        </span>
                         <button
                           type="button"
                           className="icon-btn"
@@ -673,7 +829,9 @@ function MatterDetail() {
                             <div key={v.id} className="matter-doc-row muted">
                               <span className="matter-doc-title">{v.title}</span>
                               <span className="chip small">v{v.version}</span>
-                              <span className="muted matter-doc-meta">{new Date(v.created_at).toLocaleDateString()}</span>
+                              <span className="muted matter-doc-meta">
+                                {uploaderName(v)} · {new Date(v.created_at).toLocaleDateString()}
+                              </span>
                               <button
                                 type="button"
                                 className="icon-btn"
@@ -722,6 +880,41 @@ function MatterDetail() {
                 </button>
               </form>
               {uploadError && <p className="matter-error">{uploadError}</p>}
+
+              {generatableTemplates.length > 0 && (
+                <form onSubmit={handleGenerate} className="matter-doc-upload-row" style={{ marginTop: 10 }}>
+                  <select value={genTemplateId} onChange={(e) => setGenTemplateId(e.target.value)} aria-label="Template">
+                    <option value="">Generate from template…</option>
+                    {generatableTemplates.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.title}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={genSubmissionId}
+                    onChange={(e) => setGenSubmissionId(e.target.value)}
+                    aria-label="Intake submission"
+                  >
+                    <option value="">Using submission…</option>
+                    {intakeSubmissions.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {new Date(s.created_at).toLocaleDateString()} ({s.status})
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Document title (optional)"
+                    value={genTitle}
+                    onChange={(e) => setGenTitle(e.target.value)}
+                  />
+                  <button type="submit" className="btn-ghost" disabled={generating}>
+                    {generating ? 'Generating…' : 'Generate'}
+                  </button>
+                </form>
+              )}
+              {generateError && <p className="matter-error">{generateError}</p>}
             </section>
 
             <section className="card" style={{ marginTop: 16 }}>

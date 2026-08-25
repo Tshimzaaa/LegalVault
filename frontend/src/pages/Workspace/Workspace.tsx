@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import './Workspace.css'
+import '../../styles/dashboard.css'
 import Sidebar from '../../components/Sidebar'
 import AnnouncementBanner from '../../components/AnnouncementBanner'
 import NotificationBell from '../../components/NotificationBell'

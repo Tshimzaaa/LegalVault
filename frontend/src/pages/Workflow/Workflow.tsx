@@ -3,8 +3,8 @@ import type { DragEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Workflow.css'
 import { IconPlus } from '../../components/icons'
-import { listMatters, updateMatterStatus } from '../../api/matters'
-import type { Matter, MatterStatus } from '../../api/matters'
+import { listMatters, updateMatterStatus, requestMatterApproval, listPendingApprovals, isGatedTransition, MATTER_STATUS_TRANSITIONS } from '../../api/matters'
+import type { Matter, MatterStatus, MatterApproval } from '../../api/matters'
 import { listClients } from '../../api/clients'
 import type { Client } from '../../api/clients'
 
@@ -23,6 +23,7 @@ function Workflow() {
   const navigate = useNavigate()
   const [matters, setMatters] = useState<Matter[]>([])
   const [clients, setClients] = useState<Client[]>([])
+  const [pendingApprovals, setPendingApprovals] = useState<MatterApproval[]>([])
   const [status, setStatus] = useState<LoadState>('loading')
   const [attempt, setAttempt] = useState(0)
   const [draggingId, setDraggingId] = useState<string | null>(null)
@@ -38,11 +39,12 @@ function Workflow() {
       return
     }
 
-    Promise.all([listMatters(token), listClients(token)])
-      .then(([matterList, clientList]) => {
+    Promise.all([listMatters(token), listClients(token), listPendingApprovals(token)])
+      .then(([matterList, clientList, approvalList]) => {
         if (cancelled) return
         setMatters(matterList)
         setClients(clientList)
+        setPendingApprovals(approvalList)
         setStatus('ready')
       })
       .catch(() => {
@@ -70,7 +72,13 @@ function Workflow() {
     setDragOverStatus(null)
   }
 
+  function isValidTarget(matter: Matter, targetStatus: MatterStatus) {
+    return MATTER_STATUS_TRANSITIONS[matter.status].includes(targetStatus)
+  }
+
   function handleDragOver(e: DragEvent<HTMLDivElement>, targetStatus: MatterStatus) {
+    const matter = matters.find((m) => m.id === draggingId)
+    if (!matter || !isValidTarget(matter, targetStatus)) return // no preventDefault -> browser shows "not allowed"
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
     setDragOverStatus(targetStatus)
@@ -83,13 +91,26 @@ function Workflow() {
     setDraggingId(null)
 
     const matter = matters.find((m) => m.id === matterId)
-    if (!matter || matter.status === targetStatus) return
-
-    const previousStatus = matter.status
-    setMatters((prev) => prev.map((m) => (m.id === matterId ? { ...m, status: targetStatus } : m)))
+    if (!matter || matter.status === targetStatus || !isValidTarget(matter, targetStatus)) return
 
     const token = localStorage.getItem('access_token')
     if (!token) return
+
+    if (isGatedTransition(matter.status, targetStatus)) {
+      // Status doesn't move yet — the card stays in its current column until an eligible
+      // approver decides on the request from the matter's detail page.
+      try {
+        const approval = await requestMatterApproval(token, matterId, targetStatus)
+        setPendingApprovals((prev) => [...prev, approval])
+      } catch {
+        // Most likely: an approval is already pending for this matter. Nothing to roll
+        // back since nothing moved.
+      }
+      return
+    }
+
+    const previousStatus = matter.status
+    setMatters((prev) => prev.map((m) => (m.id === matterId ? { ...m, status: targetStatus } : m)))
 
     try {
       await updateMatterStatus(token, matterId, targetStatus)
@@ -160,6 +181,9 @@ function Workflow() {
                       <span className="workflow-card-client">{clientName(m.client_id)}</span>
                       <div className="workflow-card-footer">
                         <span className="deadline-sub">Opened {new Date(m.created_at).toLocaleDateString()}</span>
+                        {pendingApprovals.some((a) => a.matter_id === m.id) && (
+                          <span className="chip small">Approval pending</span>
+                        )}
                       </div>
                     </div>
                   ))}

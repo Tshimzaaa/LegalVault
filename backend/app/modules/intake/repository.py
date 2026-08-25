@@ -124,6 +124,14 @@ class IntakeRepository:
         self.db.delete(answer)
         self.db.flush()
 
+    def list_answers_with_fields(self, submission_id) -> list[tuple[IntakeSubmissionAnswer, IntakeFormField]]:
+        statement = (
+            select(IntakeSubmissionAnswer, IntakeFormField)
+            .join(IntakeFormField, IntakeSubmissionAnswer.field_id == IntakeFormField.id)
+            .where(IntakeSubmissionAnswer.submission_id == submission_id)
+        )
+        return list(self.db.execute(statement).all())
+
     def delete_submission(self, submission: IntakeSubmission):
         self.db.delete(submission)
         self.db.flush()

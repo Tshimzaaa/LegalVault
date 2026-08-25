@@ -1,8 +1,16 @@
 from uuid import UUID
 from datetime import date, datetime
+from typing import Literal
 from pydantic import BaseModel, Field
 
-from app.modules.matters.models import MatterStatus, MatterRole, TaskStatus, MessageAuthorType, ContactPermissionLevel
+from app.modules.matters.models import (
+    MatterStatus,
+    MatterRole,
+    TaskStatus,
+    MessageAuthorType,
+    ContactPermissionLevel,
+    ApprovalStatus,
+)
 
 
 class CreateMatterRequest(BaseModel):
@@ -150,3 +158,35 @@ class MatterContactPermissionResponse(BaseModel):
     permission_level: ContactPermissionLevel
     created_at: datetime
     updated_at: datetime
+
+
+class RequestMatterApprovalRequest(BaseModel):
+    to_status: MatterStatus
+
+
+class DecideMatterApprovalRequest(BaseModel):
+    decision: Literal["approved", "rejected"]
+    note: str | None = Field(default=None, max_length=500)
+
+
+class GenerateDocumentRequest(BaseModel):
+    template_id: UUID
+    intake_submission_id: UUID
+    title: str | None = Field(default=None, min_length=2, max_length=200)
+
+
+class MatterApprovalResponse(BaseModel):
+    id: UUID
+    matter_id: UUID
+    requested_by: UUID
+    from_status: MatterStatus
+    to_status: MatterStatus
+    status: ApprovalStatus
+    decided_by: UUID | None
+    decided_at: datetime | None
+    decision_note: str | None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True

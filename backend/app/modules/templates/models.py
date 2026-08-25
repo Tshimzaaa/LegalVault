@@ -1,5 +1,5 @@
 from uuid import UUID
-from sqlalchemy import String, ForeignKey
+from sqlalchemy import String, Text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from typing import TYPE_CHECKING
 
@@ -31,3 +31,8 @@ class Template(BaseModel):
     content_type: Mapped[str] = mapped_column(String(100), nullable=False)
 
     version: Mapped[int] = mapped_column(nullable=False, default=1)
+
+    # HTML/text with {{placeholder}} markers, substituted with intake-submission answers at
+    # document-generation time (see app/modules/templates/render.py). Edited in place via
+    # PATCH — unrelated to the binary file's own versioning above.
+    body: Mapped[str | None] = mapped_column(Text, nullable=True)

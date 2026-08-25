@@ -21,6 +21,8 @@ See [`backend/docs/architecture.md`](backend/docs/architecture.md) for the origi
 - JWT auth (PyJWT) with argon2id password hashing (pwdlib), rate limiting via slowapi, refresh tokens for staff sessions
 - ClamAV (`clamd`) for malware scanning on uploads
 - Documenso (self-hosted, via `documenso_sdk`) for e-signature requests and signing webhooks
+- Celery + Redis for scheduled background jobs (matter due-date and contract expiry reminders — see `app/tasks/`)
+- `xhtml2pdf` for generating draft documents from a template body + intake-submission answers (pure-Python HTML→PDF — WeasyPrint was tried first per the original tech plan but its native Pango/GObject dependency doesn't install on Windows dev machines)
 - pytest, run in CI against a real Postgres service container (including a restricted, non-`BYPASSRLS` role so row-level security is actually exercised)
 
 **Frontend**
@@ -39,11 +41,15 @@ backend/
     core/              config, security, storage, rate limiter, exception handlers
     database/          SQLAlchemy session/engine setup, row-level-security tenant context
     exceptions/        domain exceptions
+    tasks/             Celery app + scheduled reminder jobs (matter due-date, contract expiry)
     modules/
       auth/              staff register/login, refresh tokens, staff invites, password reset
       clients/           client companies, contact invites, client-portal auth
-      matters/           matters (cases), assignments, tasks, messages, per-matter documents, calendar
-      templates/         firm-wide document templates (upload/list/download)
+      matters/           matters (cases), assignments, tasks, messages, per-matter documents, calendar,
+                         status transition rules + an approval gate on the two sensitive transitions
+      templates/         firm-wide document templates (upload/list/download); a template can also
+                         carry an editable {{placeholder}} body used to generate a draft matter
+                         document from an intake submission's answers
       signed_contracts/  contract records (value, counterparty, expiry) separate from templates
       signatures/        e-signature requests via Documenso + webhook handling
       intake/            customizable client intake forms + submissions
@@ -106,7 +112,13 @@ npm run dev
 
 The frontend dev server expects the API at the CORS origin configured in `backend/app/main.py` (`http://localhost:5173` by default).
 
-**Supporting services** (`docker-compose.yml`, needed for malware scanning and e-signature): ClamAV and a self-hosted Documenso instance (+ its own Postgres). Run `docker compose up`, then see the comments in `docker-compose.yml` for the one-time Documenso API token / webhook setup.
+**Supporting services** (`docker-compose.yml`, needed for malware scanning, e-signature, and background jobs): ClamAV, a self-hosted Documenso instance (+ its own Postgres), and Redis. Run `docker compose up`, then see the comments in `docker-compose.yml` for the one-time Documenso API token / webhook setup.
+
+**Background jobs**: matter due-date and contract expiry reminders run as scheduled Celery tasks (`backend/app/tasks/`) against the Redis broker started above. Run a combined worker + beat process locally:
+```
+cd backend && celery -A app.tasks.celery_app worker --beat --loglevel=info
+```
+Production should run the worker and beat scheduler as separate long-running processes instead — see `DEPLOYMENT.md`. Only one beat scheduler should ever run at a time; running more than one duplicates every scheduled job.
 
 **Tests**
 ```

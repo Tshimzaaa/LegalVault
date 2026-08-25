@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from app.exceptions.templates import TemplateNotFound, UnsupportedFileType
+from app.exceptions.templates import TemplateNotFound, UnsupportedFileType, TemplateHasNoBody
 from app.exceptions.auth import InvalidOrExpiredResetToken as StaffInvalidResetToken
 from app.exceptions.clients import InvalidOrExpiredResetToken as ClientInvalidResetToken
 
@@ -40,6 +40,12 @@ from app.exceptions.matters import (
     CannotDeleteOthersMessage,
     MatterContactPermissionNotFound,
     ContactNotFoundForMatterPermission,
+    InvalidStatusTransition,
+    ApprovalRequiredForTransition,
+    ApprovalAlreadyPending,
+    MatterApprovalNotFound,
+    ApprovalAlreadyDecided,
+    IntakeSubmissionClientMismatch,
 )
 from app.exceptions.support_requests import SupportRequestNotFound
 from app.exceptions.announcements import AnnouncementNotFound
@@ -162,6 +168,33 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(ContactNotFoundForMatterPermission)
     async def contact_not_found_for_matter_permission(_, __):
         raise HTTPException(status_code=404, detail="Contact not found for this matter's client.")
+
+    @app.exception_handler(InvalidStatusTransition)
+    async def invalid_status_transition(_, __):
+        raise HTTPException(status_code=409, detail="This status change isn't allowed from the matter's current status.")
+
+    @app.exception_handler(ApprovalRequiredForTransition)
+    async def approval_required_for_transition(_, __):
+        raise HTTPException(
+            status_code=409,
+            detail="This status change requires approval — request approval instead of setting it directly.",
+        )
+
+    @app.exception_handler(ApprovalAlreadyPending)
+    async def approval_already_pending(_, __):
+        raise HTTPException(status_code=409, detail="An approval is already pending for this matter.")
+
+    @app.exception_handler(MatterApprovalNotFound)
+    async def matter_approval_not_found(_, __):
+        raise HTTPException(status_code=404, detail="Approval request not found.")
+
+    @app.exception_handler(ApprovalAlreadyDecided)
+    async def approval_already_decided(_, __):
+        raise HTTPException(status_code=409, detail="This approval has already been decided.")
+
+    @app.exception_handler(IntakeSubmissionClientMismatch)
+    async def intake_submission_client_mismatch(_, __):
+        raise HTTPException(status_code=400, detail="This intake submission doesn't belong to the matter's client.")
     @app.exception_handler(TemplateNotFound)
     async def template_not_found(_, __):
         raise HTTPException(status_code=404, detail="Template not found.")
@@ -169,6 +202,10 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(UnsupportedFileType)
     async def unsupported_file_type(_, __):
         raise HTTPException(status_code=400, detail="Unsupported file type. Only PDF and Word documents are allowed.")
+
+    @app.exception_handler(TemplateHasNoBody)
+    async def template_has_no_body(_, __):
+        raise HTTPException(status_code=409, detail="This template has no body to generate from — add one first.")
     @app.exception_handler(ContactNotFound)
     async def contact_not_found(_, __):
         raise HTTPException(status_code=404, detail="Contact not found.")

@@ -3,3 +3,6 @@ class TemplateNotFound(Exception):
 
 class UnsupportedFileType(Exception):
     pass
+
+class TemplateHasNoBody(Exception):
+    pass

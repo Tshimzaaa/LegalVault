@@ -12,6 +12,7 @@ ever actually committed.
 """
 import os
 import uuid
+from datetime import date
 
 import pytest
 from fastapi.testclient import TestClient
@@ -27,7 +28,8 @@ from app.core.config import settings
 from app.modules.auth.models import LawFirm, User
 from app.modules.auth.models.role import UserRole
 from app.modules.clients.models import Client, ClientContact
-from app.modules.matters.models import Matter
+from app.modules.matters.models import Matter, MatterAssignment, MatterRole, MatterStatus
+from app.modules.signed_contracts.models import ContractStatus, ContractType, SignedContract
 
 TEST_DATABASE_URL = os.environ.get(
     "TEST_DATABASE_URL",
@@ -140,10 +142,45 @@ def make_matter(db_session, firm: LawFirm, client_company: Client, **overrides) 
         title=overrides.get("title", "Test Matter"),
         description=overrides.get("description"),
         is_visible_to_client=overrides.get("is_visible_to_client", False),
+        due_date=overrides.get("due_date"),
+        status=overrides.get("status", MatterStatus.INTAKE),
     )
     db_session.add(matter)
     db_session.flush()
     return matter
+
+
+def make_matter_assignment(db_session, matter: Matter, user: User, *, role_on_matter: MatterRole = MatterRole.LEAD_LAWYER) -> MatterAssignment:
+    assignment = MatterAssignment(
+        matter_id=matter.id,
+        user_id=user.id,
+        role_on_matter=role_on_matter,
+    )
+    db_session.add(assignment)
+    db_session.flush()
+    return assignment
+
+
+def make_signed_contract(db_session, firm: LawFirm, client_company: Client, **overrides) -> SignedContract:
+    contract = SignedContract(
+        firm_id=firm.id,
+        client_id=client_company.id,
+        matter_id=overrides.get("matter_id"),
+        uploaded_by=overrides.get("uploaded_by"),
+        title=overrides.get("title", "Test Contract"),
+        description=overrides.get("description"),
+        agreement_type=overrides.get("agreement_type", ContractType.GENERAL),
+        signed_date=overrides.get("signed_date", date.today()),
+        expiry_date=overrides.get("expiry_date"),
+        integration_source=overrides.get("integration_source", "manual"),
+        status=overrides.get("status", ContractStatus.ACTIVE),
+        file_key=overrides.get("file_key", f"contracts/{uuid.uuid4().hex}.pdf"),
+        original_filename=overrides.get("original_filename", "contract.pdf"),
+        content_type=overrides.get("content_type", "application/pdf"),
+    )
+    db_session.add(contract)
+    db_session.flush()
+    return contract
 
 
 def owner_headers() -> dict:

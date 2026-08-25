@@ -103,6 +103,7 @@
 .workflow-card-footer {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
   margin-top: 2px;
 }

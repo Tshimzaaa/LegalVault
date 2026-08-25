@@ -1,4 +1,17 @@
 services:
+  # Celery broker for background jobs (matter due-date / contract expiry reminders — see
+  # backend/app/tasks/). No persistence needed — job state lives in Postgres (via
+  # Notification rows); Redis here is purely a task queue.
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   clamav:
     image: clamav/clamav:stable
     ports:

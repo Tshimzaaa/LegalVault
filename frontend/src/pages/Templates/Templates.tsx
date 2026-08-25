@@ -30,6 +30,7 @@ function Templates() {
   const [editTitle, setEditTitle] = useState('')
   const [editDescription, setEditDescription] = useState('')
   const [editCategory, setEditCategory] = useState('')
+  const [editBody, setEditBody] = useState('')
   const [editSaving, setEditSaving] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
 
@@ -123,6 +124,7 @@ function Templates() {
     setEditTitle(t.title)
     setEditDescription(t.description ?? '')
     setEditCategory(t.category)
+    setEditBody(t.body ?? '')
     setEditError(null)
   }
 
@@ -139,6 +141,7 @@ function Templates() {
         title: editTitle,
         description: editDescription || null,
         category: editCategory,
+        body: editBody || null,
       })
       setTemplates((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
       setEditingId(null)
@@ -241,6 +244,20 @@ function Templates() {
                   <span>Description</span>
                   <textarea rows={2} value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
                 </label>
+                <label className="field">
+                  <span>
+                    Generation body — use <code>{'{{field_name}}'}</code> to insert an intake answer (matched by
+                    field label, e.g. "Counterparty" &rarr; <code>{'{{counterparty}}'}</code>), plus the built-ins{' '}
+                    <code>{'{{client_name}}'}</code>, <code>{'{{matter_title}}'}</code>, <code>{'{{today}}'}</code>.
+                    Leave blank if this template is just a reference file, not something to generate from.
+                  </span>
+                  <textarea
+                    rows={6}
+                    value={editBody}
+                    onChange={(e) => setEditBody(e.target.value)}
+                    placeholder="Agreement between {{client_name}} and {{counterparty}}, effective {{today}}."
+                  />
+                </label>
                 {editError && <p className="matter-error">{editError}</p>}
                 <div className="matter-actions">
                   <button type="button" className="btn-ghost" onClick={() => setEditingId(null)}>
@@ -278,6 +295,7 @@ function Templates() {
                 <span className="template-name">{t.title}</span>
                 <span className="template-category">
                   {t.category} <span className="chip small">v{t.version}</span>
+                  {t.body && <span className="chip small">Generatable</span>}
                 </span>
                 <p className="template-description">{t.description}</p>
                 <button

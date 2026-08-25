@@ -53,6 +53,23 @@ def test_reuploading_same_title_bumps_version(client, db_session):
     assert second_res.json()["version"] == 2
 
 
+def test_update_body_round_trips(client, db_session):
+    firm = make_firm(db_session)
+    admin, _ = make_staff(db_session, firm)
+    template_id = _upload(client, admin).json()["id"]
+
+    update_res = client.patch(
+        f"/templates/{template_id}",
+        json={"body": "Agreement between {{client_name}} and {{counterparty}}."},
+        headers=auth_headers(admin),
+    )
+    assert update_res.status_code == 200
+    assert update_res.json()["body"] == "Agreement between {{client_name}} and {{counterparty}}."
+
+    get_res = client.get("/templates", headers=auth_headers(admin))
+    assert get_res.json()[0]["body"] == "Agreement between {{client_name}} and {{counterparty}}."
+
+
 def test_update_and_delete_template(client, db_session):
     firm = make_firm(db_session)
     admin, _ = make_staff(db_session, firm)

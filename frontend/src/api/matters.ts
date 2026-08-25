@@ -24,6 +24,30 @@ export interface CalendarEvent {
   task_id: string | null
 }
 
+// Valid next statuses per current status — must stay in sync with
+// MATTER_STATUS_TRANSITIONS in backend/app/modules/matters/service.py (no shared
+// codegen between the two apps in this repo). The backend is the source of truth and
+// rejects anything not listed here regardless of what the UI allows.
+export const MATTER_STATUS_TRANSITIONS: Record<MatterStatus, MatterStatus[]> = {
+  intake: ['in_review', 'declined'],
+  in_review: ['awaiting_signature', 'declined', 'intake'],
+  awaiting_signature: ['signed', 'declined', 'in_review'],
+  signed: ['closed'],
+  closed: [],
+  declined: [],
+}
+
+// Transitions that can't be applied directly — requestMatterApproval() instead of
+// updateMatterStatus(). Must stay in sync with GATED_TRANSITIONS in matters/service.py.
+export const GATED_TRANSITIONS: [MatterStatus, MatterStatus][] = [
+  ['awaiting_signature', 'signed'],
+  ['signed', 'closed'],
+]
+
+export function isGatedTransition(from: MatterStatus, to: MatterStatus): boolean {
+  return GATED_TRANSITIONS.some(([f, t]) => f === from && t === to)
+}
+
 export type MatterRole = 'lead_lawyer' | 'paralegal' | 'secretary' | 'reviewer'
 
 export interface MatterAssignment {
@@ -81,6 +105,23 @@ export interface UpdateMatterTaskRequest {
   status?: TaskStatus
 }
 
+export type MatterApprovalStatus = 'pending' | 'approved' | 'rejected'
+export type ApprovalDecision = 'approved' | 'rejected'
+
+export interface MatterApproval {
+  id: string
+  matter_id: string
+  requested_by: string
+  from_status: MatterStatus
+  to_status: MatterStatus
+  status: MatterApprovalStatus
+  decided_by: string | null
+  decided_at: string | null
+  decision_note: string | null
+  created_at: string
+  updated_at: string
+}
+
 export async function listMatters(token: string): Promise<Matter[]> {
   return apiRequest<Matter[]>('/matters', { token })
 }
@@ -103,6 +144,48 @@ export async function updateMatterDetails(
 
 export async function updateMatterStatus(token: string, matterId: string, status: MatterStatus): Promise<Matter> {
   return apiRequest<Matter>(`/matters/${matterId}/status`, { method: 'PATCH', body: { status }, token })
+}
+
+export async function requestMatterApproval(
+  token: string,
+  matterId: string,
+  toStatus: MatterStatus,
+): Promise<MatterApproval> {
+  return apiRequest<MatterApproval>(`/matters/${matterId}/approvals`, {
+    method: 'POST',
+    body: { to_status: toStatus },
+    token,
+  })
+}
+
+export async function listMatterApprovals(token: string, matterId: string): Promise<MatterApproval[]> {
+  return apiRequest<MatterApproval[]>(`/matters/${matterId}/approvals`, { token })
+}
+
+export async function decideMatterApproval(
+  token: string,
+  matterId: string,
+  approvalId: string,
+  decision: ApprovalDecision,
+  note?: string,
+): Promise<MatterApproval> {
+  return apiRequest<MatterApproval>(`/matters/${matterId}/approvals/${approvalId}`, {
+    method: 'PATCH',
+    body: { decision, note: note || null },
+    token,
+  })
+}
+
+export async function listPendingApprovals(token: string): Promise<MatterApproval[]> {
+  return apiRequest<MatterApproval[]>('/matters/approvals/pending', { token })
+}
+
+export async function generateMatterDocument(
+  token: string,
+  matterId: string,
+  body: { template_id: string; intake_submission_id: string; title?: string },
+): Promise<MatterDocument> {
+  return apiRequest<MatterDocument>(`/matters/${matterId}/documents/generate`, { method: 'POST', body, token })
 }
 
 export async function updateMatterVisibility(

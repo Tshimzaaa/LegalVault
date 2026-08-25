@@ -9,6 +9,7 @@ export interface Template {
   original_filename: string
   content_type: string
   version: number
+  body: string | null
   created_at: string
 }
 
@@ -16,6 +17,7 @@ export interface UpdateTemplatePayload {
   title?: string
   description?: string | null
   category?: string
+  body?: string | null
 }
 
 export interface TemplateDownload {

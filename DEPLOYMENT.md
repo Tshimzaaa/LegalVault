@@ -51,16 +51,33 @@ For production these need:
   `https://<backend-host>/webhooks/documenso` using `DOCUMENSO_WEBHOOK_SECRET` from §1.
 - Point `CLAMD_HOST`/`CLAMD_PORT` at ClamAV's private-network address (not a public one).
 
-## 4. Backend deploy **[manual — needs a host; no host chosen yet]**
+## 4. Redis (Celery broker) **[manual — needs a persistent host]**
+
+Matter due-date and contract expiry reminders run as scheduled Celery tasks (`backend/app/tasks/`)
+against a Redis broker. Unlike Documenso/ClamAV, it's stateless from the app's perspective — job
+state lives in Postgres via `Notification` rows, so it's safe to lose a queued job on restart
+(worst case, a scheduled reminder run is skipped once and picks back up on the next schedule tick).
+Any managed Redis (Upstash, a hosting provider's add-on, etc.) works — set `REDIS_URL` from §1.
+**Without this, `ENVIRONMENT=production` refuses to start at all** — see `app/core/config.py`'s
+startup checks.
+
+## 5. Backend deploy **[manual — needs a host; no host chosen yet]**
 
 `ci.yml` has no deploy step — it only runs tests/lint/build. Once you pick a host (Render,
 Fly.io, Railway, a VPS, etc.), a deploy job can be added to `ci.yml`; ask for that whenever
 the host is decided. Wherever it runs, set `ENVIRONMENT=production` plus every var from
 `backend/.env.example`. The app will refuse to boot if any secret is still a placeholder,
-`FRONTEND_URL` is still the localhost default, or `RUNTIME_DATABASE_URL` is unset — that's
-intentional, not a bug to work around.
+`FRONTEND_URL` is still the localhost default, or `RUNTIME_DATABASE_URL`/`REDIS_URL` is unset —
+that's intentional, not a bug to work around.
 
-## 5. Frontend deploy **[manual — needs a host]**
+The deploy also needs a second long-running process alongside `web`: `backend/Procfile`'s
+`worker` line (`celery -A app.tasks.celery_app worker --beat --loglevel=info`) runs both the
+Celery worker and the beat scheduler in one process, which is fine at this scale. Whichever host
+is chosen must support running both `Procfile` process types, and **only one `worker` instance
+should run** — running more than one duplicates every scheduled reminder, since each would run
+its own beat scheduler.
+
+## 6. Frontend deploy **[manual — needs a host]**
 
 - Set `VITE_API_BASE_URL` to the real backend origin before `npm run build` (see
   `frontend/.env.example`).
@@ -68,10 +85,11 @@ intentional, not a bug to work around.
   otherwise.
 - `npm run build` output in `frontend/dist/` is a static site — any static host works.
 
-## 6. Already handled — verify, don't rebuild
+## 7. Already handled — verify, don't rebuild
 
 - **Production safety checks** (`backend/app/core/config.py`): fails loudly at startup if
-  secrets are placeholders, `FRONTEND_URL` is unset, or `RUNTIME_DATABASE_URL` is missing.
+  secrets are placeholders, `FRONTEND_URL` is unset, or `RUNTIME_DATABASE_URL`/`REDIS_URL` is
+  missing.
 - **CORS / HSTS**: already gated on `ENVIRONMENT` in `backend/app/main.py` — no localhost
   fallback once `ENVIRONMENT=production`.
 - **RLS session-context bug**: fixed — tenant context now survives every `db.commit()` within a
@@ -80,7 +98,7 @@ intentional, not a bug to work around.
 - **Frontend bundle**: route-level code-splitting is in place (`App.tsx`) — `Workspace`,
   `ClientPortal`, `OwnerPortal`, and the auth-flow pages load on demand instead of upfront.
 
-## 7. Known gaps this checklist doesn't fix
+## 8. Known gaps this checklist doesn't fix
 
 - **Real email delivery** — invite links and notification emails are still console-stubbed.
   Out of scope here by request; see README's Known Gaps.

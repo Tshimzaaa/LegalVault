@@ -48,6 +48,12 @@ class ContactPermissionLevel(str, enum.Enum):
     VIEWER = "viewer"
 
 
+class ApprovalStatus(str, enum.Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+
 class Matter(BaseModel):
     __tablename__ = "matters"
 
@@ -234,3 +240,35 @@ class MatterContactPermission(BaseModel):
         default=ContactPermissionLevel.VIEWER,
         nullable=False,
     )
+
+
+class MatterApproval(BaseModel):
+    __tablename__ = "matter_approvals"
+
+    matter_id: Mapped[UUID] = mapped_column(
+        ForeignKey("matters.id"),
+        nullable=False,
+        index=True,
+    )
+
+    requested_by: Mapped[UUID] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=False,
+    )
+
+    from_status: Mapped[MatterStatus] = mapped_column(Enum(MatterStatus), nullable=False)
+
+    to_status: Mapped[MatterStatus] = mapped_column(Enum(MatterStatus), nullable=False)
+
+    status: Mapped[ApprovalStatus] = mapped_column(
+        Enum(ApprovalStatus),
+        default=ApprovalStatus.PENDING,
+        nullable=False,
+        index=True,
+    )
+
+    decided_by: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    decision_note: Mapped[str | None] = mapped_column(String(500), nullable=True)

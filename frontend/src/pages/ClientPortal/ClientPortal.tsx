@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import '../../styles/dashboard.css'
 import Sidebar from '../../components/Sidebar'
 import type { NavItem } from '../../components/Sidebar'
 import AnnouncementBanner from '../../components/AnnouncementBanner'

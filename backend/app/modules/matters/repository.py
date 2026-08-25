@@ -1,6 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from app.modules.matters.models import MatterDocument, MatterTask, MatterMessage, MatterContactPermission
+from app.modules.matters.models import MatterDocument, MatterTask, MatterMessage, MatterContactPermission, MatterApproval, ApprovalStatus
 
 from app.modules.matters.models import Matter, MatterAssignment
 
@@ -235,3 +235,35 @@ class MatterRepository:
             .where(Matter.client_id == client_id, Matter.is_visible_to_client.is_(True))
         )
         return list(self.db.execute(statement).all())
+
+    def create_approval(self, approval: MatterApproval) -> MatterApproval:
+        self.db.add(approval)
+        self.db.flush()
+        return approval
+
+    def get_approval_by_id(self, approval_id) -> MatterApproval | None:
+        return self.db.scalar(select(MatterApproval).where(MatterApproval.id == approval_id))
+
+    def get_pending_approval(self, matter_id) -> MatterApproval | None:
+        return self.db.scalar(
+            select(MatterApproval).where(
+                MatterApproval.matter_id == matter_id,
+                MatterApproval.status == ApprovalStatus.PENDING,
+            )
+        )
+
+    def list_approvals_for_matter(self, matter_id) -> list[MatterApproval]:
+        statement = (
+            select(MatterApproval)
+            .where(MatterApproval.matter_id == matter_id)
+            .order_by(MatterApproval.created_at.desc())
+        )
+        return list(self.db.scalars(statement))
+
+    def list_pending_approvals_for_firm(self, firm_id) -> list[MatterApproval]:
+        statement = (
+            select(MatterApproval)
+            .join(Matter, MatterApproval.matter_id == Matter.id)
+            .where(Matter.firm_id == firm_id, MatterApproval.status == ApprovalStatus.PENDING)
+        )
+        return list(self.db.scalars(statement))

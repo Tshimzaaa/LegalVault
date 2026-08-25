@@ -1,4 +1,5 @@
 import uuid
+from datetime import date, datetime, UTC
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import ObjectDeletedError
 
@@ -6,11 +7,15 @@ from app.modules.matters.repository import MatterRepository
 from app.modules.matters.models import (
     Matter,
     MatterAssignment,
+    MatterApproval,
     MatterDocument,
     MatterTask,
     MatterMessage,
     MessageAuthorType,
     MatterContactPermission,
+    MatterStatus,
+    MatterRole,
+    ApprovalStatus,
 )
 from app.modules.matters.schemas import (
     CreateMatterRequest,
@@ -25,6 +30,9 @@ from app.modules.matters.schemas import (
     CreateMatterMessageRequest,
     SetContactPermissionRequest,
     MatterContactPermissionResponse,
+    RequestMatterApprovalRequest,
+    DecideMatterApprovalRequest,
+    GenerateDocumentRequest,
 )
 from app.exceptions.matters import (
     MatterNotFound,
@@ -37,9 +45,17 @@ from app.exceptions.matters import (
     CannotDeleteOthersMessage,
     MatterContactPermissionNotFound,
     ContactNotFoundForMatterPermission,
+    InvalidStatusTransition,
+    ApprovalRequiredForTransition,
+    ApprovalAlreadyPending,
+    MatterApprovalNotFound,
+    ApprovalAlreadyDecided,
+    IntakeSubmissionClientMismatch,
 )
+from app.exceptions.auth import InsufficientPermissions
 from app.modules.clients.repository import ClientRepository
 from app.modules.auth.repository import AuthRepository
+from app.modules.auth.models.role import UserRole
 from app.exceptions.malware import MalwareDetected
 from app.core.storage import upload_file, get_download_url, delete_file
 from app.core.malware_scan import scan_file
@@ -55,6 +71,24 @@ ALLOWED_DOCUMENT_TYPES = {
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/msword",
     "text/plain",
+}
+
+# Valid next statuses per current status — replaces the old "any status to any status"
+# behavior. CLOSED and DECLINED are terminal (no outgoing transitions).
+MATTER_STATUS_TRANSITIONS: dict[MatterStatus, set[MatterStatus]] = {
+    MatterStatus.INTAKE: {MatterStatus.IN_REVIEW, MatterStatus.DECLINED},
+    MatterStatus.IN_REVIEW: {MatterStatus.AWAITING_SIGNATURE, MatterStatus.DECLINED, MatterStatus.INTAKE},
+    MatterStatus.AWAITING_SIGNATURE: {MatterStatus.SIGNED, MatterStatus.DECLINED, MatterStatus.IN_REVIEW},
+    MatterStatus.SIGNED: {MatterStatus.CLOSED},
+    MatterStatus.CLOSED: set(),
+    MatterStatus.DECLINED: set(),
+}
+
+# Transitions that can't be applied directly via update_status — they must go through
+# request_status_approval() + decide_approval() instead.
+GATED_TRANSITIONS: set[tuple[MatterStatus, MatterStatus]] = {
+    (MatterStatus.AWAITING_SIGNATURE, MatterStatus.SIGNED),
+    (MatterStatus.SIGNED, MatterStatus.CLOSED),
 }
 
 
@@ -134,7 +168,16 @@ class MatterService:
     def update_status(self, matter_id, firm_id, actor_id, request: UpdateMatterStatusRequest) -> Matter:
         matter = self.get_matter(matter_id, firm_id)
         previous_status = matter.status
-        matter.status = request.status
+        target = request.status
+
+        if target == previous_status:
+            return matter
+        if target not in MATTER_STATUS_TRANSITIONS.get(previous_status, set()):
+            raise InvalidStatusTransition()
+        if (previous_status, target) in GATED_TRANSITIONS:
+            raise ApprovalRequiredForTransition()
+
+        matter.status = target
 
         self.audit.log(
             actor_type=ActorType.STAFF,
@@ -720,3 +763,193 @@ class MatterService:
             for p, matter in rows
             if p.client_contact_id in contacts_by_id
         ]
+
+    def _eligible_approver_ids(self, firm_id, matter_id, exclude_id=None) -> list[uuid.UUID]:
+        """Firm admins, plus this matter's lead-lawyer assignees — active users only."""
+        firm_users = {u.id: u for u in self.auth_repository.list_by_firm(firm_id)}
+        admin_ids = {u.id for u in firm_users.values() if u.role == UserRole.ADMIN and u.is_active}
+        lead_lawyer_ids = {
+            a.user_id
+            for a in self.repository.list_assignments_for_matter(matter_id)
+            if a.role_on_matter == MatterRole.LEAD_LAWYER and a.user_id in firm_users and firm_users[a.user_id].is_active
+        }
+        approver_ids = admin_ids | lead_lawyer_ids
+        if exclude_id is not None:
+            approver_ids.discard(exclude_id)
+        return list(approver_ids)
+
+    def _can_decide_approval(self, actor_id, actor_role, matter_id) -> bool:
+        if actor_role == UserRole.ADMIN:
+            return True
+        return self.repository.get_assignment(matter_id, actor_id, MatterRole.LEAD_LAWYER) is not None
+
+    def request_status_approval(
+        self, matter_id, firm_id, actor_id, request: RequestMatterApprovalRequest
+    ) -> MatterApproval:
+        matter = self.get_matter(matter_id, firm_id)
+        current = matter.status
+        target = request.to_status
+
+        if (current, target) not in GATED_TRANSITIONS:
+            raise InvalidStatusTransition()
+        if self.repository.get_pending_approval(matter_id):
+            raise ApprovalAlreadyPending()
+
+        approval = MatterApproval(
+            matter_id=matter.id,
+            requested_by=actor_id,
+            from_status=current,
+            to_status=target,
+            status=ApprovalStatus.PENDING,
+        )
+        self.repository.create_approval(approval)
+
+        self.audit.log(
+            actor_type=ActorType.STAFF,
+            actor_id=actor_id,
+            firm_id=firm_id,
+            action=audit_actions.MATTER_APPROVAL_REQUESTED,
+            target_type="matter_approval",
+            target_id=approval.id,
+            details={"from": current.value, "to": target.value},
+        )
+        self.notifications.notify_many([
+            {
+                "recipient_type": RecipientType.STAFF,
+                "recipient_id": approver_id,
+                "type": "matter.approval_requested",
+                "title": f'Approval needed: "{matter.title}"',
+                "body": f"Move from {current.value} to {target.value}?",
+                "target_type": "matter",
+                "target_id": matter.id,
+            }
+            for approver_id in self._eligible_approver_ids(firm_id, matter_id, exclude_id=actor_id)
+        ])
+        self.db.commit()
+        self.db.refresh(approval)
+        return approval
+
+    def list_approvals(self, matter_id, firm_id) -> list[MatterApproval]:
+        self.get_matter(matter_id, firm_id)  # ownership check
+        return self.repository.list_approvals_for_matter(matter_id)
+
+    def list_pending_approvals(self, firm_id) -> list[MatterApproval]:
+        return self.repository.list_pending_approvals_for_firm(firm_id)
+
+    def decide_approval(
+        self, matter_id, approval_id, firm_id, actor_id, actor_role, request: DecideMatterApprovalRequest
+    ) -> MatterApproval:
+        matter = self.get_matter(matter_id, firm_id)
+
+        approval = self.repository.get_approval_by_id(approval_id)
+        if not approval or str(approval.matter_id) != str(matter.id):
+            raise MatterApprovalNotFound()
+        if approval.status != ApprovalStatus.PENDING:
+            raise ApprovalAlreadyDecided()
+        if not self._can_decide_approval(actor_id, actor_role, matter_id):
+            raise InsufficientPermissions()
+
+        approval.status = ApprovalStatus.APPROVED if request.decision == "approved" else ApprovalStatus.REJECTED
+        approval.decided_by = actor_id
+        approval.decided_at = datetime.now(UTC)
+        approval.decision_note = request.note
+
+        if approval.status == ApprovalStatus.APPROVED:
+            matter.status = approval.to_status
+
+        self.audit.log(
+            actor_type=ActorType.STAFF,
+            actor_id=actor_id,
+            firm_id=firm_id,
+            action=audit_actions.MATTER_APPROVAL_DECIDED,
+            target_type="matter_approval",
+            target_id=approval.id,
+            details={"decision": approval.status.value, "to": approval.to_status.value},
+        )
+        self.notifications.notify(
+            recipient_type=RecipientType.STAFF,
+            recipient_id=approval.requested_by,
+            type="matter.approval_decided",
+            title=f'Approval {approval.status.value}: "{matter.title}"',
+            body=(
+                f"Your request to move to {approval.to_status.value} was {approval.status.value}."
+                + (f" Note: {request.note}" if request.note else "")
+            ),
+            target_type="matter",
+            target_id=matter.id,
+        )
+        self.db.commit()
+        self.db.refresh(approval)
+        return approval
+
+    def generate_document_from_template(
+        self, matter_id, firm_id, actor_id, request: GenerateDocumentRequest
+    ) -> MatterDocument:
+        # Local imports: intake/service.py imports MatterService at module level, so
+        # importing intake (or templates, for symmetry) at module level here would be
+        # circular. Same pattern already used above for app.exceptions.templates.
+        from app.modules.templates.repository import TemplateRepository
+        from app.modules.templates.render import normalize_key, render_body
+        from app.exceptions.templates import TemplateNotFound, TemplateHasNoBody
+        from app.modules.intake.repository import IntakeRepository
+        from app.modules.intake.models import IntakeFieldType
+        from app.exceptions.intake import IntakeSubmissionNotFound
+        from xhtml2pdf import pisa
+        from io import BytesIO
+
+        matter = self.get_matter(matter_id, firm_id)
+
+        template_repository = TemplateRepository(self.db)
+        template = template_repository.get_by_id(request.template_id)
+        if not template or str(template.firm_id) != str(firm_id):
+            raise TemplateNotFound()
+        if not template.body:
+            raise TemplateHasNoBody()
+
+        intake_repository = IntakeRepository(self.db)
+        submission = intake_repository.get_submission_by_id(request.intake_submission_id)
+        if not submission or str(submission.firm_id) != str(firm_id):
+            raise IntakeSubmissionNotFound()
+        if str(submission.client_id) != str(matter.client_id):
+            raise IntakeSubmissionClientMismatch()
+
+        values: dict[str, str] = {}
+        for answer, field in intake_repository.list_answers_with_fields(submission.id):
+            if field.field_type == IntakeFieldType.FILE:
+                values[normalize_key(field.label)] = "(file attached)"
+            else:
+                values[normalize_key(field.label)] = answer.value or ""
+
+        client = self.client_repository.get_client_by_id(matter.client_id)
+        values.setdefault("client_name", client.company_name if client else "")
+        values.setdefault("matter_title", matter.title)
+        values.setdefault("today", date.today().isoformat())
+
+        rendered_html = render_body(template.body, values)
+
+        pdf_buffer = BytesIO()
+        pisa.CreatePDF(rendered_html, dest=pdf_buffer)
+        pdf_bytes = pdf_buffer.getvalue()
+
+        title = request.title or f"{template.title} — {matter.title}"
+        document = self.upload_matter_document(
+            matter_id=matter.id,
+            title=title,
+            file_bytes=pdf_bytes,
+            original_filename=f"{title}.pdf",
+            content_type="application/pdf",
+            firm_id=firm_id,
+            uploaded_by=actor_id,
+        )
+
+        self.audit.log(
+            actor_type=ActorType.STAFF,
+            actor_id=actor_id,
+            firm_id=firm_id,
+            action=audit_actions.MATTER_DOCUMENT_GENERATED,
+            target_type="matter_document",
+            target_id=document.id,
+            details={"template_id": str(template.id), "intake_submission_id": str(submission.id)},
+        )
+        self.db.commit()
+        return document

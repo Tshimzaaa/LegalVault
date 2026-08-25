@@ -27,3 +27,21 @@ class MatterContactPermissionNotFound(Exception):
 
 class ContactNotFoundForMatterPermission(Exception):
     pass
+
+class InvalidStatusTransition(Exception):
+    pass
+
+class ApprovalRequiredForTransition(Exception):
+    pass
+
+class ApprovalAlreadyPending(Exception):
+    pass
+
+class MatterApprovalNotFound(Exception):
+    pass
+
+class ApprovalAlreadyDecided(Exception):
+    pass
+
+class IntakeSubmissionClientMismatch(Exception):
+    pass

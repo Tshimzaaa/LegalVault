@@ -17,6 +17,7 @@ function makeTemplate(overrides: Partial<Template> = {}): Template {
     original_filename: 'nda.pdf',
     content_type: 'application/pdf',
     version: 1,
+    body: null,
     created_at: new Date().toISOString(),
     ...overrides,
   }

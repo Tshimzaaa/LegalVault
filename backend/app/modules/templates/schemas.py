@@ -12,6 +12,7 @@ class TemplateResponse(BaseModel):
     original_filename: str
     content_type: str
     version: int
+    body: str | None
     created_at: datetime
 
     class Config:
@@ -27,3 +28,4 @@ class UpdateTemplateRequest(BaseModel):
     title: str | None = Field(default=None, min_length=2, max_length=200)
     description: str | None = Field(default=None, max_length=1000)
     category: str | None = Field(default=None, min_length=1, max_length=100)
+    body: str | None = Field(default=None, max_length=20000)

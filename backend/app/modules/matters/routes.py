@@ -25,6 +25,10 @@ from app.modules.matters.schemas import (
     MatterMessageResponse,
     SetContactPermissionRequest,
     MatterContactPermissionResponse,
+    RequestMatterApprovalRequest,
+    DecideMatterApprovalRequest,
+    MatterApprovalResponse,
+    GenerateDocumentRequest,
 )
 from app.modules.matters.service import MatterService
 
@@ -98,6 +102,15 @@ def get_client_calendar(
     return service.get_client_calendar(current_contact.client_id, range_start, range_end)
 
 
+@router.get("/approvals/pending", response_model=list[MatterApprovalResponse])
+def list_pending_approvals(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    service = MatterService(db)
+    return service.list_pending_approvals(current_user.firm_id)
+
+
 @router.get("/{matter_id}", response_model=MatterResponse)
 def get_matter(
     matter_id: str,
@@ -128,6 +141,41 @@ def update_status(
 ):
     service = MatterService(db)
     return service.update_status(matter_id, current_user.firm_id, current_user.id, request)
+
+
+@router.post("/{matter_id}/approvals", response_model=MatterApprovalResponse, status_code=201)
+def request_status_approval(
+    matter_id: str,
+    request: RequestMatterApprovalRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(_CASE_WORK)),
+):
+    service = MatterService(db)
+    return service.request_status_approval(matter_id, current_user.firm_id, current_user.id, request)
+
+
+@router.get("/{matter_id}/approvals", response_model=list[MatterApprovalResponse])
+def list_matter_approvals(
+    matter_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    service = MatterService(db)
+    return service.list_approvals(matter_id, current_user.firm_id)
+
+
+@router.patch("/{matter_id}/approvals/{approval_id}", response_model=MatterApprovalResponse)
+def decide_matter_approval(
+    matter_id: str,
+    approval_id: str,
+    request: DecideMatterApprovalRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(_CASE_WORK)),
+):
+    service = MatterService(db)
+    return service.decide_approval(
+        matter_id, approval_id, current_user.firm_id, current_user.id, current_user.role, request
+    )
 
 
 @router.patch("/{matter_id}/visibility", response_model=MatterResponse)
@@ -195,6 +243,17 @@ async def upload_matter_document(
         original_filename=file.filename,
         content_type=file.content_type,
     )
+
+
+@router.post("/{matter_id}/documents/generate", response_model=MatterDocumentResponse, status_code=201)
+def generate_matter_document(
+    matter_id: str,
+    request: GenerateDocumentRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(_CASE_WORK)),
+):
+    service = MatterService(db)
+    return service.generate_document_from_template(matter_id, current_user.firm_id, current_user.id, request)
 
 
 @router.get("/{matter_id}/documents", response_model=list[MatterDocumentResponse])
