@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { DragEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import './Workflow.css'
 import { IconPlus } from '../../components/icons'
 import { listMatters, updateMatterStatus, requestMatterApproval, listPendingApprovals, isGatedTransition, MATTER_STATUS_TRANSITIONS } from '../../api/matters'
@@ -28,6 +28,7 @@ function Workflow() {
   const [attempt, setAttempt] = useState(0)
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [dragOverStatus, setDragOverStatus] = useState<MatterStatus | null>(null)
+  const [moveError, setMoveError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -84,6 +85,39 @@ function Workflow() {
     setDragOverStatus(targetStatus)
   }
 
+  async function moveMatter(matter: Matter, targetStatus: MatterStatus) {
+    if (matter.status === targetStatus || !isValidTarget(matter, targetStatus)) return
+
+    const token = localStorage.getItem('access_token')
+    if (!token) return
+
+    setMoveError(null)
+
+    if (isGatedTransition(matter.status, targetStatus)) {
+      // Status doesn't move yet — the card stays in its current column until an eligible
+      // approver decides on the request from the matter's detail page.
+      try {
+        const approval = await requestMatterApproval(token, matter.id, targetStatus)
+        setPendingApprovals((prev) => [...prev, approval])
+      } catch {
+        // Most likely: an approval is already pending for this matter. Nothing to roll
+        // back since nothing moved.
+        setMoveError(`Could not request approval for "${matter.title}". It may already have one pending.`)
+      }
+      return
+    }
+
+    const previousStatus = matter.status
+    setMatters((prev) => prev.map((m) => (m.id === matter.id ? { ...m, status: targetStatus } : m)))
+
+    try {
+      await updateMatterStatus(token, matter.id, targetStatus)
+    } catch {
+      setMatters((prev) => prev.map((m) => (m.id === matter.id ? { ...m, status: previousStatus } : m)))
+      setMoveError(`Could not move "${matter.title}". Please try again.`)
+    }
+  }
+
   async function handleDrop(e: DragEvent<HTMLDivElement>, targetStatus: MatterStatus) {
     e.preventDefault()
     const matterId = e.dataTransfer.getData('text/plain')
@@ -91,32 +125,8 @@ function Workflow() {
     setDraggingId(null)
 
     const matter = matters.find((m) => m.id === matterId)
-    if (!matter || matter.status === targetStatus || !isValidTarget(matter, targetStatus)) return
-
-    const token = localStorage.getItem('access_token')
-    if (!token) return
-
-    if (isGatedTransition(matter.status, targetStatus)) {
-      // Status doesn't move yet — the card stays in its current column until an eligible
-      // approver decides on the request from the matter's detail page.
-      try {
-        const approval = await requestMatterApproval(token, matterId, targetStatus)
-        setPendingApprovals((prev) => [...prev, approval])
-      } catch {
-        // Most likely: an approval is already pending for this matter. Nothing to roll
-        // back since nothing moved.
-      }
-      return
-    }
-
-    const previousStatus = matter.status
-    setMatters((prev) => prev.map((m) => (m.id === matterId ? { ...m, status: targetStatus } : m)))
-
-    try {
-      await updateMatterStatus(token, matterId, targetStatus)
-    } catch {
-      setMatters((prev) => prev.map((m) => (m.id === matterId ? { ...m, status: previousStatus } : m)))
-    }
+    if (!matter) return
+    await moveMatter(matter, targetStatus)
   }
 
   return (
@@ -127,15 +137,21 @@ function Workflow() {
           <span className="chip">
             Total Matters <span className="chip-badge">{matters.length}</span>
           </span>
-          <button type="button" className="btn-solid" onClick={() => navigate('/staff/new-matter')}>
+          <Link to="/staff/new-matter" className="btn-solid">
             <IconPlus /> New Matter
-          </button>
+          </Link>
         </div>
       </header>
 
+      {moveError && (
+        <p className="matter-error" role="alert" aria-live="polite">
+          {moveError}
+        </p>
+      )}
+
       {status === 'loading' && (
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading matters…</p>
         </div>
       )}
@@ -173,9 +189,15 @@ function Workflow() {
                       key={m.id}
                       className={`card workflow-card${draggingId === m.id ? ' dragging' : ''}`}
                       draggable
+                      tabIndex={0}
+                      role="link"
+                      aria-label={`Open matter ${m.title}`}
                       onDragStart={(e) => handleDragStart(e, m.id)}
                       onDragEnd={handleDragEnd}
                       onClick={() => navigate(`/staff/matters/${m.id}`)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') navigate(`/staff/matters/${m.id}`)
+                      }}
                     >
                       <span className="workflow-card-title">{m.title}</span>
                       <span className="workflow-card-client">{clientName(m.client_id)}</span>
@@ -185,6 +207,26 @@ function Workflow() {
                           <span className="chip small">Approval pending</span>
                         )}
                       </div>
+                      {MATTER_STATUS_TRANSITIONS[m.status].length > 0 && (
+                        <select
+                          className="workflow-card-move"
+                          aria-label={`Move ${m.title} to a different status`}
+                          value=""
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
+                          onChange={(e) => {
+                            const target = e.target.value as MatterStatus
+                            if (target) moveMatter(m, target)
+                          }}
+                        >
+                          <option value="">Move to…</option>
+                          {MATTER_STATUS_TRANSITIONS[m.status].map((s) => (
+                            <option key={s} value={s}>
+                              {columnOrder.find((c) => c.status === s)?.label ?? s}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </div>
                   ))}
                   {cards.length === 0 && dragOverStatus === col.status && (

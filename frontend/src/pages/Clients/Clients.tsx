@@ -258,7 +258,12 @@ function Clients({ user }: ClientsProps) {
           <div className="field-row">
             <label className="field">
               <span>Company name</span>
-              <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+              <input
+                type="text"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                autoComplete="organization"
+              />
             </label>
           </div>
           <div className="matter-actions">
@@ -269,13 +274,13 @@ function Clients({ user }: ClientsProps) {
               {creating ? 'Creating…' : 'Create Client'}
             </button>
           </div>
-          {createError && <p className="matter-error">{createError}</p>}
+          {createError && <p className="matter-error" aria-live="polite">{createError}</p>}
         </form>
       )}
 
       {status === 'loading' && (
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading clients…</p>
         </div>
       )}
@@ -292,7 +297,7 @@ function Clients({ user }: ClientsProps) {
       {status === 'ready' && (
         <div className="clients-layout">
           <section className="card clients-table-card">
-            {clientActionError && <p className="matter-error">{clientActionError}</p>}
+            {clientActionError && <p className="matter-error" aria-live="polite">{clientActionError}</p>}
             <table className="data-table">
               <thead>
                 <tr>
@@ -460,22 +465,38 @@ function Clients({ user }: ClientsProps) {
                 <div className="field-row">
                   <label className="field">
                     <span>First name</span>
-                    <input type="text" value={inviteFirstName} onChange={(e) => setInviteFirstName(e.target.value)} />
+                    <input
+                      type="text"
+                      value={inviteFirstName}
+                      onChange={(e) => setInviteFirstName(e.target.value)}
+                      autoComplete="given-name"
+                    />
                   </label>
                   <label className="field">
                     <span>Last name</span>
-                    <input type="text" value={inviteLastName} onChange={(e) => setInviteLastName(e.target.value)} />
+                    <input
+                      type="text"
+                      value={inviteLastName}
+                      onChange={(e) => setInviteLastName(e.target.value)}
+                      autoComplete="family-name"
+                    />
                   </label>
                 </div>
                 <label className="field">
                   <span>Email</span>
-                  <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
+                  <input
+                    type="email"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    autoComplete="email"
+                    spellCheck={false}
+                  />
                 </label>
                 <button type="submit" className="btn-solid" disabled={inviting}>
                   <IconMail /> {inviting ? 'Sending…' : 'Send Invite'}
                 </button>
-                {inviteError && <p className="matter-error">{inviteError}</p>}
-                {inviteSent && <p className="clients-form-note">Invite sent.</p>}
+                {inviteError && <p className="matter-error" aria-live="polite">{inviteError}</p>}
+                {inviteSent && <p className="clients-form-note" aria-live="polite">Invite sent.</p>}
               </form>
             </section>
 
@@ -486,12 +507,18 @@ function Clients({ user }: ClientsProps) {
               <form onSubmit={handleResend}>
                 <label className="field">
                   <span>Contact email</span>
-                  <input type="email" value={resendEmail} onChange={(e) => setResendEmail(e.target.value)} />
+                  <input
+                    type="email"
+                    value={resendEmail}
+                    onChange={(e) => setResendEmail(e.target.value)}
+                    autoComplete="email"
+                    spellCheck={false}
+                  />
                 </label>
                 <button type="submit" className="btn-ghost" disabled={resending}>
                   {resending ? 'Resending…' : 'Resend Invite'}
                 </button>
-                {resendMessage && <p className="clients-form-note">{resendMessage}</p>}
+                {resendMessage && <p className="clients-form-note" aria-live="polite">{resendMessage}</p>}
               </form>
             </section>
           </div>

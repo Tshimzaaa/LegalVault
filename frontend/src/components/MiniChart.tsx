@@ -18,9 +18,10 @@ function MiniChart({ points, color, formatValue, height = 70 }: MiniChartProps) 
 
   const max = Math.max(...points.map((p) => p.value), 1)
   const barWidth = 100 / points.length
+  const chartLabel = `Bar chart from ${points[0].label} to ${points[points.length - 1].label}`
 
   return (
-    <svg viewBox={`0 0 100 ${height}`} preserveAspectRatio="none" className="mini-chart" role="img">
+    <svg viewBox={`0 0 100 ${height}`} preserveAspectRatio="none" className="mini-chart" role="img" aria-label={chartLabel}>
       {points.map((p, i) => {
         const barHeight = max > 0 ? (p.value / max) * (height - 4) : 0
         return (

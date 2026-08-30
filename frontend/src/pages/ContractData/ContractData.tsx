@@ -5,21 +5,32 @@ interface ContractRow {
   name: string
   client: string
   type: string
-  value: string
+  value: number
+  perMonth?: boolean
   expiry: string
   status: 'Active' | 'Expiring' | 'Expired'
 }
 
 const rows: ContractRow[] = [
-  { name: 'Share Purchase Agreement', client: 'Meridian Capital', type: 'Corporate', value: 'R420,000', expiry: '02 Jun 2028', status: 'Active' },
-  { name: 'Master Services Agreement', client: 'Vantage Logistics', type: 'Commercial', value: 'R186,500', expiry: '18 May 2027', status: 'Active' },
-  { name: 'Trademark Licensing', client: 'Kaya Software', type: 'IP', value: 'R64,200', expiry: '30 Apr 2027', status: 'Active' },
-  { name: 'Commercial Lease Renewal', client: 'Coastal Retail', type: 'Real Estate', value: 'R98,000', expiry: '11 Aug 2026', status: 'Expiring' },
-  { name: 'Employment Contract', client: 'Nkosi Holdings', type: 'Employment', value: 'R32,000', expiry: '22 Mar 2027', status: 'Active' },
-  { name: 'NDA – Partner Onboarding', client: 'Thabo & Associates', type: 'NDA', value: 'R0', expiry: '09 Mar 2026', status: 'Expiring' },
-  { name: 'Settlement Agreement', client: 'Estate of J. Botha', type: 'Litigation', value: 'R215,000', expiry: '27 Feb 2026', status: 'Expired' },
-  { name: 'Retainer Agreement', client: 'Kaya Software', type: 'Corporate', value: 'R18,000 / mo', expiry: '14 Feb 2027', status: 'Active' },
+  { name: 'Share Purchase Agreement', client: 'Meridian Capital', type: 'Corporate', value: 420000, expiry: '02 Jun 2028', status: 'Active' },
+  { name: 'Master Services Agreement', client: 'Vantage Logistics', type: 'Commercial', value: 186500, expiry: '18 May 2027', status: 'Active' },
+  { name: 'Trademark Licensing', client: 'Kaya Software', type: 'IP', value: 64200, expiry: '30 Apr 2027', status: 'Active' },
+  { name: 'Commercial Lease Renewal', client: 'Coastal Retail', type: 'Real Estate', value: 98000, expiry: '11 Aug 2026', status: 'Expiring' },
+  { name: 'Employment Contract', client: 'Nkosi Holdings', type: 'Employment', value: 32000, expiry: '22 Mar 2027', status: 'Active' },
+  { name: 'NDA – Partner Onboarding', client: 'Thabo & Associates', type: 'NDA', value: 0, expiry: '09 Mar 2026', status: 'Expiring' },
+  { name: 'Settlement Agreement', client: 'Estate of J. Botha', type: 'Litigation', value: 215000, expiry: '27 Feb 2026', status: 'Expired' },
+  { name: 'Retainer Agreement', client: 'Kaya Software', type: 'Corporate', value: 18000, perMonth: true, expiry: '14 Feb 2027', status: 'Active' },
 ]
+
+const currencyFormat = new Intl.NumberFormat(undefined, {
+  style: 'currency',
+  currency: 'ZAR',
+  maximumFractionDigits: 0,
+})
+
+function formatContractValue(row: ContractRow): string {
+  return row.perMonth ? `${currencyFormat.format(row.value)} / mo` : currencyFormat.format(row.value)
+}
 
 const statusColor: Record<ContractRow['status'], string> = {
   Active: '#22c55e',
@@ -40,11 +51,11 @@ function ContractData() {
       <div className="contract-data-filter">
         <span className="deadlines-filter-label">Type</span>
         <button className="chip small">
-          All types <IconChevron />
+          All Types <IconChevron />
         </button>
         <span className="deadlines-filter-label">Status</span>
         <button className="chip small">
-          All statuses <IconChevron />
+          All Statuses <IconChevron />
         </button>
       </div>
 
@@ -66,7 +77,7 @@ function ContractData() {
                 <td>{r.name}</td>
                 <td className="muted">{r.client}</td>
                 <td className="muted">{r.type}</td>
-                <td className="tabular">{r.value}</td>
+                <td className="tabular">{formatContractValue(r)}</td>
                 <td className="muted tabular">{r.expiry}</td>
                 <td>
                   <span

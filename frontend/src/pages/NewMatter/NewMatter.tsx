@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './NewMatter.css'
 import { IconPlus, IconCalendar, IconSearch } from '../../components/icons'
-import { listClients, createClient } from '../../api/clients'
+import { listClients, createClient, inviteContact } from '../../api/clients'
 import type { Client } from '../../api/clients'
 import { createMatter, assignStaff } from '../../api/matters'
 import { listUsers } from '../../api/auth'
@@ -16,13 +16,22 @@ function NewMatter() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [clientId, setClientId] = useState('')
+  const [openedDate, setOpenedDate] = useState('')
   const [dueDate, setDueDate] = useState('')
   const [attorneyId, setAttorneyId] = useState('')
   const [caseManagerId, setCaseManagerId] = useState('')
+  const [contactFirstName, setContactFirstName] = useState('')
+  const [contactLastName, setContactLastName] = useState('')
+  const [contactEmail, setContactEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [titleError, setTitleError] = useState<string | null>(null)
+  const [clientError, setClientError] = useState<string | null>(null)
   const [assignWarning, setAssignWarning] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+
+  const titleRef = useRef<HTMLInputElement>(null)
+  const clientSelectRef = useRef<HTMLSelectElement>(null)
 
   const [showAddClient, setShowAddClient] = useState(false)
   const [newClientName, setNewClientName] = useState('')
@@ -67,10 +76,22 @@ function NewMatter() {
     e.preventDefault()
     setError(null)
     setAssignWarning(null)
+    setTitleError(null)
+    setClientError(null)
+
+    const titleMissing = !title.trim()
+    const clientMissing = !clientId
+    if (titleMissing) setTitleError('Enter a matter name.')
+    if (clientMissing) setClientError('Select a client.')
+    if (titleMissing || clientMissing) {
+      if (titleMissing) titleRef.current?.focus()
+      else clientSelectRef.current?.focus()
+      return
+    }
 
     const token = localStorage.getItem('access_token')
-    if (!token || !clientId || !title) {
-      setError('Please select a client and enter a matter name.')
+    if (!token) {
+      setError('You need to be logged in to create a matter.')
       return
     }
 
@@ -98,6 +119,17 @@ function NewMatter() {
           assignmentFailures.push('case manager')
         }
       }
+      if (contactFirstName && contactLastName && contactEmail) {
+        try {
+          await inviteContact(token, clientId, {
+            first_name: contactFirstName,
+            last_name: contactLastName,
+            email: contactEmail,
+          })
+        } catch {
+          assignmentFailures.push('client contact invite')
+        }
+      }
       if (assignmentFailures.length > 0) {
         setAssignWarning(`Matter created, but could not assign: ${assignmentFailures.join(', ')}.`)
       }
@@ -123,7 +155,20 @@ function NewMatter() {
 
             <label className="field">
               <span>Matter Name</span>
-              <input type="text" placeholder="Matter Name" value={title} onChange={(e) => setTitle(e.target.value)} />
+              <input
+                ref={titleRef}
+                type="text"
+                placeholder="Smith v. Acme Corp…"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                autoComplete="off"
+                aria-invalid={Boolean(titleError)}
+              />
+              {titleError && (
+                <span className="matter-error" aria-live="polite">
+                  {titleError}
+                </span>
+              )}
             </label>
 
             <div className="field-row">
@@ -131,7 +176,7 @@ function NewMatter() {
                 <span>Matter Type</span>
                 <select defaultValue="">
                   <option value="" disabled>
-                    Employment Law
+                    Select matter type
                   </option>
                   <option value="corporate">Corporate</option>
                   <option value="litigation">Litigation</option>
@@ -142,7 +187,7 @@ function NewMatter() {
                 <span>Practice Area</span>
                 <select defaultValue="">
                   <option value="" disabled>
-                    Corporate
+                    Select practice area
                   </option>
                   <option value="employment">Employment Law</option>
                   <option value="ip">Intellectual Property</option>
@@ -180,8 +225,8 @@ function NewMatter() {
               <label className="field">
                 <span>Opened Date</span>
                 <div className="input-with-icon">
-                  <input type="text" placeholder="Date Picker" />
-                  <IconCalendar />
+                  <input type="date" value={openedDate} onChange={(e) => setOpenedDate(e.target.value)} />
+                  <IconCalendar aria-hidden="true" />
                 </div>
               </label>
               <label className="field">
@@ -196,7 +241,7 @@ function NewMatter() {
             <label className="field">
               <span>Description</span>
               <textarea
-                placeholder="Matter Description"
+                placeholder="Matter Description…"
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -222,7 +267,8 @@ function NewMatter() {
                     type="text"
                     value={newClientName}
                     onChange={(e) => setNewClientName(e.target.value)}
-                    placeholder="Company name"
+                    placeholder="Acme Corporation…"
+                    autoComplete="organization"
                   />
                 </label>
                 <button
@@ -236,11 +282,16 @@ function NewMatter() {
                 </button>
               </div>
             )}
-            {addClientError && <p className="matter-error">{addClientError}</p>}
+            {addClientError && <p className="matter-error" aria-live="polite">{addClientError}</p>}
 
             <label className="field">
               <span>Client</span>
-              <select value={clientId} onChange={(e) => setClientId(e.target.value)}>
+              <select
+                ref={clientSelectRef}
+                value={clientId}
+                onChange={(e) => setClientId(e.target.value)}
+                aria-invalid={Boolean(clientError)}
+              >
                 <option value="" disabled>
                   Select existing client
                 </option>
@@ -250,33 +301,50 @@ function NewMatter() {
                   </option>
                 ))}
               </select>
+              {clientError && (
+                <span className="matter-error" aria-live="polite">
+                  {clientError}
+                </span>
+              )}
             </label>
 
-            <div className="field-row">
-              <label className="field">
-                <span>First Name</span>
-                <input type="text" placeholder="First Name" />
-              </label>
-              <label className="field">
-                <span>Last Name</span>
-                <input type="text" placeholder="Last Name" />
-              </label>
-            </div>
+            <p className="muted" style={{ fontSize: 12, marginTop: -4 }}>
+              Optionally invite a client contact for this matter — leave blank to skip.
+            </p>
 
             <div className="field-row">
               <label className="field">
-                <span>Company</span>
-                <input type="text" placeholder="Company" />
+                <span>Contact First Name</span>
+                <input
+                  type="text"
+                  placeholder="Jane…"
+                  autoComplete="given-name"
+                  value={contactFirstName}
+                  onChange={(e) => setContactFirstName(e.target.value)}
+                />
               </label>
               <label className="field">
-                <span>Email</span>
-                <input type="email" placeholder="Email" />
+                <span>Contact Last Name</span>
+                <input
+                  type="text"
+                  placeholder="Doe…"
+                  autoComplete="family-name"
+                  value={contactLastName}
+                  onChange={(e) => setContactLastName(e.target.value)}
+                />
               </label>
             </div>
 
             <label className="field">
-              <span>Address</span>
-              <input type="text" placeholder="Address" />
+              <span>Contact Email</span>
+              <input
+                type="email"
+                placeholder="jane@acmecorp.com…"
+                autoComplete="email"
+                spellCheck={false}
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+              />
             </label>
           </section>
 
@@ -303,33 +371,52 @@ function NewMatter() {
               <span>Conflict Check</span>
               <div className="input-with-icon leading">
                 <IconSearch />
-                <input type="text" placeholder="Search names and entities to run conflict check" />
+                <input type="text" placeholder="Search names and entities to run conflict check…" autoComplete="off" />
               </div>
             </label>
 
             <label className="field">
               <span>Client&rsquo;s Goal</span>
-              <input type="text" placeholder="Client's Goal" />
+              <input type="text" placeholder="Client's Goal…" autoComplete="off" />
             </label>
 
             <label className="field">
               <span>Case Strategy Notes</span>
-              <textarea placeholder="Reference field for related matters" rows={2} />
+              <textarea placeholder="Reference field for related matters…" rows={2} />
             </label>
           </section>
         </div>
 
         <div className="matter-actions">
-          <button type="button" className="btn-ghost" onClick={() => navigate('/staff/matters')}>
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={() => {
+              if (
+                (title ||
+                  description ||
+                  clientId ||
+                  attorneyId ||
+                  caseManagerId ||
+                  contactFirstName ||
+                  contactLastName ||
+                  contactEmail) &&
+                !window.confirm('Discard this new matter? Your changes will be lost.')
+              ) {
+                return
+              }
+              navigate('/staff/matters')
+            }}
+          >
             Cancel
           </button>
           <button type="submit" className="btn-solid" disabled={submitting}>
             {submitting ? 'Opening…' : 'Open Matter'}
           </button>
         </div>
-        {submitted && <p className="matter-success">Matter created.</p>}
-        {assignWarning && <p className="matter-error">{assignWarning}</p>}
-        {error && <p className="matter-error">{error}</p>}
+        {submitted && <p className="matter-success" aria-live="polite">Matter created.</p>}
+        {assignWarning && <p className="matter-error" aria-live="polite">{assignWarning}</p>}
+        {error && <p className="matter-error" aria-live="polite">{error}</p>}
       </form>
     </main>
   )

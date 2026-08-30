@@ -172,8 +172,8 @@ function Integrations({ user }: IntegrationsProps) {
       </header>
 
       {status === 'loading' && (
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading integrations…</p>
         </div>
       )}
@@ -187,7 +187,7 @@ function Integrations({ user }: IntegrationsProps) {
         </div>
       )}
 
-      {actionError && <p className="matter-error">{actionError}</p>}
+      {actionError && <p className="matter-error" aria-live="polite">{actionError}</p>}
 
       {status === 'ready' && (
         <section className="integrations-grid">
@@ -218,7 +218,13 @@ function Integrations({ user }: IntegrationsProps) {
                       <div className="field-row integration-credential-row" key={index}>
                         <label className="field">
                           <span>Key</span>
-                          <input value={row.key} onChange={(e) => updateRow(index, 'key', e.target.value)} placeholder="api_key" />
+                          <input
+                            value={row.key}
+                            onChange={(e) => updateRow(index, 'key', e.target.value)}
+                            placeholder="api_key…"
+                            autoComplete="off"
+                            spellCheck={false}
+                          />
                         </label>
                         <label className="field">
                           <span>Value</span>
@@ -226,7 +232,8 @@ function Integrations({ user }: IntegrationsProps) {
                             value={row.value}
                             onChange={(e) => updateRow(index, 'value', e.target.value)}
                             type="password"
-                            placeholder="secret value"
+                            placeholder="secret value…"
+                            autoComplete="off"
                           />
                         </label>
                       </div>
@@ -236,7 +243,7 @@ function Integrations({ user }: IntegrationsProps) {
                       className="btn-ghost integration-add-row"
                       onClick={() => setCredentialRows((prev) => [...prev, { key: '', value: '' }])}
                     >
-                      <IconPlus /> Add field
+                      <IconPlus /> Add Field
                     </button>
                     <label className="intake-required-checkbox">
                       <input type="checkbox" checked={enableOnSave} onChange={(e) => setEnableOnSave(e.target.checked)} />

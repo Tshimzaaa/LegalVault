@@ -47,6 +47,10 @@ jobs:
       R2_BUCKET_NAME: ci-placeholder
       CLAMD_HOST: localhost
       CLAMD_PORT: "3310"
+      # Required (no default in Settings) — must be a real Fernet key or the app fails to
+      # import at all. CI-only, never a production secret; only ever encrypts
+      # integration-credential rows this run creates and discards.
+      ENCRYPTION_KEY: DalpMyi31rySfDxzuxq0nmzwG-VDxpQz7THePu1u8lc=
 
     steps:
       - uses: actions/checkout@v4
@@ -94,3 +98,20 @@ jobs:
       - run: npm test
 
       - run: npm run build
+
+  # Only fires on a push to main, and only once both jobs above are green — Render's own
+  # deploy-on-push doesn't know or care whether tests passed, so autoDeploy is off for
+  # every service in render.yaml and deploys are triggered here instead, via each
+  # service's deploy-hook URL (Settings tab in the Render dashboard, pasted into these
+  # three repo secrets once the Blueprint exists — see DEPLOYMENT.md).
+  deploy:
+    needs: [backend, frontend]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy API
+        run: curl -fsS "${{ secrets.RENDER_API_DEPLOY_HOOK_URL }}"
+      - name: Deploy worker
+        run: curl -fsS "${{ secrets.RENDER_WORKER_DEPLOY_HOOK_URL }}"
+      - name: Deploy frontend
+        run: curl -fsS "${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK_URL }}"

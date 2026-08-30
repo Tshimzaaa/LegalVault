@@ -108,7 +108,7 @@ describe('NotificationBell', () => {
     await user.click(screen.getByRole('button', { name: /notifications/i }))
     await screen.findAllByText('New message')
 
-    await user.click(screen.getByText('Mark all read'))
+    await user.click(screen.getByText('Mark All Read'))
 
     await waitFor(() => expect(notificationsApi.markAllNotificationsRead).toHaveBeenCalledWith('token-a', 'staff'))
     expect(screen.queryByText('2')).not.toBeInTheDocument()

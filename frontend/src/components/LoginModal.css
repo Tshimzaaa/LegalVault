@@ -82,8 +82,20 @@
 .modal-field input:focus,
 .modal-field select:focus,
 .modal-field textarea:focus {
-  outline: none;
   border-color: #22c55e;
+}
+
+.modal-field input:focus:not(:focus-visible),
+.modal-field select:focus:not(:focus-visible),
+.modal-field textarea:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.modal-field input:focus-visible,
+.modal-field select:focus-visible,
+.modal-field textarea:focus-visible {
+  outline: 2px solid #22c55e;
+  outline-offset: 2px;
 }
 
 .modal-field-row {

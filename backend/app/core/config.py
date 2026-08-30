@@ -67,6 +67,12 @@ class Settings(BaseSettings):
     # see app/tasks/). See docker-compose.yml's `redis` service for local dev.
     REDIS_URL: str = "redis://localhost:6379/0"
 
+    # Optional — Sentry error tracking. Unlike the secrets checked below, a missing DSN
+    # isn't a security hole: sentry_sdk.init() is simply skipped (see app/main.py) when
+    # this is unset, in every environment including production. No one is required to
+    # have a Sentry account to run this app.
+    SENTRY_DSN: str | None = None
+
     model_config = SettingsConfigDict(
         env_file=".env",
         extra="ignore"

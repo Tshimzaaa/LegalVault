@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import './IntakeSubmissions.css'
 import { listIntakeSubmissions, updateIntakeSubmissionStatus } from '../../api/intakeSubmissions'
 import type { IntakeSubmission, SubmissionStatus } from '../../api/intakeSubmissions'
@@ -24,15 +24,36 @@ const statusColor: Record<SubmissionStatus, string> = {
   declined: '#ef4444',
 }
 
+const validStatusFilters = ['all', 'submitted', 'in_review', 'converted', 'declined'] as const
+
 function IntakeSubmissions() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [submissions, setSubmissions] = useState<IntakeSubmission[]>([])
   const [formsById, setFormsById] = useState<Record<string, IntakeForm>>({})
   const [clientsById, setClientsById] = useState<Record<string, Client>>({})
   const [contactsById, setContactsById] = useState<Record<string, Contact>>({})
   const [status, setStatus] = useState<LoadState>('loading')
-  const [statusFilter, setStatusFilter] = useState<SubmissionStatus | 'all'>('all')
   const [savingId, setSavingId] = useState<string | null>(null)
+
+  const rawStatusFilter = searchParams.get('status')
+  const statusFilter: SubmissionStatus | 'all' = validStatusFilters.includes(
+    rawStatusFilter as (typeof validStatusFilters)[number],
+  )
+    ? (rawStatusFilter as SubmissionStatus | 'all')
+    : 'all'
+
+  function setStatusFilter(next: SubmissionStatus | 'all') {
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev)
+      if (next === 'all') {
+        params.delete('status')
+      } else {
+        params.set('status', next)
+      }
+      return params
+    })
+  }
 
   const token = localStorage.getItem('access_token')
 
@@ -88,6 +109,7 @@ function IntakeSubmissions() {
           </span>
           <select
             className="select-input"
+            aria-label="Filter by status"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as SubmissionStatus | 'all')}
           >
@@ -101,8 +123,8 @@ function IntakeSubmissions() {
       </header>
 
       {status === 'loading' && (
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading submissions…</p>
         </div>
       )}
@@ -133,7 +155,20 @@ function IntakeSubmissions() {
                 const client = clientsById[s.client_id]
                 const contact = contactsById[s.contact_id]
                 return (
-                  <tr key={s.id} className="intake-submission-row" onClick={() => navigate(s.id)}>
+                  <tr
+                    key={s.id}
+                    className="intake-submission-row"
+                    tabIndex={0}
+                    role="link"
+                    aria-label={`Open submission from ${client?.company_name ?? 'unknown client'}`}
+                    onClick={() => navigate(s.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        navigate(s.id)
+                      }
+                    }}
+                  >
                     <td className="muted tabular">{new Date(s.created_at).toLocaleDateString()}</td>
                     <td>{formsById[s.form_id]?.title ?? '—'}</td>
                     <td>{client?.company_name ?? '—'}</td>
@@ -141,10 +176,11 @@ function IntakeSubmissions() {
                     <td onClick={(e) => e.stopPropagation()}>
                       <select
                         className="select-input"
+                        aria-label={`Status for submission from ${client?.company_name ?? 'unknown client'}`}
                         value={s.status}
                         disabled={savingId === s.id}
                         onChange={(e) => handleStatusChange(s, e.target.value as SubmissionStatus)}
-                        style={{ color: statusColor[s.status] }}
+                        style={{ color: statusColor[s.status], background: `${statusColor[s.status]}22` }}
                       >
                         <option value="submitted">Submitted</option>
                         <option value="in_review">In Review</option>

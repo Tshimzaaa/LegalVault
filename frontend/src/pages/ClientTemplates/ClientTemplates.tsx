@@ -74,8 +74,8 @@ function ClientTemplates({ contact, onLogout }: ClientTemplatesProps) {
       </header>
 
       {status === 'loading' && (
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading templates…</p>
         </div>
       )}
@@ -89,7 +89,7 @@ function ClientTemplates({ contact, onLogout }: ClientTemplatesProps) {
         </div>
       )}
 
-      {downloadError && <p className="matter-error">{downloadError}</p>}
+      {downloadError && <p className="matter-error" aria-live="polite">{downloadError}</p>}
 
       {status === 'ready' && (
         <section className="templates-grid">

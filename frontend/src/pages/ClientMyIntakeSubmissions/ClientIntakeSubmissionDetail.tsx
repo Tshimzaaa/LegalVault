@@ -60,8 +60,8 @@ function ClientIntakeSubmissionDetail({ contact, onLogout }: ClientIntakeSubmiss
   if (status === 'loading') {
     return (
       <main className="dash-main">
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading request…</p>
         </div>
       </main>
@@ -71,7 +71,7 @@ function ClientIntakeSubmissionDetail({ contact, onLogout }: ClientIntakeSubmiss
   if (status === 'error' || !submission) {
     return (
       <main className="dash-main">
-        <div className="dash-state">
+        <div className="dash-state" role="status" aria-live="polite">
           <p>Couldn&rsquo;t load this request.</p>
           <button type="button" className="btn-ghost" onClick={load}>
             Retry

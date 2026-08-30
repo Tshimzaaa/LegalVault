@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import './ClientSignedContracts.css'
 import ProfileMenu from '../../components/ProfileMenu'
 import type { ClientContact } from '../../api/clientAuth'
@@ -36,15 +37,70 @@ interface ClientSignedContractsProps {
   onLogout: () => void
 }
 
+const validStatusFilters = ['all', 'active', 'expiring', 'archived'] as const
+const validTypeFilters = ['all', 'nda', 'consultancy', 'supplier', 'general'] as const
+
 function ClientSignedContracts({ contact, onLogout }: ClientSignedContractsProps) {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [contracts, setContracts] = useState<SignedContract[]>([])
   const [summary, setSummary] = useState<SignedContractsSummary | null>(null)
   const [status, setStatus] = useState<LoadState>('loading')
   const [attempt, setAttempt] = useState(0)
 
-  const [statusFilter, setStatusFilter] = useState<'all' | ContractLifecycleStatus>('all')
-  const [typeFilter, setTypeFilter] = useState<'all' | ContractType>('all')
-  const [search, setSearch] = useState('')
+  const rawStatusFilter = searchParams.get('status')
+  const statusFilter: 'all' | ContractLifecycleStatus = validStatusFilters.includes(
+    rawStatusFilter as (typeof validStatusFilters)[number],
+  )
+    ? (rawStatusFilter as 'all' | ContractLifecycleStatus)
+    : 'all'
+
+  const rawTypeFilter = searchParams.get('type')
+  const typeFilter: 'all' | ContractType = validTypeFilters.includes(
+    rawTypeFilter as (typeof validTypeFilters)[number],
+  )
+    ? (rawTypeFilter as 'all' | ContractType)
+    : 'all'
+
+  const search = searchParams.get('q') ?? ''
+
+  function setStatusFilter(next: 'all' | ContractLifecycleStatus) {
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev)
+      if (next === 'all') {
+        params.delete('status')
+      } else {
+        params.set('status', next)
+      }
+      return params
+    })
+  }
+
+  function setTypeFilter(next: 'all' | ContractType) {
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev)
+      if (next === 'all') {
+        params.delete('type')
+      } else {
+        params.set('type', next)
+      }
+      return params
+    })
+  }
+
+  function setSearch(next: string) {
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev)
+        if (next) {
+          params.set('q', next)
+        } else {
+          params.delete('q')
+        }
+        return params
+      },
+      { replace: true },
+    )
+  }
 
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [downloadError, setDownloadError] = useState<string | null>(null)
@@ -104,14 +160,14 @@ function ClientSignedContracts({ contact, onLogout }: ClientSignedContractsProps
       </header>
 
       {status === 'loading' && (
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading signed contracts…</p>
         </div>
       )}
 
       {status === 'error' && (
-        <div className="dash-state">
+        <div className="dash-state" role="status" aria-live="polite">
           <p>Couldn&rsquo;t reach the backend for signed contracts.</p>
           <button type="button" className="btn-ghost" onClick={() => setAttempt((n) => n + 1)}>
             Retry
@@ -160,6 +216,7 @@ function ClientSignedContracts({ contact, onLogout }: ClientSignedContractsProps
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search by name…"
+                  autoComplete="off"
                 />
               </label>
               <label className="field">
@@ -186,7 +243,7 @@ function ClientSignedContracts({ contact, onLogout }: ClientSignedContractsProps
               </span>
             </div>
 
-            {downloadError && <p className="matter-error">{downloadError}</p>}
+            {downloadError && <p className="matter-error" aria-live="polite">{downloadError}</p>}
 
             <table className="data-table">
               <thead>

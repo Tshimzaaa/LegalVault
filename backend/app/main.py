@@ -1,3 +1,4 @@
+import sentry_sdk
 from fastapi import FastAPI, Request
 from fastapi.middleware.gzip import GZipMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -6,6 +7,19 @@ from app.core.config import settings
 from app.core.limiter import limiter
 from app.core.exception_handlers import register_exception_handlers
 from app.modules.auth.routes import router as auth_router
+
+# Skipped entirely when unset — see SENTRY_DSN's docstring in core/config.py. FastAPI/
+# Starlette/SQLAlchemy get auto-instrumented once this runs, no manual integration
+# wiring needed. send_default_pii stays False: this platform holds client legal data,
+# nothing request-body/PII-shaped goes to a third party by default. No performance
+# tracing (traces_sample_rate=0) — scope here is error tracking, not APM.
+if settings.SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        environment=settings.ENVIRONMENT,
+        send_default_pii=False,
+        traces_sample_rate=0.0,
+    )
 
 from fastapi.middleware.cors import CORSMiddleware
 from app.modules.templates.routes import router as templates_router, client_templates_router

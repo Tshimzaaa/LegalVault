@@ -72,7 +72,7 @@ function Sidebar({
           <span className="account-email">{user.email}</span>
         </div>
         <button type="button" className="account-logout" onClick={onLogout}>
-          Log out
+          Log Out
         </button>
       </div>
     </aside>

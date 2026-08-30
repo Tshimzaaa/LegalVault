@@ -23,18 +23,28 @@ const OwnerLogin = lazy(() => import('./pages/OwnerLogin/OwnerLogin'))
 // chunk is still downloading, before that chunk's own stylesheet is available.
 function RouteFallback() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+    <div
+      role="status"
+      aria-label="Loading page"
+      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}
+    >
       <div
+        className="route-fallback-spinner"
         style={{
           width: 32,
           height: 32,
           border: '3px solid rgba(0,0,0,0.1)',
           borderTopColor: '#22c55e',
           borderRadius: '50%',
-          animation: 'route-fallback-spin 0.8s linear infinite',
         }}
       />
-      <style>{'@keyframes route-fallback-spin { to { transform: rotate(360deg); } }'}</style>
+      <style>{`
+        .route-fallback-spinner { animation: route-fallback-spin 0.8s linear infinite; }
+        @keyframes route-fallback-spin { to { transform: rotate(360deg); } }
+        @media (prefers-reduced-motion: reduce) {
+          .route-fallback-spinner { animation: none; }
+        }
+      `}</style>
     </div>
   )
 }
@@ -170,8 +180,12 @@ function App() {
   const alreadyInExpectedPortal = actor?.kind === expectedKind
 
   return (
-    <Suspense fallback={<RouteFallback />}>
-      <Routes>
+    <>
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+      <Suspense fallback={<RouteFallback />}>
+        <Routes>
         <Route path="/" element={<><Navbar onLoginClick={() => navigate('/login')} /><Home /></>} />
         <Route
           path="/login"
@@ -232,8 +246,9 @@ function App() {
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Suspense>
+        </Routes>
+      </Suspense>
+    </>
   )
 }
 

@@ -6,6 +6,11 @@
   overflow-y: auto;
 }
 
+.card-header h2 {
+  margin: 0;
+  font: inherit;
+}
+
 .owner-sections {
   display: flex;
   flex-direction: column;

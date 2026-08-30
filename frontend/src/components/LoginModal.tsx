@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import './LoginModal.css'
 import { forgotPassword } from '../api/auth'
@@ -19,6 +19,14 @@ function LoginModal({ onClose, onSubmit, staffOnly }: LoginModalProps) {
   const [submitting, setSubmitting] = useState(false)
   const [waking, setWaking] = useState(false)
 
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError('')
@@ -29,7 +37,7 @@ function LoginModal({ onClose, onSubmit, staffOnly }: LoginModalProps) {
     try {
       await onSubmit(email, password)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed')
+      setError(err instanceof Error ? err.message : 'Login failed. Check your email and password and try again.')
     } finally {
       clearTimeout(wakeTimer)
       setSubmitting(false)
@@ -54,16 +62,22 @@ function LoginModal({ onClose, onSubmit, staffOnly }: LoginModalProps) {
   if (mode === 'forgot' || mode === 'sent') {
     return (
       <div className="modal-backdrop" onClick={onClose}>
-        <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="modal-box"
+          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="login-modal-reset-title"
+        >
           <button type="button" className="modal-close" onClick={onClose} aria-label="Close">
             ×
           </button>
 
-          <h2>Reset password</h2>
+          <h2 id="login-modal-reset-title">Reset Password</h2>
           <p className="modal-sub">
             {mode === 'sent'
               ? 'If that email exists, a reset link is on its way.'
-              : "Enter your email and we'll send you a reset link."}
+              : 'Enter your email and we’ll send you a reset link.'}
           </p>
 
           {mode === 'forgot' && (
@@ -77,19 +91,21 @@ function LoginModal({ onClose, onSubmit, staffOnly }: LoginModalProps) {
                   placeholder="you@example.com"
                   required
                   autoFocus
+                  autoComplete="email"
+                  spellCheck={false}
                 />
               </label>
 
-              {error && <p className="modal-error">{error}</p>}
+              {error && <p className="modal-error" aria-live="polite">{error}</p>}
 
               <button type="submit" className="modal-submit" disabled={submitting}>
-                {submitting ? 'Sending…' : 'Send reset link'}
+                {submitting ? 'Sending…' : 'Send Reset Link'}
               </button>
             </form>
           )}
 
           <button type="button" className="modal-link-back" onClick={() => setMode('login')}>
-            &larr; Back to login
+            &larr; Back to Login
           </button>
         </div>
       </div>
@@ -98,12 +114,18 @@ function LoginModal({ onClose, onSubmit, staffOnly }: LoginModalProps) {
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="modal-box"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="login-modal-title"
+      >
         <button type="button" className="modal-close" onClick={onClose} aria-label="Close">
           ×
         </button>
 
-        <h2>Log in</h2>
+        <h2 id="login-modal-title">Log In</h2>
         <p className="modal-sub">Welcome back, enter your details below</p>
 
         <form onSubmit={handleSubmit}>
@@ -116,6 +138,8 @@ function LoginModal({ onClose, onSubmit, staffOnly }: LoginModalProps) {
               placeholder="you@example.com"
               required
               autoFocus
+              autoComplete="email"
+              spellCheck={false}
             />
           </label>
 
@@ -128,6 +152,7 @@ function LoginModal({ onClose, onSubmit, staffOnly }: LoginModalProps) {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
+                autoComplete="current-password"
               />
               <button
                 type="button"
@@ -150,7 +175,7 @@ function LoginModal({ onClose, onSubmit, staffOnly }: LoginModalProps) {
             </div>
           </label>
 
-          {error && <p className="modal-error">{error}</p>}
+          {error && <p className="modal-error" aria-live="polite">{error}</p>}
 
           <button type="submit" className="modal-submit" disabled={submitting}>
             {submitting && <span className="modal-spinner" aria-hidden="true" />}
@@ -171,7 +196,7 @@ function LoginModal({ onClose, onSubmit, staffOnly }: LoginModalProps) {
               setMode('forgot')
             }}
           >
-            Forgot password?
+            Forgot Password?
           </button>
         </form>
       </div>

@@ -68,8 +68,8 @@ function MatterAdmin({ contact, onLogout }: MatterAdminProps) {
       </header>
 
       {status === 'loading' && (
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading matter access…</p>
         </div>
       )}

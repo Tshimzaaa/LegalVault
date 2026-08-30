@@ -51,7 +51,7 @@ function Workspace({ user, onLogout }: WorkspaceProps) {
         onLogout={onLogout}
         notificationBell={<NotificationBell scope="staff" />}
       />
-      <div className="dash-content">
+      <div className="dash-content" id="main-content">
         <AnnouncementBanner scope="staff" />
         <Routes>
           <Route index element={<Navigate to="dashboard" replace />} />

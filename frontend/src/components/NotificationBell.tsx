@@ -47,6 +47,15 @@ function NotificationBell({ scope }: NotificationBellProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [open])
 
+  useEffect(() => {
+    if (!open) return
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [open])
+
   function handleToggle() {
     const token = localStorage.getItem('access_token')
     const next = !open
@@ -125,11 +134,11 @@ function NotificationBell({ scope }: NotificationBellProps) {
             <span>Notifications</span>
             {unreadCount > 0 && (
               <button type="button" className="notification-bell-mark-all" onClick={handleMarkAllRead}>
-                Mark all read
+                Mark All Read
               </button>
             )}
           </div>
-          {markError && <p className="notification-bell-error">{markError}</p>}
+          {markError && <p className="notification-bell-error" aria-live="polite">{markError}</p>}
           <div className="notification-bell-list">
             {!loaded && <p className="muted notification-bell-empty">Loading…</p>}
             {loaded && notifications.length === 0 && <p className="muted notification-bell-empty">No notifications yet.</p>}

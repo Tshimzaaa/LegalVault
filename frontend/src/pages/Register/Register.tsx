@@ -43,40 +43,78 @@ function Register() {
   return (
     <div className="auth-page">
       <div className="modal-box wide">
-        <h2>Onboard a law firm</h2>
+        <h1>Onboard a law firm</h1>
         <p className="modal-sub">SaaS-owner only — requires the shared onboarding secret.</p>
 
         <form onSubmit={handleSubmit}>
           <label className="modal-field">
             <span>Onboarding secret</span>
-            <input type="password" value={adminSecret} onChange={(e) => setAdminSecret(e.target.value)} required />
+            <input
+              type="password"
+              value={adminSecret}
+              onChange={(e) => setAdminSecret(e.target.value)}
+              required
+              autoComplete="off"
+            />
           </label>
 
           <div className="modal-field-row">
             <label className="modal-field">
               <span>Firm name</span>
-              <input type="text" value={firmName} onChange={(e) => setFirmName(e.target.value)} required />
+              <input
+                type="text"
+                value={firmName}
+                onChange={(e) => setFirmName(e.target.value)}
+                required
+                autoComplete="organization"
+              />
             </label>
             <label className="modal-field">
               <span>Firm email</span>
-              <input type="email" value={firmEmail} onChange={(e) => setFirmEmail(e.target.value)} required />
+              <input
+                type="email"
+                value={firmEmail}
+                onChange={(e) => setFirmEmail(e.target.value)}
+                required
+                autoComplete="email"
+                spellCheck={false}
+              />
             </label>
           </div>
 
           <div className="modal-field-row">
             <label className="modal-field">
               <span>Admin first name</span>
-              <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+                autoComplete="given-name"
+              />
             </label>
             <label className="modal-field">
               <span>Admin last name</span>
-              <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+                autoComplete="family-name"
+              />
             </label>
           </div>
 
           <label className="modal-field">
             <span>Admin email</span>
-            <input type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} required />
+            <input
+              type="email"
+              value={adminEmail}
+              onChange={(e) => setAdminEmail(e.target.value)}
+              required
+              autoComplete="email"
+              spellCheck={false}
+            />
           </label>
 
           <label className="modal-field">
@@ -87,10 +125,11 @@ function Register() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="At least 8 characters"
               required
+              autoComplete="new-password"
             />
           </label>
 
-          {error && <p className="modal-error">{error}</p>}
+          {error && <p className="modal-error" aria-live="polite">{error}</p>}
 
           <button type="submit" className="modal-submit" disabled={submitting}>
             {submitting ? 'Creating firm…' : 'Create firm & admin'}

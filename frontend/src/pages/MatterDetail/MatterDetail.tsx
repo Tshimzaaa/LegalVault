@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import './MatterDetail.css'
 import {
   getMatter,
@@ -98,7 +98,6 @@ const statusColor: Record<Matter['status'], string> = {
 
 function MatterDetail() {
   const { matterId } = useParams<{ matterId: string }>()
-  const navigate = useNavigate()
 
   const [matter, setMatter] = useState<Matter | null>(null)
   const [clients, setClients] = useState<Client[]>([])
@@ -390,6 +389,7 @@ function MatterDetail() {
 
   async function handleDeleteDocument(doc: MatterDocument) {
     if (!token || !matterId) return
+    if (!window.confirm(`Delete “${doc.title}”?`)) return
     setUploadError(null)
     setDocBusyId(doc.id)
     const index = documents.findIndex((d) => d.id === doc.id)
@@ -454,6 +454,7 @@ function MatterDetail() {
 
   async function handleDeleteTask(task: MatterTask) {
     if (!token || !matterId) return
+    if (!window.confirm(`Delete task “${task.title}”?`)) return
     setTaskError(null)
     setTaskBusyId(task.id)
     const index = tasks.findIndex((t) => t.id === task.id)
@@ -491,6 +492,7 @@ function MatterDetail() {
 
   async function handleDeleteMessage(message: MatterMessage) {
     if (!token || !matterId) return
+    if (!window.confirm('Delete this message?')) return
     setMessageError(null)
     setMessageBusyId(message.id)
     const index = messages.findIndex((m) => m.id === message.id)
@@ -616,9 +618,9 @@ function MatterDetail() {
     <main className="dash-main">
       <header className="dash-topbar">
         <div>
-          <button type="button" className="matter-detail-back" onClick={() => navigate('/staff/matters')}>
+          <Link to="/staff/matters" className="matter-detail-back">
             &larr; Back to Matters
-          </button>
+          </Link>
           <h1>{matter?.title ?? 'Matter'}</h1>
         </div>
         {matter && (
@@ -637,8 +639,8 @@ function MatterDetail() {
       </header>
 
       {status === 'loading' && (
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading matter…</p>
         </div>
       )}
@@ -657,7 +659,7 @@ function MatterDetail() {
           <div>
             <section className="card">
               <div className="card-header">
-                <span>Details</span>
+                <h2>Details</h2>
               </div>
               {editingDetails ? (
                 <form onSubmit={handleSaveDetails}>
@@ -669,7 +671,7 @@ function MatterDetail() {
                     <span>Description</span>
                     <textarea rows={3} value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
                   </label>
-                  {detailsError && <p className="matter-error">{detailsError}</p>}
+                  {detailsError && <p className="matter-error" aria-live="polite">{detailsError}</p>}
                   <div className="matter-actions" style={{ marginTop: 8 }}>
                     <button type="button" className="btn-ghost" onClick={() => setEditingDetails(false)}>
                       Cancel
@@ -690,10 +692,14 @@ function MatterDetail() {
 
             <section className="card" style={{ marginTop: 16 }}>
               <div className="card-header">
-                <span>Status</span>
+                <h2>Status</h2>
               </div>
               <div className="matter-detail-field-row">
-                <select value={statusValue} onChange={(e) => setStatusValue(e.target.value as Matter['status'])}>
+                <select
+                  aria-label="Matter status"
+                  value={statusValue}
+                  onChange={(e) => setStatusValue(e.target.value as Matter['status'])}
+                >
                   {availableStatusOptions.map((o) => (
                     <option key={o.value} value={o.value}>
                       {o.label}
@@ -709,7 +715,7 @@ function MatterDetail() {
                   {statusSaving ? 'Saving…' : statusChangeIsGated ? 'Request Approval' : 'Save'}
                 </button>
               </div>
-              {approvalError && <p className="matter-error">{approvalError}</p>}
+              {approvalError && <p className="matter-error" aria-live="polite">{approvalError}</p>}
 
               {pendingApproval && (
                 <div className="matter-detail-toggle-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 6 }}>
@@ -776,21 +782,21 @@ function MatterDetail() {
               </div>
 
               <div className="matter-detail-toggle-row">
-                <span>Visible to client</span>
-                <label className="field" style={{ margin: 0 }}>
+                <label className="field" style={{ margin: 0, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <input
                     type="checkbox"
                     checked={matter.is_visible_to_client}
                     disabled={visibilitySaving}
                     onChange={(e) => handleVisibilityToggle(e.target.checked)}
                   />
+                  <span>Visible to client</span>
                 </label>
               </div>
             </section>
 
             <section className="card" style={{ marginTop: 16 }}>
               <div className="card-header">
-                <span>Documents</span>
+                <h2>Documents</h2>
               </div>
 
               <div className="list-rows">
@@ -863,7 +869,8 @@ function MatterDetail() {
               <form onSubmit={handleUpload} className="matter-doc-upload-row">
                 <input
                   type="text"
-                  placeholder="Document title (reuse a title to add a new version)"
+                  aria-label="Document title"
+                  placeholder="Document title (reuse a title to add a new version)…"
                   value={docTitle}
                   onChange={(e) => setDocTitle(e.target.value)}
                   list="matter-doc-titles"
@@ -874,12 +881,19 @@ function MatterDetail() {
                     <option key={versions[0].title} value={versions[0].title} />
                   ))}
                 </datalist>
-                <input id="matter-doc-file" type="file" onChange={handleFileChange} accept=".pdf,.doc,.docx,.txt" required />
+                <input
+                  id="matter-doc-file"
+                  type="file"
+                  aria-label="Document file"
+                  onChange={handleFileChange}
+                  accept=".pdf,.doc,.docx,.txt"
+                  required
+                />
                 <button type="submit" className="btn-ghost" disabled={uploading}>
                   {uploading ? 'Uploading…' : 'Upload'}
                 </button>
               </form>
-              {uploadError && <p className="matter-error">{uploadError}</p>}
+              {uploadError && <p className="matter-error" aria-live="polite">{uploadError}</p>}
 
               {generatableTemplates.length > 0 && (
                 <form onSubmit={handleGenerate} className="matter-doc-upload-row" style={{ marginTop: 10 }}>
@@ -905,7 +919,8 @@ function MatterDetail() {
                   </select>
                   <input
                     type="text"
-                    placeholder="Document title (optional)"
+                    aria-label="Generated document title"
+                    placeholder="Document title (optional)…"
                     value={genTitle}
                     onChange={(e) => setGenTitle(e.target.value)}
                   />
@@ -914,12 +929,12 @@ function MatterDetail() {
                   </button>
                 </form>
               )}
-              {generateError && <p className="matter-error">{generateError}</p>}
+              {generateError && <p className="matter-error" aria-live="polite">{generateError}</p>}
             </section>
 
             <section className="card" style={{ marginTop: 16 }}>
               <div className="card-header">
-                <span>Signatures</span>
+                <h2>Signatures</h2>
               </div>
 
               <div className="list-rows">
@@ -971,7 +986,8 @@ function MatterDetail() {
                 </select>
                 <input
                   type="text"
-                  placeholder="Signature request title (defaults to document title)"
+                  aria-label="Signature request title"
+                  placeholder="Signature request title (defaults to document title)…"
                   value={sigTitle}
                   onChange={(e) => setSigTitle(e.target.value)}
                 />
@@ -1011,12 +1027,12 @@ function MatterDetail() {
                   )
                 })}
               </div>
-              {sigError && <p className="matter-error">{sigError}</p>}
+              {sigError && <p className="matter-error" aria-live="polite">{sigError}</p>}
             </section>
 
             <section className="card" style={{ marginTop: 16 }}>
               <div className="card-header">
-                <span>Tasks</span>
+                <h2>Tasks</h2>
               </div>
 
               <div className="list-rows">
@@ -1030,10 +1046,11 @@ function MatterDetail() {
                       </span>
                     </div>
                     <select
+                      aria-label={`Status for task ${t.title}`}
                       value={t.status}
                       disabled={taskBusyId === t.id}
                       onChange={(e) => handleTaskStatusChange(t, e.target.value as TaskStatus)}
-                      style={{ color: taskStatusColor[t.status] }}
+                      style={{ color: taskStatusColor[t.status], background: `${taskStatusColor[t.status]}22` }}
                     >
                       {taskStatusOptions.map((o) => (
                         <option key={o.value} value={o.value}>
@@ -1058,12 +1075,13 @@ function MatterDetail() {
               <form onSubmit={handleCreateTask} className="matter-task-add-row">
                 <input
                   type="text"
-                  placeholder="New task title"
+                  aria-label="New task title"
+                  placeholder="New task title…"
                   value={taskTitle}
                   onChange={(e) => setTaskTitle(e.target.value)}
                   required
                 />
-                <select value={taskAssignee} onChange={(e) => setTaskAssignee(e.target.value)}>
+                <select aria-label="Assign task to" value={taskAssignee} onChange={(e) => setTaskAssignee(e.target.value)}>
                   <option value="">Unassigned</option>
                   {users.map((u) => (
                     <option key={u.id} value={u.id}>
@@ -1071,17 +1089,22 @@ function MatterDetail() {
                     </option>
                   ))}
                 </select>
-                <input type="date" value={taskDueDate} onChange={(e) => setTaskDueDate(e.target.value)} />
+                <input
+                  type="date"
+                  aria-label="Task due date"
+                  value={taskDueDate}
+                  onChange={(e) => setTaskDueDate(e.target.value)}
+                />
                 <button type="submit" className="btn-ghost" disabled={creatingTask}>
                   {creatingTask ? 'Adding…' : 'Add Task'}
                 </button>
               </form>
-              {taskError && <p className="matter-error">{taskError}</p>}
+              {taskError && <p className="matter-error" aria-live="polite">{taskError}</p>}
             </section>
 
             <section className="card" style={{ marginTop: 16 }}>
               <div className="card-header">
-                <span>Messages</span>
+                <h2>Messages</h2>
               </div>
 
               <div className="matter-messages-list">
@@ -1112,6 +1135,7 @@ function MatterDetail() {
               <form onSubmit={handleSendMessage} className="matter-message-compose-row">
                 <input
                   type="text"
+                  aria-label="Message"
                   placeholder="Write a message to the client…"
                   value={messageBody}
                   onChange={(e) => setMessageBody(e.target.value)}
@@ -1120,13 +1144,13 @@ function MatterDetail() {
                   <IconSend /> {sendingMessage ? 'Sending…' : 'Send'}
                 </button>
               </form>
-              {messageError && <p className="matter-error">{messageError}</p>}
+              {messageError && <p className="matter-error" aria-live="polite">{messageError}</p>}
             </section>
           </div>
 
           <section className="card">
             <div className="card-header">
-              <span>Staff Assigned</span>
+              <h2>Staff Assigned</h2>
             </div>
             <div className="list-rows">
               {assignments.map((a) => (
@@ -1139,7 +1163,7 @@ function MatterDetail() {
             </div>
 
             <div className="assignment-add-row">
-              <select value={assignUserId} onChange={(e) => setAssignUserId(e.target.value)}>
+              <select aria-label="Staff member to assign" value={assignUserId} onChange={(e) => setAssignUserId(e.target.value)}>
                 <option value="">Select staff member</option>
                 {assignableUsers.map((u) => (
                   <option key={u.id} value={u.id}>
@@ -1148,6 +1172,7 @@ function MatterDetail() {
                 ))}
               </select>
               <select
+                aria-label="Role on matter"
                 value={assignRole}
                 onChange={(e) => {
                   setAssignRole(e.target.value as MatterRole)
@@ -1164,7 +1189,7 @@ function MatterDetail() {
                 {assigning ? 'Assigning…' : 'Assign'}
               </button>
             </div>
-            {assignError && <p className="matter-error">{assignError}</p>}
+            {assignError && <p className="matter-error" aria-live="polite">{assignError}</p>}
           </section>
         </div>
       )}

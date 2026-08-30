@@ -128,6 +128,7 @@ function useCapturedSlides() {
 
 function Home() {
   const [active, setActive] = useState(0)
+  const [paused, setPaused] = useState(false)
   const { captured, captureRootRef } = useCapturedSlides()
 
   const slides = captureTargets.map((target) => ({
@@ -136,26 +137,28 @@ function Home() {
   }))
 
   useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (prefersReducedMotion || paused) return
+
     const id = setInterval(() => {
       setActive((prev) => (prev + 1) % slides.length)
     }, 4000)
     return () => clearInterval(id)
-  }, [slides.length])
+  }, [slides.length, paused])
 
   return (
-    <main className="home">
+    <main className="home" id="main-content">
       <section id="home" className="hero">
 
         <h1>The Modern Practice Management</h1>
         <h2>Manage matters, clients, and billing in one secure, compliant workspace.</h2>
 
         <div className="hero-actions">
-          <a href="#get-template" className="btn btn-primary">
-            consultation
-
+          <a href="#contact" className="btn btn-primary">
+            Book a Consultation
           </a>
-          <a href="#learn-more" className="btn btn-secondary">
-            Learn More
+          <a href="#about" className="btn btn-secondary">
+            See How It Works
           </a>
         </div>
 
@@ -176,6 +179,8 @@ function Home() {
                     key={slide.alt}
                     src={slide.src}
                     alt={slide.alt}
+                    width={1440}
+                    height={900}
                     className={`mockup-slide${i === active ? ' active' : ''}`}
                   />
                 ) : null
@@ -193,6 +198,15 @@ function Home() {
                 aria-label={`Show ${slide.alt}`}
               />
             ))}
+            <button
+              type="button"
+              className="slide-pause-btn"
+              onClick={() => setPaused((p) => !p)}
+              aria-label={paused ? 'Play slide rotation' : 'Pause slide rotation'}
+              aria-pressed={paused}
+            >
+              {paused ? '▶' : '⏸'}
+            </button>
           </div>
         </div>
       </section>

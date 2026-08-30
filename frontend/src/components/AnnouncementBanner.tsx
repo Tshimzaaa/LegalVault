@@ -47,7 +47,7 @@ function AnnouncementBanner({ scope }: AnnouncementBannerProps) {
   if (visible.length === 0) return null
 
   return (
-    <div className="announcement-banner-stack">
+    <div className="announcement-banner-stack" aria-live="polite">
       {visible.map((a) => (
         <div key={a.id} className="announcement-banner" style={{ borderColor: severityColor[a.severity] }}>
           <span className="announcement-banner-icon" style={{ color: severityColor[a.severity] }}>

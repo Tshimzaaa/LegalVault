@@ -32,8 +32,13 @@
   font-family: inherit;
 }
 
-.dash-topbar-search input:focus {
+.dash-topbar-search input:focus:not(:focus-visible) {
   outline: none;
+}
+
+.dash-topbar-search input:focus-visible {
+  outline: 2px solid #22c55e;
+  outline-offset: 2px;
 }
 
 .dash-state {

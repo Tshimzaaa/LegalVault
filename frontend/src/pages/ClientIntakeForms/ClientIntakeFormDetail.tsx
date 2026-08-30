@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import './ClientIntakeFormDetail.css'
 import ProfileMenu from '../../components/ProfileMenu'
 import type { ClientContact } from '../../api/clientAuth'
@@ -77,21 +77,9 @@ function ClientIntakeFormDetail({ contact, onLogout }: ClientIntakeFormDetailPro
     const token = localStorage.getItem('access_token')
     if (!token) return
 
-    for (const field of form.fields) {
-      if (!field.is_required) continue
-      if (field.field_type === 'file' && !files[field.id]) {
-        setSubmitError(`"${field.label}" is required.`)
-        return
-      }
-      if (field.field_type === 'checkbox' && !checked[field.id]) {
-        setSubmitError(`"${field.label}" is required.`)
-        return
-      }
-      if (field.field_type !== 'file' && field.field_type !== 'checkbox' && !values[field.id]) {
-        setSubmitError(`"${field.label}" is required.`)
-        return
-      }
-    }
+    // Every required field already carries a native `required` attribute, so the browser's
+    // own constraint validation blocks submission and focuses the first invalid field before
+    // this handler ever runs — no need to duplicate that check here.
 
     const answers: Record<string, string> = {}
     const fileAnswers: SubmitIntakeFormFile[] = []
@@ -121,8 +109,8 @@ function ClientIntakeFormDetail({ contact, onLogout }: ClientIntakeFormDetailPro
   if (status === 'loading') {
     return (
       <main className="dash-main">
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading form…</p>
         </div>
       </main>
@@ -132,7 +120,7 @@ function ClientIntakeFormDetail({ contact, onLogout }: ClientIntakeFormDetailPro
   if (status === 'error' || !form) {
     return (
       <main className="dash-main">
-        <div className="dash-state">
+        <div className="dash-state" role="status" aria-live="polite">
           <p>This form isn&rsquo;t available.</p>
           <button type="button" className="btn-ghost" onClick={() => navigate(-1)}>
             Back
@@ -151,9 +139,9 @@ function ClientIntakeFormDetail({ contact, onLogout }: ClientIntakeFormDetailPro
         </header>
         <div className="card client-intake-success">
           <p>Thanks — your submission has been received.</p>
-          <button type="button" className="btn-solid" onClick={() => navigate('/client/my-intake-submissions')}>
+          <Link to="/client/my-intake-submissions" className="btn-solid">
             View My Requests
-          </button>
+          </Link>
         </div>
       </main>
     )
@@ -185,6 +173,8 @@ function ClientIntakeFormDetail({ contact, onLogout }: ClientIntakeFormDetailPro
                 type="text"
                 value={values[field.id] ?? ''}
                 onChange={(e) => setValues((prev) => ({ ...prev, [field.id]: e.target.value }))}
+                required={field.is_required}
+                aria-required={field.is_required}
               />
             )}
             {field.field_type === 'textarea' && (
@@ -192,6 +182,8 @@ function ClientIntakeFormDetail({ contact, onLogout }: ClientIntakeFormDetailPro
                 rows={4}
                 value={values[field.id] ?? ''}
                 onChange={(e) => setValues((prev) => ({ ...prev, [field.id]: e.target.value }))}
+                required={field.is_required}
+                aria-required={field.is_required}
               />
             )}
             {field.field_type === 'number' && (
@@ -199,6 +191,8 @@ function ClientIntakeFormDetail({ contact, onLogout }: ClientIntakeFormDetailPro
                 type="number"
                 value={values[field.id] ?? ''}
                 onChange={(e) => setValues((prev) => ({ ...prev, [field.id]: e.target.value }))}
+                required={field.is_required}
+                aria-required={field.is_required}
               />
             )}
             {field.field_type === 'date' && (
@@ -206,14 +200,20 @@ function ClientIntakeFormDetail({ contact, onLogout }: ClientIntakeFormDetailPro
                 type="date"
                 value={values[field.id] ?? ''}
                 onChange={(e) => setValues((prev) => ({ ...prev, [field.id]: e.target.value }))}
+                required={field.is_required}
+                aria-required={field.is_required}
               />
             )}
             {field.field_type === 'dropdown' && (
               <select
                 value={values[field.id] ?? ''}
                 onChange={(e) => setValues((prev) => ({ ...prev, [field.id]: e.target.value }))}
+                required={field.is_required}
+                aria-required={field.is_required}
               >
-                <option value="">Select…</option>
+                <option value="" disabled>
+                  Select…
+                </option>
                 {(field.options ?? []).map((opt) => (
                   <option key={opt} value={opt}>
                     {opt}
@@ -227,6 +227,8 @@ function ClientIntakeFormDetail({ contact, onLogout }: ClientIntakeFormDetailPro
                 checked={checked[field.id] ?? false}
                 onChange={(e) => setChecked((prev) => ({ ...prev, [field.id]: e.target.checked }))}
                 className="client-intake-checkbox"
+                required={field.is_required}
+                aria-required={field.is_required}
               />
             )}
             {field.field_type === 'file' && (
@@ -234,13 +236,19 @@ function ClientIntakeFormDetail({ contact, onLogout }: ClientIntakeFormDetailPro
                 type="file"
                 accept={ALLOWED_FILE_ACCEPT}
                 onChange={(e) => handleFileChange(field.id, e.target.files?.[0] ?? null)}
+                required={field.is_required}
+                aria-required={field.is_required}
               />
             )}
             {field.help_text && <span className="muted client-intake-help">{field.help_text}</span>}
           </label>
         ))}
 
-        {submitError && <p className="matter-error">{submitError}</p>}
+        {submitError && (
+          <p className="matter-error" role="alert" aria-live="polite">
+            {submitError}
+          </p>
+        )}
 
         <div className="matter-actions">
           <button type="submit" className="btn-solid" disabled={submitting}>

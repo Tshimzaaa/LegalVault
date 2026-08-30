@@ -331,7 +331,8 @@ function IntakeFormBuilder({ user }: IntakeFormBuilderProps) {
                 type="text"
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
-                placeholder="New Client Intake"
+                placeholder="New Client Intake…"
+                autoComplete="off"
               />
             </label>
             <label className="field">
@@ -340,7 +341,8 @@ function IntakeFormBuilder({ user }: IntakeFormBuilderProps) {
                 type="text"
                 value={newDescription}
                 onChange={(e) => setNewDescription(e.target.value)}
-                placeholder="Optional summary shown to clients"
+                placeholder="Optional summary shown to clients…"
+                autoComplete="off"
               />
             </label>
           </div>
@@ -352,13 +354,13 @@ function IntakeFormBuilder({ user }: IntakeFormBuilderProps) {
               {creatingForm ? 'Creating…' : 'Create Form'}
             </button>
           </div>
-          {createFormError && <p className="matter-error">{createFormError}</p>}
+          {createFormError && <p className="matter-error" aria-live="polite">{createFormError}</p>}
         </form>
       )}
 
       {status === 'loading' && (
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading intake forms…</p>
         </div>
       )}
@@ -372,7 +374,7 @@ function IntakeFormBuilder({ user }: IntakeFormBuilderProps) {
         </div>
       )}
 
-      {formActionError && <p className="matter-error">{formActionError}</p>}
+      {formActionError && <p className="matter-error" aria-live="polite">{formActionError}</p>}
 
       {status === 'ready' && (
         <section className="intake-form-list">
@@ -384,11 +386,16 @@ function IntakeFormBuilder({ user }: IntakeFormBuilderProps) {
                   <form onSubmit={handleSaveFormEdit} className="intake-form-edit-form">
                     <label className="field">
                       <span>Title</span>
-                      <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required />
+                      <input
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        required
+                        autoComplete="off"
+                      />
                     </label>
                     <label className="field">
                       <span>Description</span>
-                      <input value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
+                      <input value={editDescription} onChange={(e) => setEditDescription(e.target.value)} autoComplete="off" />
                     </label>
                     <div className="matter-actions">
                       <button type="button" className="btn-ghost" onClick={() => setEditingFormId(null)}>
@@ -449,7 +456,7 @@ function IntakeFormBuilder({ user }: IntakeFormBuilderProps) {
 
                 {expanded && (
                   <div className="intake-fields-panel">
-                    {fieldActionError && <p className="matter-error">{fieldActionError}</p>}
+                    {fieldActionError && <p className="matter-error" aria-live="polite">{fieldActionError}</p>}
                     {form.fields.length === 0 && <p className="muted">No fields yet — add the first one below.</p>}
                     <ul className="intake-fields-list">
                       {form.fields.map((field, index) =>
@@ -463,6 +470,7 @@ function IntakeFormBuilder({ user }: IntakeFormBuilderProps) {
                                     value={editFieldLabel}
                                     onChange={(e) => setEditFieldLabel(e.target.value)}
                                     required
+                                    autoComplete="off"
                                   />
                                 </label>
                                 <label className="field">
@@ -481,7 +489,11 @@ function IntakeFormBuilder({ user }: IntakeFormBuilderProps) {
                               </div>
                               <label className="field">
                                 <span>Help text</span>
-                                <input value={editFieldHelp} onChange={(e) => setEditFieldHelp(e.target.value)} />
+                                <input
+                                  value={editFieldHelp}
+                                  onChange={(e) => setEditFieldHelp(e.target.value)}
+                                  autoComplete="off"
+                                />
                               </label>
                               {editFieldType === 'dropdown' && (
                                 <label className="field">
@@ -489,7 +501,8 @@ function IntakeFormBuilder({ user }: IntakeFormBuilderProps) {
                                   <input
                                     value={editFieldOptions}
                                     onChange={(e) => setEditFieldOptions(e.target.value)}
-                                    placeholder="Yes, No"
+                                    placeholder="Yes, No…"
+                                    autoComplete="off"
                                   />
                                 </label>
                               )}
@@ -572,7 +585,8 @@ function IntakeFormBuilder({ user }: IntakeFormBuilderProps) {
                             <input
                               value={newFieldLabel}
                               onChange={(e) => setNewFieldLabel(e.target.value)}
-                              placeholder="Company Name"
+                              placeholder="Company Name…"
+                              autoComplete="off"
                             />
                           </label>
                           <label className="field">
@@ -591,7 +605,8 @@ function IntakeFormBuilder({ user }: IntakeFormBuilderProps) {
                           <input
                             value={newFieldHelp}
                             onChange={(e) => setNewFieldHelp(e.target.value)}
-                            placeholder="Optional guidance shown under the field"
+                            placeholder="Optional guidance shown under the field…"
+                            autoComplete="off"
                           />
                         </label>
                         {newFieldType === 'dropdown' && (
@@ -600,7 +615,8 @@ function IntakeFormBuilder({ user }: IntakeFormBuilderProps) {
                             <input
                               value={newFieldOptions}
                               onChange={(e) => setNewFieldOptions(e.target.value)}
-                              placeholder="Yes, No"
+                              placeholder="Yes, No…"
+                              autoComplete="off"
                             />
                           </label>
                         )}

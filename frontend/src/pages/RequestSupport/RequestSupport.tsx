@@ -69,7 +69,7 @@ function RequestSupport({ contact, onLogout }: RequestSupportProps) {
       <form className="matter-form request-form" onSubmit={handleSubmit}>
         <div className="matter-col">
           <section className="card form-section">
-            <h3>1. Request Details</h3>
+            <h2>1. Request Details</h2>
 
             <label className="field">
               <span>Request Type</span>
@@ -88,9 +88,10 @@ function RequestSupport({ contact, onLogout }: RequestSupportProps) {
               <span>Vendor / Counterparty</span>
               <input
                 type="text"
-                placeholder="Company or individual name"
+                placeholder="Company or individual name…"
                 value={counterparty}
                 onChange={(e) => setCounterparty(e.target.value)}
+                autoComplete="off"
               />
             </label>
 
@@ -112,12 +113,12 @@ function RequestSupport({ contact, onLogout }: RequestSupportProps) {
 
         <div className="matter-col">
           <section className="card form-section">
-            <h3>2. Description</h3>
+            <h2>2. Description</h2>
 
             <label className="field">
               <span>What do you need help with?</span>
               <textarea
-                placeholder="Describe your request so legal can review it without back-and-forth email"
+                placeholder="Describe your request so legal can review it without back-and-forth email…"
                 rows={6}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -127,25 +128,36 @@ function RequestSupport({ contact, onLogout }: RequestSupportProps) {
             <label className="field">
               <span>Reference Documents</span>
               <input
-                type="text"
-                placeholder="Link to any relevant documents"
+                type="url"
+                placeholder="Link to any relevant documents…"
                 value={referenceDocuments}
                 onChange={(e) => setReferenceDocuments(e.target.value)}
+                autoComplete="off"
               />
             </label>
           </section>
         </div>
 
         <div className="matter-actions">
-          <button type="button" className="btn-ghost" onClick={() => navigate('/client/dashboard')}>
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={() => {
+              const isDirty = Boolean(
+                requestType || counterparty || neededBy || description || referenceDocuments || priority !== 'medium',
+              )
+              if (isDirty && !window.confirm('Discard this request? Your changes will be lost.')) return
+              navigate('/client/dashboard')
+            }}
+          >
             Cancel
           </button>
           <button type="submit" className="btn-solid" disabled={submitting}>
             {submitting ? 'Submitting…' : 'Submit Request'}
           </button>
         </div>
-        {submitted && <p className="matter-success">Request submitted. Legal will review it shortly.</p>}
-        {error && <p className="matter-error">{error}</p>}
+        {submitted && <p className="matter-success" aria-live="polite">Request submitted. Legal will review it shortly.</p>}
+        {error && <p className="matter-error" aria-live="polite">{error}</p>}
       </form>
     </main>
   )

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import './ClientWorkflow.css'
 import { IconPlus } from '../../components/icons'
 import ProfileMenu from '../../components/ProfileMenu'
@@ -53,16 +53,16 @@ function ClientWorkflow({ contact, onLogout }: ClientWorkflowProps) {
           <span className="chip">
             Total Matters <span className="chip-badge">{matters.length}</span>
           </span>
-          <button type="button" className="btn-solid workflow-new-btn" onClick={() => navigate('/client/request-support')}>
+          <Link to="/client/request-support" className="btn-solid workflow-new-btn">
             <IconPlus /> New Request
-          </button>
+          </Link>
           <ProfileMenu user={contact} onLogout={onLogout} />
         </div>
       </header>
 
       {status === 'loading' && (
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading your matters…</p>
         </div>
       )}
@@ -83,7 +83,7 @@ function ClientWorkflow({ contact, onLogout }: ClientWorkflowProps) {
             return (
               <div key={col.status} className="workflow-column">
                 <div className="workflow-column-header">
-                  <span className="status-dot" style={{ background: col.color }} />
+                  <span className="status-dot" style={{ background: col.color }} aria-hidden="true" />
                   <span className="workflow-column-title">{col.label}</span>
                   <span className="workflow-column-count">{cards.length}</span>
                 </div>
@@ -96,7 +96,12 @@ function ClientWorkflow({ contact, onLogout }: ClientWorkflowProps) {
                       role="button"
                       tabIndex={0}
                       onClick={() => navigate(`/client/matters/${m.id}`)}
-                      onKeyDown={(e) => e.key === 'Enter' && navigate(`/client/matters/${m.id}`)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          navigate(`/client/matters/${m.id}`)
+                        }
+                      }}
                     >
                       <span className="workflow-card-title">{m.title}</span>
                       <div className="workflow-card-footer request-card-footer">

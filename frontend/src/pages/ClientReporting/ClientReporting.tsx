@@ -39,6 +39,10 @@ const contractTypeColor: Record<ContractType, string> = {
   general: '#008300',
 }
 
+const daysFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1, minimumFractionDigits: 1 })
+const gridLabelFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 })
+const percentFormat = new Intl.NumberFormat(undefined, { style: 'percent', maximumFractionDigits: 0 })
+
 const requestTypeLabel: Record<SupportRequestType, string> = {
   nda: 'NDA',
   consultancy: 'Consultancy',
@@ -52,7 +56,7 @@ function lastMonths(count: number) {
   const months = []
   for (let i = count - 1; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    months.push({ year: d.getFullYear(), month: d.getMonth(), label: d.toLocaleString('en-US', { month: 'short' }) })
+    months.push({ year: d.getFullYear(), month: d.getMonth(), label: d.toLocaleString(undefined, { month: 'short' }) })
   }
   return months
 }
@@ -126,7 +130,19 @@ function ActiveMattersLineChart({ data }: { data: TrendPoint[] }) {
 
         {points.map((p, i) => (
           <g key={p.month}>
-            <rect x={p.x - stepX / 2} y={0} width={stepX} height={height} fill="transparent" onMouseEnter={() => setHover(i)} />
+            <rect
+              x={p.x - stepX / 2}
+              y={0}
+              width={stepX}
+              height={height}
+              fill="transparent"
+              tabIndex={0}
+              role="img"
+              aria-label={`${p.month}: ${p.value} matters`}
+              onMouseEnter={() => setHover(i)}
+              onFocus={() => setHover(i)}
+              onBlur={() => setHover(null)}
+            />
             {(hover === i || i === points.length - 1) && (
               <circle cx={p.x} cy={p.y} r="4" fill="#22c55e" stroke="#0b0b0d" strokeWidth="2" />
             )}
@@ -199,8 +215,13 @@ function ContractDistributionDonut({ data }: { data: OutcomeSlice[] }) {
             strokeLinecap="butt"
             transform={`rotate(${s.rotate} ${size / 2} ${size / 2})`}
             className="donut-segment"
+            tabIndex={0}
+            role="img"
+            aria-label={`${s.label}: ${Math.round((s.value / total) * 100)}%`}
             onMouseEnter={() => setHover(i)}
             onMouseLeave={() => setHover(null)}
+            onFocus={() => setHover(i)}
+            onBlur={() => setHover(null)}
           />
         ))}
         <text x="50%" y="46%" textAnchor="middle" className="donut-center-value">
@@ -216,7 +237,7 @@ function ContractDistributionDonut({ data }: { data: OutcomeSlice[] }) {
           <div key={d.label} className={`donut-legend-row${hover === i ? ' active' : ''}`}>
             <span className="status-dot" style={{ background: d.color }} />
             <span className="donut-legend-label">{d.label}</span>
-            <span className="donut-legend-value">{Math.round((d.value / total) * 100)}%</span>
+            <span className="donut-legend-value">{percentFormat.format(d.value / total)}</span>
           </div>
         ))}
         {data.length === 0 && <p className="muted">No signed contracts yet.</p>}
@@ -247,7 +268,7 @@ function TurnaroundBarChart({ data }: { data: BarPoint[] }) {
           const y = height - padding - (g / max) * (height - padding * 2)
           return (
             <text key={g} x={padding - 6} y={y + 3} textAnchor="end" className="chart-axis-label">
-              {g.toFixed(g < 1 ? 1 : 0)}
+              {gridLabelFormat.format(g)}
             </text>
           )
         })}
@@ -258,12 +279,20 @@ function TurnaroundBarChart({ data }: { data: BarPoint[] }) {
           const y = height - padding - barHeight
           const isHover = hover === i
           return (
-            <g key={d.label} onMouseEnter={() => setHover(i)}>
+            <g
+              key={d.label}
+              tabIndex={0}
+              role="img"
+              aria-label={`${d.label}: ${daysFormat.format(d.value)} days`}
+              onMouseEnter={() => setHover(i)}
+              onFocus={() => setHover(i)}
+              onBlur={() => setHover(null)}
+            >
               <rect x={x} y={padding} width={barWidth} height={height - padding * 2} fill="transparent" />
               <rect x={x} y={y} width={barWidth} height={barHeight} rx="4" fill="#22c55e" opacity={isHover ? 1 : 0.85} />
               {isHover && (
                 <text x={x + barWidth / 2} y={y - 6} textAnchor="middle" className="chart-bar-label">
-                  {d.value.toFixed(1)}d
+                  {daysFormat.format(d.value)}d
                 </text>
               )}
             </g>
@@ -365,7 +394,9 @@ function ClientReporting({ contact, onLogout }: ClientReportingProps) {
             <span>Avg. turnaround</span>
           </div>
           <div className="stat-line">
-            <span className="stat-big">{avgTurnaroundDays !== null ? `${avgTurnaroundDays.toFixed(1)} days` : '—'}</span>
+            <span className="stat-big">
+              {avgTurnaroundDays !== null ? `${daysFormat.format(avgTurnaroundDays)} days` : '—'}
+            </span>
           </div>
         </div>
         <div className="card">
@@ -381,7 +412,9 @@ function ClientReporting({ contact, onLogout }: ClientReportingProps) {
             <span>Completion rate</span>
           </div>
           <div className="stat-line">
-            <span className="stat-big">{completionRate !== null ? `${completionRate}%` : '—'}</span>
+            <span className="stat-big">
+              {completionRate !== null ? percentFormat.format(completionRate / 100) : '—'}
+            </span>
           </div>
         </div>
       </section>

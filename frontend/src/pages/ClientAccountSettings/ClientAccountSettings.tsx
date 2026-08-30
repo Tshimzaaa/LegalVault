@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import '../Settings/Settings.css'
 import { updateContactProfile, changeContactPassword } from '../../api/clientAuth'
@@ -26,6 +26,21 @@ function ClientAccountSettings({ contact, onLogout, onContactUpdate }: ClientAcc
   const [passwordSaving, setPasswordSaving] = useState(false)
   const [passwordError, setPasswordError] = useState<string | null>(null)
 
+  const profileErrorRef = useRef<HTMLParagraphElement>(null)
+  const passwordErrorRef = useRef<HTMLParagraphElement>(null)
+
+  const profileDirty = firstName !== contact.first_name || lastName !== contact.last_name || email !== contact.email
+  const passwordDirty = Boolean(currentPassword || newPassword || confirmPassword)
+
+  useEffect(() => {
+    if (!profileDirty && !passwordDirty) return
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      e.preventDefault()
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [profileDirty, passwordDirty])
+
   async function handleProfileSave(e: FormEvent) {
     e.preventDefault()
     if (!token) return
@@ -38,6 +53,7 @@ function ClientAccountSettings({ contact, onLogout, onContactUpdate }: ClientAcc
       setProfileSaved(true)
     } catch (err) {
       setProfileError(err instanceof Error ? err.message : 'Could not save your profile.')
+      profileErrorRef.current?.focus()
     } finally {
       setProfileSaving(false)
     }
@@ -50,6 +66,7 @@ function ClientAccountSettings({ contact, onLogout, onContactUpdate }: ClientAcc
 
     if (newPassword !== confirmPassword) {
       setPasswordError('New password and confirmation do not match.')
+      passwordErrorRef.current?.focus()
       return
     }
 
@@ -61,6 +78,7 @@ function ClientAccountSettings({ contact, onLogout, onContactUpdate }: ClientAcc
       onLogout()
     } catch (err) {
       setPasswordError(err instanceof Error ? err.message : 'Could not change your password.')
+      passwordErrorRef.current?.focus()
       setPasswordSaving(false)
     }
   }
@@ -73,27 +91,48 @@ function ClientAccountSettings({ contact, onLogout, onContactUpdate }: ClientAcc
 
       <section className="card settings-card">
         <div className="card-header">
-          <span>Your profile</span>
+          <span>Your Profile</span>
         </div>
 
         <form onSubmit={handleProfileSave} className="settings-form">
           <div className="field-row">
             <label className="field">
               <span>First name</span>
-              <input value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+              <input
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+                autoComplete="given-name"
+              />
             </label>
             <label className="field">
               <span>Last name</span>
-              <input value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+              <input
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+                autoComplete="family-name"
+              />
             </label>
           </div>
           <label className="field">
             <span>Email</span>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+              spellCheck={false}
+            />
           </label>
 
-          {profileError && <p className="matter-error">{profileError}</p>}
-          {profileSaved && <p className="settings-saved">Profile saved.</p>}
+          {profileError && (
+            <p className="matter-error" role="alert" aria-live="polite" tabIndex={-1} ref={profileErrorRef}>
+              {profileError}
+            </p>
+          )}
+          {profileSaved && <p className="settings-saved" aria-live="polite">Profile saved.</p>}
 
           <div className="matter-actions">
             <button type="submit" className="btn-solid" disabled={profileSaving}>
@@ -105,7 +144,7 @@ function ClientAccountSettings({ contact, onLogout, onContactUpdate }: ClientAcc
 
       <section className="card settings-card">
         <div className="card-header">
-          <span>Change password</span>
+          <span>Change Password</span>
         </div>
 
         <form onSubmit={handlePasswordSave} className="settings-form">
@@ -116,6 +155,7 @@ function ClientAccountSettings({ contact, onLogout, onContactUpdate }: ClientAcc
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               required
+              autoComplete="current-password"
             />
           </label>
           <div className="field-row">
@@ -127,6 +167,7 @@ function ClientAccountSettings({ contact, onLogout, onContactUpdate }: ClientAcc
                 onChange={(e) => setNewPassword(e.target.value)}
                 minLength={8}
                 required
+                autoComplete="new-password"
               />
             </label>
             <label className="field">
@@ -137,11 +178,16 @@ function ClientAccountSettings({ contact, onLogout, onContactUpdate }: ClientAcc
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 minLength={8}
                 required
+                autoComplete="new-password"
               />
             </label>
           </div>
 
-          {passwordError && <p className="matter-error">{passwordError}</p>}
+          {passwordError && (
+            <p className="matter-error" role="alert" aria-live="polite" tabIndex={-1} ref={passwordErrorRef}>
+              {passwordError}
+            </p>
+          )}
 
           <div className="matter-actions">
             <button type="submit" className="btn-solid" disabled={passwordSaving}>

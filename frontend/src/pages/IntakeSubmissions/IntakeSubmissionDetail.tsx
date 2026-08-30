@@ -125,8 +125,8 @@ function IntakeSubmissionDetail({ user }: IntakeSubmissionDetailProps) {
   if (status === 'loading') {
     return (
       <main className="dash-main">
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading submission…</p>
         </div>
       </main>
@@ -158,10 +158,11 @@ function IntakeSubmissionDetail({ user }: IntakeSubmissionDetailProps) {
         <div className="topbar-actions">
           <select
             className="select-input"
+            aria-label="Submission status"
             value={submission.status}
             disabled={statusSaving}
             onChange={(e) => handleStatusChange(e.target.value as SubmissionStatus)}
-            style={{ color: statusColor[submission.status] }}
+            style={{ color: statusColor[submission.status], background: `${statusColor[submission.status]}22` }}
           >
             <option value="submitted">Submitted</option>
             <option value="in_review">In Review</option>
@@ -186,7 +187,7 @@ function IntakeSubmissionDetail({ user }: IntakeSubmissionDetailProps) {
         </div>
       </section>
 
-      {actionError && <p className="matter-error">{actionError}</p>}
+      {actionError && <p className="matter-error" aria-live="polite">{actionError}</p>}
 
       {submission.converted_matter_id ? (
         <p className="intake-converted-note">
@@ -196,7 +197,12 @@ function IntakeSubmissionDetail({ user }: IntakeSubmissionDetailProps) {
         <form className="card intake-convert-form" onSubmit={handleConvert}>
           <label className="field">
             <span>Matter title (optional — defaults to “{client?.company_name ?? 'Client'} – {form?.title ?? 'Intake'}”)</span>
-            <input value={matterTitle} onChange={(e) => setMatterTitle(e.target.value)} placeholder="Optional override" />
+            <input
+              value={matterTitle}
+              onChange={(e) => setMatterTitle(e.target.value)}
+              placeholder="Optional override…"
+              autoComplete="off"
+            />
           </label>
           <button type="submit" className="btn-solid" disabled={converting}>
             {converting ? 'Converting…' : 'Convert to Matter'}

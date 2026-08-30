@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import '../MatterDetail/MatterDetail.css'
 import ProfileMenu from '../../components/ProfileMenu'
 import { IconDownload, IconSend, IconTrash } from '../../components/icons'
@@ -19,6 +19,15 @@ import { listMyPendingClientSignatures } from '../../api/signatures'
 import type { SignatureRequest } from '../../api/signatures'
 
 type LoadState = 'loading' | 'error' | 'ready'
+
+const dateFormat = new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+const dateTimeFormat = new Intl.DateTimeFormat(undefined, {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+})
 
 const statusLabel: Record<MatterStatus, string> = {
   intake: 'Intake',
@@ -45,7 +54,6 @@ interface ClientMatterDetailProps {
 
 function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
   const { matterId } = useParams<{ matterId: string }>()
-  const navigate = useNavigate()
 
   const [matter, setMatter] = useState<Matter | null>(null)
   const [documents, setDocuments] = useState<MatterDocument[]>([])
@@ -111,6 +119,7 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
 
   async function handleDeleteMessage(message: MatterMessage) {
     if (!token || !matterId) return
+    if (!window.confirm('Delete this message?')) return
     setMessageBusyId(message.id)
     try {
       await deleteClientMessage(token, matterId, message.id)
@@ -175,9 +184,9 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
     <main className="dash-main">
       <header className="dash-topbar">
         <div>
-          <button type="button" className="matter-detail-back" onClick={() => navigate('/client/workflow')}>
+          <Link to="/client/workflow" className="matter-detail-back">
             &larr; Back to Workflow
-          </button>
+          </Link>
           <h1>{matter?.title ?? 'Matter'}</h1>
         </div>
         <div className="topbar-actions">
@@ -194,14 +203,14 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
       </header>
 
       {status === 'loading' && (
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading matter…</p>
         </div>
       )}
 
       {status === 'error' && (
-        <div className="dash-state">
+        <div className="dash-state" role="status" aria-live="polite">
           <p>Couldn&rsquo;t load this matter.</p>
           <button type="button" className="btn-ghost" onClick={loadAll}>
             Retry
@@ -215,7 +224,7 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
             <div className="card-header">
               <span>Details</span>
             </div>
-            <p className="muted">Opened: {new Date(matter.created_at).toLocaleDateString()}</p>
+            <p className="muted">Opened: {dateFormat.format(new Date(matter.created_at))}</p>
             <p className="matter-detail-description">{matter.description || 'No description provided.'}</p>
           </section>
 
@@ -260,7 +269,7 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
                     <div className="matter-doc-row">
                       <span className="matter-doc-title">{latest.title}</span>
                       <span className="chip small">v{latest.version}</span>
-                      <span className="muted matter-doc-meta">{new Date(latest.created_at).toLocaleDateString()}</span>
+                      <span className="muted matter-doc-meta">{dateFormat.format(new Date(latest.created_at))}</span>
                       <button
                         type="button"
                         className="icon-btn"
@@ -277,7 +286,7 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
                           <div key={v.id} className="matter-doc-row muted">
                             <span className="matter-doc-title">{v.title}</span>
                             <span className="chip small">v{v.version}</span>
-                            <span className="muted matter-doc-meta">{new Date(v.created_at).toLocaleDateString()}</span>
+                            <span className="muted matter-doc-meta">{dateFormat.format(new Date(v.created_at))}</span>
                             <button
                               type="button"
                               className="icon-btn"
@@ -300,7 +309,8 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
             <form onSubmit={handleUpload} className="matter-doc-upload-row">
               <input
                 type="text"
-                placeholder="Document title (reuse a title to add a new version)"
+                aria-label="Document title"
+                placeholder="Document title (reuse a title to add a new version)…"
                 value={docTitle}
                 onChange={(e) => setDocTitle(e.target.value)}
                 list="client-matter-doc-titles"
@@ -314,6 +324,7 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
               <input
                 id="client-matter-doc-file"
                 type="file"
+                aria-label="Document file"
                 onChange={handleFileChange}
                 accept=".pdf,.doc,.docx,.txt"
                 required
@@ -322,7 +333,7 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
                 {uploading ? 'Uploading…' : 'Upload'}
               </button>
             </form>
-            {uploadError && <p className="matter-error">{uploadError}</p>}
+            {uploadError && <p className="matter-error" aria-live="polite">{uploadError}</p>}
           </section>
 
           <section className="card">
@@ -338,7 +349,7 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
                       {m.author_name}
                       {m.author_type === 'staff' ? ' (firm)' : ''}
                     </span>
-                    <span className="muted">{new Date(m.created_at).toLocaleString()}</span>
+                    <span className="muted">{dateTimeFormat.format(new Date(m.created_at))}</span>
                     {m.author_type === 'client_contact' && (
                       <button
                         type="button"
@@ -360,6 +371,7 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
             <form onSubmit={handleSendMessage} className="matter-message-compose-row">
               <input
                 type="text"
+                aria-label="Message"
                 placeholder="Write a message to the firm…"
                 value={messageBody}
                 onChange={(e) => setMessageBody(e.target.value)}
@@ -368,7 +380,7 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
                 <IconSend /> {sendingMessage ? 'Sending…' : 'Send'}
               </button>
             </form>
-            {messageError && <p className="matter-error">{messageError}</p>}
+            {messageError && <p className="matter-error" aria-live="polite">{messageError}</p>}
           </section>
         </div>
       )}

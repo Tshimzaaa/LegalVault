@@ -3,7 +3,7 @@ import './Pricing.css'
 
 interface Plan {
   name: string
-  price: string
+  price: number | null
   period: string
   description: string
   features: string[]
@@ -12,10 +12,16 @@ interface Plan {
   ctaHref: string
 }
 
+const currencyFormat = new Intl.NumberFormat(undefined, {
+  style: 'currency',
+  currency: 'ZAR',
+  maximumFractionDigits: 0,
+})
+
 const plans: Plan[] = [
   {
     name: 'Starter',
-    price: 'R1,499',
+    price: 1499,
     period: '/ month',
     description: 'For solo practitioners getting organized.',
     features: [
@@ -30,7 +36,7 @@ const plans: Plan[] = [
   },
   {
     name: 'Professional',
-    price: 'R3,299',
+    price: 3299,
     period: '/ month',
     description: 'For growing firms that need more workflow.',
     features: [
@@ -47,7 +53,7 @@ const plans: Plan[] = [
   },
   {
     name: 'Firm',
-    price: 'Custom',
+    price: null,
     period: 'pricing',
     description: 'For multi-partner firms with compliance needs.',
     features: [
@@ -92,7 +98,7 @@ function Pricing() {
             {plan.highlighted && <span className="pricing-badge">Most popular</span>}
             <span className="pricing-plan-name">{plan.name}</span>
             <div className="pricing-amount">
-              <span className="pricing-price">{plan.price}</span>
+              <span className="pricing-price">{plan.price !== null ? currencyFormat.format(plan.price) : 'Custom'}</span>
               <span className="pricing-period">{plan.period}</span>
             </div>
             <p className="pricing-desc">{plan.description}</p>

@@ -23,6 +23,15 @@ function ProfileMenu({ user, onLogout }: ProfileMenuProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [open])
 
+  useEffect(() => {
+    if (!open) return
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [open])
+
   return (
     <div className="profile-menu-root" ref={rootRef}>
       <button
@@ -53,7 +62,7 @@ function ProfileMenu({ user, onLogout }: ProfileMenuProps) {
               onLogout()
             }}
           >
-            Log out
+            Log Out
           </button>
         </div>
       )}

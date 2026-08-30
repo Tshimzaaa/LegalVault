@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import '../AuthPage.css'
@@ -15,6 +15,7 @@ function AcceptStaffInvite() {
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
+  const errorRef = useRef<HTMLParagraphElement>(null)
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -22,10 +23,12 @@ function AcceptStaffInvite() {
 
     if (password.length < 8) {
       setError('Password must be at least 8 characters.')
+      errorRef.current?.focus()
       return
     }
     if (password !== confirmPassword) {
       setError('Passwords do not match.')
+      errorRef.current?.focus()
       return
     }
 
@@ -36,6 +39,7 @@ function AcceptStaffInvite() {
       setTimeout(() => navigate('/login', { state: { staffOnly: true } }), 1500)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not accept the invite. The link may have expired.')
+      errorRef.current?.focus()
     } finally {
       setSubmitting(false)
     }
@@ -44,7 +48,7 @@ function AcceptStaffInvite() {
   return (
     <div className="auth-page">
       <div className="modal-box">
-        <h2>Join your firm's workspace</h2>
+        <h2>Join your firm’s workspace</h2>
         <p className="modal-sub">
           {done ? 'All set — redirecting you to log in…' : 'Choose a password to activate your staff account.'}
         </p>
@@ -54,7 +58,14 @@ function AcceptStaffInvite() {
             {editToken ? (
               <label className="modal-field">
                 <span>Invite token</span>
-                <input type="text" value={token} onChange={(e) => setToken(e.target.value)} required />
+                <input
+                  type="text"
+                  value={token}
+                  onChange={(e) => setToken(e.target.value)}
+                  required
+                  spellCheck={false}
+                  autoComplete="off"
+                />
               </label>
             ) : (
               <p className="modal-sub">
@@ -73,6 +84,7 @@ function AcceptStaffInvite() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
+                autoComplete="new-password"
               />
             </label>
 
@@ -84,10 +96,15 @@ function AcceptStaffInvite() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
                 required
+                autoComplete="new-password"
               />
             </label>
 
-            {error && <p className="modal-error">{error}</p>}
+            {error && (
+              <p className="modal-error" role="alert" aria-live="polite" tabIndex={-1} ref={errorRef}>
+                {error}
+              </p>
+            )}
 
             <button type="submit" className="modal-submit" disabled={submitting}>
               {submitting ? 'Activating…' : 'Activate account'}

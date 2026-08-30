@@ -1,0 +1,117 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+#
+# Deploys the backend API + Celery worker + Redis + the static frontend build as four
+# services. autoDeploy is off everywhere: deploys are triggered by .github/workflows/ci.yml's
+# `deploy` job (via each service's deploy-hook URL), only after tests/lint/build pass on
+# main — not on every push the way Render's own deploy-on-push would.
+#
+# Not validated against a live Render account (no credentials available to create one) —
+# the first Blueprint sync in the Render dashboard is the real syntax check. See
+# DEPLOYMENT.md for the setup steps (connecting the repo, filling in `sync: false` vars,
+# copying the three deploy-hook URLs into GitHub repo secrets).
+
+envVarGroups:
+  - name: legalhub-shared
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "30"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: REGISTER_SECRET
+        generateValue: true
+      - key: OWNER_SECRET
+        generateValue: true
+      # Must be a real Fernet key (python -c "from cryptography.fernet import Fernet;
+      # print(Fernet.generate_key().decode())") — generateValue's random string isn't
+      # guaranteed to be valid Fernet-format, so this stays a manual paste.
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: RUNTIME_DATABASE_URL
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_ENDPOINT_URL
+        sync: false
+      - key: R2_BUCKET_NAME
+        sync: false
+      # Still an open hosting decision (see DEPLOYMENT.md §3) — ClamAV isn't provisioned
+      # by this Blueprint. Point these at wherever it ends up running.
+      - key: CLAMD_HOST
+        sync: false
+      - key: CLAMD_PORT
+        sync: false
+      - key: DOCUMENSO_API_URL
+        sync: false
+      - key: DOCUMENSO_API_KEY
+        sync: false
+      - key: DOCUMENSO_WEBHOOK_SECRET
+        sync: false
+      # Optional — leave blank in the dashboard to skip Sentry entirely.
+      - key: SENTRY_DSN
+        sync: false
+
+services:
+  - name: legalhub-redis
+    type: keyvalue
+    plan: starter
+    ipAllowList: []
+
+  - name: legalhub-api
+    type: web
+    runtime: python
+    plan: starter
+    rootDir: backend
+    autoDeploy: false
+    buildCommand: pip install -r requirements.txt
+    preDeployCommand: alembic upgrade head
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    envVarGroups:
+      - legalhub-shared
+    envVars:
+      - key: REDIS_URL
+        fromService:
+          name: legalhub-redis
+          type: keyvalue
+          property: connectionString
+      # Render service URLs are https://<name>.onrender.com by default — update this if
+      # legalhub-frontend later gets a custom domain.
+      - key: FRONTEND_URL
+        value: https://legalhub-frontend.onrender.com
+
+  - name: legalhub-worker
+    type: worker
+    runtime: python
+    plan: starter
+    rootDir: backend
+    autoDeploy: false
+    buildCommand: pip install -r requirements.txt
+    startCommand: celery -A app.tasks.celery_app worker --beat --loglevel=info
+    envVarGroups:
+      - legalhub-shared
+    envVars:
+      - key: REDIS_URL
+        fromService:
+          name: legalhub-redis
+          type: keyvalue
+          property: connectionString
+
+  - name: legalhub-frontend
+    type: web
+    runtime: static
+    rootDir: frontend
+    autoDeploy: false
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      # Same default-URL note as FRONTEND_URL above.
+      - key: VITE_API_BASE_URL
+        value: https://legalhub-api.onrender.com
+      - key: VITE_SENTRY_DSN
+        sync: false

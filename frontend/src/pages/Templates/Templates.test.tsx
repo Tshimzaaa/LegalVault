@@ -118,8 +118,8 @@ describe('Templates page', () => {
     await screen.findByText('Mutual NDA')
 
     await user.click(screen.getByRole('button', { name: /upload template/i }))
-    await user.type(screen.getByPlaceholderText('Mutual NDA'), 'Consultancy Agreement')
-    await user.type(screen.getByPlaceholderText('Confidentiality'), 'Consultancy')
+    await user.type(screen.getByPlaceholderText('Mutual NDA…'), 'Consultancy Agreement')
+    await user.type(screen.getByPlaceholderText('Confidentiality…'), 'Consultancy')
     const file = new File(['content'], 'agreement.pdf', { type: 'application/pdf' })
     const fileInput = screen.getByLabelText(/file \(pdf, word, or text/i) as HTMLInputElement
     await user.upload(fileInput, file)

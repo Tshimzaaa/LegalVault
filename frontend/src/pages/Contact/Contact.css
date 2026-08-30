@@ -20,7 +20,7 @@
   letter-spacing: -1px;
 }
 
-.contact-hero h2 {
+.contact-hero p {
   color: #9ca3af;
   font-size: 17px;
   font-weight: 400;
@@ -77,8 +77,18 @@
 
 .contact-field input:focus,
 .contact-field textarea:focus {
-  outline: none;
   border-color: #22c55e;
+}
+
+.contact-field input:focus:not(:focus-visible),
+.contact-field textarea:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.contact-field input:focus-visible,
+.contact-field textarea:focus-visible {
+  outline: 2px solid #22c55e;
+  outline-offset: 2px;
 }
 
 .contact-submit {
@@ -109,7 +119,7 @@
   margin-bottom: 6px;
 }
 
-.contact-success h3 {
+.contact-success h2 {
   margin: 0;
   color: #fff;
   font-size: 18px;

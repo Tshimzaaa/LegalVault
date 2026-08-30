@@ -11,6 +11,8 @@ interface OutcomeSlice {
   color: string
 }
 
+const numberFormat = new Intl.NumberFormat()
+
 function CaseOutcomesDonut({ data }: { data: OutcomeSlice[] }) {
   const size = 148
   const stroke = 22
@@ -153,7 +155,7 @@ function Reporting() {
       <header className="dash-topbar">
         <h1>Reporting</h1>
         <div className="topbar-actions">
-          {exportError && <span className="matter-error">{exportError}</span>}
+          {exportError && <span className="matter-error" aria-live="polite">{exportError}</span>}
           <button type="button" className="btn-ghost" onClick={handleExport} disabled={exporting}>
             {exporting ? 'Exporting…' : 'Export matters (CSV)'}
           </button>
@@ -166,7 +168,7 @@ function Reporting() {
             <span>Active matters</span>
           </div>
           <div className="stat-line">
-            <span className="stat-big">{activeMatters ?? '—'}</span>
+            <span className="stat-big">{activeMatters !== null ? numberFormat.format(activeMatters) : '—'}</span>
           </div>
         </div>
         <div className="card">
@@ -174,7 +176,9 @@ function Reporting() {
             <span>Unassigned active matters</span>
           </div>
           <div className="stat-line">
-            <span className="stat-big">{overview?.unassigned_active_matters ?? '—'}</span>
+            <span className="stat-big">
+              {overview ? numberFormat.format(overview.unassigned_active_matters) : '—'}
+            </span>
           </div>
         </div>
         <div className="card">
@@ -182,7 +186,7 @@ function Reporting() {
             <span>Open tasks</span>
           </div>
           <div className="stat-line">
-            <span className="stat-big">{overview?.open_tasks ?? '—'}</span>
+            <span className="stat-big">{overview ? numberFormat.format(overview.open_tasks) : '—'}</span>
           </div>
         </div>
         <div className="card">
@@ -191,7 +195,7 @@ function Reporting() {
           </div>
           <div className="stat-line">
             <span className="stat-big" style={{ color: overview && overview.overdue_tasks > 0 ? '#ef4444' : undefined }}>
-              {overview?.overdue_tasks ?? '—'}
+              {overview ? numberFormat.format(overview.overdue_tasks) : '—'}
             </span>
           </div>
         </div>
@@ -200,7 +204,9 @@ function Reporting() {
             <span>Deadlines (7 days)</span>
           </div>
           <div className="stat-line">
-            <span className="stat-big">{overview?.upcoming_deadlines_7_days ?? '—'}</span>
+            <span className="stat-big">
+              {overview ? numberFormat.format(overview.upcoming_deadlines_7_days) : '—'}
+            </span>
           </div>
         </div>
       </section>

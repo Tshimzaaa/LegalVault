@@ -18,15 +18,15 @@ function Contact() {
     <section id="contact" className="contact-page">
       <div className="contact-hero">
         <h1>Get in touch</h1>
-        <h2>Questions about pricing, onboarding, or a live demo? We usually reply within one business day.</h2>
+        <p>Questions about pricing, onboarding, or a live demo? We usually reply within one business day.</p>
       </div>
 
       <div className="contact-grid">
         <div className="contact-card contact-form-card">
           {submitted ? (
-            <div className="contact-success">
-              <span className="contact-success-icon">✓</span>
-              <h3>Message sent</h3>
+            <div className="contact-success" role="status" aria-live="polite">
+              <span className="contact-success-icon" aria-hidden="true">✓</span>
+              <h2>Message sent</h2>
               <p>Thanks for reaching out — someone from our team will get back to you shortly.</p>
             </div>
           ) : (
@@ -38,8 +38,9 @@ function Contact() {
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Jane Doe"
+                    placeholder="Jane Doe…"
                     required
+                    autoComplete="name"
                   />
                 </label>
                 <label className="contact-field">
@@ -48,8 +49,10 @@ function Contact() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="jane@firm.com"
+                    placeholder="jane@firm.com…"
                     required
+                    autoComplete="email"
+                    spellCheck={false}
                   />
                 </label>
               </div>
@@ -60,7 +63,8 @@ function Contact() {
                   type="text"
                   value={firm}
                   onChange={(e) => setFirm(e.target.value)}
-                  placeholder="Doe & Associates"
+                  placeholder="Doe & Associates…"
+                  autoComplete="organization"
                 />
               </label>
 
@@ -69,14 +73,14 @@ function Contact() {
                 <textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Tell us a bit about your firm and what you're looking for…"
+                  placeholder="Tell us a bit about your firm and what you’re looking for…"
                   rows={5}
                   required
                 />
               </label>
 
               <button type="submit" className="btn btn-primary contact-submit">
-                Send message
+                Send Message
               </button>
             </form>
           )}

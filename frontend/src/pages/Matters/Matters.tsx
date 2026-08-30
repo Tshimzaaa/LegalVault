@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import './Matters.css'
 import { IconPlus } from '../../components/icons'
 import { listMatters } from '../../api/matters'
@@ -28,7 +28,6 @@ const statusColor: Record<Matter['status'], string> = {
 }
 
 function Matters() {
-  const navigate = useNavigate()
   const [matters, setMatters] = useState<Matter[]>([])
   const [clients, setClients] = useState<Client[]>([])
   const [status, setStatus] = useState<LoadState>('loading')
@@ -73,15 +72,15 @@ function Matters() {
           <span className="chip">
             Total <span className="chip-badge">{matters.length}</span>
           </span>
-          <button type="button" className="btn-solid" onClick={() => navigate('/staff/new-matter')}>
+          <Link to="/staff/new-matter" className="btn-solid">
             <IconPlus /> New Matter
-          </button>
+          </Link>
         </div>
       </header>
 
       {status === 'loading' && (
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading matters…</p>
         </div>
       )}
@@ -109,8 +108,12 @@ function Matters() {
             </thead>
             <tbody>
               {matters.map((m) => (
-                <tr key={m.id} className="matters-row" onClick={() => navigate(`/staff/matters/${m.id}`)}>
-                  <td>{m.title}</td>
+                <tr key={m.id} className="matters-row">
+                  <td>
+                    <Link to={`/staff/matters/${m.id}`} className="matters-row-link">
+                      {m.title}
+                    </Link>
+                  </td>
                   <td className="muted">{clientName(m.client_id)}</td>
                   <td>
                     <span

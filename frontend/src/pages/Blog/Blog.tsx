@@ -63,7 +63,7 @@ function Blog() {
   return (
     <section id="blog" className="blog-page">
       <div className="blog-hero">
-        <h1>Insights &amp; updates</h1>
+        <h1>Insights &amp; Updates</h1>
         <h2>Practical notes on running a modern legal practice, from the team building the tools for it.</h2>
       </div>
 

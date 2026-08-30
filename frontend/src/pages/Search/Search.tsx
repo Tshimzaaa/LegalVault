@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import './Search.css'
 import { IconSearch } from '../../components/icons'
 import { search } from '../../api/search'
-import type { SearchResponse, SearchResultItem } from '../../api/search'
+import type { SearchResponse } from '../../api/search'
 
 type SearchState = 'idle' | 'loading' | 'error' | 'ready'
 
@@ -17,7 +17,6 @@ const categories: { key: keyof SearchResponse; label: string }[] = [
 ]
 
 function Search() {
-  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [query, setQuery] = useState(searchParams.get('q') ?? '')
   const [state, setState] = useState<SearchState>('idle')
@@ -50,12 +49,6 @@ function Search() {
     await runSearch(query)
   }
 
-  function handleResultClick(categoryKey: keyof SearchResponse, item: SearchResultItem) {
-    if (categoryKey === 'matters') {
-      navigate(`/staff/matters/${item.id}`)
-    }
-  }
-
   const totalResults = results
     ? categories.reduce((sum, c) => sum + results[c.key].length, 0)
     : 0
@@ -68,11 +61,12 @@ function Search() {
           <div className="input-with-icon leading search-input-wrap">
             <IconSearch />
             <input
-              type="text"
+              type="search"
               placeholder="Search clients, contacts, matters, staff, documents…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               autoFocus
+              autoComplete="off"
             />
           </div>
           <button type="submit" className="btn-solid" disabled={!query.trim() || state === 'loading'}>
@@ -105,18 +99,19 @@ function Search() {
                     <span className="chip-badge">{items.length}</span>
                   </div>
                   <div className="list-rows">
-                    {items.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        className={`search-result-row${key === 'matters' ? ' clickable' : ''}`}
-                        onClick={() => handleResultClick(key, item)}
-                        disabled={key !== 'matters'}
-                      >
-                        <span className="search-result-title">{item.title}</span>
-                        {item.subtitle && <span className="muted search-result-subtitle">{item.subtitle}</span>}
-                      </button>
-                    ))}
+                    {items.map((item) =>
+                      key === 'matters' ? (
+                        <Link key={item.id} to={`/staff/matters/${item.id}`} className="search-result-row clickable">
+                          <span className="search-result-title">{item.title}</span>
+                          {item.subtitle && <span className="muted search-result-subtitle">{item.subtitle}</span>}
+                        </Link>
+                      ) : (
+                        <div key={item.id} className="search-result-row">
+                          <span className="search-result-title">{item.title}</span>
+                          {item.subtitle && <span className="muted search-result-subtitle">{item.subtitle}</span>}
+                        </div>
+                      ),
+                    )}
                   </div>
                 </section>
               )

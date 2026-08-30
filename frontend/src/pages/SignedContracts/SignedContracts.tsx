@@ -198,7 +198,8 @@ function SignedContracts() {
                 type="text"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                placeholder="Master Services Agreement"
+                placeholder="Master Services Agreement…"
+                autoComplete="off"
               />
             </label>
           </div>
@@ -222,6 +223,7 @@ function SignedContracts() {
                 value={form.integrationSource}
                 onChange={(e) => setForm((f) => ({ ...f, integrationSource: e.target.value }))}
                 placeholder="manual, signinghub, trackado…"
+                autoComplete="off"
               />
             </label>
           </div>
@@ -264,13 +266,13 @@ function SignedContracts() {
               {uploading ? 'Uploading…' : 'Upload'}
             </button>
           </div>
-          {uploadError && <p className="matter-error">{uploadError}</p>}
+          {uploadError && <p className="matter-error" aria-live="polite">{uploadError}</p>}
         </form>
       )}
 
       {status === 'loading' && (
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading signed contracts…</p>
         </div>
       )}
@@ -325,6 +327,7 @@ function SignedContracts() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search by name, client…"
+                  autoComplete="off"
                 />
               </label>
               <label className="field">
@@ -351,7 +354,7 @@ function SignedContracts() {
               </span>
             </div>
 
-            {actionError && <p className="matter-error">{actionError}</p>}
+            {actionError && <p className="matter-error" aria-live="polite">{actionError}</p>}
 
             <table className="data-table">
               <thead>

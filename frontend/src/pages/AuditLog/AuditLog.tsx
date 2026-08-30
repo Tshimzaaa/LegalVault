@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import './AuditLog.css'
 import { listAuditLog, auditActionLabel, formatAuditDetails } from '../../api/auditLog'
 import type { AuditLogEntry } from '../../api/auditLog'
@@ -7,50 +8,54 @@ import type { User } from '../../api/auth'
 type LoadState = 'loading' | 'error' | 'ready'
 
 const PAGE_SIZE = 50
+const dateTimeFormat = new Intl.DateTimeFormat(undefined, {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+})
 
 interface AuditLogProps {
   user: User
 }
 
 function AuditLog({ user }: AuditLogProps) {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [entries, setEntries] = useState<AuditLogEntry[]>([])
   const [status, setStatus] = useState<LoadState>('loading')
-  const [offset, setOffset] = useState(0)
-  const [hasMore, setHasMore] = useState(true)
-  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasNextPage, setHasNextPage] = useState(true)
+
+  const parsedPage = Number(searchParams.get('page'))
+  const page = Number.isInteger(parsedPage) && parsedPage > 0 ? parsedPage - 1 : 0
 
   const token = localStorage.getItem('access_token')
 
-  function loadFirstPage() {
+  function loadPage(targetPage: number) {
     if (!token) {
       setStatus('error')
       return
     }
     setStatus('loading')
-    listAuditLog(token, PAGE_SIZE, 0)
+    listAuditLog(token, PAGE_SIZE, targetPage * PAGE_SIZE)
       .then((data) => {
         setEntries(data)
-        setOffset(data.length)
-        setHasMore(data.length === PAGE_SIZE)
+        setHasNextPage(data.length === PAGE_SIZE)
         setStatus('ready')
+        setSearchParams((prev) => {
+          const params = new URLSearchParams(prev)
+          if (targetPage === 0) {
+            params.delete('page')
+          } else {
+            params.set('page', String(targetPage + 1))
+          }
+          return params
+        })
       })
       .catch(() => setStatus('error'))
   }
 
-  useEffect(loadFirstPage, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  async function handleLoadMore() {
-    if (!token) return
-    setLoadingMore(true)
-    try {
-      const data = await listAuditLog(token, PAGE_SIZE, offset)
-      setEntries((prev) => [...prev, ...data])
-      setOffset((prev) => prev + data.length)
-      setHasMore(data.length === PAGE_SIZE)
-    } finally {
-      setLoadingMore(false)
-    }
-  }
+  useEffect(() => loadPage(page), []) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (user.role !== 'admin') {
     return (
@@ -77,16 +82,16 @@ function AuditLog({ user }: AuditLogProps) {
       </header>
 
       {status === 'loading' && (
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading audit log…</p>
         </div>
       )}
 
       {status === 'error' && (
-        <div className="dash-state">
+        <div className="dash-state" role="status" aria-live="polite">
           <p>Couldn&rsquo;t reach the backend for the audit log.</p>
-          <button type="button" className="btn-ghost" onClick={loadFirstPage}>
+          <button type="button" className="btn-ghost" onClick={() => loadPage(page)}>
             Retry
           </button>
         </div>
@@ -107,7 +112,7 @@ function AuditLog({ user }: AuditLogProps) {
             <tbody>
               {entries.map((e) => (
                 <tr key={e.id}>
-                  <td className="muted tabular">{new Date(e.created_at).toLocaleString()}</td>
+                  <td className="muted tabular">{dateTimeFormat.format(new Date(e.created_at))}</td>
                   <td className="muted">{e.actor_type}</td>
                   <td>{auditActionLabel[e.action] ?? e.action}</td>
                   <td className="muted">{e.target_type}</td>
@@ -123,13 +128,15 @@ function AuditLog({ user }: AuditLogProps) {
               )}
             </tbody>
           </table>
-          {hasMore && (
-            <div className="audit-log-load-more">
-              <button type="button" className="btn-ghost" disabled={loadingMore} onClick={handleLoadMore}>
-                {loadingMore ? 'Loading…' : 'Load more'}
-              </button>
-            </div>
-          )}
+          <div className="audit-log-load-more">
+            <button type="button" className="btn-ghost" disabled={page === 0} onClick={() => loadPage(page - 1)}>
+              Previous
+            </button>
+            <span className="muted">Page {page + 1}</span>
+            <button type="button" className="btn-ghost" disabled={!hasNextPage} onClick={() => loadPage(page + 1)}>
+              Next
+            </button>
+          </div>
         </section>
       )}
     </main>

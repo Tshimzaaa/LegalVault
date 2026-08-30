@@ -10,7 +10,7 @@ from sqlalchemy.exc import DBAPIError
 
 from app.database.rls import set_tenant_context
 from app.modules.clients.models import Client
-from app.modules.matters.models import Matter
+from app.modules.matters.models import ApprovalStatus, Matter, MatterApproval, MatterStatus
 
 
 def test_rls_blocks_cross_firm_select_on_matters(db_session, two_firms):
@@ -57,3 +57,31 @@ def test_rls_blocks_insert_into_another_firms_scope(db_session, two_firms):
 
     with pytest.raises(DBAPIError):
         db_session.flush()
+
+
+def test_rls_blocks_cross_firm_select_on_matter_approvals(db_session, two_firms):
+    # matter_approvals has no firm_id of its own — scoped indirectly via matter_id ->
+    # matters.firm_id (see migration 2d9a14027e1f). Mirrors the direct-Matter/Client
+    # checks above for the one table added since those were written.
+    approval_a = MatterApproval(
+        matter_id=two_firms.matter_a.id,
+        requested_by=two_firms.staff_a.id,
+        from_status=MatterStatus.AWAITING_SIGNATURE,
+        to_status=MatterStatus.SIGNED,
+        status=ApprovalStatus.PENDING,
+    )
+    approval_b = MatterApproval(
+        matter_id=two_firms.matter_b.id,
+        requested_by=two_firms.staff_b.id,
+        from_status=MatterStatus.AWAITING_SIGNATURE,
+        to_status=MatterStatus.SIGNED,
+        status=ApprovalStatus.PENDING,
+    )
+    db_session.add_all([approval_a, approval_b])
+    db_session.flush()
+
+    set_tenant_context(db_session, firm_id=two_firms.firm_a.id)
+
+    visible_ids = {a.id for a in db_session.scalars(select(MatterApproval)).all()}
+    assert approval_a.id in visible_ids
+    assert approval_b.id not in visible_ids

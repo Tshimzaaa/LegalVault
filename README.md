@@ -23,13 +23,15 @@ See [`backend/docs/architecture.md`](backend/docs/architecture.md) for the origi
 - Documenso (self-hosted, via `documenso_sdk`) for e-signature requests and signing webhooks
 - Celery + Redis for scheduled background jobs (matter due-date and contract expiry reminders — see `app/tasks/`)
 - `xhtml2pdf` for generating draft documents from a template body + intake-submission answers (pure-Python HTML→PDF — WeasyPrint was tried first per the original tech plan but its native Pango/GObject dependency doesn't install on Windows dev machines)
+- `sentry-sdk` for error tracking — optional, no-op unless `SENTRY_DSN` is set (see `app/main.py`)
 - pytest, run in CI against a real Postgres service container (including a restricted, non-`BYPASSRLS` role so row-level security is actually exercised)
 
 **Frontend**
 - React 19 + TypeScript, Vite
+- `@sentry/react` for error tracking — optional, no-op unless `VITE_SENTRY_DSN` is set (see `main.tsx`)
 - vitest + Testing Library for tests, oxlint for linting
 
-**CI** (`.github/workflows/ci.yml`): backend job runs Alembic migrations + pytest against Postgres; frontend job runs oxlint, vitest, and a production build — both on every PR and push to `main`.
+**CI/CD** (`.github/workflows/ci.yml`): backend job runs Alembic migrations + pytest against Postgres; frontend job runs oxlint, vitest, and a production build — both on every PR and push to `main`. On `main`, once both pass, a `deploy` job triggers Render deploy hooks for the API, Celery worker, and frontend static site (see `render.yaml` and `DEPLOYMENT.md` §5/§6) — nothing deploys on a push that doesn't pass CI first.
 
 ---
 
@@ -59,7 +61,8 @@ backend/
       announcements/     firm-wide announcements (staff-authored, client-visible)
       notifications/     in-app notifications
       audit/             audit log of who changed what, when
-      search/            cross-entity search (clients, contacts, matters, documents)
+      search/            cross-entity search (clients, contacts, matters, documents) — real Postgres
+                         full-text (tsvector + GIN expression indexes), not substring matching
       dashboard/         staff dashboard summary metrics
       client_dashboard/  client-portal dashboard summary
       reporting/         staff workload, status breakdown, task/deadline aggregates, CSV export
@@ -131,5 +134,5 @@ cd frontend && npm test
 ## Known gaps
 
 - **Real email sending** — invite links and notification emails are still stubbed (printed to the server console); no email provider is wired up yet (nothing email-related in `backend/requirements.txt`).
-- **No hosting chosen / no deploy pipeline** — `ci.yml` runs tests, lint, and build on every push, but nothing deploys automatically. See [`DEPLOYMENT.md`](DEPLOYMENT.md) for what's already in place (production safety checks, CORS/HSTS gating, RLS role setup, secret-generation scripts) versus what still needs a host picked.
+- **Deploy pipeline defined but not yet run for real** — host is Render (`render.yaml`), and `ci.yml`'s `deploy` job is CI-gated and ready, but the Blueprint hasn't been created in an actual Render account (no credentials available to do that from here) and `render.yaml` hasn't been validated by a real Blueprint sync. See [`DEPLOYMENT.md`](DEPLOYMENT.md) §5/§6 for the remaining manual setup steps.
 - Frontend automated test coverage is thin relative to the number of pages — most pages have no test file yet.

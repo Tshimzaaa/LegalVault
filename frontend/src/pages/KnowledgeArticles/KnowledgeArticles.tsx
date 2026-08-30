@@ -76,7 +76,7 @@ function KnowledgeArticles({ user }: KnowledgeArticlesProps) {
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault()
-    if (!token || !title || !category || !content) return
+    if (!token) return
     setCreating(true)
     setCreateError(null)
     try {
@@ -168,7 +168,14 @@ function KnowledgeArticles({ user }: KnowledgeArticlesProps) {
           <div className="field-row">
             <label className="field">
               <span>Title</span>
-              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="How NDAs work" />
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="How NDAs work…"
+                autoComplete="off"
+                required
+              />
             </label>
             <label className="field">
               <span>Category</span>
@@ -177,7 +184,9 @@ function KnowledgeArticles({ user }: KnowledgeArticlesProps) {
                 list="knowledge-categories"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                placeholder="Glossary"
+                placeholder="Glossary…"
+                autoComplete="off"
+                required
               />
               <datalist id="knowledge-categories">
                 {categories.map((c) => (
@@ -188,7 +197,7 @@ function KnowledgeArticles({ user }: KnowledgeArticlesProps) {
           </div>
           <label className="field">
             <span>Content (Markdown)</span>
-            <textarea rows={8} value={content} onChange={(e) => setContent(e.target.value)} />
+            <textarea rows={8} value={content} onChange={(e) => setContent(e.target.value)} required />
           </label>
           <div className="matter-actions">
             <button type="button" className="btn-ghost" onClick={() => setShowNew(false)}>
@@ -198,13 +207,13 @@ function KnowledgeArticles({ user }: KnowledgeArticlesProps) {
               {creating ? 'Creating…' : 'Create Article'}
             </button>
           </div>
-          {createError && <p className="matter-error">{createError}</p>}
+          {createError && <p className="matter-error" aria-live="polite">{createError}</p>}
         </form>
       )}
 
       {status === 'loading' && (
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading knowledge base…</p>
         </div>
       )}
@@ -218,7 +227,7 @@ function KnowledgeArticles({ user }: KnowledgeArticlesProps) {
         </div>
       )}
 
-      {actionError && <p className="matter-error">{actionError}</p>}
+      {actionError && <p className="matter-error" aria-live="polite">{actionError}</p>}
 
       {status === 'ready' && (
         <section className="knowledge-list">
@@ -228,7 +237,12 @@ function KnowledgeArticles({ user }: KnowledgeArticlesProps) {
                 <div className="field-row">
                   <label className="field">
                     <span>Title</span>
-                    <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required />
+                    <input
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      required
+                      autoComplete="off"
+                    />
                   </label>
                   <label className="field">
                     <span>Category</span>
@@ -237,6 +251,7 @@ function KnowledgeArticles({ user }: KnowledgeArticlesProps) {
                       onChange={(e) => setEditCategory(e.target.value)}
                       list="knowledge-categories"
                       required
+                      autoComplete="off"
                     />
                   </label>
                 </div>
@@ -244,7 +259,7 @@ function KnowledgeArticles({ user }: KnowledgeArticlesProps) {
                   <span>Content (Markdown)</span>
                   <textarea rows={8} value={editContent} onChange={(e) => setEditContent(e.target.value)} />
                 </label>
-                {editError && <p className="matter-error">{editError}</p>}
+                {editError && <p className="matter-error" aria-live="polite">{editError}</p>}
                 <div className="matter-actions">
                   <button type="button" className="btn-ghost" onClick={() => setEditingId(null)}>
                     Cancel

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import './ClientKnowledgeBase.css'
 import ProfileMenu from '../../components/ProfileMenu'
 import type { ClientContact } from '../../api/clientAuth'
@@ -14,11 +14,43 @@ interface ClientKnowledgeBaseProps {
 }
 
 function ClientKnowledgeBase({ contact, onLogout }: ClientKnowledgeBaseProps) {
-  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [articles, setArticles] = useState<KnowledgeArticle[]>([])
   const [status, setStatus] = useState<LoadState>('loading')
-  const [categoryFilter, setCategoryFilter] = useState('all')
-  const [search, setSearch] = useState('')
+  const [attempt, setAttempt] = useState(0)
+
+  const categoryFilter = searchParams.get('category') ?? 'all'
+  const search = searchParams.get('q') ?? ''
+
+  function setCategoryFilter(next: string) {
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev)
+        if (next === 'all') {
+          params.delete('category')
+        } else {
+          params.set('category', next)
+        }
+        return params
+      },
+      { replace: true },
+    )
+  }
+
+  function setSearch(next: string) {
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev)
+        if (next) {
+          params.set('q', next)
+        } else {
+          params.delete('q')
+        }
+        return params
+      },
+      { replace: true },
+    )
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -41,7 +73,7 @@ function ClientKnowledgeBase({ contact, onLogout }: ClientKnowledgeBaseProps) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [attempt])
 
   const categories = [...new Set(articles.map((a) => a.category))].sort()
   const query = search.trim().toLowerCase()
@@ -57,13 +89,20 @@ function ClientKnowledgeBase({ contact, onLogout }: ClientKnowledgeBaseProps) {
         <h1>Knowledge Base</h1>
         <div className="topbar-actions">
           <input
-            type="text"
+            type="search"
             className="select-input knowledge-search"
+            aria-label="Search articles"
             placeholder="Search articles…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            autoComplete="off"
           />
-          <select className="select-input" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+          <select
+            className="select-input"
+            aria-label="Filter by category"
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+          >
             <option value="all">All categories</option>
             {categories.map((c) => (
               <option key={c} value={c}>
@@ -76,15 +115,18 @@ function ClientKnowledgeBase({ contact, onLogout }: ClientKnowledgeBaseProps) {
       </header>
 
       {status === 'loading' && (
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading knowledge base…</p>
         </div>
       )}
 
       {status === 'error' && (
-        <div className="dash-state">
+        <div className="dash-state" role="status" aria-live="polite">
           <p>Couldn&rsquo;t reach the backend for the knowledge base.</p>
+          <button type="button" className="btn-ghost" onClick={() => setAttempt((n) => n + 1)}>
+            Retry
+          </button>
         </div>
       )}
 
@@ -95,9 +137,9 @@ function ClientKnowledgeBase({ contact, onLogout }: ClientKnowledgeBaseProps) {
               <span className="template-name">{a.title}</span>
               <span className="template-category">{a.category}</span>
               <p className="template-description knowledge-excerpt">{a.content}</p>
-              <button type="button" className="btn-ghost template-use-btn" onClick={() => navigate(a.id)}>
+              <Link to={a.id} className="btn-ghost template-use-btn">
                 Read Article
-              </button>
+              </Link>
             </div>
           ))}
           {visible.length === 0 && <p className="muted">No articles match your search.</p>}

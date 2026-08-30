@@ -96,7 +96,7 @@ function ClientPortal({ contact, onLogout, onContactUpdate }: ClientPortalProps)
         brandSub="client portal"
         notificationBell={<NotificationBell scope="client" />}
       />
-      <div className="dash-content">
+      <div className="dash-content" id="main-content">
         <AnnouncementBanner scope="client" />
         <Routes>
           <Route index element={<Navigate to="dashboard" replace />} />

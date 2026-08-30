@@ -35,8 +35,16 @@
 }
 
 .search-input-wrap input:focus {
-  outline: none;
   border-color: #22c55e;
+}
+
+.search-input-wrap input:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.search-input-wrap input:focus-visible {
+  outline: 2px solid #22c55e;
+  outline-offset: 2px;
 }
 
 .search-glass-bar .btn-solid {
@@ -78,6 +86,8 @@
 
 .search-result-row.clickable {
   cursor: pointer;
+  text-decoration: none;
+  color: inherit;
 }
 
 .search-result-row.clickable:hover .search-result-title {

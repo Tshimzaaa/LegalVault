@@ -5,9 +5,21 @@
 }
 
 .matters-row {
+  position: relative;
   cursor: pointer;
 }
 
 .matters-row:hover td {
   background: rgba(255, 255, 255, 0.03);
+}
+
+.matters-row-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.matters-row-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
 }

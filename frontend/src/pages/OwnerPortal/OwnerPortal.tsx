@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import type { FormEvent } from 'react'
 import './OwnerPortal.css'
 import { IconDollar, IconLayers, IconPlus, IconUser, IconTrash, IconDownload, IconChevron } from '../../components/icons'
@@ -22,6 +23,13 @@ import MiniChart from '../../components/MiniChart'
 
 type LoadState = 'loading' | 'error' | 'ready'
 const AUDIT_PAGE_SIZE = 50
+const dateTimeFormat = new Intl.DateTimeFormat(undefined, {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+})
 
 const severityColor: Record<AnnouncementSeverity, string> = {
   info: '#3987e5',
@@ -74,6 +82,7 @@ interface OwnerPortalProps {
 }
 
 function OwnerPortal({ onLogout }: OwnerPortalProps) {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [firms, setFirms] = useState<FirmDetail[]>([])
   const [status, setStatus] = useState<LoadState>('loading')
   const [togglingId, setTogglingId] = useState<string | null>(null)
@@ -95,10 +104,20 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
 
   const [errorEntries, setErrorEntries] = useState<RequestErrorEntry[]>([])
   const [errorsStatus, setErrorsStatus] = useState<LoadState>('loading')
-  const [errorsOffset, setErrorsOffset] = useState(0)
+  const [errorsPage, setErrorsPage] = useState(0)
   const [errorsHasMore, setErrorsHasMore] = useState(true)
-  const [errorsLoadingMore, setErrorsLoadingMore] = useState(false)
-  const [showErrors, setShowErrors] = useState(false)
+  const showErrors = searchParams.get('errors') === '1'
+  function setShowErrors(next: boolean) {
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev)
+      if (next) {
+        params.set('errors', '1')
+      } else {
+        params.delete('errors')
+      }
+      return params
+    })
+  }
 
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [announcementsStatus, setAnnouncementsStatus] = useState<LoadState>('loading')
@@ -113,11 +132,32 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
 
   const [auditEntries, setAuditEntries] = useState<AuditLogEntry[]>([])
   const [auditStatus, setAuditStatus] = useState<LoadState>('loading')
-  const [auditFirmFilter, setAuditFirmFilter] = useState('')
-  const [auditOffset, setAuditOffset] = useState(0)
+  const auditFirmFilter = searchParams.get('firm') ?? ''
+  function setAuditFirmFilter(next: string) {
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev)
+      if (next) {
+        params.set('firm', next)
+      } else {
+        params.delete('firm')
+      }
+      return params
+    })
+  }
+  const [auditPage, setAuditPage] = useState(0)
   const [auditHasMore, setAuditHasMore] = useState(true)
-  const [auditLoadingMore, setAuditLoadingMore] = useState(false)
-  const [showAuditLog, setShowAuditLog] = useState(false)
+  const showAuditLog = searchParams.get('audit') === '1'
+  function setShowAuditLog(next: boolean) {
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev)
+      if (next) {
+        params.set('audit', '1')
+      } else {
+        params.delete('audit')
+      }
+      return params
+    })
+  }
 
   const token = localStorage.getItem('access_token')
 
@@ -138,23 +178,27 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
 
   useEffect(loadAll, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  function loadAudit() {
+  function loadAudit(targetPage: number) {
     if (!token) {
       setAuditStatus('error')
       return
     }
     setAuditStatus('loading')
-    listOwnerAuditLog(token, { firmId: auditFirmFilter || undefined, limit: AUDIT_PAGE_SIZE, offset: 0 })
+    listOwnerAuditLog(token, {
+      firmId: auditFirmFilter || undefined,
+      limit: AUDIT_PAGE_SIZE,
+      offset: targetPage * AUDIT_PAGE_SIZE,
+    })
       .then((data) => {
         setAuditEntries(data)
-        setAuditOffset(data.length)
+        setAuditPage(targetPage)
         setAuditHasMore(data.length === AUDIT_PAGE_SIZE)
         setAuditStatus('ready')
       })
       .catch(() => setAuditStatus('error'))
   }
 
-  useEffect(loadAudit, [auditFirmFilter]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => loadAudit(0), [auditFirmFilter]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function loadMetrics() {
     if (!token) {
@@ -190,36 +234,23 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
 
   const ERROR_PAGE_SIZE = 50
 
-  function loadErrors() {
+  function loadErrors(targetPage: number) {
     if (!token) {
       setErrorsStatus('error')
       return
     }
     setErrorsStatus('loading')
-    listRecentErrors(token, { hours: 24, limit: ERROR_PAGE_SIZE, offset: 0 })
+    listRecentErrors(token, { hours: 24, limit: ERROR_PAGE_SIZE, offset: targetPage * ERROR_PAGE_SIZE })
       .then((data) => {
         setErrorEntries(data)
-        setErrorsOffset(data.length)
+        setErrorsPage(targetPage)
         setErrorsHasMore(data.length === ERROR_PAGE_SIZE)
         setErrorsStatus('ready')
       })
       .catch(() => setErrorsStatus('error'))
   }
 
-  useEffect(loadErrors, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  async function handleLoadMoreErrors() {
-    if (!token) return
-    setErrorsLoadingMore(true)
-    try {
-      const data = await listRecentErrors(token, { hours: 24, limit: ERROR_PAGE_SIZE, offset: errorsOffset })
-      setErrorEntries((prev) => [...prev, ...data])
-      setErrorsOffset((prev) => prev + data.length)
-      setErrorsHasMore(data.length === ERROR_PAGE_SIZE)
-    } finally {
-      setErrorsLoadingMore(false)
-    }
-  }
+  useEffect(() => loadErrors(0), []) // eslint-disable-line react-hooks/exhaustive-deps
 
   function formatActor(e: RequestErrorEntry): string {
     if (e.actor_label) return e.actor_label
@@ -288,30 +319,13 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
 
   async function handleDeleteAnnouncement(a: Announcement) {
     if (!token) return
-    if (!window.confirm(`Delete the announcement "${a.title}"?`)) return
+    if (!window.confirm(`Delete the announcement “${a.title}”?`)) return
     setAnnouncementBusyId(a.id)
     try {
       await deleteAnnouncement(token, a.id)
       setAnnouncements((prev) => prev.filter((x) => x.id !== a.id))
     } finally {
       setAnnouncementBusyId(null)
-    }
-  }
-
-  async function handleLoadMoreAudit() {
-    if (!token) return
-    setAuditLoadingMore(true)
-    try {
-      const data = await listOwnerAuditLog(token, {
-        firmId: auditFirmFilter || undefined,
-        limit: AUDIT_PAGE_SIZE,
-        offset: auditOffset,
-      })
-      setAuditEntries((prev) => [...prev, ...data])
-      setAuditOffset((prev) => prev + data.length)
-      setAuditHasMore(data.length === AUDIT_PAGE_SIZE)
-    } finally {
-      setAuditLoadingMore(false)
     }
   }
 
@@ -404,16 +418,29 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
   }
 
   const activeCount = firms.filter((f) => f.is_active).length
+  const platformNumberFormat = new Intl.NumberFormat()
   const platformStats = [
-    { label: 'Total firms', value: String(firms.length), icon: <IconLayers /> },
-    { label: 'Active firms', value: String(activeCount), icon: <IconLayers /> },
-    { label: 'Staff across platform', value: String(firms.reduce((s, f) => s + f.staff_count, 0)), icon: <IconUser /> },
-    { label: 'Clients onboarded', value: String(firms.reduce((s, f) => s + f.client_count, 0)), icon: <IconUser /> },
-    { label: 'Matters open', value: String(firms.reduce((s, f) => s + f.matter_count, 0)), icon: <IconDollar /> },
+    { label: 'Total firms', value: platformNumberFormat.format(firms.length), icon: <IconLayers /> },
+    { label: 'Active firms', value: platformNumberFormat.format(activeCount), icon: <IconLayers /> },
+    {
+      label: 'Staff across platform',
+      value: platformNumberFormat.format(firms.reduce((s, f) => s + f.staff_count, 0)),
+      icon: <IconUser />,
+    },
+    {
+      label: 'Clients onboarded',
+      value: platformNumberFormat.format(firms.reduce((s, f) => s + f.client_count, 0)),
+      icon: <IconUser />,
+    },
+    {
+      label: 'Matters open',
+      value: platformNumberFormat.format(firms.reduce((s, f) => s + f.matter_count, 0)),
+      icon: <IconDollar />,
+    },
   ]
 
   return (
-    <main className="dash-main owner-portal-main">
+    <main className="dash-main owner-portal-main" id="main-content">
       <header className="dash-topbar">
         <h1>Owner Portal</h1>
         <div className="topbar-actions">
@@ -432,13 +459,18 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
       {showCreateForm && (
         <section className="card owner-create-firm-card">
           <div className="card-header">
-            <span>Onboard a new firm</span>
+            <h2>Onboard a new firm</h2>
           </div>
           <form onSubmit={handleCreateFirm} className="owner-create-firm-form">
             <div className="field-row">
               <label className="field">
                 <span>Firm name</span>
-                <input value={form.firmName} onChange={(e) => updateField('firmName', e.target.value)} required />
+                <input
+                  value={form.firmName}
+                  onChange={(e) => updateField('firmName', e.target.value)}
+                  required
+                  autoComplete="organization"
+                />
               </label>
               <label className="field">
                 <span>Firm email</span>
@@ -447,22 +479,38 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                   value={form.firmEmail}
                   onChange={(e) => updateField('firmEmail', e.target.value)}
                   required
+                  autoComplete="email"
+                  spellCheck={false}
                 />
               </label>
             </div>
             <div className="field-row">
               <label className="field">
                 <span>Firm phone (optional)</span>
-                <input value={form.firmPhone} onChange={(e) => updateField('firmPhone', e.target.value)} />
+                <input
+                  type="tel"
+                  value={form.firmPhone}
+                  onChange={(e) => updateField('firmPhone', e.target.value)}
+                  autoComplete="tel"
+                />
               </label>
               <label className="field">
                 <span>Firm website (optional)</span>
-                <input value={form.firmWebsite} onChange={(e) => updateField('firmWebsite', e.target.value)} />
+                <input
+                  type="url"
+                  value={form.firmWebsite}
+                  onChange={(e) => updateField('firmWebsite', e.target.value)}
+                  autoComplete="url"
+                />
               </label>
             </div>
             <label className="field">
               <span>Firm address (optional)</span>
-              <input value={form.firmAddress} onChange={(e) => updateField('firmAddress', e.target.value)} />
+              <input
+                value={form.firmAddress}
+                onChange={(e) => updateField('firmAddress', e.target.value)}
+                autoComplete="street-address"
+              />
             </label>
 
             <div className="field-row">
@@ -472,6 +520,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                   value={form.adminFirstName}
                   onChange={(e) => updateField('adminFirstName', e.target.value)}
                   required
+                  autoComplete="given-name"
                 />
               </label>
               <label className="field">
@@ -480,6 +529,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                   value={form.adminLastName}
                   onChange={(e) => updateField('adminLastName', e.target.value)}
                   required
+                  autoComplete="family-name"
                 />
               </label>
             </div>
@@ -491,6 +541,8 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                   value={form.adminEmail}
                   onChange={(e) => updateField('adminEmail', e.target.value)}
                   required
+                  autoComplete="email"
+                  spellCheck={false}
                 />
               </label>
               <label className="field">
@@ -499,13 +551,14 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                   type="password"
                   value={form.adminPassword}
                   onChange={(e) => updateField('adminPassword', e.target.value)}
-                  placeholder="At least 8 characters"
+                  placeholder="At least 8 characters…"
                   required
+                  autoComplete="new-password"
                 />
               </label>
             </div>
 
-            {createError && <p className="matter-error">{createError}</p>}
+            {createError && <p className="matter-error" aria-live="polite">{createError}</p>}
 
             <div className="matter-actions">
               <button type="button" className="btn-ghost" onClick={() => setShowCreateForm(false)}>
@@ -520,14 +573,14 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
       )}
 
       {status === 'loading' && (
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading firms…</p>
         </div>
       )}
 
       {status === 'error' && (
-        <div className="dash-state">
+        <div className="dash-state" role="status" aria-live="polite">
           <p>Couldn&rsquo;t reach the backend for platform data.</p>
           <button type="button" className="btn-ghost" onClick={loadAll}>
             Retry
@@ -553,9 +606,9 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
 
           <section className="card owner-firms-table-card">
             <div className="card-header">
-              <span>Firms on the platform</span>
+              <h2>Firms on the platform</h2>
             </div>
-            {firmActionError && <p className="matter-error">{firmActionError}</p>}
+            {firmActionError && <p className="matter-error" aria-live="polite">{firmActionError}</p>}
             <table className="data-table">
               <thead>
                 <tr>
@@ -637,19 +690,19 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
 
           <section className="card owner-monitoring-card">
             <div className="card-header">
-              <span>Platform Health</span>
+              <h2>Platform Health</h2>
               <span className="muted">last 24h</span>
             </div>
 
             {systemHealthStatus === 'loading' && (
-              <div className="dash-state">
-                <span className="dash-spinner" />
+              <div className="dash-state" role="status" aria-live="polite">
+                <span className="dash-spinner" aria-hidden="true" />
                 <p>Loading platform health…</p>
               </div>
             )}
 
             {systemHealthStatus === 'error' && (
-              <div className="dash-state">
+              <div className="dash-state" role="status" aria-live="polite">
                 <p>Couldn&rsquo;t reach the backend for platform health.</p>
                 <button type="button" className="btn-ghost" onClick={loadSystemHealth}>
                   Retry
@@ -690,7 +743,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                 <div className="dash-row owner-monitoring-stats">
                   <div className="owner-monitoring-stat">
                     <span className="muted">Total requests</span>
-                    <span className="stat-big">{systemHealth.requests.total_requests}</span>
+                    <span className="stat-big">{new Intl.NumberFormat().format(systemHealth.requests.total_requests)}</span>
                   </div>
                   <div className="owner-monitoring-stat">
                     <span className="muted">Success rate</span>
@@ -725,17 +778,18 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                   </div>
                   <div className="owner-monitoring-stat">
                     <span className="muted">Active users</span>
-                    <span className="stat-big">{systemHealth.active_users}</span>
+                    <span className="stat-big">{new Intl.NumberFormat().format(systemHealth.active_users)}</span>
                   </div>
                   <div className="owner-monitoring-stat">
                     <span className="muted">Online firms</span>
-                    <span className="stat-big">{systemHealth.online_firms}</span>
+                    <span className="stat-big">{new Intl.NumberFormat().format(systemHealth.online_firms)}</span>
                   </div>
                   {metricsStatus === 'ready' && metrics && (
                     <div className="owner-monitoring-stat">
                       <span className="muted">New firms (7d / 30d)</span>
                       <span className="stat-big">
-                        {metrics.usage.new_firms_last_7_days} / {metrics.usage.new_firms_last_30_days}
+                        {new Intl.NumberFormat().format(metrics.usage.new_firms_last_7_days)} /{' '}
+                        {new Intl.NumberFormat().format(metrics.usage.new_firms_last_30_days)}
                       </span>
                     </div>
                   )}
@@ -852,7 +906,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
 
           <section className="card owner-errors-card">
             <div className="card-header">
-              <span>Recent errors</span>
+              <h2>Recent errors</h2>
               <div className="topbar-actions">
                 <span className="muted">
                   {errorsStatus === 'ready' ? `${errorEntries.length}${errorsHasMore ? '+' : ''} in last 24h` : 'last 24h'}
@@ -860,7 +914,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                 <button
                   type="button"
                   className="icon-btn"
-                  onClick={() => setShowErrors((v) => !v)}
+                  onClick={() => setShowErrors(!showErrors)}
                   aria-label={showErrors ? 'Collapse recent errors' : 'Expand recent errors'}
                   title={showErrors ? 'Collapse' : 'Expand'}
                   style={{ transform: showErrors ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }}
@@ -873,16 +927,16 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
             {showErrors && (
               <>
                 {errorsStatus === 'loading' && (
-                  <div className="dash-state">
-                    <span className="dash-spinner" />
+                  <div className="dash-state" role="status" aria-live="polite">
+                    <span className="dash-spinner" aria-hidden="true" />
                     <p>Loading recent errors…</p>
                   </div>
                 )}
 
                 {errorsStatus === 'error' && (
-                  <div className="dash-state">
+                  <div className="dash-state" role="status" aria-live="polite">
                     <p>Couldn&rsquo;t reach the backend for recent errors.</p>
-                    <button type="button" className="btn-ghost" onClick={loadErrors}>
+                    <button type="button" className="btn-ghost" onClick={() => loadErrors(errorsPage)}>
                       Retry
                     </button>
                   </div>
@@ -903,7 +957,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                       <tbody>
                         {errorEntries.map((e) => (
                           <tr key={e.id}>
-                            <td className="muted tabular">{new Date(e.created_at).toLocaleString()}</td>
+                            <td className="muted tabular">{dateTimeFormat.format(new Date(e.created_at))}</td>
                             <td className="muted">
                               {e.method} {e.path}
                             </td>
@@ -931,13 +985,25 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                         )}
                       </tbody>
                     </table>
-                    {errorsHasMore && (
-                      <div className="audit-log-load-more">
-                        <button type="button" className="btn-ghost" disabled={errorsLoadingMore} onClick={handleLoadMoreErrors}>
-                          {errorsLoadingMore ? 'Loading…' : 'Load more'}
-                        </button>
-                      </div>
-                    )}
+                    <div className="audit-log-load-more">
+                      <button
+                        type="button"
+                        className="btn-ghost"
+                        disabled={errorsPage === 0}
+                        onClick={() => loadErrors(errorsPage - 1)}
+                      >
+                        Previous
+                      </button>
+                      <span className="muted">Page {errorsPage + 1}</span>
+                      <button
+                        type="button"
+                        className="btn-ghost"
+                        disabled={!errorsHasMore}
+                        onClick={() => loadErrors(errorsPage + 1)}
+                      >
+                        Next
+                      </button>
+                    </div>
                   </>
                 )}
               </>
@@ -950,7 +1016,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
 
           <section className="card owner-announcements-card">
             <div className="card-header">
-              <span>Platform Announcements</span>
+              <h2>Platform Announcements</h2>
               <button type="button" className="btn-solid" onClick={() => setShowAnnouncementForm((v) => !v)}>
                 <IconPlus /> New Announcement
               </button>
@@ -983,7 +1049,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                   <span>Body</span>
                   <textarea rows={2} value={announcementBody} onChange={(e) => setAnnouncementBody(e.target.value)} required />
                 </label>
-                {announcementError && <p className="matter-error">{announcementError}</p>}
+                {announcementError && <p className="matter-error" aria-live="polite">{announcementError}</p>}
                 <div className="matter-actions">
                   <button type="button" className="btn-ghost" onClick={() => setShowAnnouncementForm(false)}>
                     Cancel
@@ -996,14 +1062,14 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
             )}
 
             {announcementsStatus === 'loading' && (
-              <div className="dash-state">
-                <span className="dash-spinner" />
+              <div className="dash-state" role="status" aria-live="polite">
+                <span className="dash-spinner" aria-hidden="true" />
                 <p>Loading announcements…</p>
               </div>
             )}
 
             {announcementsStatus === 'error' && (
-              <div className="dash-state">
+              <div className="dash-state" role="status" aria-live="polite">
                 <p>Couldn&rsquo;t reach the backend for announcements.</p>
                 <button type="button" className="btn-ghost" onClick={loadAnnouncements}>
                   Retry
@@ -1011,7 +1077,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
               </div>
             )}
 
-            {announcementActionError && <p className="matter-error">{announcementActionError}</p>}
+            {announcementActionError && <p className="matter-error" aria-live="polite">{announcementActionError}</p>}
 
             {announcementsStatus === 'ready' && (
               <div className="list-rows">
@@ -1064,9 +1130,14 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
 
           <section className="card owner-audit-card">
             <div className="card-header">
-              <span>Platform Audit Log</span>
+              <h2>Platform Audit Log</h2>
               <div className="topbar-actions">
-                <select className="select-input" value={auditFirmFilter} onChange={(e) => setAuditFirmFilter(e.target.value)}>
+                <select
+                  className="select-input"
+                  aria-label="Filter audit log by firm"
+                  value={auditFirmFilter}
+                  onChange={(e) => setAuditFirmFilter(e.target.value)}
+                >
                   <option value="">All firms</option>
                   {firms.map((f) => (
                     <option key={f.id} value={f.id}>
@@ -1077,7 +1148,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                 <button
                   type="button"
                   className="icon-btn"
-                  onClick={() => setShowAuditLog((v) => !v)}
+                  onClick={() => setShowAuditLog(!showAuditLog)}
                   aria-label={showAuditLog ? 'Collapse audit log' : 'Expand audit log'}
                   title={showAuditLog ? 'Collapse' : 'Expand'}
                   style={{ transform: showAuditLog ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }}
@@ -1090,16 +1161,16 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
             {showAuditLog && (
               <>
                 {auditStatus === 'loading' && (
-                  <div className="dash-state">
-                    <span className="dash-spinner" />
+                  <div className="dash-state" role="status" aria-live="polite">
+                    <span className="dash-spinner" aria-hidden="true" />
                     <p>Loading audit log…</p>
                   </div>
                 )}
 
                 {auditStatus === 'error' && (
-                  <div className="dash-state">
+                  <div className="dash-state" role="status" aria-live="polite">
                     <p>Couldn&rsquo;t reach the backend for the audit log.</p>
-                    <button type="button" className="btn-ghost" onClick={loadAudit}>
+                    <button type="button" className="btn-ghost" onClick={() => loadAudit(auditPage)}>
                       Retry
                     </button>
                   </div>
@@ -1120,7 +1191,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                       <tbody>
                         {auditEntries.map((e) => (
                           <tr key={e.id}>
-                            <td className="muted tabular">{new Date(e.created_at).toLocaleString()}</td>
+                            <td className="muted tabular">{dateTimeFormat.format(new Date(e.created_at))}</td>
                             <td className="muted">{e.actor_type}</td>
                             <td>{auditActionLabel[e.action] ?? e.action}</td>
                             <td className="muted">{e.target_type}</td>
@@ -1136,13 +1207,25 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                         )}
                       </tbody>
                     </table>
-                    {auditHasMore && (
-                      <div className="audit-log-load-more">
-                        <button type="button" className="btn-ghost" disabled={auditLoadingMore} onClick={handleLoadMoreAudit}>
-                          {auditLoadingMore ? 'Loading…' : 'Load more'}
-                        </button>
-                      </div>
-                    )}
+                    <div className="audit-log-load-more">
+                      <button
+                        type="button"
+                        className="btn-ghost"
+                        disabled={auditPage === 0}
+                        onClick={() => loadAudit(auditPage - 1)}
+                      >
+                        Previous
+                      </button>
+                      <span className="muted">Page {auditPage + 1}</span>
+                      <button
+                        type="button"
+                        className="btn-ghost"
+                        disabled={!auditHasMore}
+                        onClick={() => loadAudit(auditPage + 1)}
+                      >
+                        Next
+                      </button>
+                    </div>
                   </>
                 )}
               </>

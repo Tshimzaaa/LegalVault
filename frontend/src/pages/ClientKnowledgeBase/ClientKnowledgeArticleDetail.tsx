@@ -46,8 +46,8 @@ function ClientKnowledgeArticleDetail({ contact, onLogout }: ClientKnowledgeArti
   if (status === 'loading') {
     return (
       <main className="dash-main">
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading article…</p>
         </div>
       </main>
@@ -57,7 +57,7 @@ function ClientKnowledgeArticleDetail({ contact, onLogout }: ClientKnowledgeArti
   if (status === 'error' || !article) {
     return (
       <main className="dash-main">
-        <div className="dash-state">
+        <div className="dash-state" role="status" aria-live="polite">
           <p>This article isn&rsquo;t available.</p>
           <button type="button" className="btn-ghost" onClick={() => navigate(-1)}>
             Back

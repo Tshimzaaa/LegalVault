@@ -105,7 +105,7 @@ function Templates() {
   async function handleDelete(t: Template) {
     const token = localStorage.getItem('access_token')
     if (!token) return
-    if (!window.confirm(`Delete "${t.title}"? This cannot be undone.`)) return
+    if (!window.confirm(`Delete “${t.title}”? This cannot be undone.`)) return
 
     setDeleteError(null)
     setDeletingId(t.id)
@@ -171,7 +171,13 @@ function Templates() {
           <div className="field-row">
             <label className="field">
               <span>Title</span>
-              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Mutual NDA" />
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Mutual NDA…"
+                autoComplete="off"
+              />
             </label>
             <label className="field">
               <span>Category</span>
@@ -179,7 +185,8 @@ function Templates() {
                 type="text"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                placeholder="Confidentiality"
+                placeholder="Confidentiality…"
+                autoComplete="off"
               />
             </label>
           </div>
@@ -204,13 +211,13 @@ function Templates() {
               {uploading ? 'Uploading…' : 'Upload'}
             </button>
           </div>
-          {uploadError && <p className="matter-error">{uploadError}</p>}
+          {uploadError && <p className="matter-error" aria-live="polite">{uploadError}</p>}
         </form>
       )}
 
       {status === 'loading' && (
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading templates…</p>
         </div>
       )}
@@ -224,8 +231,8 @@ function Templates() {
         </div>
       )}
 
-      {downloadError && <p className="matter-error">{downloadError}</p>}
-      {deleteError && <p className="matter-error">{deleteError}</p>}
+      {downloadError && <p className="matter-error" aria-live="polite">{downloadError}</p>}
+      {deleteError && <p className="matter-error" aria-live="polite">{deleteError}</p>}
 
       {status === 'ready' && (
         <section className="templates-grid">
@@ -234,11 +241,21 @@ function Templates() {
               <form key={t.id} onSubmit={handleSaveEdit} className="card template-card template-edit-form">
                 <label className="field">
                   <span>Title</span>
-                  <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required />
+                  <input
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    required
+                    autoComplete="off"
+                  />
                 </label>
                 <label className="field">
                   <span>Category</span>
-                  <input value={editCategory} onChange={(e) => setEditCategory(e.target.value)} required />
+                  <input
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(e.target.value)}
+                    required
+                    autoComplete="off"
+                  />
                 </label>
                 <label className="field">
                   <span>Description</span>
@@ -247,7 +264,7 @@ function Templates() {
                 <label className="field">
                   <span>
                     Generation body — use <code>{'{{field_name}}'}</code> to insert an intake answer (matched by
-                    field label, e.g. "Counterparty" &rarr; <code>{'{{counterparty}}'}</code>), plus the built-ins{' '}
+                    field label, e.g. “Counterparty” &rarr; <code>{'{{counterparty}}'}</code>), plus the built-ins{' '}
                     <code>{'{{client_name}}'}</code>, <code>{'{{matter_title}}'}</code>, <code>{'{{today}}'}</code>.
                     Leave blank if this template is just a reference file, not something to generate from.
                   </span>
@@ -255,10 +272,10 @@ function Templates() {
                     rows={6}
                     value={editBody}
                     onChange={(e) => setEditBody(e.target.value)}
-                    placeholder="Agreement between {{client_name}} and {{counterparty}}, effective {{today}}."
+                    placeholder="Agreement between {{client_name}} and {{counterparty}}, effective {{today}}…"
                   />
                 </label>
-                {editError && <p className="matter-error">{editError}</p>}
+                {editError && <p className="matter-error" aria-live="polite">{editError}</p>}
                 <div className="matter-actions">
                   <button type="button" className="btn-ghost" onClick={() => setEditingId(null)}>
                     Cancel

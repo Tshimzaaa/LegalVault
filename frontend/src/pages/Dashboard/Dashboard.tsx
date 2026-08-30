@@ -77,10 +77,12 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
             <form onSubmit={handleDashboardSearch} className="dash-topbar-search">
               <IconSearch />
               <input
-                type="text"
+                type="search"
+                aria-label="Search clients, matters, staff"
                 placeholder="Search clients, matters, staff…"
                 value={dashboardQuery}
                 onChange={(e) => setDashboardQuery(e.target.value)}
+                autoComplete="off"
               />
             </form>
           )}
@@ -89,14 +91,14 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
       </header>
 
       {status === 'loading' && (
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading dashboard…</p>
         </div>
       )}
 
       {status === 'error' && (
-        <div className="dash-state">
+        <div className="dash-state" role="status" aria-live="polite">
           <p>Couldn&rsquo;t reach the backend for your dashboard data.</p>
           <button type="button" className="btn-ghost" onClick={() => setAttempt((n) => n + 1)}>
             Retry

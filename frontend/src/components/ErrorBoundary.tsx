@@ -1,5 +1,6 @@
 import { Component } from 'react'
 import type { ErrorInfo, ReactNode } from 'react'
+import * as Sentry from '@sentry/react'
 
 interface ErrorBoundaryProps {
   children: ReactNode
@@ -23,6 +24,8 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('Unhandled render error:', error, info.componentStack)
+    // Safe to call even when Sentry.init() never ran — becomes a no-op.
+    Sentry.captureException(error, { extra: { componentStack: info.componentStack } })
   }
 
   render() {
@@ -47,8 +50,17 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
             This page hit an unexpected error. Reloading usually fixes it — if it keeps happening, let us know
             what you were doing.
           </p>
+          <style>{`
+            .error-boundary-reload:hover,
+            .error-boundary-reload:focus-visible {
+              filter: brightness(1.1);
+              outline: 2px solid #4ade80;
+              outline-offset: 2px;
+            }
+          `}</style>
           <button
             type="button"
+            className="error-boundary-reload"
             onClick={() => window.location.reload()}
             style={{
               borderRadius: 999,

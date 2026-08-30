@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import './ClientIntakeForms.css'
 import ProfileMenu from '../../components/ProfileMenu'
 import type { ClientContact } from '../../api/clientAuth'
@@ -14,7 +14,6 @@ interface ClientIntakeFormsProps {
 }
 
 function ClientIntakeForms({ contact, onLogout }: ClientIntakeFormsProps) {
-  const navigate = useNavigate()
   const [forms, setForms] = useState<IntakeForm[]>([])
   const [status, setStatus] = useState<LoadState>('loading')
   const [attempt, setAttempt] = useState(0)
@@ -55,14 +54,14 @@ function ClientIntakeForms({ contact, onLogout }: ClientIntakeFormsProps) {
       </header>
 
       {status === 'loading' && (
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading intake forms…</p>
         </div>
       )}
 
       {status === 'error' && (
-        <div className="dash-state">
+        <div className="dash-state" role="status" aria-live="polite">
           <p>Couldn&rsquo;t reach the backend for intake forms.</p>
           <button type="button" className="btn-ghost" onClick={() => setAttempt((n) => n + 1)}>
             Retry
@@ -76,9 +75,9 @@ function ClientIntakeForms({ contact, onLogout }: ClientIntakeFormsProps) {
             <div key={f.id} className="card template-card">
               <span className="template-name">{f.title}</span>
               <p className="template-description">{f.description}</p>
-              <button type="button" className="btn-ghost template-use-btn" onClick={() => navigate(f.id)}>
+              <Link to={f.id} className="btn-ghost template-use-btn">
                 Fill Out
-              </button>
+              </Link>
             </div>
           ))}
           {forms.length === 0 && <p className="muted">No intake forms are available right now.</p>}

@@ -80,7 +80,7 @@ function Settings({ user }: SettingsProps) {
 
       {status === 'loading' && (
         <div className="dash-state">
-          <span className="dash-spinner" />
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading firm settings…</p>
         </div>
       )}
@@ -105,7 +105,13 @@ function Settings({ user }: SettingsProps) {
             <div className="field-row">
               <label className="field">
                 <span>Firm name</span>
-                <input value={name} onChange={(e) => setName(e.target.value)} disabled={!isAdmin} required />
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  disabled={!isAdmin}
+                  required
+                  autoComplete="organization"
+                />
               </label>
               <label className="field">
                 <span>Firm email</span>
@@ -115,26 +121,45 @@ function Settings({ user }: SettingsProps) {
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={!isAdmin}
                   required
+                  autoComplete="email"
+                  spellCheck={false}
                 />
               </label>
             </div>
             <div className="field-row">
               <label className="field">
                 <span>Phone</span>
-                <input value={phone} onChange={(e) => setPhone(e.target.value)} disabled={!isAdmin} />
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  disabled={!isAdmin}
+                  autoComplete="tel"
+                />
               </label>
               <label className="field">
                 <span>Website</span>
-                <input value={website} onChange={(e) => setWebsite(e.target.value)} disabled={!isAdmin} />
+                <input
+                  type="url"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  disabled={!isAdmin}
+                  autoComplete="url"
+                />
               </label>
             </div>
             <label className="field">
               <span>Address</span>
-              <input value={address} onChange={(e) => setAddress(e.target.value)} disabled={!isAdmin} />
+              <input
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                disabled={!isAdmin}
+                autoComplete="street-address"
+              />
             </label>
 
-            {saveError && <p className="matter-error">{saveError}</p>}
-            {saved && <p className="settings-saved">Firm settings saved.</p>}
+            {saveError && <p className="matter-error" aria-live="polite">{saveError}</p>}
+            {saved && <p className="settings-saved" aria-live="polite">Firm settings saved.</p>}
 
             {isAdmin && (
               <div className="matter-actions">

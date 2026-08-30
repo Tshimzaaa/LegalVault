@@ -44,7 +44,7 @@ function ResetPassword() {
   return (
     <div className="auth-page">
       <div className="modal-box">
-        <h2>Reset password</h2>
+        <h1>Reset password</h1>
         <p className="modal-sub">
           {done ? 'Your password has been reset.' : 'Enter the reset link token and choose a new password.'}
         </p>
@@ -62,7 +62,14 @@ function ResetPassword() {
             {editToken ? (
               <label className="modal-field">
                 <span>Reset token</span>
-                <input type="text" value={token} onChange={(e) => setToken(e.target.value)} required />
+                <input
+                  type="text"
+                  value={token}
+                  onChange={(e) => setToken(e.target.value)}
+                  required
+                  spellCheck={false}
+                  autoComplete="off"
+                />
               </label>
             ) : (
               <p className="modal-sub">
@@ -81,6 +88,7 @@ function ResetPassword() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
+                autoComplete="new-password"
               />
             </label>
 
@@ -92,10 +100,11 @@ function ResetPassword() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
                 required
+                autoComplete="new-password"
               />
             </label>
 
-            {error && <p className="modal-error">{error}</p>}
+            {error && <p className="modal-error" aria-live="polite">{error}</p>}
 
             <button type="submit" className="modal-submit" disabled={submitting}>
               {submitting ? 'Resetting…' : 'Reset password'}

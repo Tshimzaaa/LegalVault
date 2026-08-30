@@ -28,7 +28,7 @@ function OwnerLogin({ onSubmit }: OwnerLoginProps) {
   return (
     <div className="auth-page">
       <div className="modal-box">
-        <h2>Owner sign-in</h2>
+        <h1>Owner sign-in</h1>
         <p className="modal-sub">Platform-wide access — enter the owner secret.</p>
 
         <form onSubmit={handleSubmit}>
@@ -41,10 +41,11 @@ function OwnerLogin({ onSubmit }: OwnerLoginProps) {
               placeholder="••••••••"
               required
               autoFocus
+              autoComplete="current-password"
             />
           </label>
 
-          {error && <p className="modal-error">{error}</p>}
+          {error && <p className="modal-error" aria-live="polite">{error}</p>}
 
           <button type="submit" className="modal-submit" disabled={submitting}>
             {submitting ? 'Logging in…' : 'Login'}

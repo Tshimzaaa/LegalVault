@@ -32,6 +32,14 @@ const typeLabel: Record<SupportRequest['request_type'], string> = {
   general: 'General Inquiry',
 }
 
+const priorityLabel: Record<SupportRequest['priority'], string> = {
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
+}
+
+const dateFormat = new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+
 function SupportRequests() {
   const [requests, setRequests] = useState<SupportRequest[]>([])
   const [clientsById, setClientsById] = useState<Record<string, Client>>({})
@@ -109,7 +117,7 @@ function SupportRequests() {
 
       {status === 'loading' && (
         <div className="dash-state">
-          <span className="dash-spinner" />
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading support requests…</p>
         </div>
       )}
@@ -144,7 +152,7 @@ function SupportRequests() {
                 const contact = contactsById[r.contact_id]
                 return (
                   <tr key={r.id}>
-                    <td className="muted tabular">{new Date(r.created_at).toLocaleDateString()}</td>
+                    <td className="muted tabular">{dateFormat.format(new Date(r.created_at))}</td>
                     <td>{client?.company_name ?? '—'}</td>
                     <td className="muted">{contact ? `${contact.first_name} ${contact.last_name}` : '—'}</td>
                     <td className="muted">{typeLabel[r.request_type]}</td>
@@ -153,16 +161,19 @@ function SupportRequests() {
                         className="status-badge"
                         style={{ color: priorityColor[r.priority], background: `${priorityColor[r.priority]}22` }}
                       >
-                        {r.priority}
+                        {priorityLabel[r.priority]}
                       </span>
                     </td>
-                    <td className="muted tabular">{r.needed_by ? new Date(r.needed_by).toLocaleDateString() : '—'}</td>
+                    <td className="muted tabular">
+                      {r.needed_by ? dateFormat.format(new Date(r.needed_by)) : '—'}
+                    </td>
                     <td className="muted support-requests-description" title={r.description}>
                       {r.description}
                     </td>
                     <td>
                       <select
                         className="select-input"
+                        aria-label={`Status for ${r.description}`}
                         value={r.status}
                         disabled={savingId === r.id}
                         onChange={(e) => handleStatusChange(r, e.target.value as SupportRequestStatus)}

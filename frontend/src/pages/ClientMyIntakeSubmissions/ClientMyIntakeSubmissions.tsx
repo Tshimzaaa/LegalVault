@@ -62,14 +62,14 @@ function ClientMyIntakeSubmissions({ contact, onLogout }: ClientMyIntakeSubmissi
       </header>
 
       {status === 'loading' && (
-        <div className="dash-state">
-          <span className="dash-spinner" />
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading your requests…</p>
         </div>
       )}
 
       {status === 'error' && (
-        <div className="dash-state">
+        <div className="dash-state" role="status" aria-live="polite">
           <p>Couldn&rsquo;t reach the backend for your requests.</p>
           <button type="button" className="btn-ghost" onClick={load}>
             Retry
@@ -89,7 +89,20 @@ function ClientMyIntakeSubmissions({ contact, onLogout }: ClientMyIntakeSubmissi
             </thead>
             <tbody>
               {sorted.map((s) => (
-                <tr key={s.id} className="intake-submission-row" onClick={() => navigate(s.id)}>
+                <tr
+                  key={s.id}
+                  className="intake-submission-row"
+                  tabIndex={0}
+                  role="link"
+                  aria-label={`Open submission for ${formsById[s.form_id]?.title ?? 'Intake Form'}`}
+                  onClick={() => navigate(s.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      navigate(s.id)
+                    }
+                  }}
+                >
                   <td className="muted tabular">{new Date(s.created_at).toLocaleDateString()}</td>
                   <td>{formsById[s.form_id]?.title ?? 'Intake Form'}</td>
                   <td>

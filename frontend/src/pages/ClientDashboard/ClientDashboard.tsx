@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import './ClientDashboard.css'
 import { IconFolder, IconFilePlus, IconLearnedFriend } from '../../components/icons'
 import ProfileMenu from '../../components/ProfileMenu'
@@ -13,16 +13,19 @@ const breakdownColor: Record<'signed' | 'pending' | 'expired', string> = {
   expired: '#ef4444',
 }
 
+const relativeTimeFormat = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' })
+const dateFormat = new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+
 function formatRelativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime()
   const minutes = Math.round(diffMs / 60000)
   if (minutes < 1) return 'just now'
-  if (minutes < 60) return `${minutes}m ago`
+  if (minutes < 60) return relativeTimeFormat.format(-minutes, 'minute')
   const hours = Math.round(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
+  if (hours < 24) return relativeTimeFormat.format(-hours, 'hour')
   const days = Math.round(hours / 24)
-  if (days < 30) return `${days}d ago`
-  return new Date(iso).toLocaleDateString()
+  if (days < 30) return relativeTimeFormat.format(-days, 'day')
+  return dateFormat.format(new Date(iso))
 }
 
 interface ClientDashboardProps {
@@ -31,7 +34,6 @@ interface ClientDashboardProps {
 }
 
 function ClientDashboard({ contact, onLogout }: ClientDashboardProps) {
-  const navigate = useNavigate()
   const [summary, setSummary] = useState<ClientDashboardSummary | null>(null)
 
   useEffect(() => {
@@ -76,15 +78,15 @@ function ClientDashboard({ contact, onLogout }: ClientDashboardProps) {
           <div className="card-header">
             <span>Quick Actions</span>
           </div>
-          <button type="button" className="quick-action-btn" onClick={() => navigate('/client/workflow')}>
+          <Link to="/client/workflow" className="quick-action-btn">
             <IconFolder /> View Matters
-          </button>
-          <button type="button" className="quick-action-btn" onClick={() => navigate('/client/request-support')}>
+          </Link>
+          <Link to="/client/request-support" className="quick-action-btn">
             <IconFilePlus /> Create Request
-          </button>
-          <button type="button" className="quick-action-btn" onClick={() => navigate('/client/learned-friend')}>
+          </Link>
+          <Link to="/client/learned-friend" className="quick-action-btn">
             <IconLearnedFriend /> Access My Learned Friend
-          </button>
+          </Link>
         </div>
 
         <div className="card">

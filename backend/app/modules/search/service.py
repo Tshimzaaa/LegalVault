@@ -1,5 +1,6 @@
-from sqlalchemy import or_, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.elements import ColumnElement
 
 from app.modules.auth.models import User
 from app.modules.clients.models import Client, ClientContact
@@ -9,69 +10,70 @@ from app.modules.search.schemas import SearchResponse, SearchResultItem
 RESULTS_PER_CATEGORY = 10
 
 
+def _joined(*columns: ColumnElement) -> ColumnElement:
+    """coalesce(col, '') || ' ' || coalesce(col, '') ... — deliberately not concat_ws(),
+    which (like to_tsvector(regconfig, text)) is STABLE rather than IMMUTABLE in
+    Postgres's own catalog, so it can't back an expression index. coalesce and || are
+    genuinely immutable. Must match the corresponding migration's index expression
+    (710a35471ab8) verbatim, or Postgres falls back to a full scan for `@@`."""
+    parts = [func.coalesce(c, "") for c in columns]
+    result = parts[0]
+    for part in parts[1:]:
+        result = result.concat(" ").concat(part)
+    return result
+
+
+def _tsvector(*columns: ColumnElement) -> ColumnElement:
+    return func.immutable_english_tsvector(_joined(*columns))
+
+
 class SearchService:
 
     def __init__(self, db: Session):
         self.db = db
 
     def search(self, firm_id, query: str) -> SearchResponse:
-        pattern = f"%{query}%"
+        tsquery = func.websearch_to_tsquery("english", query)
 
+        client_vector = _tsvector(Client.company_name)
         clients = self.db.scalars(
             select(Client)
-            .where(Client.firm_id == firm_id, Client.company_name.ilike(pattern))
+            .where(Client.firm_id == firm_id, client_vector.op("@@")(tsquery))
+            .order_by(func.ts_rank(client_vector, tsquery).desc())
             .limit(RESULTS_PER_CATEGORY)
         ).all()
 
+        contact_vector = _tsvector(ClientContact.first_name, ClientContact.last_name, ClientContact.email)
         contacts = self.db.scalars(
             select(ClientContact)
             .join(Client, ClientContact.client_id == Client.id)
-            .where(
-                Client.firm_id == firm_id,
-                or_(
-                    ClientContact.first_name.ilike(pattern),
-                    ClientContact.last_name.ilike(pattern),
-                    ClientContact.email.ilike(pattern),
-                ),
-            )
+            .where(Client.firm_id == firm_id, contact_vector.op("@@")(tsquery))
+            .order_by(func.ts_rank(contact_vector, tsquery).desc())
             .limit(RESULTS_PER_CATEGORY)
         ).all()
 
+        matter_vector = _tsvector(Matter.title, Matter.description)
         matters = self.db.scalars(
             select(Matter)
-            .where(
-                Matter.firm_id == firm_id,
-                or_(
-                    Matter.title.ilike(pattern),
-                    Matter.description.ilike(pattern),
-                ),
-            )
+            .where(Matter.firm_id == firm_id, matter_vector.op("@@")(tsquery))
+            .order_by(func.ts_rank(matter_vector, tsquery).desc())
             .limit(RESULTS_PER_CATEGORY)
         ).all()
 
+        staff_vector = _tsvector(User.first_name, User.last_name, User.email)
         staff = self.db.scalars(
             select(User)
-            .where(
-                User.firm_id == firm_id,
-                or_(
-                    User.first_name.ilike(pattern),
-                    User.last_name.ilike(pattern),
-                    User.email.ilike(pattern),
-                ),
-            )
+            .where(User.firm_id == firm_id, staff_vector.op("@@")(tsquery))
+            .order_by(func.ts_rank(staff_vector, tsquery).desc())
             .limit(RESULTS_PER_CATEGORY)
         ).all()
 
+        document_vector = _tsvector(MatterDocument.title, MatterDocument.original_filename)
         documents = self.db.scalars(
             select(MatterDocument)
             .join(Matter, MatterDocument.matter_id == Matter.id)
-            .where(
-                Matter.firm_id == firm_id,
-                or_(
-                    MatterDocument.title.ilike(pattern),
-                    MatterDocument.original_filename.ilike(pattern),
-                ),
-            )
+            .where(Matter.firm_id == firm_id, document_vector.op("@@")(tsquery))
+            .order_by(func.ts_rank(document_vector, tsquery).desc())
             .limit(RESULTS_PER_CATEGORY)
         ).all()
 

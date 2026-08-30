@@ -165,7 +165,19 @@ function Staff({ user }: StaffProps) {
                 automatically yet):
               </p>
               <div className="staff-invite-link-row">
-                <input type="text" readOnly value={inviteLink} onFocus={(e) => e.target.select()} />
+                <label
+                  htmlFor="staff-invite-link"
+                  style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}
+                >
+                  Invitation link
+                </label>
+                <input
+                  id="staff-invite-link"
+                  type="text"
+                  readOnly
+                  value={inviteLink}
+                  onFocus={(e) => e.target.select()}
+                />
                 <button type="button" className="btn-ghost" onClick={handleCopyLink}>
                   {linkCopied ? 'Copied!' : 'Copy'}
                 </button>
@@ -191,6 +203,7 @@ function Staff({ user }: StaffProps) {
                     value={inviteForm.first_name}
                     onChange={(e) => setInviteForm((f) => ({ ...f, first_name: e.target.value }))}
                     required
+                    autoComplete="given-name"
                   />
                 </label>
                 <label className="field">
@@ -199,6 +212,7 @@ function Staff({ user }: StaffProps) {
                     value={inviteForm.last_name}
                     onChange={(e) => setInviteForm((f) => ({ ...f, last_name: e.target.value }))}
                     required
+                    autoComplete="family-name"
                   />
                 </label>
               </div>
@@ -210,6 +224,8 @@ function Staff({ user }: StaffProps) {
                     value={inviteForm.email}
                     onChange={(e) => setInviteForm((f) => ({ ...f, email: e.target.value }))}
                     required
+                    autoComplete="email"
+                    spellCheck={false}
                   />
                 </label>
                 <label className="field">
@@ -227,7 +243,7 @@ function Staff({ user }: StaffProps) {
                 </label>
               </div>
 
-              {inviteError && <p className="matter-error">{inviteError}</p>}
+              {inviteError && <p className="matter-error" aria-live="polite">{inviteError}</p>}
 
               <div className="matter-actions">
                 <button type="button" className="btn-ghost" onClick={() => setShowInviteForm(false)}>
@@ -244,7 +260,7 @@ function Staff({ user }: StaffProps) {
 
       {status === 'loading' && (
         <div className="dash-state">
-          <span className="dash-spinner" />
+          <span className="dash-spinner" aria-hidden="true" />
           <p>Loading staff…</p>
         </div>
       )}
@@ -260,7 +276,7 @@ function Staff({ user }: StaffProps) {
 
       {status === 'ready' && (
         <section className="card staff-table-card">
-          {forceLogoutError && <p className="matter-error">{forceLogoutError}</p>}
+          {forceLogoutError && <p className="matter-error" aria-live="polite">{forceLogoutError}</p>}
           <table className="data-table">
             <thead>
               <tr>
