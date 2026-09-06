@@ -12,6 +12,7 @@ type LoadState = 'loading' | 'error' | 'ready'
 const statusLabel: Record<SubmissionStatus, string> = {
   submitted: 'Submitted',
   in_review: 'In Review',
+  resolved: 'Resolved',
   converted: 'Converted',
   declined: 'Declined',
 }
@@ -19,6 +20,7 @@ const statusLabel: Record<SubmissionStatus, string> = {
 const statusColor: Record<SubmissionStatus, string> = {
   submitted: '#eab308',
   in_review: '#3987e5',
+  resolved: '#199e70',
   converted: '#22c55e',
   declined: '#ef4444',
 }

@@ -47,7 +47,6 @@ from app.exceptions.matters import (
     ApprovalAlreadyDecided,
     IntakeSubmissionClientMismatch,
 )
-from app.exceptions.support_requests import SupportRequestNotFound
 from app.exceptions.announcements import AnnouncementNotFound
 from app.exceptions.notifications import NotificationNotFound
 from app.exceptions.signed_contracts import SignedContractNotFound
@@ -63,6 +62,7 @@ from app.exceptions.intake import (
     IntakeFieldLocked,
     MissingRequiredIntakeAnswer,
     UnsupportedIntakeFileType,
+    SystemFormProtected,
 )
 from app.exceptions.knowledge import KnowledgeArticleNotFound
 from app.exceptions.signatures import SignatureRequestNotFound, InvalidSignatureRecipient, SigningProviderUnavailable
@@ -236,10 +236,6 @@ def register_exception_handlers(app: FastAPI):
     async def cannot_deactivate_self(_, __):
         raise HTTPException(status_code=400, detail="You cannot deactivate your own account.")
 
-    @app.exception_handler(SupportRequestNotFound)
-    async def support_request_not_found(_, __):
-        raise HTTPException(status_code=404, detail="Support request not found.")
-
     @app.exception_handler(ClientHasMatters)
     async def client_has_matters(_, __):
         raise HTTPException(status_code=409, detail="Cannot delete a client that has existing matters.")
@@ -330,6 +326,10 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(UnsupportedIntakeFileType)
     async def unsupported_intake_file_type(_, __):
         raise HTTPException(status_code=400, detail="Unsupported or oversized file for this field.")
+
+    @app.exception_handler(SystemFormProtected)
+    async def system_form_protected(_, __):
+        raise HTTPException(status_code=409, detail="This form is managed by the system and can't be modified.")
 
     @app.exception_handler(KnowledgeArticleNotFound)
     async def knowledge_article_not_found(_, __):

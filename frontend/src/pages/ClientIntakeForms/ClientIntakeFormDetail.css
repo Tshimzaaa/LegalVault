@@ -10,7 +10,7 @@
 }
 
 .client-intake-required {
-  color: #f87171;
+  color: var(--danger-light);
 }
 
 .client-intake-help {
@@ -21,7 +21,7 @@
 .client-intake-checkbox {
   width: 16px;
   height: 16px;
-  accent-color: #22c55e;
+  accent-color: var(--accent);
 }
 
 .client-intake-success {

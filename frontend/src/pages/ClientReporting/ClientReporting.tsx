@@ -6,8 +6,9 @@ import { listClientMatters } from '../../api/clientMatters'
 import type { Matter } from '../../api/matters'
 import { listClientSignedContracts } from '../../api/clientSignedContracts'
 import type { ContractType } from '../../api/signedContracts'
-import { listMySupportRequests } from '../../api/supportRequests'
-import type { SupportRequest, SupportRequestType } from '../../api/supportRequests'
+import { listMyIntakeSubmissions, listPublishedIntakeForms } from '../../api/clientIntake'
+import type { IntakeSubmission } from '../../api/intakeSubmissions'
+import type { IntakeForm } from '../../api/intakeForms'
 
 interface TrendPoint {
   month: string
@@ -42,13 +43,6 @@ const contractTypeColor: Record<ContractType, string> = {
 const daysFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1, minimumFractionDigits: 1 })
 const gridLabelFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 })
 const percentFormat = new Intl.NumberFormat(undefined, { style: 'percent', maximumFractionDigits: 0 })
-
-const requestTypeLabel: Record<SupportRequestType, string> = {
-  nda: 'NDA',
-  consultancy: 'Consultancy',
-  supplier: 'Supplier',
-  general: 'General',
-}
 
 /** Last `count` calendar months, oldest first, as {year, month, label} — used to bucket real records. */
 function lastMonths(count: number) {
@@ -144,7 +138,7 @@ function ActiveMattersLineChart({ data }: { data: TrendPoint[] }) {
               onBlur={() => setHover(null)}
             />
             {(hover === i || i === points.length - 1) && (
-              <circle cx={p.x} cy={p.y} r="4" fill="#22c55e" stroke="#0b0b0d" strokeWidth="2" />
+              <circle cx={p.x} cy={p.y} r="4" fill="#22c55e" stroke="var(--surface)" strokeWidth="2" />
             )}
           </g>
         ))}
@@ -350,20 +344,25 @@ function ClientReporting({ contact, onLogout }: ClientReportingProps) {
       })
       .catch(() => setContractDistribution([]))
 
-    listMySupportRequests(token)
-      .then((requests) => {
+    Promise.all([listMyIntakeSubmissions(token), listPublishedIntakeForms(token)])
+      .then(([submissions, forms]) => {
+        const formsById = new Map(forms.map((f) => [f.id, f]))
+
         const now = new Date()
         setRequestsThisMonth(
-          requests.filter((r) => {
-            const created = new Date(r.created_at)
+          submissions.filter((s) => {
+            const created = new Date(s.created_at)
             return created.getFullYear() === now.getFullYear() && created.getMonth() === now.getMonth()
           }).length,
         )
 
-        const resolved = requests.filter((r) => r.status === 'resolved')
-        setCompletionRate(requests.length > 0 ? Math.round((resolved.length / requests.length) * 100) : null)
-        setAvgTurnaroundDays(resolved.length > 0 ? avgDays(resolved) : null)
-        setTurnaroundByType(turnaroundByRequestType(resolved))
+        // "Completed" covers both positive terminal outcomes — resolved without a matter,
+        // or converted into one — same as the old model where only `resolved` counted before
+        // intake's convert-to-matter path existed for these requests.
+        const completed = submissions.filter((s) => s.status === 'resolved' || s.status === 'converted')
+        setCompletionRate(submissions.length > 0 ? Math.round((completed.length / submissions.length) * 100) : null)
+        setAvgTurnaroundDays(completed.length > 0 ? avgDays(completed) : null)
+        setTurnaroundByType(turnaroundByRequestType(completed, formsById))
       })
       .catch(() => {
         setRequestsThisMonth(null)
@@ -448,30 +447,45 @@ function ClientReporting({ contact, onLogout }: ClientReportingProps) {
   )
 }
 
-function avgDays(requests: SupportRequest[]): number {
-  const totalDays = requests.reduce((sum, r) => sum + daysBetween(r.created_at, r.updated_at), 0)
-  return totalDays / requests.length
+function avgDays(submissions: IntakeSubmission[]): number {
+  const totalDays = submissions.reduce((sum, s) => sum + daysBetween(s.created_at, s.updated_at), 0)
+  return totalDays / submissions.length
 }
 
 function daysBetween(start: string, end: string): number {
   return Math.max(0, (new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24))
 }
 
-function turnaroundByRequestType(resolved: SupportRequest[]): BarPoint[] {
-  const byType = resolved.reduce(
-    (acc, r) => {
-      const bucket = acc[r.request_type] ?? { total: 0, count: 0 }
-      bucket.total += daysBetween(r.created_at, r.updated_at)
+/**
+ * The system "Request Support" form's request_type answer is already a display label
+ * (e.g. "NDA Review") — bucket by that when present. A custom intake form has no such
+ * field, so bucket by its title instead; a form that's since been unpublished won't
+ * resolve at all (listPublishedIntakeForms only returns current ones), same edge case
+ * ClientIntakeSubmissionDetail already handles by falling back to a placeholder.
+ */
+function requestTypeLabel(submission: IntakeSubmission, form: IntakeForm | undefined): string {
+  if (!form) return 'Other'
+  const requestTypeField = form.fields.find((f) => f.key === 'request_type')
+  const answer = requestTypeField && submission.answers.find((a) => a.field_id === requestTypeField.id)
+  return answer?.value || form.title
+}
+
+function turnaroundByRequestType(completed: IntakeSubmission[], formsById: Map<string, IntakeForm>): BarPoint[] {
+  const byLabel = completed.reduce(
+    (acc, s) => {
+      const label = requestTypeLabel(s, formsById.get(s.form_id))
+      const bucket = acc[label] ?? { total: 0, count: 0 }
+      bucket.total += daysBetween(s.created_at, s.updated_at)
       bucket.count += 1
-      acc[r.request_type] = bucket
+      acc[label] = bucket
       return acc
     },
-    {} as Record<SupportRequestType, { total: number; count: number }>,
+    {} as Record<string, { total: number; count: number }>,
   )
 
-  return (Object.keys(byType) as SupportRequestType[]).map((type) => ({
-    label: requestTypeLabel[type],
-    value: byType[type].total / byType[type].count,
+  return Object.keys(byLabel).map((label) => ({
+    label,
+    value: byLabel[label].total / byLabel[label].count,
   }))
 }
 

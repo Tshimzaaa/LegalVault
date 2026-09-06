@@ -6,7 +6,7 @@
 
 .request-card-type {
   font-size: 10.5px;
-  color: #4ade80;
+  color: var(--accent-light);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
@@ -24,6 +24,8 @@
 
 .client-matter-board .workflow-card {
   cursor: pointer;
+  text-decoration: none;
+  color: inherit;
 }
 
 .workflow-empty-col {

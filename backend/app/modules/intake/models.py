@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import Boolean, Enum, ForeignKey, String, Text
+from sqlalchemy import Boolean, Enum, ForeignKey, Index, String, Text, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import TYPE_CHECKING
@@ -27,6 +27,7 @@ class IntakeFieldType(str, enum.Enum):
 class IntakeSubmissionStatus(str, enum.Enum):
     SUBMITTED = "submitted"
     IN_REVIEW = "in_review"
+    RESOLVED = "resolved"
     CONVERTED = "converted"
     DECLINED = "declined"
 
@@ -46,6 +47,11 @@ class IntakeForm(BaseModel):
 
     is_published: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
+    # True only for the per-firm "Request Support" form seeded at firm creation (see
+    # app.modules.intake.system_forms) — locks its fields against deletion/type changes
+    # in IntakeService so the unified request flow always has a stable base form to fill.
+    is_system: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
     created_by: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
 
     fields: Mapped[list["IntakeFormField"]] = relationship(
@@ -57,6 +63,15 @@ class IntakeForm(BaseModel):
 
 class IntakeFormField(BaseModel):
     __tablename__ = "intake_form_fields"
+    __table_args__ = (
+        Index(
+            "ix_intake_form_fields_form_id_key",
+            "form_id",
+            "key",
+            unique=True,
+            postgresql_where=text("key IS NOT NULL"),
+        ),
+    )
 
     form_id: Mapped[UUID] = mapped_column(
         ForeignKey("intake_forms.id"),
@@ -65,6 +80,12 @@ class IntakeFormField(BaseModel):
     )
 
     label: Mapped[str] = mapped_column(String(200), nullable=False)
+
+    # Stable, non-staff-editable slug (e.g. "request_type", "priority") set only by system
+    # form seeding (app.modules.intake.system_forms) — lets code find "the priority answer"
+    # without depending on a human-editable label or a firm-specific field UUID. Never
+    # accepted from IntakeFormFieldCreateRequest/IntakeFormFieldUpdateRequest.
+    key: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     field_type: Mapped[IntakeFieldType] = mapped_column(Enum(IntakeFieldType), nullable=False)
 

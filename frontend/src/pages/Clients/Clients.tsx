@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import './Clients.css'
 import { IconPlus, IconChevron, IconTrash, IconMail } from '../../components/icons'
 import {
@@ -51,7 +52,16 @@ function Clients({ user }: ClientsProps) {
   const [deletingClientId, setDeletingClientId] = useState<string | null>(null)
   const [clientActionError, setClientActionError] = useState<string | null>(null)
 
-  const [expandedClientId, setExpandedClientId] = useState<string | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const expandedClientId = searchParams.get('expanded')
+  function setExpandedClientId(id: string | null) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      if (id) next.set('expanded', id)
+      else next.delete('expanded')
+      return next
+    })
+  }
   const [contactsByClient, setContactsByClient] = useState<Record<string, Contact[]>>({})
   const [contactsLoading, setContactsLoading] = useState(false)
   const [contactActionId, setContactActionId] = useState<string | null>(null)

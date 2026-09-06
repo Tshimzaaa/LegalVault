@@ -43,7 +43,7 @@ function Register() {
   return (
     <div className="auth-page">
       <div className="modal-box wide">
-        <h1>Onboard a law firm</h1>
+        <h1>Onboard a Law Firm</h1>
         <p className="modal-sub">SaaS-owner only — requires the shared onboarding secret.</p>
 
         <form onSubmit={handleSubmit}>

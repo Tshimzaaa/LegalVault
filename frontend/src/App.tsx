@@ -25,7 +25,7 @@ function RouteFallback() {
   return (
     <div
       role="status"
-      aria-label="Loading page"
+      aria-label="Loading page…"
       style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}
     >
       <div

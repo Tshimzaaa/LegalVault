@@ -29,6 +29,7 @@ from app.exceptions.intake import (
     IntakeFieldLocked,
     MissingRequiredIntakeAnswer,
     UnsupportedIntakeFileType,
+    SystemFormProtected,
 )
 from app.exceptions.matters import ClientNotFoundForMatter
 from app.core.storage import upload_file, get_download_url
@@ -115,6 +116,8 @@ class IntakeService:
 
     def delete_form(self, form_id, firm_id, actor_id) -> None:
         form = self.get_form(form_id, firm_id)
+        if form.is_system:
+            raise SystemFormProtected()
         if self.repository.count_submissions_for_form(form_id) > 0:
             raise IntakeFormHasSubmissions()
 
@@ -135,6 +138,8 @@ class IntakeService:
 
     def add_field(self, form_id, firm_id, actor_id, request: IntakeFormFieldCreateRequest) -> IntakeFormField:
         form = self.get_form(form_id, firm_id)
+        if form.is_system:
+            raise SystemFormProtected()
         next_order = self.repository.max_display_order(form_id) + 1
         field = IntakeFormField(
             form_id=form.id,
@@ -158,8 +163,10 @@ class IntakeService:
         self.db.commit()
         return field
 
-    def _get_field_for_form(self, form_id, firm_id, field_id) -> IntakeFormField:
-        self.get_form(form_id, firm_id)  # 404s if the form doesn't exist or belongs to another firm
+    def _get_field_for_form(self, form_id, firm_id, field_id, *, guard_system: bool = True) -> IntakeFormField:
+        form = self.get_form(form_id, firm_id)  # 404s if the form doesn't exist or belongs to another firm
+        if guard_system and form.is_system:
+            raise SystemFormProtected()
         field = self.repository.get_field_by_id(field_id)
         if not field or str(field.form_id) != str(form_id):
             raise IntakeFieldNotFound()

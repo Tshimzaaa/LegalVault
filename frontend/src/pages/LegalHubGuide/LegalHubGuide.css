@@ -19,8 +19,8 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: rgba(34, 197, 94, 0.14);
-  color: #22c55e;
+  background: rgba(var(--accent-rgb), 0.14);
+  color: var(--accent);
   font-size: 13px;
   font-weight: 700;
   flex-shrink: 0;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import './IntakeSubmissions.css'
 import { listIntakeSubmissions, updateIntakeSubmissionStatus } from '../../api/intakeSubmissions'
 import type { IntakeSubmission, SubmissionStatus } from '../../api/intakeSubmissions'
@@ -7,12 +7,14 @@ import { listIntakeForms } from '../../api/intakeForms'
 import type { IntakeForm } from '../../api/intakeForms'
 import { listClients, listContacts } from '../../api/clients'
 import type { Client, Contact } from '../../api/clients'
+import { formatDate } from '../../utils/date'
 
 type LoadState = 'loading' | 'error' | 'ready'
 
 const statusLabel: Record<SubmissionStatus, string> = {
   submitted: 'Submitted',
   in_review: 'In Review',
+  resolved: 'Resolved',
   converted: 'Converted',
   declined: 'Declined',
 }
@@ -20,14 +22,14 @@ const statusLabel: Record<SubmissionStatus, string> = {
 const statusColor: Record<SubmissionStatus, string> = {
   submitted: '#eab308',
   in_review: '#3987e5',
+  resolved: '#199e70',
   converted: '#22c55e',
   declined: '#ef4444',
 }
 
-const validStatusFilters = ['all', 'submitted', 'in_review', 'converted', 'declined'] as const
+const validStatusFilters = ['all', 'submitted', 'in_review', 'resolved', 'converted', 'declined'] as const
 
 function IntakeSubmissions() {
-  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [submissions, setSubmissions] = useState<IntakeSubmission[]>([])
   const [formsById, setFormsById] = useState<Record<string, IntakeForm>>({})
@@ -116,6 +118,7 @@ function IntakeSubmissions() {
             <option value="all">All statuses</option>
             <option value="submitted">Submitted</option>
             <option value="in_review">In Review</option>
+            <option value="resolved">Resolved</option>
             <option value="converted">Converted</option>
             <option value="declined">Declined</option>
           </select>
@@ -155,25 +158,19 @@ function IntakeSubmissions() {
                 const client = clientsById[s.client_id]
                 const contact = contactsById[s.contact_id]
                 return (
-                  <tr
-                    key={s.id}
-                    className="intake-submission-row"
-                    tabIndex={0}
-                    role="link"
-                    aria-label={`Open submission from ${client?.company_name ?? 'unknown client'}`}
-                    onClick={() => navigate(s.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault()
-                        navigate(s.id)
-                      }
-                    }}
-                  >
-                    <td className="muted tabular">{new Date(s.created_at).toLocaleDateString()}</td>
+                  <tr key={s.id} className="intake-submission-row">
+                    <td className="muted tabular row-link-cell">
+                      <Link
+                        to={s.id}
+                        className="row-stretched-link"
+                        aria-label={`Open submission from ${client?.company_name ?? 'unknown client'}`}
+                      />
+                      {formatDate(s.created_at)}
+                    </td>
                     <td>{formsById[s.form_id]?.title ?? '—'}</td>
                     <td>{client?.company_name ?? '—'}</td>
                     <td className="muted">{contact ? `${contact.first_name} ${contact.last_name}` : '—'}</td>
-                    <td onClick={(e) => e.stopPropagation()}>
+                    <td>
                       <select
                         className="select-input"
                         aria-label={`Status for submission from ${client?.company_name ?? 'unknown client'}`}
@@ -184,6 +181,7 @@ function IntakeSubmissions() {
                       >
                         <option value="submitted">Submitted</option>
                         <option value="in_review">In Review</option>
+                        <option value="resolved">Resolved</option>
                         <option value="converted">Converted</option>
                         <option value="declined">Declined</option>
                       </select>

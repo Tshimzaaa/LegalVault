@@ -44,7 +44,7 @@ function ResetPassword() {
   return (
     <div className="auth-page">
       <div className="modal-box">
-        <h1>Reset password</h1>
+        <h1>Reset Password</h1>
         <p className="modal-sub">
           {done ? 'Your password has been reset.' : 'Enter the reset link token and choose a new password.'}
         </p>

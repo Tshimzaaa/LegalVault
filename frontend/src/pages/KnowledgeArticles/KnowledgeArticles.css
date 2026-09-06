@@ -38,7 +38,7 @@
   flex: 1;
   overflow-y: auto;
   font-size: 12.5px;
-  color: #d1d5db;
+  color: var(--text-subtle);
   line-height: 1.5;
 }
 
@@ -49,7 +49,7 @@
 .knowledge-markdown h1,
 .knowledge-markdown h2,
 .knowledge-markdown h3 {
-  color: #e5e7eb;
+  color: var(--text);
   font-size: 13px;
   margin: 10px 0 6px;
 }

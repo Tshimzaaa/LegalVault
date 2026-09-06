@@ -10,6 +10,7 @@ import {
 } from '../../api/clientSignedContracts'
 import type { SignedContract, SignedContractsSummary } from '../../api/clientSignedContracts'
 import type { ContractType, ContractLifecycleStatus } from '../../api/signedContracts'
+import { formatDate } from '../../utils/date'
 
 type LoadState = 'loading' | 'error' | 'ready'
 
@@ -264,7 +265,7 @@ function ClientSignedContracts({ contact, onLogout }: ClientSignedContractsProps
                       {c.description && <div className="muted signed-contract-description">{c.description}</div>}
                     </td>
                     <td className="muted">{typeLabel[c.agreement_type]}</td>
-                    <td className="muted">{c.signed_date}</td>
+                    <td className="muted">{formatDate(c.signed_date)}</td>
                     <td className="muted">{c.integration_source}</td>
                     <td>
                       <span className="status-badge" style={{ color: statusColor[c.status], background: `${statusColor[c.status]}22` }}>

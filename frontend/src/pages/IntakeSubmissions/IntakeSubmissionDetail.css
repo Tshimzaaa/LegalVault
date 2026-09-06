@@ -38,13 +38,13 @@
 }
 
 .intake-converted-note {
-  color: #22c55e;
+  color: var(--accent);
   font-size: 13px;
   margin: 0 0 12px;
 }
 
 .intake-converted-note a {
-  color: #4ade80;
+  color: var(--accent-light);
 }
 
 .intake-answers-card {
@@ -62,7 +62,7 @@
   flex-direction: column;
   gap: 4px;
   padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(var(--overlay-rgb), 0.06);
 }
 
 .intake-answer-row:last-child {
@@ -73,7 +73,7 @@
 .intake-answer-label {
   font-size: 11px;
   font-weight: 600;
-  color: #9ca3af;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }

@@ -1,4 +1,5 @@
 import './Navbar.css'
+import ThemeToggle from './ThemeToggle'
 
 interface NavLink {
   label: string
@@ -39,9 +40,12 @@ function Navbar({ onLoginClick }: NavbarProps) {
         ))}
       </nav>
 
-      <button type="button" className="navbar-cta" onClick={onLoginClick}>
-        Login
-      </button>
+      <div className="navbar-actions">
+        <ThemeToggle />
+        <button type="button" className="navbar-cta" onClick={onLoginClick}>
+          Login
+        </button>
+      </div>
     </header>
   )
 }

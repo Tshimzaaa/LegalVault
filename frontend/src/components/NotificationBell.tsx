@@ -3,6 +3,7 @@ import './NotificationBell.css'
 import { IconBell } from './icons'
 import { listNotifications, getUnreadCount, markNotificationRead, markAllNotificationsRead } from '../api/notifications'
 import type { Notification } from '../api/notifications'
+import { formatDateTime } from '../utils/date'
 
 const POLL_INTERVAL_MS = 30000
 
@@ -151,7 +152,7 @@ function NotificationBell({ scope }: NotificationBellProps) {
               >
                 <span className="notification-bell-item-title">{n.title}</span>
                 <span className="notification-bell-item-body">{n.body}</span>
-                <span className="notification-bell-item-time">{new Date(n.created_at).toLocaleString()}</span>
+                <span className="notification-bell-item-time">{formatDateTime(n.created_at)}</span>
               </button>
             ))}
           </div>

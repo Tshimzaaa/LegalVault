@@ -20,6 +20,7 @@ import type { AuditLogEntry } from '../../api/auditLog'
 import { listOwnerAnnouncements, createAnnouncement, updateAnnouncement, deleteAnnouncement } from '../../api/announcements'
 import type { Announcement, AnnouncementSeverity } from '../../api/announcements'
 import MiniChart from '../../components/MiniChart'
+import ThemeToggle from '../../components/ThemeToggle'
 
 type LoadState = 'loading' | 'error' | 'ready'
 const AUDIT_PAGE_SIZE = 50
@@ -61,8 +62,11 @@ function formatUptime(seconds: number): string {
   return `${Math.floor(seconds)}s`
 }
 
+const hourFormat = new Intl.DateTimeFormat(undefined, { hour: 'numeric' })
+const timeFormat = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit', second: '2-digit' })
+
 function formatHour(iso: string): string {
-  return new Date(iso).toLocaleTimeString([], { hour: '2-digit' })
+  return hourFormat.format(new Date(iso))
 }
 
 const emptyCreateForm = {
@@ -450,6 +454,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
           <button type="button" className="btn-solid" onClick={() => setShowCreateForm((v) => !v)}>
             <IconPlus /> New Firm
           </button>
+          <ThemeToggle />
           <button type="button" className="btn-ghost" onClick={onLogout}>
             Log out
           </button>
@@ -459,7 +464,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
       {showCreateForm && (
         <section className="card owner-create-firm-card">
           <div className="card-header">
-            <h2>Onboard a new firm</h2>
+            <h2>Onboard a New Firm</h2>
           </div>
           <form onSubmit={handleCreateFirm} className="owner-create-firm-form">
             <div className="field-row">
@@ -606,7 +611,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
 
           <section className="card owner-firms-table-card">
             <div className="card-header">
-              <h2>Firms on the platform</h2>
+              <h2>Firms on the Platform</h2>
             </div>
             {firmActionError && <p className="matter-error" aria-live="polite">{firmActionError}</p>}
             <table className="data-table">
@@ -723,7 +728,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                     </strong>
                     <span className="muted">
                       Uptime {formatUptime(systemHealth.uptime_seconds)} · checked{' '}
-                      {new Date(systemHealth.generated_at).toLocaleTimeString()}
+                      {timeFormat.format(new Date(systemHealth.generated_at))}
                     </span>
                   </div>
                   <div className="owner-health-deps">
@@ -906,7 +911,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
 
           <section className="card owner-errors-card">
             <div className="card-header">
-              <h2>Recent errors</h2>
+              <h2>Recent Errors</h2>
               <div className="topbar-actions">
                 <span className="muted">
                   {errorsStatus === 'ready' ? `${errorEntries.length}${errorsHasMore ? '+' : ''} in last 24h` : 'last 24h'}

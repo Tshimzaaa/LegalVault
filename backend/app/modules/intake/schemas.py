@@ -29,6 +29,7 @@ class IntakeFormFieldResponse(BaseModel):
     id: UUID
     form_id: UUID
     label: str
+    key: str | None
     field_type: IntakeFieldType
     is_required: bool
     help_text: str | None
@@ -56,6 +57,7 @@ class IntakeFormResponse(BaseModel):
     title: str
     description: str | None
     is_published: bool
+    is_system: bool
     created_at: datetime
     updated_at: datetime
     fields: list[IntakeFormFieldResponse] = []

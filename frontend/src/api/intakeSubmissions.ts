@@ -1,6 +1,6 @@
 import { apiRequest } from './client'
 
-export type SubmissionStatus = 'submitted' | 'in_review' | 'converted' | 'declined'
+export type SubmissionStatus = 'submitted' | 'in_review' | 'resolved' | 'converted' | 'declined'
 
 export interface IntakeAnswer {
   id: string

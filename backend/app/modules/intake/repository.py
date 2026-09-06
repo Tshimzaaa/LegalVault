@@ -53,6 +53,11 @@ class IntakeRepository:
     def get_field_by_id(self, field_id) -> IntakeFormField | None:
         return self.db.scalar(select(IntakeFormField).where(IntakeFormField.id == field_id))
 
+    def get_field_by_key(self, form_id, key: str) -> IntakeFormField | None:
+        return self.db.scalar(
+            select(IntakeFormField).where(IntakeFormField.form_id == form_id, IntakeFormField.key == key)
+        )
+
     def list_fields_by_form(self, form_id) -> list[IntakeFormField]:
         return list(
             self.db.scalars(
@@ -104,6 +109,16 @@ class IntakeRepository:
                 .order_by(IntakeSubmission.created_at.desc())
             )
         )
+
+    def list_recent_by_client(self, client_id, limit: int) -> list[IntakeSubmission]:
+        statement = (
+            select(IntakeSubmission)
+            .where(IntakeSubmission.client_id == client_id)
+            .options(selectinload(IntakeSubmission.answers))
+            .order_by(IntakeSubmission.created_at.desc())
+            .limit(limit)
+        )
+        return list(self.db.scalars(statement))
 
     def count_submissions_for_form(self, form_id) -> int:
         return self.db.scalar(

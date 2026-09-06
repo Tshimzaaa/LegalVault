@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import './LoginModal.css'
 import { forgotPassword } from '../api/auth'
 import { clientForgotPassword } from '../api/clientAuth'
+import { isDesktopPointer } from '../utils/device'
 
 interface LoginModalProps {
   onClose: () => void
@@ -86,11 +87,12 @@ function LoginModal({ onClose, onSubmit, staffOnly }: LoginModalProps) {
                 <span>Email</span>
                 <input
                   type="email"
+                  name="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder="you@example.com…"
                   required
-                  autoFocus
+                  autoFocus={isDesktopPointer}
                   autoComplete="email"
                   spellCheck={false}
                 />
@@ -133,11 +135,12 @@ function LoginModal({ onClose, onSubmit, staffOnly }: LoginModalProps) {
             <span>Email</span>
             <input
               type="email"
+              name="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
+              placeholder="you@example.com…"
               required
-              autoFocus
+              autoFocus={isDesktopPointer}
               autoComplete="email"
               spellCheck={false}
             />
@@ -148,6 +151,7 @@ function LoginModal({ onClose, onSubmit, staffOnly }: LoginModalProps) {
             <div className="modal-password-wrap">
               <input
                 type={showPassword ? 'text' : 'password'}
+                name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
@@ -161,12 +165,12 @@ function LoginModal({ onClose, onSubmit, staffOnly }: LoginModalProps) {
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? (
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.8 21.8 0 0 1 5.06-6.94M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.8 21.8 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
                     <line x1="1" y1="1" x2="23" y2="23" />
                   </svg>
                 ) : (
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
                     <circle cx="12" cy="12" r="3" />
                   </svg>

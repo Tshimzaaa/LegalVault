@@ -1,6 +1,7 @@
 import './Blog.css'
 
 interface Post {
+  slug: string
   title: string
   excerpt: string
   date: string
@@ -10,6 +11,7 @@ interface Post {
 
 const posts: Post[] = [
   {
+    slug: 'billable-hours-manual-admin',
     title: '5 ways firms lose billable hours to manual admin',
     excerpt:
       'Matter intake, document chasing, and status updates quietly eat into your week. Here is where the time actually goes, and how to claw it back.',
@@ -18,6 +20,7 @@ const posts: Post[] = [
     readTime: '6 min read',
   },
   {
+    slug: 'trust-accounting-compliance',
     title: 'A practical guide to trust accounting compliance',
     excerpt:
       'Trust accounting mistakes are one of the top reasons for bar complaints. A walkthrough of the controls every firm should have in place.',
@@ -26,6 +29,7 @@ const posts: Post[] = [
     readTime: '8 min read',
   },
   {
+    slug: 'client-portals-what-clients-want',
     title: 'Client portals: what clients actually want to see',
     excerpt:
       'We looked at portal usage across dozens of firms. The features clients open most are rarely the ones firms invest in first.',
@@ -34,6 +38,7 @@ const posts: Post[] = [
     readTime: '5 min read',
   },
   {
+    slug: 'matter-intake-workflow-that-scales',
     title: 'Building a matter intake workflow that scales',
     excerpt:
       'From first inquiry to signed engagement letter, a repeatable intake process is the difference between a chaotic queue and a calm one.',
@@ -42,6 +47,7 @@ const posts: Post[] = [
     readTime: '7 min read',
   },
   {
+    slug: 'e-signatures-and-enforceability',
     title: 'E-signatures and enforceability: what to check',
     excerpt:
       'Not all e-signature flows hold up the same way in court. A short checklist for evaluating whether your process is defensible.',
@@ -50,6 +56,7 @@ const posts: Post[] = [
     readTime: '4 min read',
   },
   {
+    slug: 'reporting-metrics-that-change-decisions',
     title: 'Reporting metrics that actually change firm decisions',
     excerpt:
       'Dashboards are easy to build and easy to ignore. These are the handful of numbers partners at well-run firms check weekly.',
@@ -63,13 +70,13 @@ function Blog() {
   return (
     <section id="blog" className="blog-page">
       <div className="blog-hero">
-        <h1>Insights &amp; Updates</h1>
-        <h2>Practical notes on running a modern legal practice, from the team building the tools for it.</h2>
+        <h2 className="blog-hero-title">Insights &amp; Updates</h2>
+        <p className="blog-hero-sub">Practical notes on running a modern legal practice, from the team building the tools for it.</p>
       </div>
 
       <div className="blog-grid">
         {posts.map((post) => (
-          <a href="#post" key={post.title} className="blog-card">
+          <a href={`#${post.slug}`} key={post.slug} className="blog-card">
             <div className="blog-card-thumb" aria-hidden="true" />
             <div className="blog-card-body">
               <span className="blog-tag">{post.tag}</span>

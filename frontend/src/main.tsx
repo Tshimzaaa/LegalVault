@@ -5,6 +5,7 @@ import * as Sentry from '@sentry/react'
 import './index.css'
 import App from './App.tsx'
 import ErrorBoundary from './components/ErrorBoundary.tsx'
+import { ThemeProvider } from './theme/ThemeContext.tsx'
 
 // Skipped entirely when unset — no one is required to have a Sentry account to run
 // this app. Sentry.init() auto-instruments window.onerror/unhandledrejection; the one
@@ -17,9 +18,11 @@ if (import.meta.env.VITE_SENTRY_DSN) {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <ThemeProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </ThemeProvider>
     </ErrorBoundary>
   </StrictMode>,
 )

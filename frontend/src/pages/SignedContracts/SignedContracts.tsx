@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import './SignedContracts.css'
 import { IconPlus } from '../../components/icons'
 import {
@@ -34,6 +35,9 @@ const typeLabel: Record<ContractType, string> = {
   general: 'General',
 }
 
+const validStatusFilters = ['all', 'active', 'expiring', 'archived'] as const
+const validTypeFilters = ['all', 'nda', 'consultancy', 'supplier', 'general'] as const
+
 const emptyUploadForm = {
   clientId: '',
   title: '',
@@ -53,9 +57,55 @@ function SignedContracts() {
 
   const [clients, setClients] = useState<Client[]>([])
 
-  const [statusFilter, setStatusFilter] = useState<'all' | ContractLifecycleStatus>('all')
-  const [typeFilter, setTypeFilter] = useState<'all' | ContractType>('all')
-  const [search, setSearch] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const rawStatusFilter = searchParams.get('status')
+  const statusFilter: 'all' | ContractLifecycleStatus = validStatusFilters.includes(
+    rawStatusFilter as (typeof validStatusFilters)[number],
+  )
+    ? (rawStatusFilter as 'all' | ContractLifecycleStatus)
+    : 'all'
+
+  const rawTypeFilter = searchParams.get('type')
+  const typeFilter: 'all' | ContractType = validTypeFilters.includes(
+    rawTypeFilter as (typeof validTypeFilters)[number],
+  )
+    ? (rawTypeFilter as 'all' | ContractType)
+    : 'all'
+
+  const search = searchParams.get('q') ?? ''
+
+  function setStatusFilter(next: 'all' | ContractLifecycleStatus) {
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev)
+      if (next === 'all') params.delete('status')
+      else params.set('status', next)
+      return params
+    })
+  }
+
+  function setTypeFilter(next: 'all' | ContractType) {
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev)
+      if (next === 'all') params.delete('type')
+      else params.set('type', next)
+      return params
+    })
+  }
+
+  function setSearch(next: string) {
+    // replace, not push — this fires on every keystroke, and a new history entry per
+    // character would make the back button useless.
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev)
+        if (next) params.set('q', next)
+        else params.delete('q')
+        return params
+      },
+      { replace: true },
+    )
+  }
 
   const [showUpload, setShowUpload] = useState(false)
   const [form, setForm] = useState(emptyUploadForm)

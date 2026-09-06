@@ -31,7 +31,7 @@
 }
 
 .clients-form-note {
-  color: #4ade80;
+  color: var(--accent-light);
   font-size: 12.5px;
   margin: 8px 0 0;
 }
@@ -60,7 +60,7 @@
 }
 
 .clients-contacts-cell {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(var(--overlay-rgb), 0.02);
   padding: 12px 10px 12px 40px !important;
 }
 
@@ -79,7 +79,7 @@
 
 .clients-contact-name {
   min-width: 140px;
-  color: #e5e7eb;
+  color: var(--text);
 }
 
 .clients-contact-row .clients-row-actions {

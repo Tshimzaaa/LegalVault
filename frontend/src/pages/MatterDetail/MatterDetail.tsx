@@ -1140,7 +1140,7 @@ function MatterDetail() {
                   value={messageBody}
                   onChange={(e) => setMessageBody(e.target.value)}
                 />
-                <button type="submit" className="btn-ghost" disabled={sendingMessage || !messageBody.trim()}>
+                <button type="submit" className="btn-ghost" disabled={sendingMessage}>
                   <IconSend /> {sendingMessage ? 'Sending…' : 'Send'}
                 </button>
               </form>

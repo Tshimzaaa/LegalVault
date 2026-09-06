@@ -17,7 +17,7 @@ function Contact() {
   return (
     <section id="contact" className="contact-page">
       <div className="contact-hero">
-        <h1>Get in touch</h1>
+        <h2>Get in Touch</h2>
         <p>Questions about pricing, onboarding, or a live demo? We usually reply within one business day.</p>
       </div>
 
@@ -36,6 +36,7 @@ function Contact() {
                   <span>Name</span>
                   <input
                     type="text"
+                    name="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Jane Doe…"
@@ -47,6 +48,7 @@ function Contact() {
                   <span>Work email</span>
                   <input
                     type="email"
+                    name="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="jane@firm.com…"
@@ -61,6 +63,7 @@ function Contact() {
                 <span>Firm name</span>
                 <input
                   type="text"
+                  name="organization"
                   value={firm}
                   onChange={(e) => setFirm(e.target.value)}
                   placeholder="Doe & Associates…"
@@ -71,6 +74,7 @@ function Contact() {
               <label className="contact-field">
                 <span>Message</span>
                 <textarea
+                  name="message"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Tell us a bit about your firm and what you’re looking for…"

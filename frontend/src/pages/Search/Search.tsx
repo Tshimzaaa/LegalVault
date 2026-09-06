@@ -5,6 +5,7 @@ import './Search.css'
 import { IconSearch } from '../../components/icons'
 import { search } from '../../api/search'
 import type { SearchResponse } from '../../api/search'
+import { isDesktopPointer } from '../../utils/device'
 
 type SearchState = 'idle' | 'loading' | 'error' | 'ready'
 
@@ -65,11 +66,11 @@ function Search() {
               placeholder="Search clients, contacts, matters, staff, documents…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              autoFocus
+              autoFocus={isDesktopPointer}
               autoComplete="off"
             />
           </div>
-          <button type="submit" className="btn-solid" disabled={!query.trim() || state === 'loading'}>
+          <button type="submit" className="btn-solid" disabled={state === 'loading'}>
             {state === 'loading' ? 'Searching…' : 'Search'}
           </button>
         </form>

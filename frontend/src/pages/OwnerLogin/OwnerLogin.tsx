@@ -28,7 +28,7 @@ function OwnerLogin({ onSubmit }: OwnerLoginProps) {
   return (
     <div className="auth-page">
       <div className="modal-box">
-        <h1>Owner sign-in</h1>
+        <h1>Owner Sign-In</h1>
         <p className="modal-sub">Platform-wide access — enter the owner secret.</p>
 
         <form onSubmit={handleSubmit}>

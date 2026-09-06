@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import './IntakeFormBuilder.css'
 import { IconPlus, IconEdit, IconTrash, IconArrowUp, IconArrowDown, IconChevron } from '../../components/icons'
 import {
@@ -51,7 +52,16 @@ function IntakeFormBuilder({ user }: IntakeFormBuilderProps) {
   const [creatingForm, setCreatingForm] = useState(false)
   const [createFormError, setCreateFormError] = useState<string | null>(null)
 
-  const [expandedFormId, setExpandedFormId] = useState<string | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const expandedFormId = searchParams.get('expanded')
+  function setExpandedFormId(id: string | null) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      if (id) next.set('expanded', id)
+      else next.delete('expanded')
+      return next
+    })
+  }
   const [editingFormId, setEditingFormId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState('')
   const [editDescription, setEditDescription] = useState('')
@@ -186,7 +196,7 @@ function IntakeFormBuilder({ user }: IntakeFormBuilderProps) {
       if (expandedFormId === form.id) setExpandedFormId(null)
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
-        setFormActionError('This form already has submissions and can’t be deleted.')
+        setFormActionError(err.message)
       } else {
         setFormActionError(permissionOrGenericMessage(err, 'Could not delete the form. Please try again.'))
       }
@@ -260,7 +270,7 @@ function IntakeFormBuilder({ user }: IntakeFormBuilderProps) {
       setEditingFieldId(null)
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
-        setFieldActionError('This field already has responses — its type can’t be changed, but the label and help text still can.')
+        setFieldActionError(err.message)
       } else {
         setFieldActionError(permissionOrGenericMessage(err, 'Could not save changes. Please try again.'))
       }
@@ -278,7 +288,7 @@ function IntakeFormBuilder({ user }: IntakeFormBuilderProps) {
       replaceForm({ ...form, fields: form.fields.filter((f) => f.id !== field.id) })
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
-        setFieldActionError('This field already has responses and can’t be deleted.')
+        setFieldActionError(err.message)
       } else {
         setFieldActionError(permissionOrGenericMessage(err, 'Could not delete the field. Please try again.'))
       }
@@ -422,6 +432,7 @@ function IntakeFormBuilder({ user }: IntakeFormBuilderProps) {
                           <span className={`status-badge${form.is_published ? ' published' : ''}`}>
                             {form.is_published ? 'Published' : 'Draft'}
                           </span>
+                          {form.is_system && <span className="chip small">System form</span>}
                         </span>
                         {form.description && <span className="muted intake-form-description">{form.description}</span>}
                       </span>
@@ -442,14 +453,16 @@ function IntakeFormBuilder({ user }: IntakeFormBuilderProps) {
                       >
                         <IconEdit />
                       </button>
-                      <button
-                        type="button"
-                        className="icon-btn"
-                        onClick={() => handleDeleteForm(form)}
-                        aria-label={`Delete ${form.title}`}
-                      >
-                        <IconTrash />
-                      </button>
+                      {!form.is_system && (
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          onClick={() => handleDeleteForm(form)}
+                          aria-label={`Delete ${form.title}`}
+                        >
+                          <IconTrash />
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -554,30 +567,32 @@ function IntakeFormBuilder({ user }: IntakeFormBuilderProps) {
                               </span>
                               {field.help_text && <span className="muted intake-field-help">{field.help_text}</span>}
                             </div>
-                            <div className="intake-field-actions">
-                              <button
-                                type="button"
-                                className="icon-btn"
-                                onClick={() => startEditField(field)}
-                                aria-label={`Edit ${field.label}`}
-                              >
-                                <IconEdit />
-                              </button>
-                              <button
-                                type="button"
-                                className="icon-btn"
-                                onClick={() => handleDeleteField(form, field)}
-                                aria-label={`Delete ${field.label}`}
-                              >
-                                <IconTrash />
-                              </button>
-                            </div>
+                            {!form.is_system && (
+                              <div className="intake-field-actions">
+                                <button
+                                  type="button"
+                                  className="icon-btn"
+                                  onClick={() => startEditField(field)}
+                                  aria-label={`Edit ${field.label}`}
+                                >
+                                  <IconEdit />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="icon-btn"
+                                  onClick={() => handleDeleteField(form, field)}
+                                  aria-label={`Delete ${field.label}`}
+                                >
+                                  <IconTrash />
+                                </button>
+                              </div>
+                            )}
                           </li>
                         ),
                       )}
                     </ul>
 
-                    {addFieldFormId === form.id ? (
+                    {form.is_system ? null : addFieldFormId === form.id ? (
                       <form onSubmit={(e) => handleAddField(e, form)} className="card intake-add-field-form">
                         <div className="field-row">
                           <label className="field">

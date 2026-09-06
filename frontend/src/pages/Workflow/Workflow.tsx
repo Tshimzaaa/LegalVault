@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import type { DragEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import './Workflow.css'
 import { IconPlus } from '../../components/icons'
 import { listMatters, updateMatterStatus, requestMatterApproval, listPendingApprovals, isGatedTransition, MATTER_STATUS_TRANSITIONS } from '../../api/matters'
 import type { Matter, MatterStatus, MatterApproval } from '../../api/matters'
 import { listClients } from '../../api/clients'
 import type { Client } from '../../api/clients'
+import { formatDate } from '../../utils/date'
 
 type LoadState = 'loading' | 'error' | 'ready'
 
@@ -20,7 +21,6 @@ const columnOrder: { status: MatterStatus; label: string; color: string }[] = [
 ]
 
 function Workflow() {
-  const navigate = useNavigate()
   const [matters, setMatters] = useState<Matter[]>([])
   const [clients, setClients] = useState<Client[]>([])
   const [pendingApprovals, setPendingApprovals] = useState<MatterApproval[]>([])
@@ -189,20 +189,14 @@ function Workflow() {
                       key={m.id}
                       className={`card workflow-card${draggingId === m.id ? ' dragging' : ''}`}
                       draggable
-                      tabIndex={0}
-                      role="link"
-                      aria-label={`Open matter ${m.title}`}
                       onDragStart={(e) => handleDragStart(e, m.id)}
                       onDragEnd={handleDragEnd}
-                      onClick={() => navigate(`/staff/matters/${m.id}`)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') navigate(`/staff/matters/${m.id}`)
-                      }}
                     >
+                      <Link to={`/staff/matters/${m.id}`} className="row-stretched-link" aria-label={`Open matter ${m.title}`} />
                       <span className="workflow-card-title">{m.title}</span>
                       <span className="workflow-card-client">{clientName(m.client_id)}</span>
                       <div className="workflow-card-footer">
-                        <span className="deadline-sub">Opened {new Date(m.created_at).toLocaleDateString()}</span>
+                        <span className="deadline-sub">Opened {formatDate(m.created_at)}</span>
                         {pendingApprovals.some((a) => a.matter_id === m.id) && (
                           <span className="chip small">Approval pending</span>
                         )}

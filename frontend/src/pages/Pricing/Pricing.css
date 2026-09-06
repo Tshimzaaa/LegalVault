@@ -1,6 +1,6 @@
 .pricing-page {
   display: block;
-  background: #000;
+  background: var(--bg);
   padding: 90px 24px 100px;
   scroll-margin-top: 110px;
 }
@@ -15,13 +15,14 @@
   font-size: 44px;
   line-height: 1.15;
   font-weight: 600;
-  color: #fff;
+  color: var(--text);
   margin: 0 0 16px;
   letter-spacing: -1px;
+  text-wrap: balance;
 }
 
 .pricing-hero h2 {
-  color: #9ca3af;
+  color: var(--text-muted);
   font-size: 17px;
   font-weight: 400;
   line-height: 1.6;
@@ -41,23 +42,23 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  background: #0b0b0d;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface);
+  border: 1px solid rgba(var(--overlay-rgb), 0.1);
   border-radius: 18px;
   padding: 28px 26px 26px;
 }
 
 .pricing-card.highlighted {
-  border-color: rgba(34, 197, 94, 0.5);
-  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.2), 0 20px 50px rgba(34, 197, 94, 0.08);
+  border-color: rgba(var(--accent-rgb), 0.5);
+  box-shadow: 0 0 0 1px rgba(var(--accent-rgb), 0.2), 0 20px 50px rgba(var(--accent-rgb), 0.08);
 }
 
 .pricing-badge {
   position: absolute;
   top: -12px;
   left: 26px;
-  background: #22c55e;
-  color: #06210f;
+  background: var(--accent);
+  color: var(--accent-on);
   font-size: 11px;
   font-weight: 700;
   padding: 4px 12px;
@@ -67,7 +68,7 @@
 .pricing-plan-name {
   font-size: 15px;
   font-weight: 600;
-  color: #d1d5db;
+  color: var(--text-subtle);
   margin-bottom: 14px;
 }
 
@@ -81,17 +82,17 @@
 .pricing-price {
   font-size: 34px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text);
   letter-spacing: -0.5px;
 }
 
 .pricing-period {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--text-subtle);
 }
 
 .pricing-desc {
-  color: #9ca3af;
+  color: var(--text-muted);
   font-size: 13.5px;
   line-height: 1.5;
   margin: 0 0 22px;
@@ -110,7 +111,7 @@
 .pricing-features li {
   position: relative;
   padding-left: 22px;
-  color: #d1d5db;
+  color: var(--text-subtle);
   font-size: 13.5px;
   line-height: 1.4;
 }
@@ -123,8 +124,8 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: rgba(34, 197, 94, 0.15);
-  box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.4);
+  background: rgba(var(--accent-rgb), 0.15);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.4);
 }
 
 .pricing-features li::after {
@@ -134,8 +135,8 @@
   top: 9px;
   width: 6px;
   height: 3px;
-  border-left: 1.5px solid #22c55e;
-  border-bottom: 1.5px solid #22c55e;
+  border-left: 1.5px solid var(--accent);
+  border-bottom: 1.5px solid var(--accent);
   transform: rotate(-45deg);
 }
 
@@ -152,7 +153,7 @@
 
 .pricing-faq h3 {
   text-align: center;
-  color: #fff;
+  color: var(--text);
   font-size: 24px;
   font-weight: 600;
   margin: 0 0 32px;
@@ -169,19 +170,19 @@
   flex-direction: column;
   gap: 6px;
   padding: 20px 22px;
-  background: #0b0b0d;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--surface);
+  border: 1px solid rgba(var(--overlay-rgb), 0.08);
   border-radius: 14px;
 }
 
 .pricing-faq-q {
-  color: #fff;
+  color: var(--text);
   font-size: 14.5px;
   font-weight: 600;
 }
 
 .pricing-faq-a {
-  color: #9ca3af;
+  color: var(--text-muted);
   font-size: 13.5px;
   line-height: 1.5;
 }

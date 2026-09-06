@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import './ClientWorkflow.css'
 import { IconPlus } from '../../components/icons'
 import ProfileMenu from '../../components/ProfileMenu'
 import type { ClientContact } from '../../api/clientAuth'
 import { listClientMatters } from '../../api/clientMatters'
 import type { Matter, MatterStatus } from '../../api/matters'
+import { formatDate } from '../../utils/date'
 
 type LoadState = 'loading' | 'error' | 'ready'
 
@@ -24,7 +25,6 @@ interface ClientWorkflowProps {
 }
 
 function ClientWorkflow({ contact, onLogout }: ClientWorkflowProps) {
-  const navigate = useNavigate()
   const [matters, setMatters] = useState<Matter[]>([])
   const [status, setStatus] = useState<LoadState>('loading')
 
@@ -53,7 +53,7 @@ function ClientWorkflow({ contact, onLogout }: ClientWorkflowProps) {
           <span className="chip">
             Total Matters <span className="chip-badge">{matters.length}</span>
           </span>
-          <Link to="/client/request-support" className="btn-solid workflow-new-btn">
+          <Link to="/client/intake-forms" className="btn-solid workflow-new-btn">
             <IconPlus /> New Request
           </Link>
           <ProfileMenu user={contact} onLogout={onLogout} />
@@ -90,24 +90,12 @@ function ClientWorkflow({ contact, onLogout }: ClientWorkflowProps) {
 
                 <div className="workflow-column-body">
                   {cards.map((m) => (
-                    <div
-                      key={m.id}
-                      className="card workflow-card"
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => navigate(`/client/matters/${m.id}`)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault()
-                          navigate(`/client/matters/${m.id}`)
-                        }
-                      }}
-                    >
+                    <Link key={m.id} to={`/client/matters/${m.id}`} className="card workflow-card">
                       <span className="workflow-card-title">{m.title}</span>
                       <div className="workflow-card-footer request-card-footer">
-                        <span className="deadline-sub">Opened {new Date(m.created_at).toLocaleDateString()}</span>
+                        <span className="deadline-sub">Opened {formatDate(m.created_at)}</span>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                   {cards.length === 0 && <p className="muted workflow-empty-col">Nothing here yet.</p>}
                 </div>

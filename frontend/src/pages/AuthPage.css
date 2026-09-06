@@ -3,7 +3,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #050506;
+  background: var(--bg-shell);
   padding: 20px;
 }
 
@@ -20,7 +20,7 @@
   display: block;
   text-align: center;
   margin-top: 14px;
-  color: #22c55e;
+  color: var(--accent);
   font-size: 13px;
   text-decoration: none;
 }

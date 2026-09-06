@@ -26,11 +26,11 @@ function About() {
   return (
     <section id="about" className="about-page">
       <div className="about-hero">
-        <h1>About Us</h1>
-        <h2>
+        <h2 className="about-hero-title">About Us</h2>
+        <p className="about-hero-sub">
           We&rsquo;re building the practice management platform we wished existed when we worked alongside legal
           teams drowning in spreadsheets, email threads, and missed deadlines.
-        </h2>
+        </p>
       </div>
 
       <div className="about-stats">

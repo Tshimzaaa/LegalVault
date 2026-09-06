@@ -6,6 +6,7 @@ export interface IntakeField {
   id: string
   form_id: string
   label: string
+  key: string | null
   field_type: FieldType
   is_required: boolean
   help_text: string | null
@@ -19,6 +20,7 @@ export interface IntakeForm {
   title: string
   description: string | null
   is_published: boolean
+  is_system: boolean
   created_at: string
   updated_at: string
   fields: IntakeField[]

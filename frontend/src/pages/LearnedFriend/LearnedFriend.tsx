@@ -31,7 +31,7 @@ function LearnedFriend({ contact, onLogout }: LearnedFriendProps) {
         <h1>My Learned Friend</h1>
         <div className="topbar-actions">
           <button className="chip">
-            Filter <IconChevron /> <span className="chip-badge">{clauses.length}</span>
+            Filter <IconChevron aria-hidden="true" /> <span className="chip-badge">{clauses.length}</span>
           </button>
           <ProfileMenu user={contact} onLogout={onLogout} />
         </div>
@@ -40,11 +40,11 @@ function LearnedFriend({ contact, onLogout }: LearnedFriendProps) {
       <div className="contract-data-filter">
         <span className="deadlines-filter-label">Category</span>
         <button className="chip small">
-          All categories <IconChevron />
+          All categories <IconChevron aria-hidden="true" />
         </button>
         <span className="deadlines-filter-label">Risk Tolerance</span>
         <button className="chip small">
-          Pre-approved <IconChevron />
+          Pre-approved <IconChevron aria-hidden="true" />
         </button>
       </div>
 

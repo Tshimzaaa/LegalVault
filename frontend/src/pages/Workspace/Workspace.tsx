@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import '../../styles/dashboard.css'
 import Sidebar from '../../components/Sidebar'
 import AnnouncementBanner from '../../components/AnnouncementBanner'
@@ -19,7 +19,6 @@ import Staff from '../Staff/Staff'
 import Search from '../Search/Search'
 import AuditLog from '../AuditLog/AuditLog'
 import Calendar from '../Calendar/Calendar'
-import SupportRequests from '../SupportRequests/SupportRequests'
 import Settings from '../Settings/Settings'
 import IntakeFormBuilder from '../IntakeFormBuilder/IntakeFormBuilder'
 import IntakeSubmissions from '../IntakeSubmissions/IntakeSubmissions'
@@ -35,7 +34,6 @@ interface WorkspaceProps {
 
 function Workspace({ user, onLogout }: WorkspaceProps) {
   const location = useLocation()
-  const navigate = useNavigate()
   const activePage = (location.pathname.split('/')[2] as StaffPage) || 'dashboard'
   const navItems = staffNavItems.filter(
     (item) => !ADMIN_ONLY_PAGES.includes(item.page as StaffPage) || user.role === 'admin',
@@ -45,7 +43,7 @@ function Workspace({ user, onLogout }: WorkspaceProps) {
     <div className="dash-layout">
       <Sidebar
         activePage={activePage}
-        onNavigate={(page) => navigate(`/staff/${page}`)}
+        basePath="/staff"
         navItems={navItems}
         user={user}
         onLogout={onLogout}
@@ -67,7 +65,6 @@ function Workspace({ user, onLogout }: WorkspaceProps) {
           <Route path="templates" element={<Templates />} />
           <Route path="search" element={<Search />} />
           <Route path="calendar" element={<Calendar />} />
-          <Route path="support-requests" element={<SupportRequests />} />
           <Route path="intake-forms" element={<IntakeFormBuilder user={user} />} />
           <Route path="intake-submissions" element={<IntakeSubmissions />} />
           <Route path="intake-submissions/:submissionId" element={<IntakeSubmissionDetail user={user} />} />

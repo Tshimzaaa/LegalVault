@@ -32,3 +32,7 @@ class MissingRequiredIntakeAnswer(Exception):
 
 class UnsupportedIntakeFileType(Exception):
     pass
+
+
+class SystemFormProtected(Exception):
+    pass

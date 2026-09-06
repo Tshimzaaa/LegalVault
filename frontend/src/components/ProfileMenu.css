@@ -9,8 +9,8 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #22c55e, #15803d);
-  color: #05100a;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: var(--surface);
   font-size: 12.5px;
   font-weight: 700;
   letter-spacing: 0.3px;
@@ -20,7 +20,7 @@
 }
 
 .profile-avatar-btn:hover {
-  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 4px rgba(var(--overlay-rgb), 0.08);
 }
 
 .profile-menu {
@@ -28,10 +28,10 @@
   top: calc(100% + 10px);
   right: 0;
   width: 240px;
-  background: #17181a;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-3);
+  border: 1px solid rgba(var(--overlay-rgb), 0.1);
   border-radius: 16px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 12px 32px rgba(var(--shadow-rgb), 0.45);
   padding: 20px 16px 14px;
   z-index: 20;
 }
@@ -51,8 +51,8 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #22c55e, #15803d);
-  color: #05100a;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: var(--surface);
   font-size: 20px;
   font-weight: 700;
   margin-bottom: 6px;
@@ -62,7 +62,7 @@
   max-width: 100%;
   font-size: 13.5px;
   font-weight: 600;
-  color: #e5e7eb;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -71,7 +71,7 @@
 .profile-menu-email {
   max-width: 100%;
   font-size: 11.5px;
-  color: #6b7280;
+  color: var(--text-subtle);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -79,7 +79,7 @@
 
 .profile-menu-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(var(--overlay-rgb), 0.08);
   margin: 14px 0 12px;
 }
 
@@ -87,9 +87,9 @@
   width: 100%;
   padding: 9px 0;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(var(--overlay-rgb), 0.14);
   background: transparent;
-  color: #e5e7eb;
+  color: var(--text);
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
@@ -97,7 +97,7 @@
 }
 
 .profile-menu-logout:hover {
-  background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.4);
-  color: #f87171;
+  background: rgba(var(--danger-rgb), 0.12);
+  border-color: rgba(var(--danger-rgb), 0.4);
+  color: var(--danger-light);
 }

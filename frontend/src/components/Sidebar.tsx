@@ -1,5 +1,7 @@
+import { Link } from 'react-router-dom'
 import './Sidebar.css'
 import { IconLeaf } from './icons'
+import ThemeToggle from './ThemeToggle'
 
 export interface NavItem {
   label: string
@@ -15,7 +17,8 @@ export interface SidebarUser {
 
 interface SidebarProps {
   activePage: string
-  onNavigate: (page: string) => void
+  /** Route prefix each nav item's page is appended to, e.g. "/staff" or "/client". */
+  basePath: string
   navItems: NavItem[]
   user: SidebarUser
   onLogout: () => void
@@ -26,7 +29,7 @@ interface SidebarProps {
 
 function Sidebar({
   activePage,
-  onNavigate,
+  basePath,
   navItems,
   user,
   onLogout,
@@ -51,15 +54,15 @@ function Sidebar({
         {navItems.map((item) => {
           const active = item.page === activePage
           return (
-            <button
+            <Link
               key={item.label}
-              type="button"
+              to={`${basePath}/${item.page}`}
               className={`nav-item${active ? ' active' : ''}`}
-              onClick={() => onNavigate(item.page)}
+              aria-current={active ? 'page' : undefined}
             >
               <span className="nav-icon">{item.icon}</span>
               <span className="nav-label">{item.label}</span>
-            </button>
+            </Link>
           )
         })}
       </nav>
@@ -71,9 +74,12 @@ function Sidebar({
           </span>
           <span className="account-email">{user.email}</span>
         </div>
-        <button type="button" className="account-logout" onClick={onLogout}>
-          Log Out
-        </button>
+        <div className="account-actions">
+          <ThemeToggle />
+          <button type="button" className="account-logout" onClick={onLogout}>
+            Log Out
+          </button>
+        </div>
       </div>
     </aside>
   )

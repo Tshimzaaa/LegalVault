@@ -81,7 +81,7 @@ function ClientDashboard({ contact, onLogout }: ClientDashboardProps) {
           <Link to="/client/workflow" className="quick-action-btn">
             <IconFolder /> View Matters
           </Link>
-          <Link to="/client/request-support" className="quick-action-btn">
+          <Link to="/client/intake-forms" className="quick-action-btn">
             <IconFilePlus /> Create Request
           </Link>
           <Link to="/client/learned-friend" className="quick-action-btn">

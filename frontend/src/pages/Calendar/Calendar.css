@@ -7,7 +7,7 @@
   flex-direction: column;
   gap: 6px;
   padding: 10px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(var(--overlay-rgb), 0.06);
 }
 
 .calendar-day-group:last-child {
@@ -17,7 +17,7 @@
 .calendar-day-label {
   font-size: 11px;
   font-weight: 600;
-  color: #4ade80;
+  color: var(--accent-light);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
@@ -30,9 +30,9 @@
   text-align: left;
   padding: 8px 10px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(var(--overlay-rgb), 0.03);
   border: none;
-  color: #e5e7eb;
+  color: var(--text);
   cursor: pointer;
   font-family: inherit;
   font-size: 12.5px;
@@ -40,7 +40,7 @@
 }
 
 .calendar-event-row:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(var(--overlay-rgb), 0.06);
 }
 
 .calendar-event-icon {

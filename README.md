@@ -85,7 +85,7 @@ frontend/
 | Area | Pages |
 |---|---|
 | Marketing | `Home`, `About`, `Blog`, `Resources`, `Contact` |
-| Staff app | `Dashboard`, `Matters`, `MatterDetail`, `NewMatter`, `Clients`, `Templates`, `Staff`, `Workflow`, `Reporting`, `MatterAdmin`, `SignedContracts`, `ContractData`, `IntakeFormBuilder`, `IntakeSubmissions`, `KnowledgeArticles`, `Integrations`, `AuditLog`, `Calendar`, `Search`, `Settings`, `SupportRequests`, `LearnedFriend`, `LightHubGuide` |
+| Staff app | `Dashboard`, `Matters`, `MatterDetail`, `NewMatter`, `Clients`, `Templates`, `Staff`, `Workflow`, `Reporting`, `MatterAdmin`, `SignedContracts`, `ContractData`, `IntakeFormBuilder`, `IntakeSubmissions`, `KnowledgeArticles`, `Integrations`, `AuditLog`, `Calendar`, `Search`, `Settings`, `SupportRequests`, `LearnedFriend`, `LegalHubGuide` |
 | Client portal | `ClientPortal`, `ClientDashboard`, `ClientMatterDetail`, `ClientWorkflow`, `ClientTemplates`, `ClientReporting`, `ClientSignedContracts`, `ClientIntakeForms`, `ClientMyIntakeSubmissions`, `ClientKnowledgeBase`, `ClientAccountSettings`, `Workspace` |
 | Auth / onboarding | `AuthPage`, `Register`, `AcceptInvite` (client), `AcceptStaffInvite`, `ResetPassword` |
 | SaaS owner console | `OwnerLogin`, `OwnerPortal` |

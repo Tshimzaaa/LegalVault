@@ -11,8 +11,8 @@
   grid-template-areas: 'sidebar main';
   height: 100svh;
   flex-grow: 1;
-  background: #050506;
-  color: #fff;
+  background: var(--bg-shell);
+  color: var(--text);
   font-size: 13px;
   overflow: hidden;
 }
@@ -39,7 +39,7 @@
   min-height: 0;
   overflow: hidden;
   padding: 20px 28px 16px;
-  background: #000;
+  background: var(--bg);
 }
 
 .dash-topbar {
@@ -59,7 +59,7 @@
 .dash-topbar h1 {
   font-size: 24px;
   font-weight: 700;
-  color: #22c55e;
+  color: var(--accent);
   margin: 0;
 }
 
@@ -72,19 +72,19 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  border: 1px solid #4b5563;
+  border: 1px solid var(--text-faint);
 }
 
 .dot.filled {
-  background: #6b7280;
-  border-color: #6b7280;
+  background: var(--text-subtle);
+  border-color: var(--text-subtle);
 }
 
 .card {
   display: flex;
   flex-direction: column;
-  background: #0b0b0d;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--surface);
+  border: 1px solid rgba(var(--overlay-rgb), 0.08);
   border-radius: 14px;
   padding: 14px;
   overflow: hidden;
@@ -98,13 +98,13 @@
   font-weight: 600;
   font-size: 13px;
   margin-bottom: 10px;
-  color: #e5e7eb;
+  color: var(--text);
 }
 
 .card-subtitle {
   display: block;
   font-size: 11px;
-  color: #9ca3af;
+  color: var(--text-muted);
   margin-bottom: 10px;
   margin-top: -8px;
 }
@@ -116,15 +116,15 @@
   align-items: center;
   justify-content: center;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(var(--overlay-rgb), 0.06);
   border: none;
-  color: #9ca3af;
+  color: var(--text-muted);
   cursor: pointer;
 }
 
 .icon-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #e5e7eb;
+  background: rgba(var(--overlay-rgb), 0.12);
+  color: var(--text);
 }
 
 .icon-btn svg {
@@ -136,9 +136,9 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #d1d5db;
+  background: rgba(var(--overlay-rgb), 0.06);
+  border: 1px solid rgba(var(--overlay-rgb), 0.08);
+  color: var(--text-subtle);
   border-radius: 999px;
   padding: 4px 10px;
   font-size: 11.5px;
@@ -158,8 +158,8 @@ button.chip {
 }
 
 .chip-badge {
-  background: rgba(34, 197, 94, 0.18);
-  color: #22c55e;
+  background: rgba(var(--accent-rgb), 0.18);
+  color: var(--accent);
   border-radius: 999px;
   padding: 0 6px;
   font-size: 10.5px;
@@ -179,7 +179,7 @@ button.chip {
 
 .stat-sub {
   font-size: 11.5px;
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .stat-sub.top {
@@ -188,7 +188,7 @@ button.chip {
 }
 
 .muted {
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .tabular {
@@ -213,31 +213,45 @@ button.chip {
   text-align: left;
   font-size: 11px;
   font-weight: 600;
-  color: #9ca3af;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.03em;
   padding: 0 10px 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(var(--overlay-rgb), 0.08);
 }
 
 .data-table td {
   padding: 11px 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  color: #e5e7eb;
+  border-bottom: 1px solid rgba(var(--overlay-rgb), 0.06);
+  color: var(--text);
 }
 
 .data-table tr:last-child td {
   border-bottom: none;
 }
 
+/* "Stretched link" pattern for clickable table rows: a real <Link> (so Cmd/Ctrl/middle-click
+   work) sized to cover the whole row via an ancestor with position: relative, instead of a
+   <tr role="link" onClick>. Put .row-link-cell on the <td> that contains the <Link
+   className="row-stretched-link" />; the link's own text content (if any) is visually hidden
+   since the cell's real content renders alongside it, not inside it. */
+.row-link-cell {
+  position: relative;
+}
+
+.row-stretched-link {
+  position: absolute;
+  inset: 0;
+}
+
 /* Styling for a bare <select> used outside a .field wrapper (e.g. a table-cell or topbar
    filter) — same visual treatment as .field select, without requiring the label/wrapper markup. */
 .select-input {
-  background: #18181b;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--surface-2);
+  border: 1px solid rgba(var(--overlay-rgb), 0.12);
   border-radius: 7px;
   padding: 7px 10px;
-  color: #fff;
+  color: var(--text);
   font-size: 12.5px;
   font-family: inherit;
   appearance: none;

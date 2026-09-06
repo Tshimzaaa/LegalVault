@@ -23,6 +23,7 @@ type LoadState = 'loading' | 'error' | 'ready'
 const statusColor: Record<SubmissionStatus, string> = {
   submitted: '#eab308',
   in_review: '#3987e5',
+  resolved: '#199e70',
   converted: '#22c55e',
   declined: '#ef4444',
 }
@@ -166,6 +167,7 @@ function IntakeSubmissionDetail({ user }: IntakeSubmissionDetailProps) {
           >
             <option value="submitted">Submitted</option>
             <option value="in_review">In Review</option>
+            <option value="resolved">Resolved</option>
             <option value="converted">Converted</option>
             <option value="declined">Declined</option>
           </select>

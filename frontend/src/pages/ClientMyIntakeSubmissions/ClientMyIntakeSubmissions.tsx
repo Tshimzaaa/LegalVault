@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import './ClientMyIntakeSubmissions.css'
 import ProfileMenu from '../../components/ProfileMenu'
 import type { ClientContact } from '../../api/clientAuth'
 import { listMyIntakeSubmissions, listPublishedIntakeForms } from '../../api/clientIntake'
 import type { IntakeSubmission, SubmissionStatus } from '../../api/intakeSubmissions'
 import type { IntakeForm } from '../../api/intakeForms'
+import { formatDate } from '../../utils/date'
 
 type LoadState = 'loading' | 'error' | 'ready'
 
 const statusLabel: Record<SubmissionStatus, string> = {
   submitted: 'Submitted',
   in_review: 'In Review',
+  resolved: 'Resolved',
   converted: 'Converted',
   declined: 'Declined',
 }
@@ -19,6 +21,7 @@ const statusLabel: Record<SubmissionStatus, string> = {
 const statusColor: Record<SubmissionStatus, string> = {
   submitted: '#eab308',
   in_review: '#3987e5',
+  resolved: '#199e70',
   converted: '#22c55e',
   declined: '#ef4444',
 }
@@ -29,7 +32,6 @@ interface ClientMyIntakeSubmissionsProps {
 }
 
 function ClientMyIntakeSubmissions({ contact, onLogout }: ClientMyIntakeSubmissionsProps) {
-  const navigate = useNavigate()
   const [submissions, setSubmissions] = useState<IntakeSubmission[]>([])
   const [formsById, setFormsById] = useState<Record<string, IntakeForm>>({})
   const [status, setStatus] = useState<LoadState>('loading')
@@ -89,21 +91,15 @@ function ClientMyIntakeSubmissions({ contact, onLogout }: ClientMyIntakeSubmissi
             </thead>
             <tbody>
               {sorted.map((s) => (
-                <tr
-                  key={s.id}
-                  className="intake-submission-row"
-                  tabIndex={0}
-                  role="link"
-                  aria-label={`Open submission for ${formsById[s.form_id]?.title ?? 'Intake Form'}`}
-                  onClick={() => navigate(s.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      navigate(s.id)
-                    }
-                  }}
-                >
-                  <td className="muted tabular">{new Date(s.created_at).toLocaleDateString()}</td>
+                <tr key={s.id} className="intake-submission-row">
+                  <td className="muted tabular row-link-cell">
+                    <Link
+                      to={s.id}
+                      className="row-stretched-link"
+                      aria-label={`Open submission for ${formsById[s.form_id]?.title ?? 'Intake Form'}`}
+                    />
+                    {formatDate(s.created_at)}
+                  </td>
                   <td>{formsById[s.form_id]?.title ?? 'Intake Form'}</td>
                   <td>
                     <span className="status-badge" style={{ color: statusColor[s.status], background: `${statusColor[s.status]}22` }}>

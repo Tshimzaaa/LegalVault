@@ -1,4 +1,4 @@
-import { IconChevron } from '../../components/icons'
+import { useState } from 'react'
 import './ContractData.css'
 
 interface ContractRow {
@@ -39,24 +39,50 @@ const statusColor: Record<ContractRow['status'], string> = {
 }
 
 function ContractData() {
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | ContractRow['status']>('all')
+
+  const types = Array.from(new Set(rows.map((r) => r.type))).sort()
+  const filteredRows = rows.filter(
+    (r) => (typeFilter === 'all' || r.type === typeFilter) && (statusFilter === 'all' || r.status === statusFilter),
+  )
+
   return (
     <main className="dash-main">
       <header className="dash-topbar">
         <h1>Contract Data</h1>
-        <button className="chip">
-          Filter <IconChevron /> <span className="chip-badge">{rows.length}</span>
-        </button>
+        <span className="chip">
+          <span className="chip-badge">{filteredRows.length}</span> of {rows.length}
+        </span>
       </header>
 
       <div className="contract-data-filter">
         <span className="deadlines-filter-label">Type</span>
-        <button className="chip small">
-          All Types <IconChevron />
-        </button>
+        <select
+          className="select-input"
+          aria-label="Filter by contract type"
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+        >
+          <option value="all">All Types</option>
+          {types.map((t) => (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          ))}
+        </select>
         <span className="deadlines-filter-label">Status</span>
-        <button className="chip small">
-          All Statuses <IconChevron />
-        </button>
+        <select
+          className="select-input"
+          aria-label="Filter by contract status"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as 'all' | ContractRow['status'])}
+        >
+          <option value="all">All Statuses</option>
+          <option value="Active">Active</option>
+          <option value="Expiring">Expiring</option>
+          <option value="Expired">Expired</option>
+        </select>
       </div>
 
       <section className="card contract-data-table-card">
@@ -72,7 +98,7 @@ function ContractData() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
+            {filteredRows.map((r) => (
               <tr key={r.name}>
                 <td>{r.name}</td>
                 <td className="muted">{r.client}</td>
@@ -91,6 +117,7 @@ function ContractData() {
             ))}
           </tbody>
         </table>
+        {filteredRows.length === 0 && <p className="muted">No contracts match these filters.</p>}
       </section>
     </main>
   )

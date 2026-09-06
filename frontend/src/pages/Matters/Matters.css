@@ -10,7 +10,7 @@
 }
 
 .matters-row:hover td {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(var(--overlay-rgb), 0.03);
 }
 
 .matters-row-link {

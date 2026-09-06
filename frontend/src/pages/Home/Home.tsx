@@ -103,10 +103,14 @@ function useCapturedSlides() {
         if (!el) continue
 
         try {
+          // html2canvas needs a resolved color, not a var() reference — read the
+          // current theme's shell background off the root element at capture time
+          // so the mockup screenshot matches light/dark mode instead of always dark.
+          const shellBg = getComputedStyle(document.documentElement).getPropertyValue('--bg-shell').trim()
           const canvas = await html2canvas(el, {
             width: 1440,
             height: 900,
-            backgroundColor: '#050506',
+            backgroundColor: shellBg || '#050506',
             scale: 1,
           })
           if (cancelled) return
@@ -182,6 +186,7 @@ function Home() {
                     width={1440}
                     height={900}
                     className={`mockup-slide${i === active ? ' active' : ''}`}
+                    fetchPriority={i === 0 ? 'high' : undefined}
                   />
                 ) : null
               )}
@@ -223,7 +228,7 @@ function Home() {
             <div className="dash-layout">
               <Sidebar
                 activePage={target.page}
-                onNavigate={noop}
+                basePath="/staff"
                 navItems={staffNavItems}
                 user={demoUser}
                 onLogout={noop}

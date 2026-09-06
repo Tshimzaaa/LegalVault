@@ -5,9 +5,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(var(--shadow-rgb), 0.6);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .modal-box {
@@ -15,12 +17,12 @@
   width: 100%;
   max-width: 360px;
   margin: 0 20px;
-  background: #0b0b0d;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface);
+  border: 1px solid rgba(var(--overlay-rgb), 0.1);
   border-radius: 16px;
   padding: 32px 28px 28px;
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
-  color: #fff;
+  box-shadow: 0 30px 60px rgba(var(--shadow-rgb), 0.6);
+  color: var(--text);
 }
 
 .modal-close {
@@ -34,16 +36,16 @@
   justify-content: center;
   border: none;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
-  color: #9ca3af;
+  background: rgba(var(--overlay-rgb), 0.06);
+  color: var(--text-muted);
   font-size: 18px;
   line-height: 1;
   cursor: pointer;
 }
 
 .modal-close:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  background: rgba(var(--overlay-rgb), 0.12);
+  color: var(--text);
 }
 
 .modal-box h2 {
@@ -54,7 +56,7 @@
 
 .modal-sub {
   margin: 0 0 24px;
-  color: #9ca3af;
+  color: var(--text-muted);
   font-size: 13px;
 }
 
@@ -64,17 +66,17 @@
   gap: 6px;
   margin-bottom: 16px;
   font-size: 13px;
-  color: #d1d5db;
+  color: var(--text-subtle);
 }
 
 .modal-field input,
 .modal-field select,
 .modal-field textarea {
-  background: #18181b;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--surface-2);
+  border: 1px solid rgba(var(--overlay-rgb), 0.12);
   border-radius: 8px;
   padding: 10px 12px;
-  color: #fff;
+  color: var(--text);
   font-size: 14px;
   font-family: inherit;
 }
@@ -82,7 +84,7 @@
 .modal-field input:focus,
 .modal-field select:focus,
 .modal-field textarea:focus {
-  border-color: #22c55e;
+  border-color: var(--accent);
 }
 
 .modal-field input:focus:not(:focus-visible),
@@ -94,7 +96,7 @@
 .modal-field input:focus-visible,
 .modal-field select:focus-visible,
 .modal-field textarea:focus-visible {
-  outline: 2px solid #22c55e;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -129,19 +131,19 @@
   height: 28px;
   border: none;
   background: transparent;
-  color: #9ca3af;
+  color: var(--text-muted);
   cursor: pointer;
   border-radius: 6px;
 }
 
 .modal-password-toggle:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  background: rgba(var(--overlay-rgb), 0.08);
 }
 
 .modal-error {
   margin: 0 0 12px;
-  color: #f87171;
+  color: var(--danger-light);
   font-size: 13px;
 }
 
@@ -152,8 +154,8 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: #22c55e;
-  color: #06210f;
+  background: var(--accent);
+  color: var(--accent-on);
   border: none;
   border-radius: 999px;
   padding: 12px;
@@ -164,7 +166,7 @@
 }
 
 .modal-submit:hover {
-  background: #16a34a;
+  background: var(--accent-hover);
 }
 
 .modal-submit:disabled {
@@ -175,8 +177,8 @@
 .modal-spinner {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(6, 33, 15, 0.3);
-  border-top-color: #06210f;
+  border: 2px solid rgba(var(--accent-on-rgb), 0.3);
+  border-top-color: var(--accent-on);
   border-radius: 50%;
   animation: modal-spin 0.7s linear infinite;
 }
@@ -187,9 +189,25 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .modal-spinner {
+    animation: modal-spin-reduced 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes modal-spin-reduced {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 .modal-hint {
   margin: 10px 0 0;
-  color: #9ca3af;
+  color: var(--text-muted);
   font-size: 12px;
   text-align: center;
   line-height: 1.4;
@@ -201,12 +219,12 @@
   margin-top: 14px;
   background: none;
   border: none;
-  color: #9ca3af;
+  color: var(--text-muted);
   font-size: 13px;
   text-align: center;
   cursor: pointer;
 }
 
 .modal-link-back:hover {
-  color: #fff;
+  color: var(--text);
 }

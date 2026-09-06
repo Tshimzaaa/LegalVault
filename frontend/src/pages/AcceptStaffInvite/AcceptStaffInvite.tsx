@@ -48,7 +48,7 @@ function AcceptStaffInvite() {
   return (
     <div className="auth-page">
       <div className="modal-box">
-        <h2>Join your firm’s workspace</h2>
+        <h2>Join Your Firm’s Workspace</h2>
         <p className="modal-sub">
           {done ? 'All set — redirecting you to log in…' : 'Choose a password to activate your staff account.'}
         </p>

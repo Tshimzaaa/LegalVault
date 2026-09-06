@@ -6,7 +6,7 @@
 .matter-detail-back {
   background: none;
   border: none;
-  color: #9ca3af;
+  color: var(--text-muted);
   font-size: 13px;
   cursor: pointer;
   padding: 0;
@@ -16,7 +16,7 @@
 }
 
 .matter-detail-back:hover {
-  color: #fff;
+  color: var(--text);
 }
 
 .matter-detail-grid {
@@ -33,7 +33,7 @@
 }
 
 .matter-detail-description {
-  color: #e5e7eb;
+  color: var(--text);
   font-size: 13px;
   line-height: 1.5;
   margin: 8px 0 0;
@@ -58,7 +58,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(var(--overlay-rgb), 0.06);
 }
 
 .assignment-row:last-child {
@@ -77,7 +77,7 @@
 
 .matter-doc-group {
   padding: 8px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(var(--overlay-rgb), 0.06);
 }
 
 .matter-doc-group:last-child {
@@ -105,7 +105,7 @@
   gap: 6px;
   margin-top: 6px;
   padding-left: 10px;
-  border-left: 2px solid rgba(255, 255, 255, 0.08);
+  border-left: 2px solid rgba(var(--overlay-rgb), 0.08);
 }
 
 .matter-doc-upload-row {
@@ -118,18 +118,18 @@
 .matter-doc-upload-row input[type='text'] {
   flex: 1;
   min-width: 160px;
-  background: #18181b;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--surface-2);
+  border: 1px solid rgba(var(--overlay-rgb), 0.12);
   border-radius: 7px;
   padding: 7px 10px;
-  color: #fff;
+  color: var(--text);
   font-size: 12.5px;
   font-family: inherit;
 }
 
 .matter-doc-upload-row input[type='file'] {
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--text-muted);
   max-width: 180px;
 }
 
@@ -138,7 +138,7 @@
   align-items: center;
   gap: 10px;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(var(--overlay-rgb), 0.06);
 }
 
 .matter-task-row:last-child {
@@ -155,7 +155,7 @@
 
 .matter-task-title {
   font-size: 13px;
-  color: #e5e7eb;
+  color: var(--text);
 }
 
 .matter-task-meta {
@@ -163,8 +163,8 @@
 }
 
 .matter-task-row select {
-  background: #18181b;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--surface-2);
+  border: 1px solid rgba(var(--overlay-rgb), 0.12);
   border-radius: 7px;
   padding: 6px 8px;
   font-size: 12px;
@@ -181,22 +181,22 @@
 .matter-task-add-row input[type='text'] {
   flex: 1;
   min-width: 140px;
-  background: #18181b;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--surface-2);
+  border: 1px solid rgba(var(--overlay-rgb), 0.12);
   border-radius: 7px;
   padding: 7px 10px;
-  color: #fff;
+  color: var(--text);
   font-size: 12.5px;
   font-family: inherit;
 }
 
 .matter-task-add-row select,
 .matter-task-add-row input[type='date'] {
-  background: #18181b;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--surface-2);
+  border: 1px solid rgba(var(--overlay-rgb), 0.12);
   border-radius: 7px;
   padding: 7px 10px;
-  color: #fff;
+  color: var(--text);
   font-size: 12.5px;
   font-family: inherit;
 }
@@ -211,7 +211,7 @@
 
 .matter-message-row {
   padding: 8px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(var(--overlay-rgb), 0.06);
 }
 
 .matter-message-row:last-child {
@@ -227,13 +227,13 @@
 
 .matter-message-author {
   font-weight: 600;
-  color: #e5e7eb;
+  color: var(--text);
   flex: 1;
 }
 
 .matter-message-body {
   font-size: 13px;
-  color: #e5e7eb;
+  color: var(--text);
   margin: 4px 0 0;
   line-height: 1.4;
 }
@@ -246,11 +246,11 @@
 
 .matter-message-compose-row input[type='text'] {
   flex: 1;
-  background: #18181b;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--surface-2);
+  border: 1px solid rgba(var(--overlay-rgb), 0.12);
   border-radius: 7px;
   padding: 7px 10px;
-  color: #fff;
+  color: var(--text);
   font-size: 12.5px;
   font-family: inherit;
 }

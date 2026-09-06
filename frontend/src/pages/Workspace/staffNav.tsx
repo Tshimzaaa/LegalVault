@@ -18,7 +18,6 @@ import {
   IconClock,
   IconCalendar,
   IconGear,
-  IconInbox,
   IconFilePlus,
   IconMail,
   IconHelp,
@@ -38,7 +37,6 @@ export type StaffPage =
   | 'search'
   | 'audit-log'
   | 'calendar'
-  | 'support-requests'
   | 'settings'
   | 'intake-forms'
   | 'intake-submissions'
@@ -56,9 +54,8 @@ export const staffNavItems: NavItem[] = [
   { label: 'Clients', icon: <IconUser />, page: 'clients' },
   { label: 'Calendar', icon: <IconCalendar />, page: 'calendar' },
   { label: 'Workflow', icon: <IconWorkflow />, page: 'workflow' },
-  { label: 'Support Requests', icon: <IconInbox />, page: 'support-requests' },
   { label: 'Intake Forms', icon: <IconFilePlus />, page: 'intake-forms' },
-  { label: 'Intake Inbox', icon: <IconMail />, page: 'intake-submissions' },
+  { label: 'Requests', icon: <IconMail />, page: 'intake-submissions' },
   { label: 'Signed Contracts', icon: <IconSignedContract />, page: 'signed-contracts' },
   { label: 'Reporting', icon: <IconReport />, page: 'reporting' },
   { label: 'Contract Data', icon: <IconContractData />, page: 'contract-data' },

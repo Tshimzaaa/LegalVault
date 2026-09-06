@@ -48,7 +48,6 @@ from app.modules.notifications.repository import NotificationRepository
 from app.modules.notifications.models import RecipientType
 from app.modules.signed_contracts.repository import SignedContractRepository
 from app.modules.templates.repository import TemplateRepository
-from app.modules.support_requests.repository import SupportRequestRepository
 from app.modules.auth.refresh_token_repository import RefreshTokenRepository
 from app.modules.auth.models.refresh_token import RefreshTokenActorType
 from app.modules.intake.repository import IntakeRepository
@@ -376,20 +375,16 @@ def delete_firm(
     notification_repo = NotificationRepository(db)
     signed_contract_repo = SignedContractRepository(db)
     template_repo = TemplateRepository(db)
-    support_request_repo = SupportRequestRepository(db)
     refresh_token_repo = RefreshTokenRepository(db)
     intake_repo = IntakeRepository(db)
     knowledge_repo = KnowledgeRepository(db)
     integration_repo = IntegrationRepository(db)
 
-    # Signed contracts and support requests hold their own FKs into matters/clients/contacts,
-    # so they must go before those rows are deleted below or the delete fails with an
-    # IntegrityError (this was the bug — firm delete 500'd for any firm with real usage data).
+    # Signed contracts hold their own FKs into matters/clients/contacts, so they must go
+    # before those rows are deleted below or the delete fails with an IntegrityError (this
+    # was the bug — firm delete 500'd for any firm with real usage data).
     for contract in signed_contract_repo.list_plain_by_firm(firm.id):
         signed_contract_repo.delete(contract)
-
-    for support_request in support_request_repo.list_by_firm(firm.id):
-        support_request_repo.delete(support_request)
 
     for template in template_repo.list_by_firm(firm.id):
         template_repo.delete(template)

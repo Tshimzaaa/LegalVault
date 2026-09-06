@@ -50,6 +50,22 @@ function NewMatter() {
       .catch(() => setStaff([]))
   }, [])
 
+  const isDirty = Boolean(
+    title || description || clientId || attorneyId || caseManagerId || contactFirstName || contactLastName || contactEmail,
+  )
+
+  // Browser back/refresh/tab-close bypass the in-app Cancel confirmation — warn there too
+  // so a half-filled matter form isn't silently discarded.
+  useEffect(() => {
+    if (submitted) return
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      if (!isDirty) return
+      e.preventDefault()
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [isDirty, submitted])
+
   async function handleAddClient() {
     setAddClientError(null)
     const token = localStorage.getItem('access_token')
@@ -392,17 +408,7 @@ function NewMatter() {
             type="button"
             className="btn-ghost"
             onClick={() => {
-              if (
-                (title ||
-                  description ||
-                  clientId ||
-                  attorneyId ||
-                  caseManagerId ||
-                  contactFirstName ||
-                  contactLastName ||
-                  contactEmail) &&
-                !window.confirm('Discard this new matter? Your changes will be lost.')
-              ) {
+              if (isDirty && !window.confirm('Discard this new matter? Your changes will be lost.')) {
                 return
               }
               navigate('/staff/matters')

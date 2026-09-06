@@ -9,7 +9,7 @@
 }
 
 .settings-saved {
-  color: #22c55e;
+  color: var(--accent);
   font-size: 12.5px;
   text-align: right;
 }

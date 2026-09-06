@@ -1,4 +1,4 @@
-import './LightHubGuide.css'
+import './LegalHubGuide.css'
 import ProfileMenu from '../../components/ProfileMenu'
 import type { ClientContact } from '../../api/clientAuth'
 
@@ -26,7 +26,7 @@ function LegalPortalGuide({ contact, onLogout }: LegalPortalGuideProps) {
   return (
     <main className="dash-main">
       <header className="dash-topbar">
-        <h1>How to use legal portal</h1>
+        <h1>How to Use Legal Portal</h1>
         <ProfileMenu user={contact} onLogout={onLogout} />
       </header>
 

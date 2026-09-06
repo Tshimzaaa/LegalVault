@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import '../Settings/Settings.css'
 import { updateContactProfile, changeContactPassword } from '../../api/clientAuth'
 import type { ClientContact } from '../../api/clientAuth'
+import { formatDateTime } from '../../utils/date'
 
 interface ClientAccountSettingsProps {
   contact: ClientContact
@@ -205,7 +206,7 @@ function ClientAccountSettings({ contact, onLogout, onContactUpdate }: ClientAcc
         <div className="settings-form">
           <p className="muted">
             Status: {contact.is_active ? 'Active' : 'Deactivated'}
-            {contact.last_login && ` · Last login ${new Date(contact.last_login).toLocaleString()}`}
+            {contact.last_login && ` · Last login ${formatDateTime(contact.last_login)}`}
           </p>
           <p className="muted">
             To deactivate or remove your account, contact your firm — this is managed on their side.

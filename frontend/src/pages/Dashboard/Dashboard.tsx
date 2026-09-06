@@ -112,7 +112,7 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
             <div className="card active-cases">
               <div className="card-header">
                 <span>Active Cases</span>
-                <button className="icon-btn" type="button" aria-label="Add">
+                <button className="icon-btn" type="button" aria-label="Add active case">
                   <IconPlus />
                 </button>
               </div>
@@ -132,7 +132,7 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
             <div className="card contract-status">
               <div className="card-header">
                 <span>Contract Status</span>
-                <button className="icon-btn" type="button" aria-label="Add">
+                <button className="icon-btn" type="button" aria-label="Add contract">
                   <IconPlus />
                 </button>
               </div>
