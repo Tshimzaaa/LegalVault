@@ -81,7 +81,7 @@ class SignatureRecipient(BaseModel):
     # different tables), same pattern as Notification.recipient_type/recipient_id.
     recipient_type: Mapped[RecipientType] = mapped_column(Enum(RecipientType), nullable=False)
 
-    recipient_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False)
+    recipient_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False, index=True)
 
     name: Mapped[str] = mapped_column(String(200), nullable=False)
 

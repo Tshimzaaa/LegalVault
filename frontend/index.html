@@ -4,9 +4,48 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="dark light" />
     <meta name="theme-color" content="#000000" />
-    <title>frontend</title>
+
+    <!-- Site-wide defaults, shown before React mounts (and to crawlers/link-unfurlers that
+         don't execute JS). Per-page values come from src/components/Seo.tsx once JS runs.
+         [PLACEHOLDER] og:url/og:image use a placeholder domain: swap for the real production
+         domain before launch (see src/constants/site.ts, the single source of truth). -->
+    <title>Index Legal: Modern Practice Management for Law Firms</title>
+    <meta
+      name="description"
+      content="Index Legal (working name LegalHub) is a practice management platform for growing law firms: matters, clients, and documents in one secure, compliant workspace."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Index Legal" />
+    <meta property="og:title" content="Index Legal: Modern Practice Management for Law Firms" />
+    <meta
+      property="og:description"
+      content="Index Legal (working name LegalHub) is a practice management platform for growing law firms: matters, clients, and documents in one secure, compliant workspace."
+    />
+    <meta property="og:url" content="https://legalhub.example.com/" />
+    <meta property="og:image" content="https://legalhub.example.com/og-image.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Static (not React-rendered) so it's present even without JS. Address matches the
+         one already live in Footer.tsx, not invented here. No `sameAs` yet: no real social
+         profiles to link. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Index Legal",
+        "url": "https://legalhub.example.com/",
+        "logo": "https://legalhub.example.com/favicon.svg",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "12 Fredman Drive",
+          "addressLocality": "Sandton, Johannesburg",
+          "postalCode": "2196",
+          "addressCountry": "ZA"
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

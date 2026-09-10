@@ -22,6 +22,16 @@
   overflow-x: auto;
 }
 
+@media (max-width: 900px) {
+  .client-matter-board {
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    grid-auto-columns: minmax(220px, 78vw);
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+  }
+}
+
 .client-matter-board .workflow-card {
   cursor: pointer;
   text-decoration: none;

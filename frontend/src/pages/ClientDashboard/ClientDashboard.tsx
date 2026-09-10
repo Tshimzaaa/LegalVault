@@ -70,7 +70,7 @@ function ClientDashboard({ contact, onLogout }: ClientDashboardProps) {
             <span>Open Matters</span>
           </div>
           <div className="stat-line">
-            <span className="stat-big">{summary?.openMatters ?? '—'}</span>
+            <span className="stat-big">{summary?.openMatters ?? 'N/A'}</span>
           </div>
         </div>
 
@@ -94,7 +94,7 @@ function ClientDashboard({ contact, onLogout }: ClientDashboardProps) {
             <span>Contract Breakdown</span>
           </div>
           <div className="stat-line">
-            <span className="stat-big">{breakdown?.total ?? '—'}</span>
+            <span className="stat-big">{breakdown?.total ?? 'N/A'}</span>
             <span className="stat-sub">total</span>
           </div>
           {breakdownRows.map((c) => (

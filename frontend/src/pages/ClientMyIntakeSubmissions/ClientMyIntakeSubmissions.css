@@ -1,1 +1,2 @@
-/* Reuses .intake-submissions-card / .intake-submission-row from IntakeSubmissions.css (globally available). */
+/* .intake-submissions-card / .intake-submission-row live in ../../styles/dashboard.css
+   (shared by both portals). */

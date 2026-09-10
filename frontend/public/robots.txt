@@ -1,0 +1,21 @@
+# [PLACEHOLDER] Update the Sitemap URL below once the real production domain is set.
+# See frontend/src/constants/site.ts for the single source of truth on the domain.
+
+User-agent: *
+Allow: /
+Allow: /privacy-policy
+Allow: /terms
+Allow: /cookie-policy
+Allow: /refund-policy
+
+# App-internal / auth-gated, never meant to be indexed.
+Disallow: /login
+Disallow: /register
+Disallow: /reset-password
+Disallow: /accept-invite
+Disallow: /accept-staff-invite
+Disallow: /owner/
+Disallow: /staff/
+Disallow: /client/
+
+Sitemap: https://legalhub.example.com/sitemap.xml

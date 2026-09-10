@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  [PLACEHOLDER] All <loc> values use a placeholder domain: swap for the real production
+  domain before launch (see frontend/src/constants/site.ts, the single source of truth).
+  Home (/) is a single page (hero + about + blog + contact sections); add a new <url>
+  entry here only if a real new route is added later. App-internal routes (/login,
+  /staff/*, /client/*, /owner/*, etc.) belong in robots.txt's Disallow list instead.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://legalhub.example.com/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://legalhub.example.com/privacy-policy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://legalhub.example.com/terms</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://legalhub.example.com/cookie-policy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://legalhub.example.com/refund-policy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+</urlset>

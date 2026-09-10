@@ -1,8 +1,6 @@
-.intake-detail-back {
-  padding: 4px 10px;
-  font-size: 12px;
-  margin-bottom: 8px;
-}
+/* .intake-detail-back / .intake-answers-card / .intake-answers-list / .intake-answer-row /
+   .intake-answer-label moved to ../../styles/dashboard.css — reused by the client portal's
+   ClientIntakeSubmissionDetail, which never loads this staff-only stylesheet. */
 
 .intake-detail-meta {
   flex-direction: row;
@@ -45,37 +43,6 @@
 
 .intake-converted-note a {
   color: var(--accent-light);
-}
-
-.intake-answers-card {
-  overflow-y: auto;
-}
-
-.intake-answers-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.intake-answer-row {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(var(--overlay-rgb), 0.06);
-}
-
-.intake-answer-row:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.intake-answer-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
 }
 
 .intake-answer-download {

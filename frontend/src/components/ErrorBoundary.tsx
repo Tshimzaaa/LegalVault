@@ -47,7 +47,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
         >
           <h1 style={{ fontSize: 20, margin: 0 }}>Something went wrong.</h1>
           <p style={{ color: '#9ca3af', margin: 0, maxWidth: 420 }}>
-            This page hit an unexpected error. Reloading usually fixes it — if it keeps happening, let us know
+            This page hit an unexpected error. Reloading usually fixes it; if it keeps happening, let us know
             what you were doing.
           </p>
           <style>{`

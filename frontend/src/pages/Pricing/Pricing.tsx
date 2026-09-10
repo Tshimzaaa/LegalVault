@@ -28,7 +28,7 @@ const plans: Plan[] = [
       'Up to 25 active matters',
       'Client portal access',
       'Document storage (10GB)',
-      'Basic billing & invoicing',
+      'Document templates & e-signatures',
       'Email support',
     ],
     cta: 'Start free trial',
@@ -43,8 +43,8 @@ const plans: Plan[] = [
       'Unlimited active matters',
       'Client portal + e-signatures',
       'Document storage (100GB)',
-      'Advanced billing & trust accounting',
       'Workflow automation',
+      'Reporting & CSV export',
       'Priority support',
     ],
     highlighted: true,
@@ -55,14 +55,14 @@ const plans: Plan[] = [
     name: 'Firm',
     price: null,
     period: 'pricing',
-    description: 'For multi-partner firms with compliance needs.',
+    description: 'For multi-partner firms with larger teams.',
     features: [
       'Everything in Professional',
       'Unlimited storage',
       'Custom roles & permissions',
-      'Audit logs & compliance exports',
+      'Full audit log access',
       'Dedicated account manager',
-      'SSO & SLA',
+      'Custom SLA agreement',
     ],
     cta: 'Talk to sales',
     ctaHref: '#contact',
@@ -72,15 +72,20 @@ const plans: Plan[] = [
 const faqs = [
   {
     q: 'Can I switch plans later?',
-    a: 'Yes, you can upgrade or downgrade at any time. Changes apply from your next billing cycle.',
+    a: 'Yes, you can upgrade or downgrade at any time: talk to your account contact and we’ll adjust your next invoice.',
   },
   {
     q: 'Is there a free trial?',
     a: 'Starter and Professional both include a 14-day free trial, no card required.',
   },
   {
-    q: 'Do you offer discounts for annual billing?',
-    a: 'Yes, paying annually saves two months compared to monthly billing on any plan.',
+    q: 'How does billing work?',
+    a: (
+      <>
+        Subscriptions are invoiced directly by our team, not processed in-app. See our{' '}
+        <Link to="/refund-policy">Refund Policy</Link> for details.
+      </>
+    ),
   },
 ]
 

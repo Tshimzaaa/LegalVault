@@ -470,7 +470,7 @@ function IntakeFormBuilder({ user }: IntakeFormBuilderProps) {
                 {expanded && (
                   <div className="intake-fields-panel">
                     {fieldActionError && <p className="matter-error" aria-live="polite">{fieldActionError}</p>}
-                    {form.fields.length === 0 && <p className="muted">No fields yet — add the first one below.</p>}
+                    {form.fields.length === 0 && <p className="muted">No fields yet, add the first one below.</p>}
                     <ul className="intake-fields-list">
                       {form.fields.map((field, index) =>
                         editingFieldId === field.id ? (

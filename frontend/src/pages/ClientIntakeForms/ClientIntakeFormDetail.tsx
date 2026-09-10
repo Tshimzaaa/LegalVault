@@ -65,7 +65,7 @@ function ClientIntakeFormDetail({ contact, onLogout }: ClientIntakeFormDetailPro
       return
     }
     if (file.size > MAX_FILE_SIZE) {
-      setSubmitError('That file is too large — 10MB max.')
+      setSubmitError('That file is too large: 10MB max.')
       return
     }
     setFiles((prev) => ({ ...prev, [fieldId]: file }))
@@ -138,7 +138,7 @@ function ClientIntakeFormDetail({ contact, onLogout }: ClientIntakeFormDetailPro
           <ProfileMenu user={contact} onLogout={onLogout} />
         </header>
         <div className="card client-intake-success">
-          <p>Thanks — your submission has been received.</p>
+          <p>Thanks, your submission has been received.</p>
           <Link to="/client/my-intake-submissions" className="btn-solid">
             View My Requests
           </Link>

@@ -143,6 +143,7 @@ function IntakeSubmissions() {
 
       {status === 'ready' && (
         <section className="card intake-submissions-card">
+          <div className="table-scroll">
           <table className="data-table">
             <thead>
               <tr>
@@ -167,9 +168,9 @@ function IntakeSubmissions() {
                       />
                       {formatDate(s.created_at)}
                     </td>
-                    <td>{formsById[s.form_id]?.title ?? '—'}</td>
-                    <td>{client?.company_name ?? '—'}</td>
-                    <td className="muted">{contact ? `${contact.first_name} ${contact.last_name}` : '—'}</td>
+                    <td>{formsById[s.form_id]?.title ?? 'N/A'}</td>
+                    <td>{client?.company_name ?? 'N/A'}</td>
+                    <td className="muted">{contact ? `${contact.first_name} ${contact.last_name}` : 'N/A'}</td>
                     <td>
                       <select
                         className="select-input"
@@ -198,6 +199,7 @@ function IntakeSubmissions() {
               )}
             </tbody>
           </table>
+          </div>
         </section>
       )}
     </main>

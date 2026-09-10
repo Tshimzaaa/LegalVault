@@ -1,3 +1,4 @@
+import '../ContractData/ContractData.css'
 import './LearnedFriend.css'
 import { IconChevron, IconShield, IconDollar, IconClock, IconUser, IconFolder, IconGavel } from '../../components/icons'
 import ProfileMenu from '../../components/ProfileMenu'
@@ -11,12 +12,12 @@ interface Clause {
 }
 
 const clauses: Clause[] = [
-  { name: 'Limitation of Liability — Fallback', category: 'Risk', description: 'Pre-approved fallback cap when a counterparty rejects the standard liability clause.', icon: <IconShield /> },
-  { name: 'Payment Terms — 45 Days', category: 'Commercial', description: 'Acceptable fallback payment term when 30 days is rejected by a supplier.', icon: <IconDollar /> },
+  { name: 'Limitation of Liability (Fallback)', category: 'Risk', description: 'Pre-approved fallback cap when a counterparty rejects the standard liability clause.', icon: <IconShield /> },
+  { name: 'Payment Terms (45 Days)', category: 'Commercial', description: 'Acceptable fallback payment term when 30 days is rejected by a supplier.', icon: <IconDollar /> },
   { name: 'Termination for Convenience', category: 'Term', description: 'Alternative termination clause allowing either party to exit with 60 days notice.', icon: <IconClock /> },
   { name: 'Data Processing Fallback', category: 'Privacy', description: 'Acceptable data handling position when a vendor cannot meet the standard DPA.', icon: <IconUser /> },
   { name: 'Confidentiality Carve-Out', category: 'Confidentiality', description: 'Standard carve-outs acceptable when a counterparty wants broader exceptions.', icon: <IconFolder /> },
-  { name: 'Indemnity — Mutual Cap', category: 'Risk', description: 'Fallback mutual indemnity position for use when one-sided indemnity is rejected.', icon: <IconGavel /> },
+  { name: 'Indemnity (Mutual Cap)', category: 'Risk', description: 'Fallback mutual indemnity position for use when one-sided indemnity is rejected.', icon: <IconGavel /> },
 ]
 
 interface LearnedFriendProps {

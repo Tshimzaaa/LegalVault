@@ -43,6 +43,7 @@ class ClientContact(BaseModel):
     client_id: Mapped[UUID] = mapped_column(
         ForeignKey("clients.id"),
         nullable=False,
+        index=True,
     )
 
     first_name: Mapped[str] = mapped_column(String(100), nullable=False)

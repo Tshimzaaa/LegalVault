@@ -1,7 +1,2 @@
-.templates-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  overflow-y: auto;
-  align-content: start;
-}
+/* .templates-grid / .template-card / .template-name / .template-description /
+   .template-use-btn all live in ../../styles/dashboard.css (shared by both portals). */

@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import '../AuthPage.css'
 import { acceptInvite } from '../../api/clientAuth'
+import Seo from '../../components/Seo'
 
 function AcceptInvite() {
   const navigate = useNavigate()
@@ -47,10 +48,11 @@ function AcceptInvite() {
 
   return (
     <div className="auth-page">
+      <Seo title="Accept Invite" description="Set up your client portal account." path="/accept-invite" noindex />
       <div className="modal-box">
         <h2>Set Up Your Account</h2>
         <p className="modal-sub">
-          {done ? 'All set — redirecting you to log in…' : 'Choose a password to activate your client portal login.'}
+          {done ? 'All set, redirecting you to log in…' : 'Choose a password to activate your client portal login.'}
         </p>
 
         {!done && (

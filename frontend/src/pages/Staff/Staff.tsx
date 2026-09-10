@@ -161,7 +161,7 @@ function Staff({ user }: StaffProps) {
           {inviteLink ? (
             <div className="staff-invite-link-box">
               <p className="muted">
-                Invitation created. Share this link with them — it expires in 48 hours (no email is sent
+                Invitation created. Share this link with them; it expires in 48 hours (no email is sent
                 automatically yet):
               </p>
               <div className="staff-invite-link-row">
@@ -277,6 +277,7 @@ function Staff({ user }: StaffProps) {
       {status === 'ready' && (
         <section className="card staff-table-card">
           {forceLogoutError && <p className="matter-error" aria-live="polite">{forceLogoutError}</p>}
+          <div className="table-scroll">
           <table className="data-table">
             <thead>
               <tr>
@@ -347,6 +348,7 @@ function Staff({ user }: StaffProps) {
               )}
             </tbody>
           </table>
+          </div>
         </section>
       )}
     </main>

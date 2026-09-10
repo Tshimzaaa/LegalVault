@@ -18,7 +18,7 @@ function Footer() {
             <span>Index</span>
           </a>
           <p className="site-footer-tagline">
-            The modern practice management platform for growing law firms — matters, clients, and documents in one
+            The modern practice management platform for growing law firms: matters, clients, and documents in one
             secure workspace.
           </p>
         </div>
@@ -41,11 +41,22 @@ function Footer() {
             </Link>
             <Link to="/owner/login">Owner Portal</Link>
           </div>
+          <div className="site-footer-col">
+            <span className="site-footer-heading">Legal</span>
+            <Link to="/privacy-policy">Privacy Policy</Link>
+            <Link to="/terms">Terms &amp; Conditions</Link>
+            <Link to="/cookie-policy">Cookie Policy</Link>
+            <Link to="/refund-policy">Refund Policy</Link>
+          </div>
         </div>
       </div>
 
       <div className="site-footer-bottom">
-        <span className="site-footer-copyright">&copy; {new Date().getFullYear()} Index Legal. All rights reserved.</span>
+        <span className="site-footer-copyright">
+          &copy; {new Date().getFullYear()} Index Legal (Pty) Ltd. Reg. no. [ADD COMPANY REGISTRATION NUMBER]. All
+          rights reserved.
+        </span>
+        <span className="site-footer-address">12 Fredman Drive, Sandton, Johannesburg, 2196, South Africa</span>
       </div>
     </footer>
   )

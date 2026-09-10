@@ -15,6 +15,7 @@ class Template(BaseModel):
     firm_id: Mapped[UUID] = mapped_column(
         ForeignKey("law_firms.id"),
         nullable=False,
+        index=True,
     )
 
     title: Mapped[str] = mapped_column(String(200), nullable=False)

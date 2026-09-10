@@ -12,6 +12,18 @@
   align-content: start;
 }
 
+@media (max-width: 900px) {
+  .knowledge-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .knowledge-list {
+    grid-template-columns: 1fr;
+  }
+}
+
 .knowledge-edit-form {
   grid-column: 1 / -1;
 }

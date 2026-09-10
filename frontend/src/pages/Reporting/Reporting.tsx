@@ -77,6 +77,7 @@ function StaffWorkloadTable({ overview }: { overview: ReportingOverview | null }
   const rows = overview?.staff_workload ?? []
 
   return (
+    <div className="table-scroll">
     <table className="data-table">
       <thead>
         <tr>
@@ -106,6 +107,7 @@ function StaffWorkloadTable({ overview }: { overview: ReportingOverview | null }
         )}
       </tbody>
     </table>
+    </div>
   )
 }
 
@@ -168,7 +170,7 @@ function Reporting() {
             <span>Active matters</span>
           </div>
           <div className="stat-line">
-            <span className="stat-big">{activeMatters !== null ? numberFormat.format(activeMatters) : '—'}</span>
+            <span className="stat-big">{activeMatters !== null ? numberFormat.format(activeMatters) : 'N/A'}</span>
           </div>
         </div>
         <div className="card">
@@ -177,7 +179,7 @@ function Reporting() {
           </div>
           <div className="stat-line">
             <span className="stat-big">
-              {overview ? numberFormat.format(overview.unassigned_active_matters) : '—'}
+              {overview ? numberFormat.format(overview.unassigned_active_matters) : 'N/A'}
             </span>
           </div>
         </div>
@@ -186,7 +188,7 @@ function Reporting() {
             <span>Open tasks</span>
           </div>
           <div className="stat-line">
-            <span className="stat-big">{overview ? numberFormat.format(overview.open_tasks) : '—'}</span>
+            <span className="stat-big">{overview ? numberFormat.format(overview.open_tasks) : 'N/A'}</span>
           </div>
         </div>
         <div className="card">
@@ -195,7 +197,7 @@ function Reporting() {
           </div>
           <div className="stat-line">
             <span className="stat-big" style={{ color: overview && overview.overdue_tasks > 0 ? '#ef4444' : undefined }}>
-              {overview ? numberFormat.format(overview.overdue_tasks) : '—'}
+              {overview ? numberFormat.format(overview.overdue_tasks) : 'N/A'}
             </span>
           </div>
         </div>
@@ -205,7 +207,7 @@ function Reporting() {
           </div>
           <div className="stat-line">
             <span className="stat-big">
-              {overview ? numberFormat.format(overview.upcoming_deadlines_7_days) : '—'}
+              {overview ? numberFormat.format(overview.upcoming_deadlines_7_days) : 'N/A'}
             </span>
           </div>
         </div>

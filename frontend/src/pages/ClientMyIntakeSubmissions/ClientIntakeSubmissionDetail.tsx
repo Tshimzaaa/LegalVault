@@ -114,9 +114,9 @@ function ClientIntakeSubmissionDetail({ contact, onLogout }: ClientIntakeSubmiss
                 {field?.field_type === 'file' ? (
                   <span className="muted">{answer.original_filename ?? 'No file uploaded'}</span>
                 ) : field?.field_type === 'checkbox' ? (
-                  <span>{answer.value === 'true' ? '✓ Yes' : '— No'}</span>
+                  <span>{answer.value === 'true' ? '✓ Yes' : '✗ No'}</span>
                 ) : (
-                  <span>{answer.value || '—'}</span>
+                  <span>{answer.value || 'N/A'}</span>
                 )}
               </div>
             )

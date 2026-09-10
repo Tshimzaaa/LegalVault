@@ -6,6 +6,12 @@
   align-content: start;
 }
 
+@media (max-width: 640px) {
+  .integrations-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .integration-card {
   gap: 8px;
 }

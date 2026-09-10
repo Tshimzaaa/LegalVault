@@ -122,17 +122,20 @@ class IntakeSubmission(BaseModel):
     client_id: Mapped[UUID] = mapped_column(
         ForeignKey("clients.id"),
         nullable=False,
+        index=True,
     )
 
     contact_id: Mapped[UUID] = mapped_column(
         ForeignKey("client_contacts.id"),
         nullable=False,
+        index=True,
     )
 
     status: Mapped[IntakeSubmissionStatus] = mapped_column(
         Enum(IntakeSubmissionStatus),
         default=IntakeSubmissionStatus.SUBMITTED,
         nullable=False,
+        index=True,
     )
 
     converted_matter_id: Mapped[UUID | None] = mapped_column(

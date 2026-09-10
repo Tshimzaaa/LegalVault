@@ -29,4 +29,4 @@ class KnowledgeArticle(BaseModel):
 
     is_published: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
-    created_by: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    created_by: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)

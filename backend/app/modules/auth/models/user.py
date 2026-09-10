@@ -24,6 +24,7 @@ class User(BaseModel):
     firm_id: Mapped[UUID] = mapped_column(
         ForeignKey("law_firms.id"),
         nullable=False,
+        index=True,
     )
 
     first_name: Mapped[str] = mapped_column(

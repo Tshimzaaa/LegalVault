@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import './Contact.css'
 
 function Contact() {
@@ -7,6 +8,7 @@ function Contact() {
   const [email, setEmail] = useState('')
   const [firm, setFirm] = useState('')
   const [message, setMessage] = useState('')
+  const [consent, setConsent] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
   function handleSubmit(e: FormEvent) {
@@ -27,7 +29,7 @@ function Contact() {
             <div className="contact-success" role="status" aria-live="polite">
               <span className="contact-success-icon" aria-hidden="true">✓</span>
               <h2>Message sent</h2>
-              <p>Thanks for reaching out — someone from our team will get back to you shortly.</p>
+              <p>Thanks for reaching out, someone from our team will get back to you shortly.</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
@@ -81,6 +83,19 @@ function Contact() {
                   rows={5}
                   required
                 />
+              </label>
+
+              <label className="contact-field contact-field-checkbox">
+                <input
+                  type="checkbox"
+                  checked={consent}
+                  onChange={(e) => setConsent(e.target.checked)}
+                  required
+                />
+                <span>
+                  I agree to the <Link to="/privacy-policy" target="_blank" rel="noreferrer">Privacy Policy</Link>{' '}
+                  and consent to being contacted about my enquiry.
+                </span>
               </label>
 
               <button type="submit" className="btn btn-primary contact-submit">

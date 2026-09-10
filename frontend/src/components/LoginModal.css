@@ -100,6 +100,28 @@
   outline-offset: 2px;
 }
 
+.modal-field-checkbox {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.modal-field-checkbox input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: var(--accent);
+}
+
+.modal-field-checkbox span {
+  line-height: 1.5;
+}
+
+.modal-field-checkbox a {
+  color: var(--accent);
+}
+
 .modal-field-row {
   display: flex;
   gap: 12px;

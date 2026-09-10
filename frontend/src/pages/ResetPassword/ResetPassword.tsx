@@ -4,6 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import '../AuthPage.css'
 import { resetPassword } from '../../api/auth'
 import { clientResetPassword } from '../../api/clientAuth'
+import Seo from '../../components/Seo'
 
 function ResetPassword() {
   const [searchParams] = useSearchParams()
@@ -43,6 +44,7 @@ function ResetPassword() {
 
   return (
     <div className="auth-page">
+      <Seo title="Reset Password" description="Reset your account password." path="/reset-password" noindex />
       <div className="modal-box">
         <h1>Reset Password</h1>
         <p className="modal-sub">

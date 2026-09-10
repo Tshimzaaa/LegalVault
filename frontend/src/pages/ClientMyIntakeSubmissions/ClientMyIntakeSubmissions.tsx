@@ -81,6 +81,7 @@ function ClientMyIntakeSubmissions({ contact, onLogout }: ClientMyIntakeSubmissi
 
       {status === 'ready' && (
         <section className="card intake-submissions-card">
+          <div className="table-scroll">
           <table className="data-table">
             <thead>
               <tr>
@@ -117,6 +118,7 @@ function ClientMyIntakeSubmissions({ contact, onLogout }: ClientMyIntakeSubmissi
               )}
             </tbody>
           </table>
+          </div>
         </section>
       )}
     </main>

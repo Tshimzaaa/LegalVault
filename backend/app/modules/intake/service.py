@@ -122,6 +122,12 @@ class IntakeService:
             raise IntakeFormHasSubmissions()
 
         title = form.title
+        # No ORM cascade is configured on IntakeForm.fields (consistent with how the rest
+        # of this codebase handles delete: see ClientService.delete_client), so children
+        # must be deleted explicitly — otherwise SQLAlchemy tries to null out each field's
+        # non-nullable form_id, which also violates the RLS policy on intake_form_fields.
+        for field in self.repository.list_fields_by_form(form_id):
+            self.repository.delete_field(field)
         self.repository.delete_form(form)
         self.audit.log(
             actor_type=ActorType.STAFF,

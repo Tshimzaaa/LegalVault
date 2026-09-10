@@ -96,6 +96,7 @@ function Matters() {
 
       {status === 'ready' && (
         <section className="card matters-table-card">
+          <div className="table-scroll">
           <table className="data-table">
             <thead>
               <tr>
@@ -136,6 +137,7 @@ function Matters() {
               )}
             </tbody>
           </table>
+          </div>
         </section>
       )}
     </main>

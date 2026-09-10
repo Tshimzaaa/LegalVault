@@ -1,31 +1,37 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import '../../styles/dashboard.css'
 import Sidebar from '../../components/Sidebar'
 import AnnouncementBanner from '../../components/AnnouncementBanner'
 import NotificationBell from '../../components/NotificationBell'
+import RouteSkeleton from '../../components/RouteSkeleton'
 import { ADMIN_ONLY_PAGES, staffNavItems } from './staffNav'
 import type { StaffPage } from './staffNav'
-import Dashboard from '../Dashboard/Dashboard'
-import NewMatter from '../NewMatter/NewMatter'
-import Matters from '../Matters/Matters'
-import MatterDetail from '../MatterDetail/MatterDetail'
-import Clients from '../Clients/Clients'
-import Workflow from '../Workflow/Workflow'
-import SignedContracts from '../SignedContracts/SignedContracts'
-import Reporting from '../Reporting/Reporting'
-import ContractData from '../ContractData/ContractData'
-import Templates from '../Templates/Templates'
-import Staff from '../Staff/Staff'
-import Search from '../Search/Search'
-import AuditLog from '../AuditLog/AuditLog'
-import Calendar from '../Calendar/Calendar'
-import Settings from '../Settings/Settings'
-import IntakeFormBuilder from '../IntakeFormBuilder/IntakeFormBuilder'
-import IntakeSubmissions from '../IntakeSubmissions/IntakeSubmissions'
-import IntakeSubmissionDetail from '../IntakeSubmissions/IntakeSubmissionDetail'
-import KnowledgeArticles from '../KnowledgeArticles/KnowledgeArticles'
-import Integrations from '../Integrations/Integrations'
 import type { User } from '../../api/auth'
+
+// Lazy so each staff page's code (and its dependencies, e.g. react-markdown for Knowledge
+// Base) only downloads when that page is actually visited, instead of all ~18 shipping in
+// one bundle on every staff login.
+const Dashboard = lazy(() => import('../Dashboard/Dashboard'))
+const NewMatter = lazy(() => import('../NewMatter/NewMatter'))
+const Matters = lazy(() => import('../Matters/Matters'))
+const MatterDetail = lazy(() => import('../MatterDetail/MatterDetail'))
+const Clients = lazy(() => import('../Clients/Clients'))
+const Workflow = lazy(() => import('../Workflow/Workflow'))
+const SignedContracts = lazy(() => import('../SignedContracts/SignedContracts'))
+const Reporting = lazy(() => import('../Reporting/Reporting'))
+const ContractData = lazy(() => import('../ContractData/ContractData'))
+const Templates = lazy(() => import('../Templates/Templates'))
+const Staff = lazy(() => import('../Staff/Staff'))
+const Search = lazy(() => import('../Search/Search'))
+const AuditLog = lazy(() => import('../AuditLog/AuditLog'))
+const Calendar = lazy(() => import('../Calendar/Calendar'))
+const Settings = lazy(() => import('../Settings/Settings'))
+const IntakeFormBuilder = lazy(() => import('../IntakeFormBuilder/IntakeFormBuilder'))
+const IntakeSubmissions = lazy(() => import('../IntakeSubmissions/IntakeSubmissions'))
+const IntakeSubmissionDetail = lazy(() => import('../IntakeSubmissions/IntakeSubmissionDetail'))
+const KnowledgeArticles = lazy(() => import('../KnowledgeArticles/KnowledgeArticles'))
+const Integrations = lazy(() => import('../Integrations/Integrations'))
 
 interface WorkspaceProps {
   user: User
@@ -51,30 +57,32 @@ function Workspace({ user, onLogout }: WorkspaceProps) {
       />
       <div className="dash-content" id="main-content">
         <AnnouncementBanner scope="staff" />
-        <Routes>
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<Dashboard user={user} onLogout={onLogout} />} />
-          <Route path="new-matter" element={<NewMatter />} />
-          <Route path="matters" element={<Matters />} />
-          <Route path="matters/:matterId" element={<MatterDetail />} />
-          <Route path="clients" element={<Clients user={user} />} />
-          <Route path="workflow" element={<Workflow />} />
-          <Route path="signed-contracts" element={<SignedContracts />} />
-          <Route path="reporting" element={<Reporting />} />
-          <Route path="contract-data" element={<ContractData />} />
-          <Route path="templates" element={<Templates />} />
-          <Route path="search" element={<Search />} />
-          <Route path="calendar" element={<Calendar />} />
-          <Route path="intake-forms" element={<IntakeFormBuilder user={user} />} />
-          <Route path="intake-submissions" element={<IntakeSubmissions />} />
-          <Route path="intake-submissions/:submissionId" element={<IntakeSubmissionDetail user={user} />} />
-          <Route path="knowledge-articles" element={<KnowledgeArticles user={user} />} />
-          <Route path="integrations" element={<Integrations user={user} />} />
-          <Route path="settings" element={<Settings user={user} />} />
-          <Route path="staff" element={<Staff user={user} />} />
-          <Route path="audit-log" element={<AuditLog user={user} />} />
-          <Route path="*" element={<Navigate to="dashboard" replace />} />
-        </Routes>
+        <Suspense fallback={<RouteSkeleton />}>
+          <Routes>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<Dashboard user={user} onLogout={onLogout} />} />
+            <Route path="new-matter" element={<NewMatter />} />
+            <Route path="matters" element={<Matters />} />
+            <Route path="matters/:matterId" element={<MatterDetail />} />
+            <Route path="clients" element={<Clients user={user} />} />
+            <Route path="workflow" element={<Workflow />} />
+            <Route path="signed-contracts" element={<SignedContracts />} />
+            <Route path="reporting" element={<Reporting />} />
+            <Route path="contract-data" element={<ContractData />} />
+            <Route path="templates" element={<Templates />} />
+            <Route path="search" element={<Search />} />
+            <Route path="calendar" element={<Calendar />} />
+            <Route path="intake-forms" element={<IntakeFormBuilder user={user} />} />
+            <Route path="intake-submissions" element={<IntakeSubmissions />} />
+            <Route path="intake-submissions/:submissionId" element={<IntakeSubmissionDetail user={user} />} />
+            <Route path="knowledge-articles" element={<KnowledgeArticles user={user} />} />
+            <Route path="integrations" element={<Integrations user={user} />} />
+            <Route path="settings" element={<Settings user={user} />} />
+            <Route path="staff" element={<Staff user={user} />} />
+            <Route path="audit-log" element={<AuditLog user={user} />} />
+            <Route path="*" element={<Navigate to="dashboard" replace />} />
+          </Routes>
+        </Suspense>
       </div>
     </div>
   )

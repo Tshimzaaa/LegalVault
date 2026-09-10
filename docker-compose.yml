@@ -70,6 +70,20 @@ services:
       NEXT_PRIVATE_SMTP_TRANSPORT: "smtp-auth"
       NEXT_PRIVATE_SMTP_HOST: "localhost"
       NEXT_PRIVATE_SMTP_PORT: "2500"
+      # Documenso's own document-creation flow (the one app/core/documenso_client.py
+      # calls) refuses to run without S3-compatible object storage configured — it
+      # has no local/database-storage fallback for that specific path. Reuses the
+      # same Cloudflare R2 bucket/credentials the main app already has (see
+      # backend/.env's R2_* vars) via the root .env file docker compose loads
+      # automatically; regenerate that root .env from backend/.env if the R2
+      # credentials ever rotate.
+      NEXT_PUBLIC_UPLOAD_TRANSPORT: "s3"
+      NEXT_PRIVATE_UPLOAD_ACCESS_KEY_ID: "${NEXT_PRIVATE_UPLOAD_ACCESS_KEY_ID}"
+      NEXT_PRIVATE_UPLOAD_SECRET_ACCESS_KEY: "${NEXT_PRIVATE_UPLOAD_SECRET_ACCESS_KEY}"
+      NEXT_PRIVATE_UPLOAD_ENDPOINT: "${NEXT_PRIVATE_UPLOAD_ENDPOINT}"
+      NEXT_PRIVATE_UPLOAD_BUCKET: "${NEXT_PRIVATE_UPLOAD_BUCKET}"
+      NEXT_PRIVATE_UPLOAD_REGION: "auto"
+      NEXT_PRIVATE_UPLOAD_FORCE_PATH_STYLE: "false"
 
 volumes:
   clamav-data:

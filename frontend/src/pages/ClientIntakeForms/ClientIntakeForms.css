@@ -1,1 +1,2 @@
-/* Reuses .templates-grid / .template-card from Templates.css (globally available). */
+/* .templates-grid / .template-card / .template-name / .template-description /
+   .template-use-btn all live in ../../styles/dashboard.css (shared by both portals). */

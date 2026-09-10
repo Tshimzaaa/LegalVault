@@ -92,6 +92,26 @@
   outline-offset: 2px;
 }
 
+.contact-field-checkbox {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.contact-field-checkbox input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: var(--accent);
+}
+
+.contact-field-checkbox a {
+  color: var(--accent);
+}
+
 .contact-submit {
   width: 100%;
   border: none;

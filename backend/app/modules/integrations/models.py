@@ -37,6 +37,6 @@ class FirmIntegration(BaseModel):
     # Never decrypted by any route response — see app/modules/integrations/service.py.
     encrypted_credentials: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    configured_by: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    configured_by: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
 
     connected_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

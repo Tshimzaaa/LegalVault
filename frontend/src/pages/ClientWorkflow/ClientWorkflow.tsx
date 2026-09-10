@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import '../Workflow/Workflow.css'
 import './ClientWorkflow.css'
 import { IconPlus } from '../../components/icons'
 import ProfileMenu from '../../components/ProfileMenu'

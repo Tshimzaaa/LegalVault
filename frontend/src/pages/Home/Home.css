@@ -245,3 +245,31 @@
 .slide-pause-btn:hover {
   color: var(--text);
 }
+
+@media (max-width: 640px) {
+  .hero {
+    padding: 110px 18px 0;
+  }
+
+  .hero h1 {
+    font-size: 34px;
+    letter-spacing: -0.5px;
+  }
+
+  .hero h2,
+  .hero-sub {
+    font-size: 15px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 48px;
+  }
+
+  .btn {
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+  }
+}

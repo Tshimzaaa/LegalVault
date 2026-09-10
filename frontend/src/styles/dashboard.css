@@ -91,6 +91,41 @@
   min-height: 0;
 }
 
+/* Loading / error state shown while a page's data is still being fetched — used by
+   nearly every async page in both portals. */
+.dash-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.dash-spinner {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 3px solid rgba(var(--overlay-rgb), 0.1);
+  border-top-color: var(--accent);
+  animation: dash-spin 0.8s linear infinite;
+}
+
+@keyframes dash-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-spinner {
+    animation: none;
+    border-top-color: rgba(var(--overlay-rgb), 0.1);
+  }
+}
+
 .card-header {
   display: flex;
   align-items: center;
@@ -261,4 +296,458 @@ button.chip {
   background-size: 14px;
   padding-right: 28px;
   cursor: pointer;
+}
+
+/* Shared form-field pattern: a <label class="field"> wrapping a <span> (the field's label
+   text) and an <input>/<select>/<textarea>. Used across most dashboard forms (New Matter,
+   Owner Portal, Signed Contracts, Search, Settings, etc.) — centralized here so every page
+   gets the same spacing instead of each page needing its own copy. */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-subtle);
+}
+
+.field:last-child {
+  margin-bottom: 0;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.field-row:last-child {
+  margin-bottom: 0;
+}
+
+.field-row .field {
+  margin-bottom: 0;
+}
+
+.field input,
+.field select,
+.field textarea {
+  background: var(--surface-2);
+  border: 1px solid rgba(var(--overlay-rgb), 0.12);
+  border-radius: 7px;
+  padding: 9px 12px;
+  color: var(--text);
+  font-size: 12.5px;
+  font-family: inherit;
+  line-height: 1.4;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.field select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+  padding-right: 32px;
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--text-subtle);
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--accent);
+}
+
+.field input:focus:not(:focus-visible),
+.field select:focus:not(:focus-visible),
+.field textarea:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-icon input {
+  padding-right: 36px;
+}
+
+.input-with-icon svg {
+  position: absolute;
+  right: 12px;
+  width: 15px;
+  height: 15px;
+  color: var(--text-subtle);
+  pointer-events: none;
+}
+
+.input-with-icon.leading input {
+  padding-left: 36px;
+  padding-right: 12px;
+}
+
+.input-with-icon.leading svg {
+  left: 12px;
+  right: auto;
+}
+
+/* Wrap a .data-table in .table-scroll where a table can get wide (many columns) so it
+   scrolls horizontally on narrow screens instead of squeezing every column unreadably
+   thin or overflowing the page. */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 880px) {
+  .dash-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100svh;
+  }
+
+  .dash-content {
+    min-height: 0;
+  }
+
+  .dash-content > .announcement-banner-stack {
+    margin: 14px 16px 0;
+  }
+
+  .dash-main {
+    padding: 16px 16px 14px;
+  }
+
+  .dash-topbar {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-topbar h1 {
+    font-size: 20px;
+  }
+
+  .topbar-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .data-table {
+    min-width: 560px;
+  }
+
+  .field-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dash-main {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .dash-row {
+    grid-template-columns: 1fr !important;
+    align-items: stretch;
+    height: auto !important;
+    flex: none;
+  }
+
+  .card {
+    min-height: auto;
+  }
+}
+
+/* Buttons used throughout both portals — previously only defined in NewMatter.css, so any
+   page outside the staff Workspace bundle (the whole client portal, in particular) rendered
+   them with no styling at all. */
+.btn-ghost,
+.btn-solid {
+  border-radius: 999px;
+  padding: 10px 24px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-ghost {
+  background: rgba(var(--overlay-rgb), 0.06);
+  color: var(--text-subtle);
+  border: 1px solid rgba(var(--overlay-rgb), 0.1);
+}
+
+.btn-ghost:hover {
+  background: rgba(var(--overlay-rgb), 0.1);
+}
+
+.btn-solid {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: linear-gradient(135deg, var(--accent-light), var(--accent-hover));
+  color: var(--accent-on);
+  box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.32);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.btn-solid svg {
+  width: 14px;
+  height: 14px;
+}
+
+.btn-solid:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 6px 22px rgba(var(--accent-rgb), 0.48);
+  transform: translateY(-1px);
+}
+
+.btn-solid:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 3px 10px rgba(var(--accent-rgb), 0.3);
+}
+
+.btn-solid:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+}
+
+/* Card-grid list pattern (templates, resources, client intake forms, etc.) — previously
+   only defined in the staff Templates.css, so the client portal's equivalent pages
+   (ClientIntakeForms, ClientTemplates, Resources) rendered these cards with no styling. */
+.templates-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  overflow-y: auto;
+  align-content: start;
+}
+
+@media (max-width: 1000px) {
+  .templates-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .templates-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.template-card {
+  gap: 8px;
+}
+
+.template-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.template-description {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin: 0;
+  flex: 1;
+}
+
+.template-use-btn {
+  align-self: flex-start;
+  padding: 5px 12px;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.template-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--accent-rgb), 0.12);
+  color: var(--accent);
+  margin-bottom: 2px;
+}
+
+.template-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.template-category {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-light);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Intake submissions list + detail — shared between the staff Requests inbox and the
+   client portal's My Requests, previously only defined in the staff-only stylesheets. */
+.intake-submissions-card {
+  overflow-y: auto;
+}
+
+.intake-submission-row {
+  cursor: pointer;
+}
+
+.intake-submission-row:hover td {
+  background: rgba(var(--overlay-rgb), 0.03);
+}
+
+.intake-detail-back {
+  padding: 4px 10px;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.intake-answers-card {
+  overflow-y: auto;
+}
+
+.intake-answers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.intake-answer-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(var(--overlay-rgb), 0.06);
+}
+
+.intake-answer-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.intake-answer-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Dashboard summary widgets (stat rows, status breakdowns, recent-activity lists) — used by
+   both the staff Dashboard and the client portal's Dashboard/Workflow/LegalHubGuide pages. */
+.dash-row {
+  display: grid;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+.dash-row + .dash-row {
+  margin-top: 12px;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 12.5px;
+  color: var(--text-subtle);
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-label {
+  flex: 1;
+}
+
+.status-count {
+  color: var(--text-muted);
+}
+
+.deadlines-filter-label {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.deadline-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.deadline-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.deadline-title {
+  font-size: 12.5px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.deadline-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.list-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+/* Generic form-actions row + inline error message — used across 20+ pages/forms in both
+   portals. grid-column: 1 / -1 is a no-op outside a grid parent (most callers are flex),
+   harmless where unused. */
+.matter-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.matter-error {
+  grid-column: 1 / -1;
+  margin: 4px 0 0;
+  text-align: right;
+  color: var(--danger-light);
+  font-size: 12.5px;
 }

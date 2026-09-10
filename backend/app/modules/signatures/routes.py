@@ -73,13 +73,15 @@ def list_my_pending_signatures(
 
 # --- Documenso webhook --------------------------------------------------
 # Unauthenticated by design (Documenso, not a logged-in user, calls this) — verified
-# instead via a shared secret header. See app/core/documenso_client.py's module
-# docstring for the caveat that the exact header name and event-type strings below
-# are our best understanding of Documenso's webhook contract, not something verified
-# against a live instance — confirm both against Settings -> Webhooks once the
-# self-hosted instance is actually running, and adjust here if they differ.
+# instead via a shared secret header. Header name, event names, and payload shape
+# below were confirmed against a real running self-hosted instance's build output
+# (docker exec into the documenso container and read its compiled webhook-sending
+# code) on 2026-09-09 — see app/core/documenso_client.py's module docstring for
+# background on why the pinned documenso_sdk package can't be trusted for this kind
+# of detail. Re-verify if the pulled "documenso/documenso:latest" image changes.
 _EVENT_RECIPIENT_SIGNED = "DOCUMENT_SIGNED"
-_EVENT_RECIPIENT_REJECTED = "DOCUMENT_REJECTED"
+_EVENT_RECIPIENT_COMPLETED = "DOCUMENT_RECIPIENT_COMPLETED"
+_EVENT_DOCUMENT_REJECTED = "DOCUMENT_REJECTED"
 _EVENT_DOCUMENT_COMPLETED = "DOCUMENT_COMPLETED"
 
 
@@ -100,16 +102,25 @@ async def documenso_webhook(request: Request, db: Session = Depends(get_db)):
     set_tenant_context(db, firm_id=None, is_owner=True)
 
     service = SignatureService(db)
-    if event == _EVENT_RECIPIENT_SIGNED:
-        recipient = data.get("recipient", data)
-        documenso_recipient_id = str(recipient.get("id", ""))
-        if documenso_recipient_id:
-            service.handle_recipient_signed(documenso_document_id, documenso_recipient_id)
-    elif event == _EVENT_RECIPIENT_REJECTED:
-        recipient = data.get("recipient", data)
-        documenso_recipient_id = str(recipient.get("id", ""))
-        if documenso_recipient_id:
-            service.handle_recipient_declined(documenso_document_id, documenso_recipient_id)
+    if event in (_EVENT_RECIPIENT_SIGNED, _EVENT_RECIPIENT_COMPLETED):
+        # DOCUMENT_SIGNED / DOCUMENT_RECIPIENT_COMPLETED both carry the *whole*
+        # document, with every recipient's own signingStatus — there's no top-level
+        # "recipient" object naming just the one who signed. Reconcile every
+        # recipient the payload says is SIGNED; handle_recipient_signed is a no-op
+        # for ones we've already recorded, so this is safe to call repeatedly.
+        for recipient in data.get("recipients") or data.get("Recipient") or []:
+            if recipient.get("signingStatus") == "SIGNED":
+                documenso_recipient_id = str(recipient.get("id", ""))
+                if documenso_recipient_id:
+                    service.handle_recipient_signed(documenso_document_id, documenso_recipient_id)
+    elif event == _EVENT_DOCUMENT_REJECTED:
+        # Same whole-document payload shape — the rejecting recipient is whichever
+        # one has signingStatus REJECTED.
+        for recipient in data.get("recipients") or data.get("Recipient") or []:
+            if recipient.get("signingStatus") == "REJECTED":
+                documenso_recipient_id = str(recipient.get("id", ""))
+                if documenso_recipient_id:
+                    service.handle_recipient_declined(documenso_document_id, documenso_recipient_id)
     elif event == _EVENT_DOCUMENT_COMPLETED:
         service.handle_document_completed(documenso_document_id)
 

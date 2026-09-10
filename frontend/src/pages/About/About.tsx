@@ -1,16 +1,9 @@
 import './About.css'
 
-const stats = [
-  { value: '120+', label: 'Firms onboarded' },
-  { value: '18k', label: 'Matters managed' },
-  { value: '99.9%', label: 'Platform uptime' },
-  { value: '4', label: 'Years building for legal teams' },
-]
-
 const values = [
   {
     title: 'Built for How Firms Actually Work',
-    body: 'Every workflow is modeled on real intake queues, real deadlines, and real client communication — not a generic project board with a legal skin on it.',
+    body: 'Every workflow is modeled on real intake queues, real deadlines, and real client communication, not a generic project board with a legal skin on it.',
   },
   {
     title: 'Security and Confidentiality First',
@@ -31,15 +24,6 @@ function About() {
           We&rsquo;re building the practice management platform we wished existed when we worked alongside legal
           teams drowning in spreadsheets, email threads, and missed deadlines.
         </p>
-      </div>
-
-      <div className="about-stats">
-        {stats.map((s) => (
-          <div key={s.label} className="about-stat">
-            <span className="about-stat-value">{s.value}</span>
-            <span className="about-stat-label">{s.label}</span>
-          </div>
-        ))}
       </div>
 
       <div className="about-values">

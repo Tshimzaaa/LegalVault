@@ -1,0 +1,21 @@
+# Index Legal
+
+> Index Legal (working name "LegalHub") is a practice management platform for growing
+> law firms: matters, clients, and documents in one secure, compliant workspace, with a
+> client portal, document templates, e-signatures, and workflow tracking. South African
+> B2B SaaS; subscriptions are invoiced directly, not processed in-app.
+
+[PLACEHOLDER] Replace https://legalhub.example.com below with the real production domain
+before launch (see frontend/src/constants/site.ts).
+
+## Pages
+
+- [Home](https://legalhub.example.com/): product overview, about, blog, and contact
+  sections all on one page.
+
+## Legal
+
+- [Privacy Policy](https://legalhub.example.com/privacy-policy)
+- [Terms & Conditions](https://legalhub.example.com/terms)
+- [Cookie Policy](https://legalhub.example.com/cookie-policy)
+- [Billing & Refund Policy](https://legalhub.example.com/refund-policy)

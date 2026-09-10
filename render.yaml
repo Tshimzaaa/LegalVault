@@ -109,6 +109,15 @@ services:
     autoDeploy: false
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
+    # Without this, a hard refresh (or a shared link) on any client-side route deeper than
+    # `/` — /staff/dashboard, /about, a 404, etc. — 404s at Render's host level before
+    # React Router ever gets a chance to run. This falls back to index.html for anything
+    # that isn't a real static asset, letting the SPA's own routing (including its real
+    # 404 page) handle it instead.
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
     envVars:
       # Same default-URL note as FRONTEND_URL above.
       - key: VITE_API_BASE_URL

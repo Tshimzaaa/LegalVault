@@ -325,7 +325,7 @@ function NewMatter() {
             </label>
 
             <p className="muted" style={{ fontSize: 12, marginTop: -4 }}>
-              Optionally invite a client contact for this matter — leave blank to skip.
+              Optionally invite a client contact for this matter; leave blank to skip.
             </p>
 
             <div className="field-row">

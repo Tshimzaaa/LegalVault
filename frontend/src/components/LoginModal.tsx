@@ -188,7 +188,7 @@ function LoginModal({ onClose, onSubmit, staffOnly }: LoginModalProps) {
 
           {waking && (
             <p className="modal-hint">
-              The server was asleep and is starting up — this can take up to a minute.
+              The server was asleep and is starting up; this can take up to a minute.
             </p>
           )}
 

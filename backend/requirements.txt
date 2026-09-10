@@ -41,7 +41,6 @@ slowapi==0.1.10
 pytest==8.3.4
 httpx==0.28.1
 clamd==1.0.2
-documenso_sdk==0.6.0
 celery==5.6.3
 redis==5.2.1
 xhtml2pdf==0.2.17

@@ -1,2 +1,2 @@
-/* Reuses .intake-detail-back / .intake-answers-card / .intake-answers-list / .intake-answer-row /
-   .intake-answer-label from the staff IntakeSubmissionDetail.css (globally available). */
+/* .intake-detail-back / .intake-answers-card / .intake-answers-list / .intake-answer-row /
+   .intake-answer-label all live in ../../styles/dashboard.css (shared by both portals). */

@@ -177,7 +177,7 @@ def register_exception_handlers(app: FastAPI):
     async def approval_required_for_transition(_, __):
         raise HTTPException(
             status_code=409,
-            detail="This status change requires approval — request approval instead of setting it directly.",
+            detail="This status change requires approval: request approval instead of setting it directly.",
         )
 
     @app.exception_handler(ApprovalAlreadyPending)
@@ -205,7 +205,7 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(TemplateHasNoBody)
     async def template_has_no_body(_, __):
-        raise HTTPException(status_code=409, detail="This template has no body to generate from — add one first.")
+        raise HTTPException(status_code=409, detail="This template has no body to generate from, add one first.")
     @app.exception_handler(ContactNotFound)
     async def contact_not_found(_, __):
         raise HTTPException(status_code=404, detail="Contact not found.")
@@ -278,7 +278,7 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(StorageUnavailable)
     async def storage_unavailable(_, __):
-        raise HTTPException(status_code=503, detail="File storage is temporarily unavailable — please try again shortly.")
+        raise HTTPException(status_code=503, detail="File storage is temporarily unavailable, please try again shortly.")
 
     @app.exception_handler(MalwareDetected)
     async def malware_detected(_, __):
@@ -286,7 +286,7 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(ScannerUnavailable)
     async def scanner_unavailable(_, __):
-        raise HTTPException(status_code=503, detail="File security scanning is temporarily unavailable — please try again shortly.")
+        raise HTTPException(status_code=503, detail="File security scanning is temporarily unavailable, please try again shortly.")
 
     @app.exception_handler(IntakeFormNotFound)
     async def intake_form_not_found(_, __):
@@ -347,5 +347,5 @@ def register_exception_handlers(app: FastAPI):
     async def signing_provider_unavailable(_, __):
         raise HTTPException(
             status_code=503,
-            detail="The e-signature service is temporarily unavailable — please try again shortly.",
+            detail="The e-signature service is temporarily unavailable, please try again shortly.",
         )

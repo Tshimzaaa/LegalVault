@@ -46,7 +46,7 @@ class ClientDashboardService:
             # spuriously treat every fresh matter as "just changed status". Require a real gap instead.
             if matter.updated_at - matter.created_at > timedelta(seconds=1):
                 status_label = matter.status.value.replace("_", " ").title()
-                events.append((matter.updated_at, f'"{matter.title}" — status is now {status_label}'))
+                events.append((matter.updated_at, f'"{matter.title}": status is now {status_label}'))
 
         for document, matter in self.matter_repository.list_recent_documents_for_client(client_id, RECENT_ACTIONS_LIMIT):
             events.append((document.created_at, f'Document uploaded: "{document.title}" on "{matter.title}"'))
@@ -55,11 +55,22 @@ class ClientDashboardService:
             preview = message.body if len(message.body) <= 80 else f"{message.body[:77]}..."
             events.append((message.created_at, f'{message.author_name} on "{matter.title}": {preview}'))
 
-        for submission in self.intake_repository.list_recent_by_client(client_id, RECENT_ACTIONS_LIMIT):
-            form = self.intake_repository.get_form_by_id(submission.form_id)
+        recent_submissions = self.intake_repository.list_recent_by_client(client_id, RECENT_ACTIONS_LIMIT)
+        # One batched fetch for every form referenced by these submissions (each form arrives
+        # with its fields eager-loaded), instead of a separate get_form_by_id/get_field_by_key
+        # round trip per submission.
+        forms_by_id = {
+            form.id: form
+            for form in self.intake_repository.list_forms_by_ids(
+                {s.form_id for s in recent_submissions}
+            )
+        }
+
+        for submission in recent_submissions:
+            form = forms_by_id.get(submission.form_id)
             type_label = None
             if form and form.is_system:
-                request_type_field = self.intake_repository.get_field_by_key(form.id, "request_type")
+                request_type_field = next((f for f in form.fields if f.key == "request_type"), None)
                 if request_type_field:
                     answer = next((a for a in submission.answers if a.field_id == request_type_field.id), None)
                     if answer and answer.value:

@@ -300,7 +300,7 @@ function SignedContracts() {
             <textarea rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
           </label>
           <label className="field">
-            <span>Executed document (PDF, Word, or text — max 10MB)</span>
+            <span>Executed document (PDF, Word, or text; max 10MB)</span>
             <input
               ref={fileInputRef}
               type="file"
@@ -406,6 +406,7 @@ function SignedContracts() {
 
             {actionError && <p className="matter-error" aria-live="polite">{actionError}</p>}
 
+            <div className="table-scroll">
             <table className="data-table">
               <thead>
                 <tr>
@@ -467,6 +468,7 @@ function SignedContracts() {
                 )}
               </tbody>
             </table>
+            </div>
           </section>
         </>
       )}

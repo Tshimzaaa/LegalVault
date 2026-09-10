@@ -614,6 +614,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
               <h2>Firms on the Platform</h2>
             </div>
             {firmActionError && <p className="matter-error" aria-live="polite">{firmActionError}</p>}
+            <div className="table-scroll">
             <table className="data-table">
               <thead>
                 <tr>
@@ -688,6 +689,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                 )}
               </tbody>
             </table>
+            </div>
           </section>
 
           <div className="owner-section-group">
@@ -770,7 +772,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                     <span className="stat-big">
                       {systemHealth.requests.average_duration_ms != null
                         ? `${Math.round(systemHealth.requests.average_duration_ms)}ms`
-                        : '—'}
+                        : 'N/A'}
                     </span>
                   </div>
                   <div className="owner-monitoring-stat">
@@ -778,7 +780,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                     <span className="stat-big">
                       {systemHealth.requests.p95_duration_ms != null
                         ? `${Math.round(systemHealth.requests.p95_duration_ms)}ms`
-                        : '—'}
+                        : 'N/A'}
                     </span>
                   </div>
                   <div className="owner-monitoring-stat">
@@ -827,6 +829,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                 <div className="owner-health-tables">
                   <div>
                     <span className="muted owner-health-table-title">Services</span>
+                    <div className="table-scroll">
                     <table className="data-table">
                       <thead>
                         <tr>
@@ -855,7 +858,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                             <td className="tabular">{s.request_count}</td>
                             <td className="tabular">{s.error_rate_percent.toFixed(2)}%</td>
                             <td className="tabular">
-                              {s.avg_duration_ms != null ? `${Math.round(s.avg_duration_ms)}ms` : '—'}
+                              {s.avg_duration_ms != null ? `${Math.round(s.avg_duration_ms)}ms` : 'N/A'}
                             </td>
                           </tr>
                         ))}
@@ -868,10 +871,12 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                         )}
                       </tbody>
                     </table>
+                    </div>
                   </div>
 
                   <div>
                     <span className="muted owner-health-table-title">Worst-performing endpoints</span>
+                    <div className="table-scroll">
                     <table className="data-table">
                       <thead>
                         <tr>
@@ -903,6 +908,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                         )}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 </div>
               </>
@@ -949,6 +955,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
 
                 {errorsStatus === 'ready' && (
                   <>
+                    <div className="table-scroll">
                     <table className="data-table">
                       <thead>
                         <tr>
@@ -978,7 +985,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                               </span>
                             </td>
                             <td className="muted">{formatActor(e)}</td>
-                            <td className="muted audit-log-details">{e.error_detail ?? '—'}</td>
+                            <td className="muted audit-log-details">{e.error_detail ?? 'N/A'}</td>
                           </tr>
                         ))}
                         {errorEntries.length === 0 && (
@@ -990,6 +997,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                         )}
                       </tbody>
                     </table>
+                    </div>
                     <div className="audit-log-load-more">
                       <button
                         type="button"
@@ -1183,6 +1191,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
 
                 {auditStatus === 'ready' && (
                   <>
+                    <div className="table-scroll">
                     <table className="data-table">
                       <thead>
                         <tr>
@@ -1212,6 +1221,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                         )}
                       </tbody>
                     </table>
+                    </div>
                     <div className="audit-log-load-more">
                       <button
                         type="button"

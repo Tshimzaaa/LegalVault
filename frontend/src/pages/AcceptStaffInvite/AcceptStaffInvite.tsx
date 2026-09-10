@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import '../AuthPage.css'
 import { acceptStaffInvite } from '../../api/auth'
+import Seo from '../../components/Seo'
 
 function AcceptStaffInvite() {
   const navigate = useNavigate()
@@ -47,10 +48,16 @@ function AcceptStaffInvite() {
 
   return (
     <div className="auth-page">
+      <Seo
+        title="Accept Staff Invite"
+        description="Set up your staff account."
+        path="/accept-staff-invite"
+        noindex
+      />
       <div className="modal-box">
         <h2>Join Your Firm’s Workspace</h2>
         <p className="modal-sub">
-          {done ? 'All set — redirecting you to log in…' : 'Choose a password to activate your staff account.'}
+          {done ? 'All set, redirecting you to log in…' : 'Choose a password to activate your staff account.'}
         </p>
 
         {!done && (

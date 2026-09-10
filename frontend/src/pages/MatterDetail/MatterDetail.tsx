@@ -602,7 +602,7 @@ function MatterDetail() {
       const contact = contacts.find((c) => c.id === doc.uploaded_by_contact_id)
       return contact ? `${contact.first_name} ${contact.last_name} (client)` : 'Client'
     }
-    return '—'
+    return 'N/A'
   }
 
   const documentGroups = Object.values(

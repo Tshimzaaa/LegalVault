@@ -99,6 +99,7 @@ function AuditLog({ user }: AuditLogProps) {
 
       {status === 'ready' && (
         <section className="card audit-log-card">
+          <div className="table-scroll">
           <table className="data-table">
             <thead>
               <tr>
@@ -128,6 +129,7 @@ function AuditLog({ user }: AuditLogProps) {
               )}
             </tbody>
           </table>
+          </div>
           <div className="audit-log-load-more">
             <button type="button" className="btn-ghost" disabled={page === 0} onClick={() => loadPage(page - 1)}>
               Previous

@@ -94,9 +94,25 @@ Setup:
 
 Also defined in `render.yaml`, as `legalhub-frontend` (a Render Static Site — `runtime: static`,
 built from `frontend/` via `npm ci && npm run build`, served from `dist/`). Created and deployed
-alongside the backend services in the same Blueprint (§5's steps 1–3 cover it). `VITE_API_BASE_URL`
-and `VITE_SENTRY_DSN` are pre-filled in `render.yaml`; update `VITE_API_BASE_URL` (and the
-backend's `FRONTEND_URL`) if a custom domain replaces the default `*.onrender.com` URLs.
+alongside the backend services in the same Blueprint (§5's steps 1–3 cover it). Also has a
+`routes` rewrite rule (falls back to `index.html` for any non-asset path) so client-side routes
+survive a hard refresh or a shared link — without it, `/about`, `/staff/dashboard`, etc. 404 at
+the host level before React Router ever runs.
+
+**Custom domain checklist** — a real domain isn't set up anywhere yet; the whole app currently
+uses placeholder domains (`legalhub.example.com` in `frontend/src/constants/site.ts`,
+`public/robots.txt`, `public/sitemap.xml`, `public/llms.txt`, and `index.html`'s static OG tags
++ Organization JSON-LD; `*.onrender.com` in `render.yaml`). Once a real domain is bought:
+1. In the Render dashboard, `legalhub-frontend` → Settings → Custom Domain: add it, and add the
+   CNAME/A record it gives you at your DNS registrar.
+2. Update `SITE_URL` in `frontend/src/constants/site.ts` to the real domain.
+3. Update the placeholder domain in `public/robots.txt`, `public/sitemap.xml`, `public/llms.txt`,
+   and `index.html`'s `og:url`/`og:image`/Organization `url`/`logo` fields to match.
+4. Update `render.yaml`: `legalhub-api`'s `FRONTEND_URL` and `legalhub-frontend`'s
+   `VITE_API_BASE_URL`, if the API also gets its own custom domain (or leave `VITE_API_BASE_URL`
+   pointing at the API's `.onrender.com` URL if only the frontend gets a custom domain).
+5. Generate a real `og-image.png` (1200×630) to replace the placeholder in `public/` — the
+   current one is a generated placeholder with a visible "replace before launch" watermark.
 
 ## 7. Already handled — verify, don't rebuild
 

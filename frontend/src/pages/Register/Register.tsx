@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import '../AuthPage.css'
 import { register } from '../../api/auth'
+import Seo from '../../components/Seo'
 
 function Register() {
   const navigate = useNavigate()
@@ -13,6 +14,7 @@ function Register() {
   const [lastName, setLastName] = useState('')
   const [adminEmail, setAdminEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [consent, setConsent] = useState(false)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -22,6 +24,11 @@ function Register() {
 
     if (password.length < 8) {
       setError('Admin password must be at least 8 characters.')
+      return
+    }
+
+    if (!consent) {
+      setError('You must confirm you have the authority to create this firm account and agree to the Terms and Privacy Policy.')
       return
     }
 
@@ -42,9 +49,10 @@ function Register() {
 
   return (
     <div className="auth-page">
+      <Seo title="Onboard a Firm" description="Firm onboarding." path="/register" noindex />
       <div className="modal-box wide">
         <h1>Onboard a Law Firm</h1>
-        <p className="modal-sub">SaaS-owner only — requires the shared onboarding secret.</p>
+        <p className="modal-sub">SaaS-owner only: requires the shared onboarding secret.</p>
 
         <form onSubmit={handleSubmit}>
           <label className="modal-field">
@@ -127,6 +135,20 @@ function Register() {
               required
               autoComplete="new-password"
             />
+          </label>
+
+          <label className="modal-field modal-field-checkbox">
+            <input
+              type="checkbox"
+              checked={consent}
+              onChange={(e) => setConsent(e.target.checked)}
+              required
+            />
+            <span>
+              I confirm I have the authority to create this firm account, and agree to the{' '}
+              <Link to="/terms" target="_blank" rel="noreferrer">Terms and Conditions</Link> and{' '}
+              <Link to="/privacy-policy" target="_blank" rel="noreferrer">Privacy Policy</Link>.
+            </span>
           </label>
 
           {error && <p className="modal-error" aria-live="polite">{error}</p>}

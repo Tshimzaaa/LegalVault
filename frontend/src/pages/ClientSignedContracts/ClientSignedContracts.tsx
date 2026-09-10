@@ -246,6 +246,7 @@ function ClientSignedContracts({ contact, onLogout }: ClientSignedContractsProps
 
             {downloadError && <p className="matter-error" aria-live="polite">{downloadError}</p>}
 
+            <div className="table-scroll">
             <table className="data-table">
               <thead>
                 <tr>
@@ -293,6 +294,7 @@ function ClientSignedContracts({ contact, onLogout }: ClientSignedContractsProps
                 )}
               </tbody>
             </table>
+            </div>
           </section>
         </>
       )}

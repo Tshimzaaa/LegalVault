@@ -21,6 +21,15 @@ class IntakeRepository:
             select(IntakeForm).where(IntakeForm.id == form_id).options(selectinload(IntakeForm.fields))
         )
 
+    def list_forms_by_ids(self, form_ids) -> list[IntakeForm]:
+        if not form_ids:
+            return []
+        return list(
+            self.db.scalars(
+                select(IntakeForm).where(IntakeForm.id.in_(form_ids)).options(selectinload(IntakeForm.fields))
+            )
+        )
+
     def list_forms_by_firm(self, firm_id) -> list[IntakeForm]:
         return list(
             self.db.scalars(
@@ -72,9 +81,12 @@ class IntakeRepository:
         self.db.flush()
 
     def max_display_order(self, form_id) -> int:
-        return self.db.scalar(
-            select(func.max(IntakeFormField.display_order)).where(IntakeFormField.form_id == form_id)
-        ) or -1
+        # Deliberately reuses list_fields_by_form's row-select rather than a func.max()
+        # aggregate over the same predicate — the aggregate form was observed returning
+        # NULL (so every new field landed at display_order 0) even when list_fields_by_form
+        # correctly returned the existing rows for the same form_id in the same request.
+        fields = self.list_fields_by_form(form_id)
+        return max((f.display_order for f in fields), default=-1)
 
     # Submissions
 

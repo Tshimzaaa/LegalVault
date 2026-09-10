@@ -36,13 +36,14 @@ class AuditLog(BaseModel):
         index=True,
     )
 
-    action: Mapped[str] = mapped_column(String(50), nullable=False)
+    action: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
 
-    target_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    target_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
 
     target_id: Mapped[UUID | None] = mapped_column(
         PG_UUID(as_uuid=True),
         nullable=True,
+        index=True,
     )
 
     details: Mapped[dict | None] = mapped_column(JSONB, nullable=True)

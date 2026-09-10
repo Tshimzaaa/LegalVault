@@ -109,7 +109,7 @@ def get_dashboard_summary(
     return DashboardSummaryResponse(
         activeCases=ActiveCasesSummary(
             count=active,
-            totalValue="—",
+            totalValue="N/A",
             progressPercent=pct(closed + signed),
         ),
         contractStatus=ContractStatusSummary(

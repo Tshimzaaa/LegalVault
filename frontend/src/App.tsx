@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
+import Footer from './components/Footer'
 import LoginModal from './components/LoginModal'
 import Home from './pages/Home/Home'
 import { login, getCurrentUser, refreshStaffToken, logoutStaff } from './api/auth'
@@ -18,6 +19,11 @@ const ResetPassword = lazy(() => import('./pages/ResetPassword/ResetPassword'))
 const AcceptInvite = lazy(() => import('./pages/AcceptInvite/AcceptInvite'))
 const AcceptStaffInvite = lazy(() => import('./pages/AcceptStaffInvite/AcceptStaffInvite'))
 const OwnerLogin = lazy(() => import('./pages/OwnerLogin/OwnerLogin'))
+const PrivacyPolicy = lazy(() => import('./pages/legal/PrivacyPolicy'))
+const TermsAndConditions = lazy(() => import('./pages/legal/TermsAndConditions'))
+const CookiePolicy = lazy(() => import('./pages/legal/CookiePolicy'))
+const RefundPolicy = lazy(() => import('./pages/legal/RefundPolicy'))
+const NotFound = lazy(() => import('./pages/NotFound/NotFound'))
 
 // Self-contained (no page-specific CSS dependency) — this renders while a lazy route
 // chunk is still downloading, before that chunk's own stylesheet is available.
@@ -202,6 +208,10 @@ function App() {
           }
         />
         <Route path="/register" element={<Register />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsAndConditions />} />
+        <Route path="/cookie-policy" element={<CookiePolicy />} />
+        <Route path="/refund-policy" element={<RefundPolicy />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/accept-invite" element={<AcceptInvite />} />
         <Route path="/accept-staff-invite" element={<AcceptStaffInvite />} />
@@ -245,7 +255,10 @@ function App() {
             )
           }
         />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route
+          path="*"
+          element={<><Navbar onLoginClick={() => navigate('/login')} /><NotFound /><Footer /></>}
+        />
         </Routes>
       </Suspense>
     </>

@@ -86,6 +86,7 @@ function ContractData() {
       </div>
 
       <section className="card contract-data-table-card">
+        <div className="table-scroll">
         <table className="data-table">
           <thead>
             <tr>
@@ -117,6 +118,7 @@ function ContractData() {
             ))}
           </tbody>
         </table>
+        </div>
         {filteredRows.length === 0 && <p className="muted">No contracts match these filters.</p>}
       </section>
     </main>

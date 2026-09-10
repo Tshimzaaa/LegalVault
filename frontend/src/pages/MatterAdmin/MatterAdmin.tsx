@@ -88,6 +88,7 @@ function MatterAdmin({ contact, onLogout }: MatterAdminProps) {
           {permissions.length === 0 ? (
             <p className="muted">No matter access has been granted to anyone at your company yet.</p>
           ) : (
+            <div className="table-scroll">
             <table className="data-table">
               <thead>
                 <tr>
@@ -119,6 +120,7 @@ function MatterAdmin({ contact, onLogout }: MatterAdminProps) {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </section>
       )}

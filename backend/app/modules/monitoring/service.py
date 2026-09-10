@@ -168,22 +168,23 @@ class MonitoringService:
 
         auth_repo = AuthRepository(self.db)
         client_repo = ClientRepository(self.db)
-        label_cache: dict[tuple[str, str], str | None] = {}
+
+        # Two batched lookups for every distinct actor on this page, instead of one query per
+        # error row (a page of N errors from M distinct actors used to cost up to M extra
+        # round trips; now it's a flat 2 regardless of N or M).
+        staff_ids = {row.actor_id for row in rows if row.actor_type == "staff" and row.actor_id}
+        client_ids = {row.actor_id for row in rows if row.actor_type == "client" and row.actor_id}
+        staff_labels = {u.id: u.email for u in auth_repo.list_users_by_ids(list(staff_ids))}
+        client_labels = {c.id: c.email for c in client_repo.list_contacts_by_ids(list(client_ids))}
 
         def resolve_label(actor_type: str | None, actor_id: str | None) -> str | None:
             if actor_type == "owner":
                 return "Owner"
-            if actor_type not in ("staff", "client") or not actor_id:
-                return None
-            key = (actor_type, actor_id)
-            if key not in label_cache:
-                if actor_type == "staff":
-                    user = auth_repo.get_user_by_id(actor_id)
-                    label_cache[key] = user.email if user else None
-                else:
-                    contact = client_repo.get_contact_by_id(actor_id)
-                    label_cache[key] = contact.email if contact else None
-            return label_cache[key]
+            if actor_type == "staff" and actor_id:
+                return staff_labels.get(actor_id)
+            if actor_type == "client" and actor_id:
+                return client_labels.get(actor_id)
+            return None
 
         return [
             RequestErrorEntry(

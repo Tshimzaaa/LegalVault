@@ -115,6 +115,7 @@ class MatterAssignment(BaseModel):
     user_id: Mapped[UUID] = mapped_column(
         ForeignKey("users.id"),
         nullable=False,
+        index=True,
     )
 
     role_on_matter: Mapped[MatterRole] = mapped_column(
@@ -140,11 +141,13 @@ class MatterDocument(BaseModel):
     uploaded_by: Mapped[UUID | None] = mapped_column(
         ForeignKey("users.id"),
         nullable=True,
+        index=True,
     )
 
     uploaded_by_contact_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("client_contacts.id"),
         nullable=True,
+        index=True,
     )
 
     title: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -174,6 +177,7 @@ class MatterTask(BaseModel):
     assigned_to: Mapped[UUID | None] = mapped_column(
         ForeignKey("users.id"),
         nullable=True,
+        index=True,
     )
 
     due_date: Mapped[date | None] = mapped_column(Date, nullable=True)
@@ -254,6 +258,7 @@ class MatterApproval(BaseModel):
     requested_by: Mapped[UUID] = mapped_column(
         ForeignKey("users.id"),
         nullable=False,
+        index=True,
     )
 
     from_status: Mapped[MatterStatus] = mapped_column(Enum(MatterStatus), nullable=False)
@@ -267,7 +272,7 @@ class MatterApproval(BaseModel):
         index=True,
     )
 
-    decided_by: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    decided_by: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
 
     decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 

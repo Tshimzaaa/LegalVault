@@ -931,7 +931,7 @@ class MatterService:
         pisa.CreatePDF(rendered_html, dest=pdf_buffer)
         pdf_bytes = pdf_buffer.getvalue()
 
-        title = request.title or f"{template.title} — {matter.title}"
+        title = request.title or f"{template.title}: {matter.title}"
         document = self.upload_matter_document(
             matter_id=matter.id,
             title=title,

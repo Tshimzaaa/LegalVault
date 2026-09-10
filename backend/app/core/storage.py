@@ -36,7 +36,7 @@ def _call_through_breaker(func, *args, **kwargs):
     try:
         return _storage_breaker.call(func, *args, **kwargs)
     except CircuitOpenError:
-        raise StorageUnavailable("File storage is temporarily unavailable — please try again shortly.")
+        raise StorageUnavailable("File storage is temporarily unavailable, please try again shortly.")
     except (BotoCoreError, ClientError) as exc:
         raise StorageUnavailable("File storage request failed.") from exc
 

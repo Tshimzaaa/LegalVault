@@ -186,7 +186,7 @@ function Clients({ user }: ClientsProps) {
       if (expandedClientId === client.id) setExpandedClientId(null)
     } catch (err) {
       setClientActionError(
-        err instanceof Error ? err.message : 'Could not delete this client — it may still have open matters.',
+        err instanceof Error ? err.message : 'Could not delete this client: it may still have open matters.',
       )
     } finally {
       setDeletingClientId(null)
@@ -308,6 +308,7 @@ function Clients({ user }: ClientsProps) {
         <div className="clients-layout">
           <section className="card clients-table-card">
             {clientActionError && <p className="matter-error" aria-live="polite">{clientActionError}</p>}
+            <div className="table-scroll">
             <table className="data-table">
               <thead>
                 <tr>
@@ -453,6 +454,7 @@ function Clients({ user }: ClientsProps) {
                 )}
               </tbody>
             </table>
+            </div>
           </section>
 
           <div className="clients-side">

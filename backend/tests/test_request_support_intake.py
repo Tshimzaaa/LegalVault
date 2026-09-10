@@ -99,3 +99,50 @@ def test_staff_cannot_delete_or_add_fields_to_system_form(client, db_session):
 
     delete_res = client.delete(f"/intake-forms/{form_id}", headers=auth_headers(admin))
     assert delete_res.status_code == 409
+
+
+def test_staff_can_delete_a_custom_form_with_fields(client, db_session):
+    # Regression test: IntakeForm.fields has no ORM delete cascade, so deleting a form
+    # used to try nulling out each field's non-nullable form_id — which also violates
+    # the RLS policy on intake_form_fields — and 500'd on any form that had fields.
+    firm = make_firm(db_session)
+    admin, _ = make_staff(db_session, firm)
+
+    form_id = client.post(
+        "/intake-forms", json={"title": "Custom Intake"}, headers=auth_headers(admin)
+    ).json()["id"]
+    client.post(
+        f"/intake-forms/{form_id}/fields",
+        json={"label": "Full name", "field_type": "text"},
+        headers=auth_headers(admin),
+    )
+
+    delete_res = client.delete(f"/intake-forms/{form_id}", headers=auth_headers(admin))
+    assert delete_res.status_code == 204
+
+    list_res = client.get("/intake-forms", headers=auth_headers(admin))
+    assert all(f["id"] != form_id for f in list_res.json())
+
+
+def test_intake_field_display_order_increments(client, db_session):
+    # Regression test: max_display_order() used a func.max() aggregate that was
+    # observed always returning NULL under this app's RLS setup, so every new field
+    # landed at display_order 0 instead of incrementing. Fixed by deriving the max
+    # from the same row-select list_fields_by_form already uses successfully.
+    firm = make_firm(db_session)
+    admin, _ = make_staff(db_session, firm)
+
+    form_id = client.post(
+        "/intake-forms", json={"title": "Order Test"}, headers=auth_headers(admin)
+    ).json()["id"]
+
+    orders = []
+    for label in ("Field A", "Field B", "Field C"):
+        res = client.post(
+            f"/intake-forms/{form_id}/fields",
+            json={"label": label, "field_type": "text"},
+            headers=auth_headers(admin),
+        )
+        orders.append(res.json()["display_order"])
+
+    assert orders == [0, 1, 2]

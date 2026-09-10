@@ -177,11 +177,11 @@ function IntakeSubmissionDetail({ user }: IntakeSubmissionDetailProps) {
       <section className="card intake-detail-meta">
         <div>
           <span className="muted">Client</span>
-          <span>{client?.company_name ?? '—'}</span>
+          <span>{client?.company_name ?? 'N/A'}</span>
         </div>
         <div>
           <span className="muted">Contact</span>
-          <span>{contact ? `${contact.first_name} ${contact.last_name}` : '—'}</span>
+          <span>{contact ? `${contact.first_name} ${contact.last_name}` : 'N/A'}</span>
         </div>
         <div>
           <span className="muted">Submitted</span>
@@ -193,12 +193,12 @@ function IntakeSubmissionDetail({ user }: IntakeSubmissionDetailProps) {
 
       {submission.converted_matter_id ? (
         <p className="intake-converted-note">
-          Converted to matter — <Link to={`/staff/matters/${submission.converted_matter_id}`}>view matter</Link>
+          Converted to matter: <Link to={`/staff/matters/${submission.converted_matter_id}`}>view matter</Link>
         </p>
       ) : canConvert(user.role) ? (
         <form className="card intake-convert-form" onSubmit={handleConvert}>
           <label className="field">
-            <span>Matter title (optional — defaults to “{client?.company_name ?? 'Client'} – {form?.title ?? 'Intake'}”)</span>
+            <span>Matter title (optional, defaults to “{client?.company_name ?? 'Client'} – {form?.title ?? 'Intake'}”)</span>
             <input
               value={matterTitle}
               onChange={(e) => setMatterTitle(e.target.value)}
@@ -236,9 +236,9 @@ function IntakeSubmissionDetail({ user }: IntakeSubmissionDetailProps) {
                     <span className="muted">No file uploaded</span>
                   )
                 ) : field?.field_type === 'checkbox' ? (
-                  <span>{answer.value === 'true' ? '✓ Yes' : '— No'}</span>
+                  <span>{answer.value === 'true' ? '✓ Yes' : '✗ No'}</span>
                 ) : (
-                  <span>{answer.value || '—'}</span>
+                  <span>{answer.value || 'N/A'}</span>
                 )}
               </div>
             )

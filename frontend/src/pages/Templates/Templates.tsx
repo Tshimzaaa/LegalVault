@@ -195,7 +195,7 @@ function Templates() {
             <textarea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />
           </label>
           <label className="field">
-            <span>File (PDF, Word, or text — max 10MB)</span>
+            <span>File (PDF, Word, or text; max 10MB)</span>
             <input
               ref={fileInputRef}
               type="file"
@@ -263,7 +263,7 @@ function Templates() {
                 </label>
                 <label className="field">
                   <span>
-                    Generation body — use <code>{'{{field_name}}'}</code> to insert an intake answer (matched by
+                    Generation body: use <code>{'{{field_name}}'}</code> to insert an intake answer (matched by
                     field label, e.g. “Counterparty” &rarr; <code>{'{{counterparty}}'}</code>), plus the built-ins{' '}
                     <code>{'{{client_name}}'}</code>, <code>{'{{matter_title}}'}</code>, <code>{'{{today}}'}</code>.
                     Leave blank if this template is just a reference file, not something to generate from.

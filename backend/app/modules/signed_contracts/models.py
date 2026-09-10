@@ -32,11 +32,13 @@ class SignedContract(BaseModel):
     firm_id: Mapped[UUID] = mapped_column(
         ForeignKey("law_firms.id"),
         nullable=False,
+        index=True,
     )
 
     client_id: Mapped[UUID] = mapped_column(
         ForeignKey("clients.id"),
         nullable=False,
+        index=True,
     )
 
     # Optional traceability back to the matter this contract was signed under —
@@ -44,11 +46,13 @@ class SignedContract(BaseModel):
     matter_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("matters.id"),
         nullable=True,
+        index=True,
     )
 
     uploaded_by: Mapped[UUID | None] = mapped_column(
         ForeignKey("users.id"),
         nullable=True,
+        index=True,
     )
 
     title: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -75,6 +79,7 @@ class SignedContract(BaseModel):
         Enum(ContractStatus),
         default=ContractStatus.ACTIVE,
         nullable=False,
+        index=True,
     )
 
     file_key: Mapped[str] = mapped_column(String(500), nullable=False)

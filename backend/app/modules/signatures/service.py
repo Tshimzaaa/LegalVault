@@ -131,7 +131,7 @@ class SignatureService:
                     "recipient_id": r.recipient_id,
                     "type": "signature.requested",
                     "title": f'Signature requested: "{request.title}"',
-                    "body": f"{matter.title} — you have a document waiting for your signature.",
+                    "body": f"{matter.title}: you have a document waiting for your signature.",
                     "target_type": "signature_request",
                     "target_id": signature_request.id,
                 }

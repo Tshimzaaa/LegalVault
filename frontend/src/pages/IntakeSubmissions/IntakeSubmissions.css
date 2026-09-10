@@ -1,11 +1,3 @@
-.intake-submissions-card {
-  overflow-y: auto;
-}
-
-.intake-submission-row {
-  cursor: pointer;
-}
-
-.intake-submission-row:hover td {
-  background: rgba(var(--overlay-rgb), 0.03);
-}
+/* .intake-submissions-card / .intake-submission-row moved to ../../styles/dashboard.css —
+   reused by the client portal's ClientMyIntakeSubmissions, which never loads this
+   staff-only stylesheet. */

@@ -385,7 +385,7 @@ function ClientReporting({ contact, onLogout }: ClientReportingProps) {
             <span>Active matters</span>
           </div>
           <div className="stat-line">
-            <span className="stat-big">{activeMatters ?? '—'}</span>
+            <span className="stat-big">{activeMatters ?? 'N/A'}</span>
           </div>
         </div>
         <div className="card">
@@ -394,7 +394,7 @@ function ClientReporting({ contact, onLogout }: ClientReportingProps) {
           </div>
           <div className="stat-line">
             <span className="stat-big">
-              {avgTurnaroundDays !== null ? `${daysFormat.format(avgTurnaroundDays)} days` : '—'}
+              {avgTurnaroundDays !== null ? `${daysFormat.format(avgTurnaroundDays)} days` : 'N/A'}
             </span>
           </div>
         </div>
@@ -403,7 +403,7 @@ function ClientReporting({ contact, onLogout }: ClientReportingProps) {
             <span>Requests this month</span>
           </div>
           <div className="stat-line">
-            <span className="stat-big">{requestsThisMonth ?? '—'}</span>
+            <span className="stat-big">{requestsThisMonth ?? 'N/A'}</span>
           </div>
         </div>
         <div className="card">
@@ -412,7 +412,7 @@ function ClientReporting({ contact, onLogout }: ClientReportingProps) {
           </div>
           <div className="stat-line">
             <span className="stat-big">
-              {completionRate !== null ? percentFormat.format(completionRate / 100) : '—'}
+              {completionRate !== null ? percentFormat.format(completionRate / 100) : 'N/A'}
             </span>
           </div>
         </div>

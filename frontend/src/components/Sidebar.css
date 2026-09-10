@@ -191,3 +191,136 @@
 .nav-label {
   flex: 1;
 }
+
+.sidebar-mobile-bar {
+  display: none;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 880px) {
+  .sidebar-mobile-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(var(--overlay-rgb), 0.08);
+    background: var(--bg-shell);
+  }
+
+  .sidebar-mobile-toggle {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .sidebar-menu-icon {
+    position: relative;
+    width: 18px;
+    height: 13px;
+    display: block;
+  }
+
+  .sidebar-menu-icon span {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    border-radius: 999px;
+    background: var(--text);
+    transition: transform 0.2s ease, opacity 0.2s ease, top 0.2s ease;
+  }
+
+  .sidebar-menu-icon span:nth-child(1) {
+    top: 0;
+  }
+
+  .sidebar-menu-icon span:nth-child(2) {
+    top: 5.5px;
+  }
+
+  .sidebar-menu-icon span:nth-child(3) {
+    top: 11px;
+  }
+
+  .sidebar-menu-icon.open span:nth-child(1) {
+    top: 5.5px;
+    transform: rotate(45deg);
+  }
+
+  .sidebar-menu-icon.open span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .sidebar-menu-icon.open span:nth-child(3) {
+    top: 5.5px;
+    transform: rotate(-45deg);
+  }
+
+  .sidebar-mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    color: var(--text);
+  }
+
+  .sidebar-mobile-brand .brand-mark {
+    width: 24px;
+    height: 24px;
+  }
+
+  .sidebar-mobile-brand .brand-mark svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .sidebar-mobile-bell {
+    margin-left: auto;
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: rgba(var(--shadow-rgb), 0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .sidebar-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .dash-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 60;
+    width: 260px;
+    max-width: 82vw;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: 20px 0 50px rgba(var(--shadow-rgb), 0.5);
+  }
+
+  .dash-sidebar.open {
+    transform: translateX(0);
+  }
+}

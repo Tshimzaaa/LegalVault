@@ -8,4 +8,9 @@ export default defineConfig({
     strictPort: true
   },
   plugins: [react()],
+  build: {
+    // Vite already defaults to this — made explicit so it's a documented decision, not an
+    // implicit default someone could flip on later without noticing.
+    sourcemap: false,
+  },
 })
