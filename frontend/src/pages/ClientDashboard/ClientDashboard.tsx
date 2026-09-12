@@ -28,6 +28,8 @@ function formatRelativeTime(iso: string): string {
   return dateFormat.format(new Date(iso))
 }
 
+type LoadState = 'loading' | 'error' | 'ready'
+
 interface ClientDashboardProps {
   contact: ClientContact
   onLogout: () => void
@@ -35,15 +37,34 @@ interface ClientDashboardProps {
 
 function ClientDashboard({ contact, onLogout }: ClientDashboardProps) {
   const [summary, setSummary] = useState<ClientDashboardSummary | null>(null)
+  const [status, setStatus] = useState<LoadState>('loading')
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
+    let cancelled = false
+    setStatus('loading')
+
     const token = localStorage.getItem('access_token')
-    if (!token) return
+    if (!token) {
+      setStatus('error')
+      return
+    }
 
     getClientDashboardSummary(token)
-      .then(setSummary)
-      .catch(() => setSummary(null))
-  }, [])
+      .then((data) => {
+        if (cancelled) return
+        setSummary(data)
+        setStatus('ready')
+      })
+      .catch(() => {
+        if (cancelled) return
+        setStatus('error')
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [attempt])
 
   const breakdown = summary?.contractBreakdown
   const breakdownRows = breakdown
@@ -64,6 +85,24 @@ function ClientDashboard({ contact, onLogout }: ClientDashboardProps) {
         </div>
       </header>
 
+      {status === 'loading' && (
+        <div className="dash-state" role="status" aria-live="polite">
+          <span className="dash-spinner" aria-hidden="true" />
+          <p>Loading dashboard…</p>
+        </div>
+      )}
+
+      {status === 'error' && (
+        <div className="dash-state" role="status" aria-live="polite">
+          <p>Couldn&rsquo;t reach the backend for your dashboard data.</p>
+          <button type="button" className="btn-ghost" onClick={() => setAttempt((n) => n + 1)}>
+            Retry
+          </button>
+        </div>
+      )}
+
+      {status === 'ready' && (
+        <>
       <section className="dash-row client-dash-row-1">
         <div className="card">
           <div className="card-header">
@@ -125,6 +164,8 @@ function ClientDashboard({ contact, onLogout }: ClientDashboardProps) {
           </div>
         </div>
       </section>
+        </>
+      )}
     </main>
   )
 }

@@ -1,0 +1,2 @@
+class FallbackClauseNotFound(Exception):
+    pass

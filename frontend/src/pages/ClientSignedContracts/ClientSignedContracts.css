@@ -12,7 +12,10 @@
 
 .signed-filters {
   display: flex;
-  align-items: flex-end;
+  /* stretch so every field box shares the row's full height, then each field packs its
+     own content (label + control) to the bottom of that shared height via justify-content
+     below — a fixed control height instead of matching font metrics between elements. */
+  align-items: stretch;
   gap: 12px;
   margin-bottom: 12px;
   flex-wrap: wrap;
@@ -20,6 +23,29 @@
 
 .signed-filters .field {
   min-width: 160px;
+  justify-content: flex-end;
+}
+
+.signed-filters .field input,
+.signed-filters .field select {
+  height: 38px;
+  box-sizing: border-box;
+}
+
+.signed-filters-count {
+  align-items: flex-start;
+  min-width: 0;
+  width: 160px;
+  height: 70.09px;
+  box-sizing: border-box;
+}
+
+.signed-filters-count .chip {
+  height: 38px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .signed-contract-description {

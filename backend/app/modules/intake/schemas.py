@@ -5,26 +5,6 @@ from pydantic import BaseModel, Field
 from app.modules.intake.models import IntakeFieldType, IntakeSubmissionStatus
 
 
-class IntakeFormFieldCreateRequest(BaseModel):
-    label: str = Field(min_length=1, max_length=200)
-    field_type: IntakeFieldType
-    is_required: bool = False
-    help_text: str | None = Field(default=None, max_length=500)
-    options: list[str] | None = None
-
-
-class IntakeFormFieldUpdateRequest(BaseModel):
-    label: str | None = Field(default=None, min_length=1, max_length=200)
-    field_type: IntakeFieldType | None = None
-    is_required: bool | None = None
-    help_text: str | None = Field(default=None, max_length=500)
-    options: list[str] | None = None
-
-
-class ReorderFieldsRequest(BaseModel):
-    field_ids: list[UUID]
-
-
 class IntakeFormFieldResponse(BaseModel):
     id: UUID
     form_id: UUID
@@ -38,17 +18,6 @@ class IntakeFormFieldResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
-
-class CreateIntakeFormRequest(BaseModel):
-    title: str = Field(min_length=2, max_length=200)
-    description: str | None = None
-
-
-class UpdateIntakeFormRequest(BaseModel):
-    title: str | None = Field(default=None, min_length=2, max_length=200)
-    description: str | None = None
-    is_published: bool | None = None
 
 
 class IntakeFormResponse(BaseModel):

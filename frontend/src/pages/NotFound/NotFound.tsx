@@ -11,7 +11,7 @@ function NotFound() {
       <div className="not-found-inner">
         <span className="not-found-code">404</span>
         <h1>Page Not Found</h1>
-        <p>The page you're looking for doesn't exist or has moved.</p>
+        <p>The page you&rsquo;re looking for doesn&rsquo;t exist or has moved.</p>
         <Link to="/" className="not-found-cta">
           Back to Home
         </Link>

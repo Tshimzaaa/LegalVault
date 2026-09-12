@@ -149,6 +149,11 @@ function KnowledgeArticles({ user }: KnowledgeArticlesProps) {
 
   return (
     <main className="dash-main">
+      <datalist id="knowledge-categories">
+        {categories.map((c) => (
+          <option key={c} value={c} />
+        ))}
+      </datalist>
       <header className="dash-topbar">
         <h1>Knowledge Base</h1>
         <div className="topbar-actions">
@@ -188,11 +193,6 @@ function KnowledgeArticles({ user }: KnowledgeArticlesProps) {
                 autoComplete="off"
                 required
               />
-              <datalist id="knowledge-categories">
-                {categories.map((c) => (
-                  <option key={c} value={c} />
-                ))}
-              </datalist>
             </label>
           </div>
           <label className="field">
@@ -230,7 +230,7 @@ function KnowledgeArticles({ user }: KnowledgeArticlesProps) {
       {actionError && <p className="matter-error" aria-live="polite">{actionError}</p>}
 
       {status === 'ready' && (
-        <section className="knowledge-list">
+        <section className="templates-grid knowledge-list">
           {articles.map((a) =>
             editingId === a.id ? (
               <form key={a.id} onSubmit={handleSaveEdit} className="card knowledge-form knowledge-edit-form">
@@ -313,7 +313,12 @@ function KnowledgeArticles({ user }: KnowledgeArticlesProps) {
                 </div>
 
                 <div className="knowledge-card-footer">
-                  <button type="button" className="btn-ghost template-use-btn" onClick={() => setPreviewId(previewId === a.id ? null : a.id)}>
+                  <button
+                    type="button"
+                    className="btn-ghost template-use-btn"
+                    aria-pressed={previewId === a.id}
+                    onClick={() => setPreviewId(previewId === a.id ? null : a.id)}
+                  >
                     {previewId === a.id ? 'Show Excerpt' : 'Preview'}
                   </button>
                   {canWrite && (

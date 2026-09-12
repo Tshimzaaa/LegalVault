@@ -132,7 +132,7 @@ function ClientKnowledgeBase({ contact, onLogout }: ClientKnowledgeBaseProps) {
       )}
 
       {status === 'ready' && (
-        <section className="knowledge-list">
+        <section className="templates-grid knowledge-list">
           {visible.map((a) => (
             <div key={a.id} className="card knowledge-card">
               <span className="template-name">{a.title}</span>

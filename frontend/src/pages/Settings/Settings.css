@@ -8,6 +8,18 @@
   gap: 14px;
 }
 
+/* .field-row and the standalone address .field already carry their own margin-bottom
+   (from dashboard.css) for use in plain stacked forms; since they sit directly inside this
+   flex column's own gap, that margin doubled the space after them and made the rhythm
+   depend on whether the save-error/success message happened to render after. Zero it here,
+   matching the same fix already applied where .field/.field-row sit inside a gap-based flex
+   row elsewhere (see Integrations.css .integration-credential-row, IntakeSubmissionDetail.css
+   .intake-convert-form .field). */
+.settings-form .field-row,
+.settings-form > .field {
+  margin-bottom: 0;
+}
+
 .settings-saved {
   color: var(--accent);
   font-size: 12.5px;

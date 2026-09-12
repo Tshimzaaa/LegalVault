@@ -105,8 +105,13 @@
 }
 
 .donut-segment {
-  transition: stroke-width 0.15s ease;
   cursor: pointer;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .donut-segment {
+    transition: stroke-width 0.15s ease;
+  }
 }
 
 .donut-center-value {
@@ -136,7 +141,12 @@
   color: var(--text-subtle);
   border-radius: 6px;
   padding: 2px 4px;
-  transition: background 0.15s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .donut-legend-row {
+    transition: background 0.15s ease;
+  }
 }
 
 .donut-legend-row.active {

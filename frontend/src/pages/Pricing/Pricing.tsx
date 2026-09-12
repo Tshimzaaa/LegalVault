@@ -65,7 +65,7 @@ const plans: Plan[] = [
       'Custom SLA agreement',
     ],
     cta: 'Talk to sales',
-    ctaHref: '#contact',
+    ctaHref: '/contact',
   },
 ]
 

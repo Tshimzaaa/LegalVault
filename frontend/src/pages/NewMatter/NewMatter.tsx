@@ -23,6 +23,12 @@ function NewMatter() {
   const [contactFirstName, setContactFirstName] = useState('')
   const [contactLastName, setContactLastName] = useState('')
   const [contactEmail, setContactEmail] = useState('')
+  const [matterType, setMatterType] = useState('')
+  const [practiceArea, setPracticeArea] = useState('')
+  const [feeType, setFeeType] = useState('hourly')
+  const [conflictCheck, setConflictCheck] = useState('')
+  const [clientGoal, setClientGoal] = useState('')
+  const [caseStrategyNotes, setCaseStrategyNotes] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [titleError, setTitleError] = useState<string | null>(null)
@@ -51,7 +57,19 @@ function NewMatter() {
   }, [])
 
   const isDirty = Boolean(
-    title || description || clientId || attorneyId || caseManagerId || contactFirstName || contactLastName || contactEmail,
+    title ||
+      description ||
+      clientId ||
+      attorneyId ||
+      caseManagerId ||
+      contactFirstName ||
+      contactLastName ||
+      contactEmail ||
+      matterType ||
+      practiceArea ||
+      conflictCheck ||
+      clientGoal ||
+      caseStrategyNotes,
   )
 
   // Browser back/refresh/tab-close bypass the in-app Cancel confirmation — warn there too
@@ -113,10 +131,23 @@ function NewMatter() {
 
     setSubmitting(true)
     try {
+      // The backend's matter record has no dedicated columns for matter type, practice
+      // area, fee type, conflict check, client goal, or case strategy notes yet, so we
+      // fold them into the description to avoid silently discarding what the user typed.
+      const extraDetails = [
+        matterType && `Matter Type: ${matterType}`,
+        practiceArea && `Practice Area: ${practiceArea}`,
+        feeType && `Fee Type: ${feeType}`,
+        conflictCheck && `Conflict Check: ${conflictCheck}`,
+        clientGoal && `Client's Goal: ${clientGoal}`,
+        caseStrategyNotes && `Case Strategy Notes: ${caseStrategyNotes}`,
+      ].filter(Boolean)
+      const fullDescription = [description, ...extraDetails].filter(Boolean).join('\n')
+
       const matter = await createMatter(token, {
         client_id: clientId,
         title,
-        description: description || null,
+        description: fullDescription || null,
         due_date: dueDate || null,
       })
 
@@ -179,9 +210,10 @@ function NewMatter() {
                 onChange={(e) => setTitle(e.target.value)}
                 autoComplete="off"
                 aria-invalid={Boolean(titleError)}
+                aria-describedby={titleError ? 'matter-title-error' : undefined}
               />
               {titleError && (
-                <span className="matter-error" aria-live="polite">
+                <span className="matter-error" id="matter-title-error" aria-live="polite">
                   {titleError}
                 </span>
               )}
@@ -190,7 +222,7 @@ function NewMatter() {
             <div className="field-row">
               <label className="field">
                 <span>Matter Type</span>
-                <select defaultValue="">
+                <select value={matterType} onChange={(e) => setMatterType(e.target.value)}>
                   <option value="" disabled>
                     Select matter type
                   </option>
@@ -201,7 +233,7 @@ function NewMatter() {
               </label>
               <label className="field">
                 <span>Practice Area</span>
-                <select defaultValue="">
+                <select value={practiceArea} onChange={(e) => setPracticeArea(e.target.value)}>
                   <option value="" disabled>
                     Select practice area
                   </option>
@@ -307,6 +339,7 @@ function NewMatter() {
                 value={clientId}
                 onChange={(e) => setClientId(e.target.value)}
                 aria-invalid={Boolean(clientError)}
+                aria-describedby={clientError ? 'matter-client-error' : undefined}
               >
                 <option value="" disabled>
                   Select existing client
@@ -318,7 +351,7 @@ function NewMatter() {
                 ))}
               </select>
               {clientError && (
-                <span className="matter-error" aria-live="polite">
+                <span className="matter-error" id="matter-client-error" aria-live="polite">
                   {clientError}
                 </span>
               )}
@@ -369,7 +402,7 @@ function NewMatter() {
 
             <label className="field">
               <span>Fee Type</span>
-              <select defaultValue="hourly">
+              <select value={feeType} onChange={(e) => setFeeType(e.target.value)}>
                 <option value="hourly">Hourly</option>
                 <option value="flat">Flat Fee</option>
                 <option value="contingency">Contingency</option>
@@ -387,18 +420,35 @@ function NewMatter() {
               <span>Conflict Check</span>
               <div className="input-with-icon leading">
                 <IconSearch />
-                <input type="text" placeholder="Search names and entities to run conflict check…" autoComplete="off" />
+                <input
+                  type="text"
+                  placeholder="Search names and entities to run conflict check…"
+                  autoComplete="off"
+                  value={conflictCheck}
+                  onChange={(e) => setConflictCheck(e.target.value)}
+                />
               </div>
             </label>
 
             <label className="field">
               <span>Client&rsquo;s Goal</span>
-              <input type="text" placeholder="Client's Goal…" autoComplete="off" />
+              <input
+                type="text"
+                placeholder="Client's Goal…"
+                autoComplete="off"
+                value={clientGoal}
+                onChange={(e) => setClientGoal(e.target.value)}
+              />
             </label>
 
             <label className="field">
               <span>Case Strategy Notes</span>
-              <textarea placeholder="Reference field for related matters…" rows={2} />
+              <textarea
+                placeholder="Reference field for related matters…"
+                rows={2}
+                value={caseStrategyNotes}
+                onChange={(e) => setCaseStrategyNotes(e.target.value)}
+              />
             </label>
           </section>
         </div>

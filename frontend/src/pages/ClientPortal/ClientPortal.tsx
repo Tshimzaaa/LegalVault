@@ -2,24 +2,11 @@ import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import '../../styles/dashboard.css'
 import Sidebar from '../../components/Sidebar'
-import type { NavItem } from '../../components/Sidebar'
 import AnnouncementBanner from '../../components/AnnouncementBanner'
 import NotificationBell from '../../components/NotificationBell'
 import RouteSkeleton from '../../components/RouteSkeleton'
-import {
-  IconGauge,
-  IconFilePlus,
-  IconWorkflow,
-  IconSignedContract,
-  IconReport,
-  IconHelp,
-  IconLearnedFriend,
-  IconGrid,
-  IconShield,
-  IconTemplates,
-  IconUser,
-  IconInbox,
-} from '../../components/icons'
+import { clientNavItems } from './clientNav'
+import type { ClientPage } from './clientNav'
 import type { ClientContact } from '../../api/clientAuth'
 
 // Lazy so each client page's code only downloads when actually visited, instead of all 14
@@ -35,43 +22,11 @@ const LegalGuide = lazy(() => import('../LegalHubGuide/LegalHubGuide'))
 const MatterAdmin = lazy(() => import('../MatterAdmin/MatterAdmin'))
 const ClientTemplates = lazy(() => import('../ClientTemplates/ClientTemplates'))
 const ClientAccountSettings = lazy(() => import('../ClientAccountSettings/ClientAccountSettings'))
-const ClientIntakeForms = lazy(() => import('../ClientIntakeForms/ClientIntakeForms'))
 const ClientIntakeFormDetail = lazy(() => import('../ClientIntakeForms/ClientIntakeFormDetail'))
 const ClientMyIntakeSubmissions = lazy(() => import('../ClientMyIntakeSubmissions/ClientMyIntakeSubmissions'))
 const ClientIntakeSubmissionDetail = lazy(() => import('../ClientMyIntakeSubmissions/ClientIntakeSubmissionDetail'))
 const ClientKnowledgeBase = lazy(() => import('../ClientKnowledgeBase/ClientKnowledgeBase'))
 const ClientKnowledgeArticleDetail = lazy(() => import('../ClientKnowledgeBase/ClientKnowledgeArticleDetail'))
-
-export type ClientPage =
-  | 'dashboard'
-  | 'workflow'
-  | 'signed-contracts'
-  | 'reporting'
-  | 'resources'
-  | 'learned-friend'
-  | 'guide'
-  | 'matter-admin'
-  | 'templates'
-  | 'account-settings'
-  | 'intake-forms'
-  | 'my-intake-submissions'
-  | 'knowledge-base'
-
-export const clientNavItems: NavItem[] = [
-  { label: 'Dashboard', icon: <IconGauge />, page: 'dashboard' },
-  { label: 'Workflow', icon: <IconWorkflow />, page: 'workflow' },
-  { label: 'New Request', icon: <IconFilePlus />, page: 'intake-forms' },
-  { label: 'My Requests', icon: <IconInbox />, page: 'my-intake-submissions' },
-  { label: 'Signed Contracts', icon: <IconSignedContract />, page: 'signed-contracts' },
-  { label: 'Data & Reporting', icon: <IconReport />, page: 'reporting' },
-  { label: 'Resources', icon: <IconHelp />, page: 'resources' },
-  { label: 'Knowledge Base', icon: <IconHelp />, page: 'knowledge-base' },
-  { label: 'My Learned Friend', icon: <IconLearnedFriend />, page: 'learned-friend' },
-  { label: 'How to Use LegalHub', icon: <IconGrid />, page: 'guide' },
-  { label: 'Matter Admin', icon: <IconShield />, page: 'matter-admin' },
-  { label: 'Templates', icon: <IconTemplates />, page: 'templates' },
-  { label: 'Account Settings', icon: <IconUser />, page: 'account-settings' },
-]
 
 interface ClientPortalProps {
   contact: ClientContact
@@ -114,11 +69,7 @@ function ClientPortal({ contact, onLogout, onContactUpdate }: ClientPortalProps)
             <Route path="learned-friend" element={<LearnedFriend contact={contact} onLogout={onLogout} />} />
             <Route path="guide" element={<LegalGuide contact={contact} onLogout={onLogout} />} />
             <Route path="matter-admin" element={<MatterAdmin contact={contact} onLogout={onLogout} />} />
-            <Route path="intake-forms" element={<ClientIntakeForms contact={contact} onLogout={onLogout} />} />
-            <Route
-              path="intake-forms/:formId"
-              element={<ClientIntakeFormDetail contact={contact} onLogout={onLogout} />}
-            />
+            <Route path="intake-forms" element={<ClientIntakeFormDetail contact={contact} onLogout={onLogout} />} />
             <Route
               path="my-intake-submissions"
               element={<ClientMyIntakeSubmissions contact={contact} onLogout={onLogout} />}

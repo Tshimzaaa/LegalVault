@@ -1,4 +1,4 @@
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app.modules.intake.models import IntakeForm, IntakeFormField, IntakeSubmission, IntakeSubmissionAnswer
@@ -67,26 +67,9 @@ class IntakeRepository:
             select(IntakeFormField).where(IntakeFormField.form_id == form_id, IntakeFormField.key == key)
         )
 
-    def list_fields_by_form(self, form_id) -> list[IntakeFormField]:
-        return list(
-            self.db.scalars(
-                select(IntakeFormField)
-                .where(IntakeFormField.form_id == form_id)
-                .order_by(IntakeFormField.display_order)
-            )
-        )
-
     def delete_field(self, field: IntakeFormField):
         self.db.delete(field)
         self.db.flush()
-
-    def max_display_order(self, form_id) -> int:
-        # Deliberately reuses list_fields_by_form's row-select rather than a func.max()
-        # aggregate over the same predicate — the aggregate form was observed returning
-        # NULL (so every new field landed at display_order 0) even when list_fields_by_form
-        # correctly returned the existing rows for the same form_id in the same request.
-        fields = self.list_fields_by_form(form_id)
-        return max((f.display_order for f in fields), default=-1)
 
     # Submissions
 
@@ -131,11 +114,6 @@ class IntakeRepository:
             .limit(limit)
         )
         return list(self.db.scalars(statement))
-
-    def count_submissions_for_form(self, form_id) -> int:
-        return self.db.scalar(
-            select(func.count()).select_from(IntakeSubmission).where(IntakeSubmission.form_id == form_id)
-        )
 
     # Answers
 

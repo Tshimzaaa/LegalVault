@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import type { FormEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { FormEvent, KeyboardEvent as ReactKeyboardEvent } from 'react'
 import './LoginModal.css'
 import { forgotPassword } from '../api/auth'
 import { clientForgotPassword } from '../api/clientAuth'
@@ -19,6 +19,7 @@ function LoginModal({ onClose, onSubmit, staffOnly }: LoginModalProps) {
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [waking, setWaking] = useState(false)
+  const modalRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -27,6 +28,37 @@ function LoginModal({ onClose, onSubmit, staffOnly }: LoginModalProps) {
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
+
+  // Focus the first focusable element whenever the modal (re)mounts or switches mode
+  // (login/forgot/sent each render different fields), so keyboard users land inside it.
+  useEffect(() => {
+    const focusable = modalRef.current?.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    )
+    focusable?.[0]?.focus()
+  }, [mode])
+
+  function getFocusable(): HTMLElement[] {
+    const focusable = modalRef.current?.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    )
+    return focusable ? Array.from(focusable) : []
+  }
+
+  function handleModalKeyDown(e: ReactKeyboardEvent) {
+    if (e.key !== 'Tab') return
+    const elements = getFocusable()
+    if (elements.length === 0) return
+    const first = elements[0]
+    const last = elements[elements.length - 1]
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault()
+      last.focus()
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault()
+      first.focus()
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -64,8 +96,10 @@ function LoginModal({ onClose, onSubmit, staffOnly }: LoginModalProps) {
     return (
       <div className="modal-backdrop" onClick={onClose}>
         <div
+          ref={modalRef}
           className="modal-box"
           onClick={(e) => e.stopPropagation()}
+          onKeyDown={handleModalKeyDown}
           role="dialog"
           aria-modal="true"
           aria-labelledby="login-modal-reset-title"
@@ -117,8 +151,10 @@ function LoginModal({ onClose, onSubmit, staffOnly }: LoginModalProps) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
+        ref={modalRef}
         className="modal-box"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={handleModalKeyDown}
         role="dialog"
         aria-modal="true"
         aria-labelledby="login-modal-title"

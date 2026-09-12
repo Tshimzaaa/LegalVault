@@ -69,7 +69,7 @@ function ClientWorkflow({ contact, onLogout }: ClientWorkflowProps) {
       )}
 
       {status === 'error' && (
-        <div className="dash-state">
+        <div className="dash-state" role="status" aria-live="polite">
           <p>Couldn&rsquo;t reach the backend for your matters.</p>
           <button type="button" className="btn-ghost" onClick={loadAll}>
             Retry

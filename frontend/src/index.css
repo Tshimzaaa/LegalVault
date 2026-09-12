@@ -21,6 +21,25 @@
   top: 8px;
 }
 
+button,
+a,
+[role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 :root {
   /* Dark theme — default, used whenever no explicit choice overrides it and the OS
      has no light preference (or JS hasn't run yet). See ThemeContext.tsx for how
@@ -58,6 +77,7 @@
   --warning-light: #f6c945;
   --warning-rgb: 246, 201, 69;
   --warning-on: #1a1300;
+  --warning-text: #eab308;
   --code-bg: #1f2028;
   --shadow-rgb: 0, 0, 0;
   --shadow:
@@ -99,6 +119,7 @@
     --overlay-rgb: 0, 0, 0;
     --accent-light: #16a34a;
     --accent-text: #15803d;
+    --warning-text: #a16207;
     --code-bg: #eef0f3;
     --shadow:
       rgba(15, 23, 42, 0.08) 0 10px 15px -3px, rgba(15, 23, 42, 0.04) 0 4px 6px -2px;
@@ -121,6 +142,7 @@
   --overlay-rgb: 0, 0, 0;
   --accent-light: #16a34a;
   --accent-text: #15803d;
+  --warning-text: #a16207;
   --code-bg: #eef0f3;
   --shadow:
     rgba(15, 23, 42, 0.08) 0 10px 15px -3px, rgba(15, 23, 42, 0.04) 0 4px 6px -2px;
@@ -143,6 +165,7 @@
   --overlay-rgb: 255, 255, 255;
   --accent-light: #4ade80;
   --accent-text: #22c55e;
+  --warning-text: #eab308;
   --code-bg: #1f2028;
   --shadow:
     rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;

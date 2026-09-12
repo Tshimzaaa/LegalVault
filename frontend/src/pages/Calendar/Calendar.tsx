@@ -115,7 +115,9 @@ function Calendar() {
                       {e.type === 'matter_deadline' ? <IconFlag color="#ef4444" /> : <IconCheckCircle />}
                     </span>
                     <span className="calendar-event-title">{e.title}</span>
-                    <span className="muted">{e.matter_title}</span>
+                    <span className="muted calendar-event-matter" title={e.matter_title}>
+                      {e.matter_title}
+                    </span>
                   </Link>
                 ))}
               </div>

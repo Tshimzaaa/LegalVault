@@ -3,7 +3,6 @@ from pydantic import BaseModel
 
 class ActiveCasesSummary(BaseModel):
     count: int
-    totalValue: str
     progressPercent: int
 
 

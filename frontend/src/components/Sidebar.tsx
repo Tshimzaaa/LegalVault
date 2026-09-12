@@ -50,6 +50,15 @@ function Sidebar({
 
   const close = () => setOpen(false)
 
+  useEffect(() => {
+    if (!open) return
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') close()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [open])
+
   return (
     <>
       <div className="sidebar-mobile-bar">

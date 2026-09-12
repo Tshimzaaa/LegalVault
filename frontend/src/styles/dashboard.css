@@ -538,6 +538,17 @@ button.chip {
   filter: none;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .btn-solid {
+    transition: box-shadow 0.15s ease, filter 0.15s ease;
+  }
+
+  .btn-solid:hover:not(:disabled),
+  .btn-solid:active:not(:disabled) {
+    transform: none;
+  }
+}
+
 /* Card-grid list pattern (templates, resources, client intake forms, etc.) — previously
    only defined in the staff Templates.css, so the client portal's equivalent pages
    (ClientIntakeForms, ClientTemplates, Resources) rendered these cards with no styling. */
@@ -563,6 +574,22 @@ button.chip {
 
 .template-card {
   gap: 8px;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.template-card:hover {
+  border-color: rgba(var(--accent-rgb), 0.35);
+  transform: translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .template-card {
+    transition: border-color 0.15s ease;
+  }
+
+  .template-card:hover {
+    transform: none;
+  }
 }
 
 .template-name {
@@ -577,6 +604,10 @@ button.chip {
   line-height: 1.4;
   margin: 0;
   flex: 1;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .template-use-btn {

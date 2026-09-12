@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import '../AuthPage.css'
@@ -16,14 +16,19 @@ function Register() {
   const [password, setPassword] = useState('')
   const [consent, setConsent] = useState(false)
   const [error, setError] = useState('')
+  const [passwordError, setPasswordError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  const passwordRef = useRef<HTMLInputElement>(null)
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError('')
+    setPasswordError('')
 
     if (password.length < 8) {
-      setError('Admin password must be at least 8 characters.')
+      setPasswordError('Admin password must be at least 8 characters.')
+      passwordRef.current?.focus()
       return
     }
 
@@ -51,7 +56,7 @@ function Register() {
     <div className="auth-page">
       <Seo title="Onboard a Firm" description="Firm onboarding." path="/register" noindex />
       <div className="modal-box wide">
-        <h1>Onboard a Law Firm</h1>
+        <h2>Onboard a Law Firm</h2>
         <p className="modal-sub">SaaS-owner only: requires the shared onboarding secret.</p>
 
         <form onSubmit={handleSubmit}>
@@ -128,13 +133,20 @@ function Register() {
           <label className="modal-field">
             <span>Admin password</span>
             <input
+              ref={passwordRef}
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="At least 8 characters"
+              placeholder="At least 8 characters…"
               required
               autoComplete="new-password"
+              aria-invalid={Boolean(passwordError)}
             />
+            {passwordError && (
+              <span className="modal-field-error" aria-live="polite">
+                {passwordError}
+              </span>
+            )}
           </label>
 
           <label className="modal-field modal-field-checkbox">

@@ -175,7 +175,7 @@ function App() {
   }
 
   if (checkingSession) {
-    return null
+    return <RouteFallback />
   }
 
   const homePath = actor?.kind === 'staff' ? '/staff/dashboard' : '/client/dashboard'

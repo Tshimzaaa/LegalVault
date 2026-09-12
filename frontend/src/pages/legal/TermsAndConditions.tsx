@@ -29,23 +29,23 @@ function TermsAndConditions() {
         <p>
           These Terms and Conditions govern access to and use of the practice management platform operated by{' '}
           <span className="legal-placeholder">[Index Legal (Pty) Ltd, registration no. PLACEHOLDER]</span> ("we",
-          "us", the "Platform"). By creating an account, or by a law firm's staff or clients using the Platform, you
-          agree to these Terms. If you don't agree, don't use the Platform.
+          "us", the "Platform"). By creating an account, or by a law firm’s staff or clients using the Platform, you
+          agree to these Terms. If you don’t agree, don’t use the Platform.
         </p>
 
-        <h2>2. What the Platform is, and isn't</h2>
+        <h2>2. What the Platform is, and isn’t</h2>
         <p>
           The Platform is practice-management software: matter tracking, client communication, document storage,
           templates, e-signature requests, and reporting for law firms. We are a software provider, not a law firm.
-          We don't provide legal advice, don't represent any user in any legal matter, and aren't responsible for
+          We don’t provide legal advice, don’t represent any user in any legal matter, and aren’t responsible for
           the legal accuracy or adequacy of any document, template, or advice a firm produces using the Platform.
         </p>
 
         <h2>3. Accounts and eligibility</h2>
         <ul>
-          <li>Firm accounts are provisioned by us on a law firm's request; the firm's administrator is responsible for managing staff access within their account.</li>
+          <li>Firm accounts are provisioned by us on a law firm’s request; the firm’s administrator is responsible for managing staff access within their account.</li>
           <li>Client-portal access is provisioned by the law firm that represents you.</li>
-          <li>You're responsible for keeping your login credentials confidential and for all activity under your account.</li>
+          <li>You’re responsible for keeping your login credentials confidential and for all activity under your account.</li>
           <li>Notify us immediately at hello@indexlegal.com if you suspect unauthorized access to your account.</li>
         </ul>
 
@@ -53,23 +53,23 @@ function TermsAndConditions() {
         <p>You agree not to:</p>
         <ul>
           <li>Use the Platform for any unlawful purpose or in violation of any applicable law.</li>
-          <li>Attempt to gain unauthorized access to another firm's data or another user's account.</li>
+          <li>Attempt to gain unauthorized access to another firm’s data or another user’s account.</li>
           <li>Upload malicious code, or attempt to disrupt, overload, or reverse-engineer the Platform.</li>
-          <li>Use the Platform to store or transmit content you don't have the right to share.</li>
+          <li>Use the Platform to store or transmit content you don’t have the right to share.</li>
         </ul>
 
         <h2>5. Client data and confidentiality</h2>
         <p>
           Law firms using the Platform remain responsible for their professional and ethical obligations to their
           own clients, including attorney-client privilege and confidentiality. We process firm-client data only on
-          the firm's instructions, as described in our <Link to="/privacy-policy">Privacy Policy</Link>, and take
+          the firm’s instructions, as described in our <Link to="/privacy-policy">Privacy Policy</Link>, and take
           the security measures described there.
         </p>
 
         <h2>6. Fees and payment</h2>
         <p>
           Subscription fees are arranged directly with our team and invoiced outside the Platform (there is no
-          in-app billing or card processing). Fees, billing frequency, and payment terms are set out in your firm's
+          in-app billing or card processing). Fees, billing frequency, and payment terms are set out in your firm’s
           order form or agreement with us. See our <Link to="/refund-policy">Refund Policy</Link> for cancellation
           and refund terms.
         </p>
@@ -77,13 +77,13 @@ function TermsAndConditions() {
         <h2>7. Free trials</h2>
         <p>
           Where offered, a free trial gives temporary access to the Platform on these Terms. We may end or modify a
-          trial at any time. Data created during a trial may not be preserved if you don't convert to a paid plan.
+          trial at any time. Data created during a trial may not be preserved if you don’t convert to a paid plan.
         </p>
 
         <h2>8. Intellectual property</h2>
         <p>
           We own the Platform, its software, design, and branding. You (or your firm) retain ownership of the
-          matter data, documents, and content you upload; we don't claim ownership of it, and use it only to
+          matter data, documents, and content you upload; we don’t claim ownership of it, and use it only to
           provide the service to you.
         </p>
 
@@ -96,7 +96,7 @@ function TermsAndConditions() {
 
         <h2>10. Service availability</h2>
         <p>
-          We aim to keep the Platform available and reliable, but we don't guarantee uninterrupted or error-free
+          We aim to keep the Platform available and reliable, but we don’t guarantee uninterrupted or error-free
           service. Scheduled maintenance and unplanned downtime may occur.
         </p>
 

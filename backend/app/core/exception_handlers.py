@@ -50,19 +50,16 @@ from app.exceptions.matters import (
 from app.exceptions.announcements import AnnouncementNotFound
 from app.exceptions.notifications import NotificationNotFound
 from app.exceptions.signed_contracts import SignedContractNotFound
+from app.exceptions.fallback_clauses import FallbackClauseNotFound
 from app.exceptions.storage import StorageUnavailable
 from app.exceptions.malware import MalwareDetected, ScannerUnavailable
 from app.exceptions.intake import (
     IntakeFormNotFound,
-    IntakeFieldNotFound,
     IntakeSubmissionNotFound,
     IntakeAnswerNotFound,
     IntakeFormNotPublished,
-    IntakeFormHasSubmissions,
-    IntakeFieldLocked,
     MissingRequiredIntakeAnswer,
     UnsupportedIntakeFileType,
-    SystemFormProtected,
 )
 from app.exceptions.knowledge import KnowledgeArticleNotFound
 from app.exceptions.signatures import SignatureRequestNotFound, InvalidSignatureRecipient, SigningProviderUnavailable
@@ -264,6 +261,10 @@ def register_exception_handlers(app: FastAPI):
     async def signed_contract_not_found(_, __):
         raise HTTPException(status_code=404, detail="Signed contract not found.")
 
+    @app.exception_handler(FallbackClauseNotFound)
+    async def fallback_clause_not_found(_, __):
+        raise HTTPException(status_code=404, detail="Fallback clause not found.")
+
     @app.exception_handler(StaffInvalidRefreshToken)
     async def staff_invalid_refresh_token(_, __):
         raise HTTPException(status_code=401, detail="Invalid or expired refresh token.")
@@ -292,10 +293,6 @@ def register_exception_handlers(app: FastAPI):
     async def intake_form_not_found(_, __):
         raise HTTPException(status_code=404, detail="Intake form not found.")
 
-    @app.exception_handler(IntakeFieldNotFound)
-    async def intake_field_not_found(_, __):
-        raise HTTPException(status_code=404, detail="Intake form field not found.")
-
     @app.exception_handler(IntakeSubmissionNotFound)
     async def intake_submission_not_found(_, __):
         raise HTTPException(status_code=404, detail="Intake submission not found.")
@@ -308,17 +305,6 @@ def register_exception_handlers(app: FastAPI):
     async def intake_form_not_published(_, __):
         raise HTTPException(status_code=404, detail="Intake form not found.")
 
-    @app.exception_handler(IntakeFormHasSubmissions)
-    async def intake_form_has_submissions(_, __):
-        raise HTTPException(status_code=409, detail="Cannot delete an intake form that has existing submissions.")
-
-    @app.exception_handler(IntakeFieldLocked)
-    async def intake_field_locked(_, __):
-        raise HTTPException(
-            status_code=409,
-            detail="This field can't be removed or have its type changed because submissions already reference it.",
-        )
-
     @app.exception_handler(MissingRequiredIntakeAnswer)
     async def missing_required_intake_answer(_, __):
         raise HTTPException(status_code=422, detail="One or more required fields were not answered.")
@@ -326,10 +312,6 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(UnsupportedIntakeFileType)
     async def unsupported_intake_file_type(_, __):
         raise HTTPException(status_code=400, detail="Unsupported or oversized file for this field.")
-
-    @app.exception_handler(SystemFormProtected)
-    async def system_form_protected(_, __):
-        raise HTTPException(status_code=409, detail="This form is managed by the system and can't be modified.")
 
     @app.exception_handler(KnowledgeArticleNotFound)
     async def knowledge_article_not_found(_, __):

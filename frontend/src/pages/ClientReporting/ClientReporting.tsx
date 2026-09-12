@@ -119,8 +119,8 @@ function ActiveMattersLineChart({ data }: { data: TrendPoint[] }) {
           />
         ))}
 
-        <path d={areaPath} fill="#22c55e" opacity="0.1" stroke="none" />
-        <path d={linePath} fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d={areaPath} fill="var(--accent)" opacity="0.1" stroke="none" />
+        <path d={linePath} fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
 
         {points.map((p, i) => (
           <g key={p.month}>
@@ -138,7 +138,7 @@ function ActiveMattersLineChart({ data }: { data: TrendPoint[] }) {
               onBlur={() => setHover(null)}
             />
             {(hover === i || i === points.length - 1) && (
-              <circle cx={p.x} cy={p.y} r="4" fill="#22c55e" stroke="var(--surface)" strokeWidth="2" />
+              <circle cx={p.x} cy={p.y} r="4" fill="var(--accent)" stroke="var(--surface)" strokeWidth="2" />
             )}
           </g>
         ))}
@@ -283,7 +283,7 @@ function TurnaroundBarChart({ data }: { data: BarPoint[] }) {
               onBlur={() => setHover(null)}
             >
               <rect x={x} y={padding} width={barWidth} height={height - padding * 2} fill="transparent" />
-              <rect x={x} y={y} width={barWidth} height={barHeight} rx="4" fill="#22c55e" opacity={isHover ? 1 : 0.85} />
+              <rect x={x} y={y} width={barWidth} height={barHeight} rx="4" fill="var(--accent)" opacity={isHover ? 1 : 0.85} />
               {isHover && (
                 <text x={x + barWidth / 2} y={y - 6} textAnchor="middle" className="chart-bar-label">
                   {daysFormat.format(d.value)}d

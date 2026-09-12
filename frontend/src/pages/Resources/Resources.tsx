@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import './Resources.css'
 import { IconFilePlus, IconWorkflow, IconSignedContract, IconShield, IconGear, IconTemplates } from '../../components/icons'
 import ProfileMenu from '../../components/ProfileMenu'
@@ -44,9 +45,12 @@ function Resources({ contact, onLogout }: ResourcesProps) {
             <span className="template-name">{a.name}</span>
             <span className="template-category">{a.category}</span>
             <p className="template-description">{a.description}</p>
-            <button type="button" className="btn-ghost template-use-btn">
+            <Link
+              to={`/client/knowledge-base?category=${encodeURIComponent(a.category)}`}
+              className="btn-ghost template-use-btn"
+            >
               Read Article
-            </button>
+            </Link>
           </div>
         ))}
       </section>

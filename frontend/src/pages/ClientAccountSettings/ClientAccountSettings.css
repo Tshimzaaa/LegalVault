@@ -1,0 +1,15 @@
+/* Settings.css (staff) only ever needed to lay out a single .settings-card sitting
+   directly in .dash-main (which is overflow: hidden, relying on the page's own content
+   to size itself, e.g. NewMatter's .matter-form scrolls itself via flex: 1 + overflow-y).
+   This page stacks three cards (Profile, Password, Account), so it needs the same
+   scrollable-flex-child treatment plus a real gap between the cards, otherwise they
+   render flush against each other and long content can get clipped with no way to
+   reach the fields below. */
+.client-settings-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}

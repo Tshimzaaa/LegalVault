@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import './Navbar.css'
 import ThemeToggle from './ThemeToggle'
 
@@ -31,6 +32,15 @@ function Navbar({ onLoginClick }: NavbarProps) {
 
   const closeMenu = () => setMenuOpen(false)
 
+  useEffect(() => {
+    if (!menuOpen) return
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') closeMenu()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [menuOpen])
+
   return (
     <header className="navbar">
       <a href="#home" className="navbar-brand" onClick={closeMenu}>
@@ -55,9 +65,9 @@ function Navbar({ onLoginClick }: NavbarProps) {
 
       <div className="navbar-actions">
         <ThemeToggle />
-        <button type="button" className="navbar-cta" onClick={onLoginClick}>
+        <Link to="/login" className="navbar-cta" onClick={onLoginClick}>
           Login
-        </button>
+        </Link>
         <button
           type="button"
           className="navbar-menu-toggle"
@@ -86,8 +96,8 @@ function Navbar({ onLoginClick }: NavbarProps) {
             {link.label}
           </a>
         ))}
-        <button
-          type="button"
+        <Link
+          to="/login"
           className="navbar-cta navbar-mobile-cta"
           onClick={() => {
             closeMenu()
@@ -95,7 +105,7 @@ function Navbar({ onLoginClick }: NavbarProps) {
           }}
         >
           Login
-        </button>
+        </Link>
       </nav>
     </header>
   )

@@ -83,66 +83,53 @@ def test_staff_resolves_request_support_submission(client, db_session):
     assert res.json()["status"] == "resolved"
 
 
-def test_staff_cannot_delete_or_add_fields_to_system_form(client, db_session):
+def test_client_submits_other_request_type_with_uploaded_document(client, db_session, monkeypatch):
+    monkeypatch.setattr("app.modules.intake.service.scan_file", lambda *a, **k: None)
+    monkeypatch.setattr("app.modules.intake.service.upload_file", lambda *a, **k: "intake/fake-key")
+
+    firm = make_firm(db_session)
+    seed_system_support_form(db_session, firm.id)
+    client_company = make_client_company(db_session, firm)
+    contact, _ = make_contact(db_session, client_company)
+
+    form = client.get("/client-intake/forms", headers=auth_headers(contact)).json()[0]
+    assert "Other" in next(f for f in form["fields"] if f["key"] == "request_type")["options"]
+
+    request_type_field_id = _request_type_field_id(form)
+    other_field_id = next(f["id"] for f in form["fields"] if f["key"] == "other_request_type")
+    description_field_id = next(f["id"] for f in form["fields"] if f["key"] == "description")
+    upload_field_id = next(f["id"] for f in form["fields"] if f["key"] == "reference_document_upload")
+
+    create_res = client.post(
+        f"/client-intake/forms/{form['id']}/submit",
+        data={
+            "answers_json": (
+                f'{{"{request_type_field_id}": "Other", '
+                f'"{other_field_id}": "Trademark opposition", '
+                f'"{description_field_id}": "Need help opposing a trademark filing."}}'
+            ),
+            "file_field_ids": [upload_field_id],
+        },
+        files={"files": ("evidence.pdf", b"fake pdf content", "application/pdf")},
+        headers=auth_headers(contact),
+    )
+    assert create_res.status_code == 201
+    answers = {a["field_id"]: a for a in create_res.json()["answers"]}
+    assert answers[other_field_id]["value"] == "Trademark opposition"
+    assert answers[upload_field_id]["original_filename"] == "evidence.pdf"
+
+
+def test_staff_can_list_and_get_the_system_form_read_only(client, db_session):
+    # There's no form builder — every firm has exactly the one system-seeded form, and
+    # staff can only read it (to label submission answers), never create/edit/delete it.
     firm = make_firm(db_session)
     seed_system_support_form(db_session, firm.id)
     admin, _ = make_staff(db_session, firm)
 
-    form_id = client.get("/intake-forms", headers=auth_headers(admin)).json()[0]["id"]
-
-    add_res = client.post(
-        f"/intake-forms/{form_id}/fields",
-        json={"label": "Extra Field", "field_type": "text"},
-        headers=auth_headers(admin),
-    )
-    assert add_res.status_code == 409
-
-    delete_res = client.delete(f"/intake-forms/{form_id}", headers=auth_headers(admin))
-    assert delete_res.status_code == 409
-
-
-def test_staff_can_delete_a_custom_form_with_fields(client, db_session):
-    # Regression test: IntakeForm.fields has no ORM delete cascade, so deleting a form
-    # used to try nulling out each field's non-nullable form_id — which also violates
-    # the RLS policy on intake_form_fields — and 500'd on any form that had fields.
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-
-    form_id = client.post(
-        "/intake-forms", json={"title": "Custom Intake"}, headers=auth_headers(admin)
-    ).json()["id"]
-    client.post(
-        f"/intake-forms/{form_id}/fields",
-        json={"label": "Full name", "field_type": "text"},
-        headers=auth_headers(admin),
-    )
-
-    delete_res = client.delete(f"/intake-forms/{form_id}", headers=auth_headers(admin))
-    assert delete_res.status_code == 204
-
     list_res = client.get("/intake-forms", headers=auth_headers(admin))
-    assert all(f["id"] != form_id for f in list_res.json())
+    assert list_res.status_code == 200
+    assert len(list_res.json()) == 1
+    assert list_res.json()[0]["is_system"] is True
 
-
-def test_intake_field_display_order_increments(client, db_session):
-    # Regression test: max_display_order() used a func.max() aggregate that was
-    # observed always returning NULL under this app's RLS setup, so every new field
-    # landed at display_order 0 instead of incrementing. Fixed by deriving the max
-    # from the same row-select list_fields_by_form already uses successfully.
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-
-    form_id = client.post(
-        "/intake-forms", json={"title": "Order Test"}, headers=auth_headers(admin)
-    ).json()["id"]
-
-    orders = []
-    for label in ("Field A", "Field B", "Field C"):
-        res = client.post(
-            f"/intake-forms/{form_id}/fields",
-            json={"label": label, "field_type": "text"},
-            headers=auth_headers(admin),
-        )
-        orders.append(res.json()["display_order"])
-
-    assert orders == [0, 1, 2]
+    get_res = client.get(f"/intake-forms/{list_res.json()[0]['id']}", headers=auth_headers(admin))
+    assert get_res.status_code == 200

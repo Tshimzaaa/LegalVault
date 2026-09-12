@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import '../AuthPage.css'
@@ -15,19 +15,28 @@ function ResetPassword() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
+  const [passwordError, setPasswordError] = useState('')
+  const [confirmPasswordError, setConfirmPasswordError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
+
+  const passwordRef = useRef<HTMLInputElement>(null)
+  const confirmPasswordRef = useRef<HTMLInputElement>(null)
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError('')
+    setPasswordError('')
+    setConfirmPasswordError('')
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters.')
+      setPasswordError('Password must be at least 8 characters.')
+      passwordRef.current?.focus()
       return
     }
     if (password !== confirmPassword) {
-      setError('Passwords do not match.')
+      setConfirmPasswordError('Passwords do not match.')
+      confirmPasswordRef.current?.focus()
       return
     }
 
@@ -46,7 +55,7 @@ function ResetPassword() {
     <div className="auth-page">
       <Seo title="Reset Password" description="Reset your account password." path="/reset-password" noindex />
       <div className="modal-box">
-        <h1>Reset Password</h1>
+        <h2>Reset Password</h2>
         <p className="modal-sub">
           {done ? 'Your password has been reset.' : 'Enter the reset link token and choose a new password.'}
         </p>
@@ -74,7 +83,7 @@ function ResetPassword() {
                 />
               </label>
             ) : (
-              <p className="modal-sub">
+              <p className="modal-sub modal-sub-inline">
                 Reset token detected from your link.{' '}
                 <button type="button" className="auth-page-link auth-page-link-inline" onClick={() => setEditToken(true)}>
                   Enter a different one
@@ -85,25 +94,39 @@ function ResetPassword() {
             <label className="modal-field">
               <span>New password</span>
               <input
+                ref={passwordRef}
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
                 autoComplete="new-password"
+                aria-invalid={Boolean(passwordError)}
               />
+              {passwordError && (
+                <span className="modal-field-error" aria-live="polite">
+                  {passwordError}
+                </span>
+              )}
             </label>
 
             <label className="modal-field">
               <span>Confirm password</span>
               <input
+                ref={confirmPasswordRef}
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
                 required
                 autoComplete="new-password"
+                aria-invalid={Boolean(confirmPasswordError)}
               />
+              {confirmPasswordError && (
+                <span className="modal-field-error" aria-live="polite">
+                  {confirmPasswordError}
+                </span>
+              )}
             </label>
 
             {error && <p className="modal-error" aria-live="polite">{error}</p>}

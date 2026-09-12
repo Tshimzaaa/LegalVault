@@ -635,7 +635,7 @@ class MatterService:
             CalendarEvent(
                 date=matter.due_date,
                 type="matter_deadline",
-                title=matter.title,
+                title="Matter due date",
                 matter_id=matter.id,
                 matter_title=matter.title,
             )
@@ -660,7 +660,7 @@ class MatterService:
             CalendarEvent(
                 date=matter.due_date,
                 type="matter_deadline",
-                title=matter.title,
+                title="Matter due date",
                 matter_id=matter.id,
                 matter_title=matter.title,
             )

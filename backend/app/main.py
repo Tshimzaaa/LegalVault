@@ -42,6 +42,10 @@ from app.modules.signed_contracts.routes import (
     router as signed_contracts_router,
     client_signed_contracts_router,
 )
+from app.modules.fallback_clauses.routes import (
+    router as fallback_clauses_router,
+    client_fallback_clauses_router,
+)
 from app.modules.intake.routes import (
     router as intake_forms_router,
     submissions_router as intake_submissions_router,
@@ -85,6 +89,8 @@ app.include_router(client_notifications_router)
 app.include_router(reporting_router)
 app.include_router(signed_contracts_router)
 app.include_router(client_signed_contracts_router)
+app.include_router(fallback_clauses_router)
+app.include_router(client_fallback_clauses_router)
 app.include_router(intake_forms_router)
 app.include_router(intake_submissions_router)
 app.include_router(client_intake_router)

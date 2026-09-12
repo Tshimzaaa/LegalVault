@@ -328,7 +328,7 @@ function SignedContracts() {
       )}
 
       {status === 'error' && (
-        <div className="dash-state">
+        <div className="dash-state" role="status" aria-live="polite">
           <p>Couldn&rsquo;t reach the backend for signed contracts.</p>
           <button type="button" className="btn-ghost" onClick={refresh}>
             Retry
@@ -399,9 +399,12 @@ function SignedContracts() {
                   <option value="general">General</option>
                 </select>
               </label>
-              <span className="chip">
-                Showing <span className="chip-badge">{filteredContracts.length}</span>
-              </span>
+              <div className="field signed-filters-count">
+                <span>Results</span>
+                <span className="chip">
+                  Showing <span className="chip-badge">{filteredContracts.length}</span>
+                </span>
+              </div>
             </div>
 
             {actionError && <p className="matter-error" aria-live="polite">{actionError}</p>}
@@ -422,8 +425,8 @@ function SignedContracts() {
               <tbody>
                 {filteredContracts.map((c) => (
                   <tr key={c.id}>
-                    <td>
-                      {c.title}
+                    <td className="signed-contract-cell">
+                      <div className="signed-contract-title">{c.title}</div>
                       {c.description && <div className="muted signed-contract-description">{c.description}</div>}
                     </td>
                     <td className="muted">{c.client_name}</td>

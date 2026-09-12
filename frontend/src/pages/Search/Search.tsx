@@ -76,10 +76,14 @@ function Search() {
         </form>
       </header>
 
-      {state === 'idle' && <div className="dash-state"><p>Search across your firm&rsquo;s data.</p></div>}
+      {state === 'idle' && (
+        <div className="dash-state" role="status" aria-live="polite">
+          <p>Search across your firm&rsquo;s data.</p>
+        </div>
+      )}
 
       {state === 'error' && (
-        <div className="dash-state">
+        <div className="dash-state" role="status" aria-live="polite">
           <p>Couldn&rsquo;t reach the backend for search.</p>
         </div>
       )}

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import './Clients.css'
@@ -43,6 +43,7 @@ function Clients({ user }: ClientsProps) {
   const [inviting, setInviting] = useState(false)
   const [inviteError, setInviteError] = useState<string | null>(null)
   const [inviteSent, setInviteSent] = useState(false)
+  const inviteErrorRef = useRef<HTMLParagraphElement>(null)
 
   const [resendEmail, setResendEmail] = useState('')
   const [resending, setResending] = useState(false)
@@ -118,6 +119,7 @@ function Clients({ user }: ClientsProps) {
     setInviteSent(false)
     if (!token || !inviteClientId || !inviteFirstName || !inviteLastName || !inviteEmail) {
       setInviteError('Select a client and fill in all fields.')
+      inviteErrorRef.current?.focus()
       return
     }
 
@@ -139,6 +141,7 @@ function Clients({ user }: ClientsProps) {
       }
     } catch {
       setInviteError('Could not send the invite. The email may already be in use.')
+      inviteErrorRef.current?.focus()
     } finally {
       setInviting(false)
     }
@@ -296,7 +299,7 @@ function Clients({ user }: ClientsProps) {
       )}
 
       {status === 'error' && (
-        <div className="dash-state">
+        <div className="dash-state" role="status" aria-live="polite">
           <p>Couldn&rsquo;t reach the backend for your clients.</p>
           <button type="button" className="btn-ghost" onClick={() => setAttempt((n) => n + 1)}>
             Retry
@@ -507,7 +510,11 @@ function Clients({ user }: ClientsProps) {
                 <button type="submit" className="btn-solid" disabled={inviting}>
                   <IconMail /> {inviting ? 'Sending…' : 'Send Invite'}
                 </button>
-                {inviteError && <p className="matter-error" aria-live="polite">{inviteError}</p>}
+                {inviteError && (
+                  <p className="matter-error" role="alert" aria-live="polite" tabIndex={-1} ref={inviteErrorRef}>
+                    {inviteError}
+                  </p>
+                )}
                 {inviteSent && <p className="clients-form-note" aria-live="polite">Invite sent.</p>}
               </form>
             </section>

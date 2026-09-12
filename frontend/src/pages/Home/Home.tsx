@@ -12,7 +12,6 @@ import NewMatter from '../NewMatter/NewMatter'
 import Workflow from '../Workflow/Workflow'
 import SignedContracts from '../SignedContracts/SignedContracts'
 import Reporting from '../Reporting/Reporting'
-import ContractData from '../ContractData/ContractData'
 import Templates from '../Templates/Templates'
 import About from '../About/About'
 import Blog from '../Blog/Blog'
@@ -34,7 +33,7 @@ const demoUser: User = {
 function noop() {}
 
 const demoSummary: DashboardSummary = {
-  activeCases: { count: 34, totalValue: 'R4.2M', progressPercent: 68 },
+  activeCases: { count: 34, progressPercent: 68 },
   contractStatus: {
     total: 52,
     breakdown: [
@@ -80,7 +79,6 @@ const captureTargets: CaptureTarget[] = [
   { key: 'workflow', alt: 'Workflow board', page: 'workflow', node: <Workflow /> },
   { key: 'signed-contracts', alt: 'Signed Contracts', page: 'signed-contracts', node: <SignedContracts /> },
   { key: 'reporting', alt: 'Reporting', page: 'reporting', node: <Reporting /> },
-  { key: 'contract-data', alt: 'Contract Data', page: 'contract-data', node: <ContractData /> },
   { key: 'templates', alt: 'Templates', page: 'templates', node: <Templates /> },
 ]
 
@@ -228,7 +226,7 @@ function Home() {
       <Footer />
 
       {/* Off-screen render of every page, captured once into the static images above. */}
-      <div className="capture-root" ref={captureRootRef} aria-hidden="true">
+      <div className="capture-root" ref={captureRootRef} aria-hidden="true" inert>
         {captureTargets.map((target) => (
           <div key={target.key} data-capture-key={target.key} className="capture-frame">
             <div className="dash-layout">

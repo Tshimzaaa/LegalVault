@@ -175,3 +175,17 @@
   margin-right: 8px;
   text-transform: uppercase;
 }
+
+.owner-disclosure-arrow {
+  transition: transform 0.15s ease;
+}
+
+.owner-disclosure-arrow.is-expanded {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .owner-disclosure-arrow {
+    transition: none;
+  }
+}

@@ -28,13 +28,19 @@ SUPPORT_REQUEST_FIELDS: list[tuple[str, str, IntakeFieldType, bool, list[str] | 
         "Request Type",
         IntakeFieldType.DROPDOWN,
         True,
-        ["NDA Review", "Consultancy Agreement", "Supplier Agreement", "General Inquiry"],
+        ["NDA Review", "Consultancy Agreement", "Supplier Agreement", "General Inquiry", "Other"],
     ),
+    # Only shown/required client-side when request_type is answered "Other" — the generic
+    # required-field check has no notion of one field depending on another's value, so this
+    # stays optional here and the client portal enforces it conditionally (see
+    # ClientIntakeFormDetail.tsx).
+    ("other_request_type", "Please specify", IntakeFieldType.TEXT, False, None),
     ("counterparty", "Vendor / Counterparty", IntakeFieldType.TEXT, False, None),
     ("priority", "Priority", IntakeFieldType.DROPDOWN, False, ["High", "Medium", "Low"]),
     ("needed_by", "Needed By", IntakeFieldType.DATE, False, None),
     ("description", "What do you need help with?", IntakeFieldType.TEXTAREA, True, None),
-    ("reference_documents", "Reference Documents", IntakeFieldType.TEXT, False, None),
+    ("reference_documents", "Reference Documents (link)", IntakeFieldType.TEXT, False, None),
+    ("reference_document_upload", "Or Upload a Document", IntakeFieldType.FILE, False, None),
 ]
 
 

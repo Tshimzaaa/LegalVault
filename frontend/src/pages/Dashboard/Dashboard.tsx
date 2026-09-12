@@ -120,10 +120,6 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
                 <span className="stat-big">{summary.activeCases.count}</span>
                 <span className="stat-sub">count</span>
               </div>
-              <div className="stat-line">
-                <span className="stat-big">{summary.activeCases.totalValue}</span>
-                <span className="stat-sub">total value</span>
-              </div>
               <div className="progress-track">
                 <span className="progress-fill" style={{ width: `${summary.activeCases.progressPercent}%` }} />
               </div>

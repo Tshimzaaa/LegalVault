@@ -169,6 +169,11 @@
   font-size: 13px;
 }
 
+.modal-field-error {
+  color: var(--danger-light);
+  font-size: 12px;
+}
+
 .modal-submit {
   width: 100%;
   margin-top: 8px;

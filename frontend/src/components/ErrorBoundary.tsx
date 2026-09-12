@@ -32,6 +32,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     if (this.state.error) {
       return (
         <div
+          className="error-boundary-screen"
           style={{
             minHeight: '100svh',
             display: 'flex',
@@ -41,16 +42,33 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
             gap: 16,
             padding: 24,
             textAlign: 'center',
-            background: '#000',
-            color: '#fff',
           }}
         >
           <h1 style={{ fontSize: 20, margin: 0 }}>Something went wrong.</h1>
-          <p style={{ color: '#9ca3af', margin: 0, maxWidth: 420 }}>
+          <p className="error-boundary-sub" style={{ margin: 0, maxWidth: 420 }}>
             This page hit an unexpected error. Reloading usually fixes it; if it keeps happening, let us know
             what you were doing.
           </p>
           <style>{`
+            .error-boundary-screen {
+              /* Self-contained fallback colors (no ThemeContext/CSS variables assumed available) —
+                 this can render when the rest of the app's context tree has failed. */
+              --ebg: #ffffff;
+              --etext: #18181b;
+              --etext-muted: #6b7280;
+              background: var(--ebg);
+              color: var(--etext);
+            }
+            @media (prefers-color-scheme: dark) {
+              .error-boundary-screen {
+                --ebg: #000000;
+                --etext: #f3f4f6;
+                --etext-muted: #9ca3af;
+              }
+            }
+            .error-boundary-sub {
+              color: var(--etext-muted);
+            }
             .error-boundary-reload:hover,
             .error-boundary-reload:focus-visible {
               filter: brightness(1.1);

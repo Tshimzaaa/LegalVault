@@ -157,7 +157,7 @@ function Workflow() {
       )}
 
       {status === 'error' && (
-        <div className="dash-state">
+        <div className="dash-state" role="status" aria-live="polite">
           <p>Couldn&rsquo;t reach the backend for your matters.</p>
           <button type="button" className="btn-ghost" onClick={() => setAttempt((n) => n + 1)}>
             Retry
@@ -203,7 +203,7 @@ function Workflow() {
                       </div>
                       {MATTER_STATUS_TRANSITIONS[m.status].length > 0 && (
                         <select
-                          className="workflow-card-move"
+                          className="workflow-card-move select-input"
                           aria-label={`Move ${m.title} to a different status`}
                           value=""
                           onClick={(e) => e.stopPropagation()}

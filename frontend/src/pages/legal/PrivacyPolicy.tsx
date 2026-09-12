@@ -8,7 +8,7 @@ function PrivacyPolicy() {
     <main className="legal-page" id="main-content">
       <Seo
         title="Privacy Policy"
-        description="How Index Legal collects, uses, and protects personal information under South Africa's POPIA."
+        description="How Index Legal collects, uses, and protects personal information under South Africa’s POPIA."
         path="/privacy-policy"
       />
       <div className="legal-page-inner">
@@ -32,7 +32,7 @@ function PrivacyPolicy() {
           This Privacy Policy explains how <span className="legal-placeholder">[Index Legal (Pty) Ltd, registration
           no. PLACEHOLDER]</span> ("we", "us", "Index Legal") collects, uses, and protects personal information when
           you visit our website, use our practice management platform, or interact with us as a law firm, a member
-          of law firm staff, or a firm's client.
+          of law firm staff, or a firm’s client.
         </p>
         <p>
           Registered address: 12 Fredman Drive, Sandton, Johannesburg, 2196, South Africa (
@@ -50,12 +50,12 @@ function PrivacyPolicy() {
         <ul>
           <li>
             <strong>Responsible party</strong>: for information about our website visitors, prospective customers,
-            and law firm staff accounts (name, email, login activity), where we decide why and how it's processed.
+            and law firm staff accounts (name, email, login activity), where we decide why and how it’s processed.
           </li>
           <li>
             <strong>Operator</strong>: for personal information that a law firm using our platform uploads about
             its own clients (matters, documents, intake submissions, messages). The firm is the responsible party
-            for that data; we only process it on the firm's instructions, under a data processing agreement with
+            for that data; we only process it on the firm’s instructions, under a data processing agreement with
             that firm.
           </li>
         </ul>
@@ -75,11 +75,11 @@ function PrivacyPolicy() {
         <ul>
           <li>
             Information the law firm invites you to submit: contact details, matter/case information, documents,
-            and intake-form answers. This is collected on the firm's instructions; the firm controls what is asked
+            and intake-form answers. This is collected on the firm’s instructions; the firm controls what is asked
             for and why. Contact your firm directly with questions about what they collect.
           </li>
         </ul>
-        <p>We only ask website and account forms for the information needed to provide the service; we don't request data we don't need.</p>
+        <p>We only ask website and account forms for the information needed to provide the service; we don’t request data we don’t need.</p>
 
         <h2>4. How we use it</h2>
         <ul>
@@ -94,8 +94,8 @@ function PrivacyPolicy() {
 
         <h2>5. Cookies and local storage</h2>
         <p>
-          We don't use tracking or advertising cookies, and we don't run third-party analytics on this site. To keep
-          you signed in, the app stores your session token in your browser's <strong>local storage</strong> (not a
+          We don’t use tracking or advertising cookies, and we don’t run third-party analytics on this site. To keep
+          you signed in, the app stores your session token in your browser’s <strong>local storage</strong> (not a
           cookie); this is strictly necessary for the service to function. See our{' '}
           <Link to="/cookie-policy">Cookie Policy</Link> for details.
         </p>
@@ -127,7 +127,7 @@ function PrivacyPolicy() {
 
         <h2>8. How long we keep it</h2>
         <p>
-          We keep account and matter data for as long as your firm's account is active, plus a reasonable period
+          We keep account and matter data for as long as your firm’s account is active, plus a reasonable period
           afterward to meet legal, accounting, or dispute-resolution needs. Contact form submissions are kept only
           as long as needed to respond to and resolve the enquiry.
         </p>
@@ -135,7 +135,7 @@ function PrivacyPolicy() {
         <h2>9. Security</h2>
         <p>
           Passwords are hashed with argon2id, data in transit is encrypted, uploaded files are scanned for malware,
-          and access to each firm's data is isolated using row-level security in our database, on top of
+          and access to each firm’s data is isolated using row-level security in our database, on top of
           application-level access controls and an audit log.
         </p>
 
@@ -147,7 +147,7 @@ function PrivacyPolicy() {
           <li>Object to the processing of your personal information on reasonable grounds.</li>
           <li>Withdraw consent, where processing is based on consent, without affecting prior lawful processing.</li>
           <li>
-            Lodge a complaint with the Information Regulator (South Africa) if you believe we've mishandled your
+            Lodge a complaint with the Information Regulator (South Africa) if you believe we’ve mishandled your
             information: <a href="https://inforegulator.org.za" target="_blank" rel="noreferrer">inforegulator.org.za</a>.
           </li>
         </ul>
@@ -164,11 +164,11 @@ function PrivacyPolicy() {
           . Contact: <span className="legal-placeholder">[email/phone]</span>.
         </p>
 
-        <h2>12. Children's information</h2>
+        <h2>12. Children’s information</h2>
         <p>This platform is intended for use by law firms and their authorized adult staff and clients; it is not directed at children.</p>
 
         <h2>13. Changes to this policy</h2>
-        <p>We'll update this page when our practices change and update the "last updated" date above.</p>
+        <p>We’ll update this page when our practices change and update the "last updated" date above.</p>
 
         <h2>14. Contact us</h2>
         <p>

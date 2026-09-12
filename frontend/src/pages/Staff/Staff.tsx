@@ -259,14 +259,14 @@ function Staff({ user }: StaffProps) {
       )}
 
       {status === 'loading' && (
-        <div className="dash-state">
+        <div className="dash-state" role="status" aria-live="polite">
           <span className="dash-spinner" aria-hidden="true" />
           <p>Loading staff…</p>
         </div>
       )}
 
       {status === 'error' && (
-        <div className="dash-state">
+        <div className="dash-state" role="status" aria-live="polite">
           <p>Couldn&rsquo;t reach the backend for staff.</p>
           <button type="button" className="btn-ghost" onClick={loadAll}>
             Retry

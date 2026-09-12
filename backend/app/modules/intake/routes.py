@@ -10,13 +10,7 @@ from app.modules.auth.models.role import UserRole
 from app.modules.clients.dependencies import get_current_contact
 from app.modules.clients.models import ClientContact
 from app.modules.intake.schemas import (
-    CreateIntakeFormRequest,
-    UpdateIntakeFormRequest,
     IntakeFormResponse,
-    IntakeFormFieldCreateRequest,
-    IntakeFormFieldUpdateRequest,
-    IntakeFormFieldResponse,
-    ReorderFieldsRequest,
     IntakeSubmissionResponse,
     UpdateIntakeSubmissionStatusRequest,
     ConvertIntakeSubmissionRequest,
@@ -29,17 +23,9 @@ submissions_router = APIRouter(prefix="/intake-submissions", tags=["intake-submi
 client_intake_router = APIRouter(prefix="/client-intake", tags=["client-intake"])
 
 
-# ---- Staff: form builder (admin only) ----
-
-@router.post("", response_model=IntakeFormResponse, status_code=201)
-def create_intake_form(
-    request: CreateIntakeFormRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN])),
-):
-    service = IntakeService(db)
-    return service.create_form(current_user.firm_id, current_user.id, request)
-
+# ---- Staff: read-only access to the firm's system request form (used to label answers
+# in the submission-triage views below — there's no builder to create/edit forms, every
+# firm has exactly the one system-seeded "Request Support" form, see system_forms.py) ----
 
 @router.get("", response_model=list[IntakeFormResponse])
 def list_intake_forms(
@@ -58,72 +44,6 @@ def get_intake_form(
 ):
     service = IntakeService(db)
     return service.get_form(form_id, current_user.firm_id)
-
-
-@router.patch("/{form_id}", response_model=IntakeFormResponse)
-def update_intake_form(
-    form_id: str,
-    request: UpdateIntakeFormRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN])),
-):
-    service = IntakeService(db)
-    return service.update_form(form_id, current_user.firm_id, current_user.id, request)
-
-
-@router.delete("/{form_id}", status_code=204)
-def delete_intake_form(
-    form_id: str,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN])),
-):
-    service = IntakeService(db)
-    service.delete_form(form_id, current_user.firm_id, current_user.id)
-
-
-@router.post("/{form_id}/fields", response_model=IntakeFormFieldResponse, status_code=201)
-def add_intake_field(
-    form_id: str,
-    request: IntakeFormFieldCreateRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN])),
-):
-    service = IntakeService(db)
-    return service.add_field(form_id, current_user.firm_id, current_user.id, request)
-
-
-@router.patch("/{form_id}/fields/{field_id}", response_model=IntakeFormFieldResponse)
-def update_intake_field(
-    form_id: str,
-    field_id: str,
-    request: IntakeFormFieldUpdateRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN])),
-):
-    service = IntakeService(db)
-    return service.update_field(form_id, current_user.firm_id, current_user.id, field_id, request)
-
-
-@router.delete("/{form_id}/fields/{field_id}", status_code=204)
-def delete_intake_field(
-    form_id: str,
-    field_id: str,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN])),
-):
-    service = IntakeService(db)
-    service.delete_field(form_id, current_user.firm_id, current_user.id, field_id)
-
-
-@router.post("/{form_id}/fields/reorder", response_model=list[IntakeFormFieldResponse])
-def reorder_intake_fields(
-    form_id: str,
-    request: ReorderFieldsRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_role([UserRole.ADMIN])),
-):
-    service = IntakeService(db)
-    return service.reorder_fields(form_id, current_user.firm_id, current_user.id, request)
 
 
 # ---- Staff: submission triage ----

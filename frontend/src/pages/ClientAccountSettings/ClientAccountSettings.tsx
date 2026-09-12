@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import '../Settings/Settings.css'
+import './ClientAccountSettings.css'
 import { updateContactProfile, changeContactPassword } from '../../api/clientAuth'
 import type { ClientContact } from '../../api/clientAuth'
 import { formatDateTime } from '../../utils/date'
@@ -90,6 +91,7 @@ function ClientAccountSettings({ contact, onLogout, onContactUpdate }: ClientAcc
         <h1>Account Settings</h1>
       </header>
 
+      <div className="client-settings-scroll">
       <section className="card settings-card">
         <div className="card-header">
           <span>Your Profile</span>
@@ -213,6 +215,7 @@ function ClientAccountSettings({ contact, onLogout, onContactUpdate }: ClientAcc
           </p>
         </div>
       </section>
+      </div>
     </main>
   )
 }

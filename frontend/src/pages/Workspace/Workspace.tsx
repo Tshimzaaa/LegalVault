@@ -20,14 +20,13 @@ const Clients = lazy(() => import('../Clients/Clients'))
 const Workflow = lazy(() => import('../Workflow/Workflow'))
 const SignedContracts = lazy(() => import('../SignedContracts/SignedContracts'))
 const Reporting = lazy(() => import('../Reporting/Reporting'))
-const ContractData = lazy(() => import('../ContractData/ContractData'))
 const Templates = lazy(() => import('../Templates/Templates'))
+const FallbackClauses = lazy(() => import('../FallbackClauses/FallbackClauses'))
 const Staff = lazy(() => import('../Staff/Staff'))
 const Search = lazy(() => import('../Search/Search'))
 const AuditLog = lazy(() => import('../AuditLog/AuditLog'))
 const Calendar = lazy(() => import('../Calendar/Calendar'))
 const Settings = lazy(() => import('../Settings/Settings'))
-const IntakeFormBuilder = lazy(() => import('../IntakeFormBuilder/IntakeFormBuilder'))
 const IntakeSubmissions = lazy(() => import('../IntakeSubmissions/IntakeSubmissions'))
 const IntakeSubmissionDetail = lazy(() => import('../IntakeSubmissions/IntakeSubmissionDetail'))
 const KnowledgeArticles = lazy(() => import('../KnowledgeArticles/KnowledgeArticles'))
@@ -68,11 +67,10 @@ function Workspace({ user, onLogout }: WorkspaceProps) {
             <Route path="workflow" element={<Workflow />} />
             <Route path="signed-contracts" element={<SignedContracts />} />
             <Route path="reporting" element={<Reporting />} />
-            <Route path="contract-data" element={<ContractData />} />
             <Route path="templates" element={<Templates />} />
+            <Route path="fallback-clauses" element={<FallbackClauses />} />
             <Route path="search" element={<Search />} />
             <Route path="calendar" element={<Calendar />} />
-            <Route path="intake-forms" element={<IntakeFormBuilder user={user} />} />
             <Route path="intake-submissions" element={<IntakeSubmissions />} />
             <Route path="intake-submissions/:submissionId" element={<IntakeSubmissionDetail user={user} />} />
             <Route path="knowledge-articles" element={<KnowledgeArticles user={user} />} />

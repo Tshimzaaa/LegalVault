@@ -30,7 +30,7 @@ function OwnerLogin({ onSubmit }: OwnerLoginProps) {
     <div className="auth-page">
       <Seo title="Owner Sign-In" description="SaaS owner console sign-in." path="/owner/login" noindex />
       <div className="modal-box">
-        <h1>Owner Sign-In</h1>
+        <h2>Owner Sign-In</h2>
         <p className="modal-sub">Platform-wide access: enter the owner secret.</p>
 
         <form onSubmit={handleSubmit}>

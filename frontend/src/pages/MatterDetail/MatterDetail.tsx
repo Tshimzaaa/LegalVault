@@ -659,143 +659,6 @@ function MatterDetail() {
           <div>
             <section className="card">
               <div className="card-header">
-                <h2>Details</h2>
-              </div>
-              {editingDetails ? (
-                <form onSubmit={handleSaveDetails}>
-                  <label className="field">
-                    <span>Title</span>
-                    <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required minLength={2} />
-                  </label>
-                  <label className="field" style={{ marginTop: 8 }}>
-                    <span>Description</span>
-                    <textarea rows={3} value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
-                  </label>
-                  {detailsError && <p className="matter-error" aria-live="polite">{detailsError}</p>}
-                  <div className="matter-actions" style={{ marginTop: 8 }}>
-                    <button type="button" className="btn-ghost" onClick={() => setEditingDetails(false)}>
-                      Cancel
-                    </button>
-                    <button type="submit" className="btn-solid" disabled={detailsSaving}>
-                      {detailsSaving ? 'Saving…' : 'Save'}
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <>
-                  <p className="muted">Client: {clientName(matter.client_id)}</p>
-                  <p className="muted">Opened: {new Date(matter.created_at).toLocaleDateString()}</p>
-                  <p className="matter-detail-description">{matter.description || 'No description provided.'}</p>
-                </>
-              )}
-            </section>
-
-            <section className="card" style={{ marginTop: 16 }}>
-              <div className="card-header">
-                <h2>Status</h2>
-              </div>
-              <div className="matter-detail-field-row">
-                <select
-                  aria-label="Matter status"
-                  value={statusValue}
-                  onChange={(e) => setStatusValue(e.target.value as Matter['status'])}
-                >
-                  {availableStatusOptions.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  className="btn-solid"
-                  disabled={statusSaving || statusValue === matter.status || Boolean(pendingApproval)}
-                  onClick={statusChangeIsGated ? handleRequestApproval : handleStatusSave}
-                >
-                  {statusSaving ? 'Saving…' : statusChangeIsGated ? 'Request Approval' : 'Save'}
-                </button>
-              </div>
-              {approvalError && <p className="matter-error" aria-live="polite">{approvalError}</p>}
-
-              {pendingApproval && (
-                <div className="matter-detail-toggle-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 6 }}>
-                  <span className="muted">
-                    Approval pending: {pendingApproval.from_status} &rarr; {pendingApproval.to_status}, requested by{' '}
-                    {userName(pendingApproval.requested_by)} on {new Date(pendingApproval.created_at).toLocaleDateString()}
-                  </span>
-                  {canDecideApprovals && (
-                    <div className="matter-actions">
-                      <button
-                        type="button"
-                        className="btn-solid"
-                        disabled={decidingApproval}
-                        onClick={() => handleDecideApproval(pendingApproval, 'approved')}
-                      >
-                        Approve
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-ghost"
-                        disabled={decidingApproval}
-                        onClick={() => handleDecideApproval(pendingApproval, 'rejected')}
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {approvals.filter((a) => a.status !== 'pending').length > 0 && (
-                <div className="list-rows" style={{ marginTop: 8 }}>
-                  {approvals
-                    .filter((a) => a.status !== 'pending')
-                    .map((a) => (
-                      <div key={a.id} className="assignment-row">
-                        <span className="muted">
-                          {a.from_status} &rarr; {a.to_status}
-                        </span>
-                        <span className={`chip small ${a.status === 'approved' ? '' : 'muted'}`}>{a.status}</span>
-                      </div>
-                    ))}
-                </div>
-              )}
-
-              <p className="muted" style={{ margin: '12px 0 4px' }}>
-                Deadline
-              </p>
-              <div className="matter-detail-field-row">
-                <input
-                  type="date"
-                  value={deadlineValue}
-                  onChange={(e) => setDeadlineValue(e.target.value)}
-                  aria-label="Matter deadline"
-                />
-                <button
-                  type="button"
-                  className="btn-solid"
-                  disabled={deadlineSaving || deadlineValue === (matter.due_date ?? '')}
-                  onClick={handleDeadlineSave}
-                >
-                  {deadlineSaving ? 'Saving…' : 'Save deadline'}
-                </button>
-              </div>
-
-              <div className="matter-detail-toggle-row">
-                <label className="field" style={{ margin: 0, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <input
-                    type="checkbox"
-                    checked={matter.is_visible_to_client}
-                    disabled={visibilitySaving}
-                    onChange={(e) => handleVisibilityToggle(e.target.checked)}
-                  />
-                  <span>Visible to client</span>
-                </label>
-              </div>
-            </section>
-
-            <section className="card" style={{ marginTop: 16 }}>
-              <div className="card-header">
                 <h2>Documents</h2>
               </div>
 
@@ -1148,49 +1011,188 @@ function MatterDetail() {
             </section>
           </div>
 
-          <section className="card">
-            <div className="card-header">
-              <h2>Staff Assigned</h2>
-            </div>
-            <div className="list-rows">
-              {assignments.map((a) => (
-                <div key={a.id} className="assignment-row">
-                  <span>{userName(a.user_id)}</span>
-                  <span className="muted">{roleOptions.find((r) => r.value === a.role_on_matter)?.label}</span>
-                </div>
-              ))}
-              {assignments.length === 0 && <p className="muted">No staff assigned yet.</p>}
-            </div>
+          <div>
+            <section className="card">
+              <div className="card-header">
+                <h2>Details</h2>
+              </div>
+              {editingDetails ? (
+                <form onSubmit={handleSaveDetails}>
+                  <label className="field">
+                    <span>Title</span>
+                    <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required minLength={2} />
+                  </label>
+                  <label className="field" style={{ marginTop: 8 }}>
+                    <span>Description</span>
+                    <textarea rows={3} value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
+                  </label>
+                  {detailsError && <p className="matter-error" aria-live="polite">{detailsError}</p>}
+                  <div className="matter-actions" style={{ marginTop: 8 }}>
+                    <button type="button" className="btn-ghost" onClick={() => setEditingDetails(false)}>
+                      Cancel
+                    </button>
+                    <button type="submit" className="btn-solid" disabled={detailsSaving}>
+                      {detailsSaving ? 'Saving…' : 'Save'}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <p className="muted">Client: {clientName(matter.client_id)}</p>
+                  <p className="muted">Opened: {new Date(matter.created_at).toLocaleDateString()}</p>
+                  <p className="matter-detail-description">{matter.description || 'No description provided.'}</p>
+                </>
+              )}
+            </section>
 
-            <div className="assignment-add-row">
-              <select aria-label="Staff member to assign" value={assignUserId} onChange={(e) => setAssignUserId(e.target.value)}>
-                <option value="">Select staff member</option>
-                {assignableUsers.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.first_name} {u.last_name}
-                  </option>
+            <section className="card" style={{ marginTop: 16 }}>
+              <div className="card-header">
+                <h2>Status</h2>
+              </div>
+              <div className="matter-detail-field-row">
+                <select
+                  aria-label="Matter status"
+                  value={statusValue}
+                  onChange={(e) => setStatusValue(e.target.value as Matter['status'])}
+                >
+                  {availableStatusOptions.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="btn-solid"
+                  disabled={statusSaving || statusValue === matter.status || Boolean(pendingApproval)}
+                  onClick={statusChangeIsGated ? handleRequestApproval : handleStatusSave}
+                >
+                  {statusSaving ? 'Saving…' : statusChangeIsGated ? 'Request Approval' : 'Save'}
+                </button>
+              </div>
+              {approvalError && <p className="matter-error" aria-live="polite">{approvalError}</p>}
+
+              {pendingApproval && (
+                <div className="matter-detail-toggle-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 6 }}>
+                  <span className="muted">
+                    Approval pending: {pendingApproval.from_status} &rarr; {pendingApproval.to_status}, requested by{' '}
+                    {userName(pendingApproval.requested_by)} on {new Date(pendingApproval.created_at).toLocaleDateString()}
+                  </span>
+                  {canDecideApprovals && (
+                    <div className="matter-actions">
+                      <button
+                        type="button"
+                        className="btn-solid"
+                        disabled={decidingApproval}
+                        onClick={() => handleDecideApproval(pendingApproval, 'approved')}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-ghost"
+                        disabled={decidingApproval}
+                        onClick={() => handleDecideApproval(pendingApproval, 'rejected')}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {approvals.filter((a) => a.status !== 'pending').length > 0 && (
+                <div className="list-rows" style={{ marginTop: 8 }}>
+                  {approvals
+                    .filter((a) => a.status !== 'pending')
+                    .map((a) => (
+                      <div key={a.id} className="assignment-row">
+                        <span className="muted">
+                          {a.from_status} &rarr; {a.to_status}
+                        </span>
+                        <span className={`chip small ${a.status === 'approved' ? '' : 'muted'}`}>{a.status}</span>
+                      </div>
+                    ))}
+                </div>
+              )}
+
+              <p className="muted" style={{ margin: '12px 0 4px' }}>
+                Deadline
+              </p>
+              <div className="matter-detail-field-row">
+                <input
+                  type="date"
+                  value={deadlineValue}
+                  onChange={(e) => setDeadlineValue(e.target.value)}
+                  aria-label="Matter deadline"
+                />
+                <button
+                  type="button"
+                  className="btn-solid"
+                  disabled={deadlineSaving || deadlineValue === (matter.due_date ?? '')}
+                  onClick={handleDeadlineSave}
+                >
+                  {deadlineSaving ? 'Saving…' : 'Save deadline'}
+                </button>
+              </div>
+
+              <div className="matter-detail-toggle-row">
+                <label className="field" style={{ margin: 0, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={matter.is_visible_to_client}
+                    disabled={visibilitySaving}
+                    onChange={(e) => handleVisibilityToggle(e.target.checked)}
+                  />
+                  <span>Visible to client</span>
+                </label>
+              </div>
+            </section>
+
+            <section className="card" style={{ marginTop: 16 }}>
+              <div className="card-header">
+                <h2>Staff Assigned</h2>
+              </div>
+              <div className="list-rows">
+                {assignments.map((a) => (
+                  <div key={a.id} className="assignment-row">
+                    <span>{userName(a.user_id)}</span>
+                    <span className="muted">{roleOptions.find((r) => r.value === a.role_on_matter)?.label}</span>
+                  </div>
                 ))}
-              </select>
-              <select
-                aria-label="Role on matter"
-                value={assignRole}
-                onChange={(e) => {
-                  setAssignRole(e.target.value as MatterRole)
-                  setAssignUserId('')
-                }}
-              >
-                {roleOptions.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-              <button type="button" className="btn-ghost" disabled={assigning} onClick={handleAssign}>
-                {assigning ? 'Assigning…' : 'Assign'}
-              </button>
-            </div>
-            {assignError && <p className="matter-error" aria-live="polite">{assignError}</p>}
-          </section>
+                {assignments.length === 0 && <p className="muted">No staff assigned yet.</p>}
+              </div>
+
+              <div className="assignment-add-row">
+                <select aria-label="Staff member to assign" value={assignUserId} onChange={(e) => setAssignUserId(e.target.value)}>
+                  <option value="">Select staff member</option>
+                  {assignableUsers.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.first_name} {u.last_name}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  aria-label="Role on matter"
+                  value={assignRole}
+                  onChange={(e) => {
+                    setAssignRole(e.target.value as MatterRole)
+                    setAssignUserId('')
+                  }}
+                >
+                  {roleOptions.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+                <button type="button" className="btn-ghost" disabled={assigning} onClick={handleAssign}>
+                  {assigning ? 'Assigning…' : 'Assign'}
+                </button>
+              </div>
+              {assignError && <p className="matter-error" aria-live="polite">{assignError}</p>}
+            </section>
+          </div>
         </div>
       )}
     </main>

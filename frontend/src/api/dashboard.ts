@@ -3,7 +3,6 @@ import { apiRequest } from './client'
 export interface DashboardSummary {
   activeCases: {
     count: number
-    totalValue: string
     progressPercent: number
   }
   contractStatus: {

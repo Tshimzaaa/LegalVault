@@ -5,11 +5,7 @@
 }
 
 .knowledge-list {
-  display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  overflow-y: auto;
-  align-content: start;
 }
 
 @media (max-width: 900px) {

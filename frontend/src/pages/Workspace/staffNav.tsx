@@ -11,14 +11,13 @@ import {
   IconWorkflow,
   IconSignedContract,
   IconReport,
-  IconContractData,
   IconTemplates,
+  IconLearnedFriend,
   IconShield,
   IconSearch,
   IconClock,
   IconCalendar,
   IconGear,
-  IconFilePlus,
   IconMail,
   IconHelp,
 } from '../../components/icons'
@@ -31,21 +30,20 @@ export type StaffPage =
   | 'workflow'
   | 'signed-contracts'
   | 'reporting'
-  | 'contract-data'
   | 'templates'
+  | 'fallback-clauses'
   | 'staff'
   | 'search'
   | 'audit-log'
   | 'calendar'
   | 'settings'
-  | 'intake-forms'
   | 'intake-submissions'
   | 'knowledge-articles'
   | 'integrations'
 
 // Nav items visible only to admins — attempting these as another role now cleanly 403s
 // server-side, so we hide the entry rather than show it disabled.
-export const ADMIN_ONLY_PAGES: StaffPage[] = ['staff', 'audit-log', 'intake-forms', 'integrations']
+export const ADMIN_ONLY_PAGES: StaffPage[] = ['staff', 'audit-log', 'integrations']
 
 export const staffNavItems: NavItem[] = [
   { label: 'Dashboard', icon: <IconGauge />, page: 'dashboard' },
@@ -54,12 +52,11 @@ export const staffNavItems: NavItem[] = [
   { label: 'Clients', icon: <IconUser />, page: 'clients' },
   { label: 'Calendar', icon: <IconCalendar />, page: 'calendar' },
   { label: 'Workflow', icon: <IconWorkflow />, page: 'workflow' },
-  { label: 'Intake Forms', icon: <IconFilePlus />, page: 'intake-forms' },
   { label: 'Requests', icon: <IconMail />, page: 'intake-submissions' },
   { label: 'Signed Contracts', icon: <IconSignedContract />, page: 'signed-contracts' },
   { label: 'Reporting', icon: <IconReport />, page: 'reporting' },
-  { label: 'Contract Data', icon: <IconContractData />, page: 'contract-data' },
   { label: 'Templates', icon: <IconTemplates />, page: 'templates' },
+  { label: 'Fallback Clauses', icon: <IconLearnedFriend />, page: 'fallback-clauses' },
   { label: 'Knowledge Base', icon: <IconHelp />, page: 'knowledge-articles' },
   { label: 'Search', icon: <IconSearch />, page: 'search' },
   { label: 'Staff', icon: <IconShield />, page: 'staff' },

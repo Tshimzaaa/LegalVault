@@ -38,3 +38,21 @@
   font: inherit;
   cursor: pointer;
 }
+
+/* Mid-form status text (e.g. "token detected from your link") reuses
+   .modal-sub, but that class carries a 24px bottom margin meant to
+   separate the header from the form. Inside the form, that breaks the
+   16px rhythm every other field uses. */
+.auth-page .modal-sub.modal-sub-inline {
+  margin-bottom: 16px;
+}
+
+/* Two-column field rows (e.g. Register's name/email pairs) need to
+   collapse to a single column once there isn't room for two usable
+   inputs side by side. */
+@media (max-width: 480px) {
+  .auth-page .modal-field-row {
+    flex-direction: column;
+    gap: 0;
+  }
+}

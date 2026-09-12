@@ -71,6 +71,7 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
   const [sendingMessage, setSendingMessage] = useState(false)
   const [messageError, setMessageError] = useState<string | null>(null)
   const [messageBusyId, setMessageBusyId] = useState<string | null>(null)
+  const [messageToDelete, setMessageToDelete] = useState<MatterMessage | null>(null)
 
   const token = localStorage.getItem('access_token')
 
@@ -119,7 +120,6 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
 
   async function handleDeleteMessage(message: MatterMessage) {
     if (!token || !matterId) return
-    if (!window.confirm('Delete this message?')) return
     setMessageBusyId(message.id)
     try {
       await deleteClientMessage(token, matterId, message.id)
@@ -355,7 +355,7 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
                         type="button"
                         className="icon-btn"
                         disabled={messageBusyId === m.id}
-                        onClick={() => handleDeleteMessage(m)}
+                        onClick={() => setMessageToDelete(m)}
                         aria-label="Delete message"
                       >
                         <IconTrash />
@@ -382,6 +382,37 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
             </form>
             {messageError && <p className="matter-error" aria-live="polite">{messageError}</p>}
           </section>
+        </div>
+      )}
+
+      {messageToDelete && (
+        <div className="matter-confirm-backdrop" onClick={() => setMessageToDelete(null)}>
+          <div
+            className="matter-confirm-box"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-message-title"
+          >
+            <h3 id="delete-message-title">Delete this message?</h3>
+            <p>This cannot be undone.</p>
+            <div className="matter-confirm-actions">
+              <button type="button" className="btn-ghost" onClick={() => setMessageToDelete(null)}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-solid"
+                onClick={() => {
+                  const message = messageToDelete
+                  setMessageToDelete(null)
+                  handleDeleteMessage(message)
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </main>

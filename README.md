@@ -1,14 +1,14 @@
 # LegalHub
 
-A multi-tenant SaaS platform for law firm practice management — working name "LegalHub" (product-positioned against lighthub.law). FastAPI backend + React frontend.
+A multi-tenant SaaS platform for law firm practice management, working name "LegalHub" (product-positioned against lighthub.law). FastAPI backend + React frontend.
 
 Three tiers of users, each with its own auth system and JWT token type:
 
-1. **SaaS Owner** — onboards law firms onto the platform, activates/suspends firms
-2. **Firm Staff** — lawyers, admins, paralegals, secretaries, receptionists who manage clients/matters
-3. **Firm Clients** — the firm's own clients, who log into a restricted portal to view case status, documents, templates, intake forms, and the knowledge base
+1. **SaaS Owner**: onboards law firms onto the platform, activates/suspends firms
+2. **Firm Staff**: lawyers, admins, paralegals, secretaries, receptionists who manage clients/matters
+3. **Firm Clients**: the firm's own clients, who log into a restricted portal to view case status, documents, templates, intake forms, and the knowledge base
 
-See [`backend/docs/architecture.md`](backend/docs/architecture.md) for the original design doc (staff/client auth, schema, RLS setup — note it predates several modules listed below and hasn't been kept current) and [`ROADMAP.md`](ROADMAP.md) for a feature-parity comparison against lighthub.law (also out of date as of this edit — treat both as historical context, not a live spec). See [`DEPLOYMENT.md`](DEPLOYMENT.md) before deploying anywhere beyond local dev.
+See [`backend/docs/architecture.md`](backend/docs/architecture.md) for the original design doc (staff/client auth, schema, RLS setup; note it predates several modules listed below and hasn't been kept current) and [`ROADMAP.md`](ROADMAP.md) for a feature-parity comparison against lighthub.law (also out of date as of this edit; treat both as historical context, not a live spec). See [`DEPLOYMENT.md`](DEPLOYMENT.md) before deploying anywhere beyond local dev.
 
 ---
 
@@ -21,17 +21,17 @@ See [`backend/docs/architecture.md`](backend/docs/architecture.md) for the origi
 - JWT auth (PyJWT) with argon2id password hashing (pwdlib), rate limiting via slowapi, refresh tokens for staff sessions
 - ClamAV (`clamd`) for malware scanning on uploads
 - Documenso (self-hosted, via `documenso_sdk`) for e-signature requests and signing webhooks
-- Celery + Redis for scheduled background jobs (matter due-date and contract expiry reminders — see `app/tasks/`)
-- `xhtml2pdf` for generating draft documents from a template body + intake-submission answers (pure-Python HTML→PDF — WeasyPrint was tried first per the original tech plan but its native Pango/GObject dependency doesn't install on Windows dev machines)
-- `sentry-sdk` for error tracking — optional, no-op unless `SENTRY_DSN` is set (see `app/main.py`)
+- Celery + Redis for scheduled background jobs (matter due-date and contract expiry reminders; see `app/tasks/`)
+- `xhtml2pdf` for generating draft documents from a template body + intake-submission answers (pure-Python HTML→PDF: WeasyPrint was tried first per the original tech plan, but its native Pango/GObject dependency doesn't install on Windows dev machines)
+- `sentry-sdk` for error tracking (optional, no-op unless `SENTRY_DSN` is set; see `app/main.py`)
 - pytest, run in CI against a real Postgres service container (including a restricted, non-`BYPASSRLS` role so row-level security is actually exercised)
 
 **Frontend**
 - React 19 + TypeScript, Vite
-- `@sentry/react` for error tracking — optional, no-op unless `VITE_SENTRY_DSN` is set (see `main.tsx`)
+- `@sentry/react` for error tracking (optional, no-op unless `VITE_SENTRY_DSN` is set; see `main.tsx`)
 - vitest + Testing Library for tests, oxlint for linting
 
-**CI/CD** (`.github/workflows/ci.yml`): backend job runs Alembic migrations + pytest against Postgres; frontend job runs oxlint, vitest, and a production build — both on every PR and push to `main`. On `main`, once both pass, a `deploy` job triggers Render deploy hooks for the API, Celery worker, and frontend static site (see `render.yaml` and `DEPLOYMENT.md` §5/§6) — nothing deploys on a push that doesn't pass CI first.
+**CI/CD** (`.github/workflows/ci.yml`): backend job runs Alembic migrations + pytest against Postgres; frontend job runs oxlint, vitest, and a production build. Both run on every PR and push to `main`. On `main`, once both pass, a `deploy` job triggers Render deploy hooks for the API, Celery worker, and frontend static site (see `render.yaml` and `DEPLOYMENT.md` §5/§6). Nothing deploys on a push that doesn't pass CI first.
 
 ---
 
@@ -71,13 +71,13 @@ backend/
   alembic/             migrations
   tests/               pytest suite (auth, clients, matters, RLS, multi-tenant isolation, malware
                        scanning, force-logout, audit log, notifications, reporting/search, etc.)
-  docs/                architecture.md (original design doc — see staleness note above)
+  docs/                architecture.md (original design doc, see staleness note above)
 
 frontend/
   src/
     api/               typed API clients, one per backend module
     components/        shared UI (login modal, footer, notification bell, icons)
-    pages/              one folder per route — see below
+    pages/              one folder per route (see below)
 ```
 
 ### Frontend pages
@@ -90,7 +90,7 @@ frontend/
 | Auth / onboarding | `AuthPage`, `Register`, `AcceptInvite` (client), `AcceptStaffInvite`, `ResetPassword` |
 | SaaS owner console | `OwnerLogin`, `OwnerPortal` |
 
-Not every page here is necessarily wired to live data end-to-end — check the corresponding `frontend/src/api/*.ts` client and backend module before assuming a page is real or mock; the module list above reflects what the backend actually supports as of this edit.
+Not every page here is necessarily wired to live data end-to-end. Check the corresponding `frontend/src/api/*.ts` client and backend module before assuming a page is real or mock; the module list above reflects what the backend actually supports as of this edit.
 
 ---
 
@@ -121,7 +121,7 @@ The frontend dev server expects the API at the CORS origin configured in `backen
 ```
 cd backend && celery -A app.tasks.celery_app worker --beat --loglevel=info
 ```
-Production should run the worker and beat scheduler as separate long-running processes instead — see `DEPLOYMENT.md`. Only one beat scheduler should ever run at a time; running more than one duplicates every scheduled job.
+Production should run the worker and beat scheduler as separate long-running processes instead. See `DEPLOYMENT.md`. Only one beat scheduler should ever run at a time; running more than one duplicates every scheduled job.
 
 **Tests**
 ```
@@ -133,6 +133,6 @@ cd frontend && npm test
 
 ## Known gaps
 
-- **Real email sending** — invite links and notification emails are still stubbed (printed to the server console); no email provider is wired up yet (nothing email-related in `backend/requirements.txt`).
-- **Deploy pipeline defined but not yet run for real** — host is Render (`render.yaml`), and `ci.yml`'s `deploy` job is CI-gated and ready, but the Blueprint hasn't been created in an actual Render account (no credentials available to do that from here) and `render.yaml` hasn't been validated by a real Blueprint sync. See [`DEPLOYMENT.md`](DEPLOYMENT.md) §5/§6 for the remaining manual setup steps.
-- Frontend automated test coverage is thin relative to the number of pages — most pages have no test file yet.
+- **Real email sending**: invite links and notification emails are still stubbed (printed to the server console); no email provider is wired up yet (nothing email-related in `backend/requirements.txt`).
+- **Deploy pipeline defined but not yet run for real**: host is Render (`render.yaml`), and `ci.yml`'s `deploy` job is CI-gated and ready, but the Blueprint hasn't been created in an actual Render account (no credentials available to do that from here) and `render.yaml` hasn't been validated by a real Blueprint sync. See [`DEPLOYMENT.md`](DEPLOYMENT.md) §5/§6 for the remaining manual setup steps.
+- Frontend automated test coverage is thin relative to the number of pages: most pages have no test file yet.

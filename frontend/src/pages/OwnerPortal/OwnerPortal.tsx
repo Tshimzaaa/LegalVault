@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import type { FormEvent } from 'react'
+import '../../styles/dashboard.css'
 import './OwnerPortal.css'
 import { IconDollar, IconLayers, IconPlus, IconUser, IconTrash, IconDownload, IconChevron } from '../../components/icons'
 import {
@@ -926,11 +927,11 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                   type="button"
                   className="icon-btn"
                   onClick={() => setShowErrors(!showErrors)}
+                  aria-expanded={showErrors}
                   aria-label={showErrors ? 'Collapse recent errors' : 'Expand recent errors'}
                   title={showErrors ? 'Collapse' : 'Expand'}
-                  style={{ transform: showErrors ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }}
                 >
-                  <IconChevron />
+                  <IconChevron className={`owner-disclosure-arrow${showErrors ? ' is-expanded' : ''}`} />
                 </button>
               </div>
             </div>
@@ -1162,11 +1163,11 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                   type="button"
                   className="icon-btn"
                   onClick={() => setShowAuditLog(!showAuditLog)}
+                  aria-expanded={showAuditLog}
                   aria-label={showAuditLog ? 'Collapse audit log' : 'Expand audit log'}
                   title={showAuditLog ? 'Collapse' : 'Expand'}
-                  style={{ transform: showAuditLog ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }}
                 >
-                  <IconChevron />
+                  <IconChevron className={`owner-disclosure-arrow${showAuditLog ? ' is-expanded' : ''}`} />
                 </button>
               </div>
             </div>

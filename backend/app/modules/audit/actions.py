@@ -45,12 +45,10 @@ TEMPLATE_DELETED = "template.deleted"
 SIGNED_CONTRACT_UPLOADED = "signed_contract.uploaded"
 SIGNED_CONTRACT_STATUS_UPDATED = "signed_contract.status_updated"
 
-INTAKE_FORM_CREATED = "intake_form.created"
-INTAKE_FORM_UPDATED = "intake_form.updated"
-INTAKE_FORM_DELETED = "intake_form.deleted"
-INTAKE_FIELD_ADDED = "intake_field.added"
-INTAKE_FIELD_UPDATED = "intake_field.updated"
-INTAKE_FIELD_REMOVED = "intake_field.removed"
+FALLBACK_CLAUSE_CREATED = "fallback_clause.created"
+FALLBACK_CLAUSE_UPDATED = "fallback_clause.updated"
+FALLBACK_CLAUSE_DELETED = "fallback_clause.deleted"
+
 INTAKE_SUBMISSION_STATUS_UPDATED = "intake_submission.status_updated"
 INTAKE_SUBMISSION_CONVERTED = "intake_submission.converted"
 

@@ -117,7 +117,9 @@ function AuditLog({ user }: AuditLogProps) {
                   <td className="muted">{e.actor_type}</td>
                   <td>{auditActionLabel[e.action] ?? e.action}</td>
                   <td className="muted">{e.target_type}</td>
-                  <td className="muted audit-log-details">{formatAuditDetails(e.details)}</td>
+                  <td className="muted audit-log-details" title={formatAuditDetails(e.details)}>
+                    {formatAuditDetails(e.details)}
+                  </td>
                 </tr>
               ))}
               {entries.length === 0 && (

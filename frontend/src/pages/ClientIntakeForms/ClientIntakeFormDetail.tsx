@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import './ClientIntakeFormDetail.css'
 import ProfileMenu from '../../components/ProfileMenu'
 import type { ClientContact } from '../../api/clientAuth'
-import { getPublishedIntakeForm, submitIntakeForm } from '../../api/clientIntake'
+import { listPublishedIntakeForms, submitIntakeForm } from '../../api/clientIntake'
 import type { SubmitIntakeFormFile } from '../../api/clientIntake'
-import type { IntakeForm } from '../../api/intakeForms'
+import type { IntakeForm, IntakeField } from '../../api/intakeForms'
 
 type LoadState = 'loading' | 'error' | 'ready'
 
@@ -19,30 +19,34 @@ interface ClientIntakeFormDetailProps {
 }
 
 function ClientIntakeFormDetail({ contact, onLogout }: ClientIntakeFormDetailProps) {
-  const { formId } = useParams<{ formId: string }>()
-  const navigate = useNavigate()
-
   const [form, setForm] = useState<IntakeForm | null>(null)
   const [status, setStatus] = useState<LoadState>('loading')
+  const [attempt, setAttempt] = useState(0)
   const [values, setValues] = useState<Record<string, string>>({})
   const [checked, setChecked] = useState<Record<string, boolean>>({})
   const [files, setFiles] = useState<Record<string, File>>({})
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
+  const submitErrorRef = useRef<HTMLParagraphElement>(null)
 
   useEffect(() => {
     let cancelled = false
     setStatus('loading')
     const token = localStorage.getItem('access_token')
-    if (!token || !formId) {
+    if (!token) {
       setStatus('error')
       return
     }
-    getPublishedIntakeForm(token, formId)
-      .then((data) => {
+    // Every firm has exactly one request form (the system-seeded one) — no picker needed.
+    listPublishedIntakeForms(token)
+      .then((forms) => {
         if (cancelled) return
-        setForm(data)
+        if (forms.length === 0) {
+          setStatus('error')
+          return
+        }
+        setForm(forms[0])
         setStatus('ready')
       })
       .catch(() => {
@@ -52,7 +56,16 @@ function ClientIntakeFormDetail({ contact, onLogout }: ClientIntakeFormDetailPro
     return () => {
       cancelled = true
     }
-  }, [formId])
+  }, [attempt])
+
+  // "other_request_type" only makes sense once request_type is answered "Other" — it has
+  // no way to express that dependency to the generic backend validation, so it's enforced
+  // here: hidden (and excluded from the submission) until then, required while shown.
+  function isFieldVisible(field: IntakeField): boolean {
+    if (field.key !== 'other_request_type' || !form) return true
+    const requestTypeField = form.fields.find((f) => f.key === 'request_type')
+    return requestTypeField ? values[requestTypeField.id] === 'Other' : false
+  }
 
   function handleFileChange(fieldId: string, file: File | null) {
     setSubmitError(null)
@@ -84,6 +97,7 @@ function ClientIntakeFormDetail({ contact, onLogout }: ClientIntakeFormDetailPro
     const answers: Record<string, string> = {}
     const fileAnswers: SubmitIntakeFormFile[] = []
     for (const field of form.fields) {
+      if (!isFieldVisible(field)) continue
       if (field.field_type === 'file') {
         const file = files[field.id]
         if (file) fileAnswers.push({ fieldId: field.id, file })
@@ -101,6 +115,7 @@ function ClientIntakeFormDetail({ contact, onLogout }: ClientIntakeFormDetailPro
       setSubmitted(true)
     } catch {
       setSubmitError('Could not submit the form. Please check your answers and try again.')
+      submitErrorRef.current?.focus()
     } finally {
       setSubmitting(false)
     }
@@ -111,7 +126,7 @@ function ClientIntakeFormDetail({ contact, onLogout }: ClientIntakeFormDetailPro
       <main className="dash-main">
         <div className="dash-state" role="status" aria-live="polite">
           <span className="dash-spinner" aria-hidden="true" />
-          <p>Loading form…</p>
+          <p>Loading request form…</p>
         </div>
       </main>
     )
@@ -121,9 +136,9 @@ function ClientIntakeFormDetail({ contact, onLogout }: ClientIntakeFormDetailPro
     return (
       <main className="dash-main">
         <div className="dash-state" role="status" aria-live="polite">
-          <p>This form isn&rsquo;t available.</p>
-          <button type="button" className="btn-ghost" onClick={() => navigate(-1)}>
-            Back
+          <p>The request form isn&rsquo;t available right now.</p>
+          <button type="button" className="btn-ghost" onClick={() => setAttempt((n) => n + 1)}>
+            Retry
           </button>
         </div>
       </main>
@@ -150,31 +165,28 @@ function ClientIntakeFormDetail({ contact, onLogout }: ClientIntakeFormDetailPro
   return (
     <main className="dash-main">
       <header className="dash-topbar">
-        <div>
-          <button type="button" className="btn-ghost intake-detail-back" onClick={() => navigate(-1)}>
-            ← Back
-          </button>
-          <h1>{form.title}</h1>
-        </div>
+        <h1>{form.title}</h1>
         <ProfileMenu user={contact} onLogout={onLogout} />
       </header>
 
       {form.description && <p className="muted client-intake-description">{form.description}</p>}
 
       <form className="card client-intake-form" onSubmit={handleSubmit}>
-        {form.fields.map((field) => (
+        {form.fields.filter(isFieldVisible).map((field) => {
+          const isRequired = field.is_required || field.key === 'other_request_type'
+          return (
           <label key={field.id} className="field">
             <span>
               {field.label}
-              {field.is_required && <span className="client-intake-required"> *</span>}
+              {isRequired && <span className="client-intake-required"> *</span>}
             </span>
             {field.field_type === 'text' && (
               <input
                 type="text"
                 value={values[field.id] ?? ''}
                 onChange={(e) => setValues((prev) => ({ ...prev, [field.id]: e.target.value }))}
-                required={field.is_required}
-                aria-required={field.is_required}
+                required={isRequired}
+                aria-required={isRequired}
               />
             )}
             {field.field_type === 'textarea' && (
@@ -242,10 +254,11 @@ function ClientIntakeFormDetail({ contact, onLogout }: ClientIntakeFormDetailPro
             )}
             {field.help_text && <span className="muted client-intake-help">{field.help_text}</span>}
           </label>
-        ))}
+          )
+        })}
 
         {submitError && (
-          <p className="matter-error" role="alert" aria-live="polite">
+          <p className="matter-error" role="alert" aria-live="polite" tabIndex={-1} ref={submitErrorRef}>
             {submitError}
           </p>
         )}

@@ -81,7 +81,7 @@ function ClientTemplates({ contact, onLogout }: ClientTemplatesProps) {
       )}
 
       {status === 'error' && (
-        <div className="dash-state">
+        <div className="dash-state" role="status" aria-live="polite">
           <p>Couldn&rsquo;t reach the backend for your templates.</p>
           <button type="button" className="btn-ghost" onClick={() => setAttempt((n) => n + 1)}>
             Retry

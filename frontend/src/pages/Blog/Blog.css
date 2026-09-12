@@ -63,6 +63,12 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .blog-card:hover {
+    transform: none;
+  }
+}
+
 .blog-card-thumb {
   height: 140px;
   background:

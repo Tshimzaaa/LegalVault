@@ -239,9 +239,12 @@ function ClientSignedContracts({ contact, onLogout }: ClientSignedContractsProps
                   <option value="general">General</option>
                 </select>
               </label>
-              <span className="chip">
-                Showing <span className="chip-badge">{filteredContracts.length}</span>
-              </span>
+              <div className="field signed-filters-count">
+                <span>Results</span>
+                <span className="chip">
+                  Showing <span className="chip-badge">{filteredContracts.length}</span>
+                </span>
+              </div>
             </div>
 
             {downloadError && <p className="matter-error" aria-live="polite">{downloadError}</p>}

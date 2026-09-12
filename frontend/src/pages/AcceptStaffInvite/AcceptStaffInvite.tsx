@@ -75,7 +75,7 @@ function AcceptStaffInvite() {
                 />
               </label>
             ) : (
-              <p className="modal-sub">
+              <p className="modal-sub modal-sub-inline">
                 Invite token detected from your link.{' '}
                 <button type="button" className="auth-page-link auth-page-link-inline" onClick={() => setEditToken(true)}>
                   Enter a different one

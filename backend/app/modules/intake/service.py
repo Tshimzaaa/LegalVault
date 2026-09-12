@@ -4,32 +4,22 @@ from sqlalchemy.orm import Session
 from app.modules.intake.repository import IntakeRepository
 from app.modules.intake.models import (
     IntakeForm,
-    IntakeFormField,
     IntakeFieldType,
     IntakeSubmission,
     IntakeSubmissionAnswer,
     IntakeSubmissionStatus,
 )
 from app.modules.intake.schemas import (
-    CreateIntakeFormRequest,
-    UpdateIntakeFormRequest,
-    IntakeFormFieldCreateRequest,
-    IntakeFormFieldUpdateRequest,
-    ReorderFieldsRequest,
     UpdateIntakeSubmissionStatusRequest,
     ConvertIntakeSubmissionRequest,
 )
 from app.exceptions.intake import (
     IntakeFormNotFound,
-    IntakeFieldNotFound,
     IntakeSubmissionNotFound,
     IntakeAnswerNotFound,
     IntakeFormNotPublished,
-    IntakeFormHasSubmissions,
-    IntakeFieldLocked,
     MissingRequiredIntakeAnswer,
     UnsupportedIntakeFileType,
-    SystemFormProtected,
 )
 from app.exceptions.matters import ClientNotFoundForMatter
 from app.core.storage import upload_file, get_download_url
@@ -66,27 +56,7 @@ class IntakeService:
         self.audit = AuditService(db)
         self.notifications = NotificationService(db)
 
-    # ---- Forms (staff) ----
-
-    def create_form(self, firm_id, actor_id, request: CreateIntakeFormRequest) -> IntakeForm:
-        form = IntakeForm(
-            firm_id=firm_id,
-            title=request.title,
-            description=request.description,
-            created_by=actor_id,
-        )
-        self.repository.create_form(form)
-        self.audit.log(
-            actor_type=ActorType.STAFF,
-            actor_id=actor_id,
-            firm_id=firm_id,
-            action=audit_actions.INTAKE_FORM_CREATED,
-            target_type="intake_form",
-            target_id=form.id,
-            details={"title": form.title},
-        )
-        self.db.commit()
-        return form
+    # ---- Forms (staff: read-only — see routes.py's note on why there's no builder) ----
 
     def get_form(self, form_id, firm_id) -> IntakeForm:
         form = self.repository.get_form_by_id(form_id)
@@ -96,152 +66,6 @@ class IntakeService:
 
     def list_forms(self, firm_id) -> list[IntakeForm]:
         return self.repository.list_forms_by_firm(firm_id)
-
-    def update_form(self, form_id, firm_id, actor_id, request: UpdateIntakeFormRequest) -> IntakeForm:
-        form = self.get_form(form_id, firm_id)
-        updates = request.model_dump(exclude_unset=True)
-        for field, value in updates.items():
-            setattr(form, field, value)
-        self.audit.log(
-            actor_type=ActorType.STAFF,
-            actor_id=actor_id,
-            firm_id=firm_id,
-            action=audit_actions.INTAKE_FORM_UPDATED,
-            target_type="intake_form",
-            target_id=form.id,
-            details=updates,
-        )
-        self.db.commit()
-        return form
-
-    def delete_form(self, form_id, firm_id, actor_id) -> None:
-        form = self.get_form(form_id, firm_id)
-        if form.is_system:
-            raise SystemFormProtected()
-        if self.repository.count_submissions_for_form(form_id) > 0:
-            raise IntakeFormHasSubmissions()
-
-        title = form.title
-        # No ORM cascade is configured on IntakeForm.fields (consistent with how the rest
-        # of this codebase handles delete: see ClientService.delete_client), so children
-        # must be deleted explicitly — otherwise SQLAlchemy tries to null out each field's
-        # non-nullable form_id, which also violates the RLS policy on intake_form_fields.
-        for field in self.repository.list_fields_by_form(form_id):
-            self.repository.delete_field(field)
-        self.repository.delete_form(form)
-        self.audit.log(
-            actor_type=ActorType.STAFF,
-            actor_id=actor_id,
-            firm_id=firm_id,
-            action=audit_actions.INTAKE_FORM_DELETED,
-            target_type="intake_form",
-            target_id=form_id,
-            details={"title": title},
-        )
-        self.db.commit()
-
-    # ---- Fields (staff) ----
-
-    def add_field(self, form_id, firm_id, actor_id, request: IntakeFormFieldCreateRequest) -> IntakeFormField:
-        form = self.get_form(form_id, firm_id)
-        if form.is_system:
-            raise SystemFormProtected()
-        next_order = self.repository.max_display_order(form_id) + 1
-        field = IntakeFormField(
-            form_id=form.id,
-            label=request.label,
-            field_type=request.field_type,
-            is_required=request.is_required,
-            help_text=request.help_text,
-            options=request.options,
-            display_order=next_order,
-        )
-        self.repository.create_field(field)
-        self.audit.log(
-            actor_type=ActorType.STAFF,
-            actor_id=actor_id,
-            firm_id=firm_id,
-            action=audit_actions.INTAKE_FIELD_ADDED,
-            target_type="intake_form_field",
-            target_id=field.id,
-            details={"form_id": str(form_id), "label": field.label},
-        )
-        self.db.commit()
-        return field
-
-    def _get_field_for_form(self, form_id, firm_id, field_id, *, guard_system: bool = True) -> IntakeFormField:
-        form = self.get_form(form_id, firm_id)  # 404s if the form doesn't exist or belongs to another firm
-        if guard_system and form.is_system:
-            raise SystemFormProtected()
-        field = self.repository.get_field_by_id(field_id)
-        if not field or str(field.form_id) != str(form_id):
-            raise IntakeFieldNotFound()
-        return field
-
-    def update_field(
-        self, form_id, firm_id, actor_id, field_id, request: IntakeFormFieldUpdateRequest
-    ) -> IntakeFormField:
-        field = self._get_field_for_form(form_id, firm_id, field_id)
-        updates = request.model_dump(exclude_unset=True)
-
-        changes_type = "field_type" in updates and updates["field_type"] != field.field_type
-        if changes_type and self.repository.count_submissions_for_form(form_id) > 0:
-            raise IntakeFieldLocked()
-
-        for key, value in updates.items():
-            setattr(field, key, value)
-
-        self.audit.log(
-            actor_type=ActorType.STAFF,
-            actor_id=actor_id,
-            firm_id=firm_id,
-            action=audit_actions.INTAKE_FIELD_UPDATED,
-            target_type="intake_form_field",
-            target_id=field.id,
-            details=updates,
-        )
-        self.db.commit()
-        return field
-
-    def delete_field(self, form_id, firm_id, actor_id, field_id) -> None:
-        field = self._get_field_for_form(form_id, firm_id, field_id)
-        if self.repository.count_submissions_for_form(form_id) > 0:
-            raise IntakeFieldLocked()
-
-        label = field.label
-        self.repository.delete_field(field)
-        self.audit.log(
-            actor_type=ActorType.STAFF,
-            actor_id=actor_id,
-            firm_id=firm_id,
-            action=audit_actions.INTAKE_FIELD_REMOVED,
-            target_type="intake_form_field",
-            target_id=field_id,
-            details={"form_id": str(form_id), "label": label},
-        )
-        self.db.commit()
-
-    def reorder_fields(self, form_id, firm_id, actor_id, request: ReorderFieldsRequest) -> list[IntakeFormField]:
-        form = self.get_form(form_id, firm_id)
-        fields_by_id = {field.id: field for field in form.fields}
-
-        if set(request.field_ids) != set(fields_by_id.keys()):
-            raise IntakeFieldNotFound()
-
-        for order, field_id in enumerate(request.field_ids):
-            fields_by_id[field_id].display_order = order
-
-        self.audit.log(
-            actor_type=ActorType.STAFF,
-            actor_id=actor_id,
-            firm_id=firm_id,
-            action=audit_actions.INTAKE_FIELD_UPDATED,
-            target_type="intake_form",
-            target_id=form.id,
-            details={"reordered": [str(fid) for fid in request.field_ids]},
-        )
-        self.db.commit()
-        return self.repository.list_fields_by_form(form_id)
 
     # ---- Submissions (staff triage) ----
 

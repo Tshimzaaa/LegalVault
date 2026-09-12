@@ -1,19 +1,19 @@
-# LegalHub Backend — Architecture & Feature Documentation
+# LegalHub Backend: Architecture & Feature Documentation
 
 ## Overview
 
 LegalHub is a multi-tenant SaaS platform for law firm practice management. 
 The system has three tiers of users:
 
-1. **SaaS Owner (you)** — onboards law firms onto the platform
-2. **Firm Staff** — lawyers, admins, paralegals, secretaries who work at a 
+1. **SaaS Owner (you)**: onboards law firms onto the platform
+2. **Firm Staff**: lawyers, admins, paralegals, secretaries who work at a 
    registered law firm and manage cases/clients
-3. **Firm Clients** — the law firm's own clients (e.g. a company like 
+3. **Firm Clients**: the law firm's own clients (e.g. a company like 
    "Mike Motors") who log into a restricted client portal to view case 
    status and download templates
 
 Each tier has its own authentication system, its own JWT token type, and 
-strict data isolation — a firm cannot see another firm's data, and a 
+strict data isolation: a firm cannot see another firm's data, and a 
 client cannot access staff-only endpoints or vice versa.
 
 ---
@@ -47,7 +47,7 @@ The paying tenant. Represents one law firm (e.g. "Pearson Attorneys").
 | created_at / updated_at | timestamp | |
 
 ### `users`
-Firm staff — lawyers, admins, paralegals, secretaries, receptionists.
+Firm staff: lawyers, admins, paralegals, secretaries, receptionists.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -75,7 +75,7 @@ A law firm's own client company (e.g. "Mike Motors").
 ### `client_contacts`
 Individual people who can log into the client portal on behalf of a client 
 company. One client can have multiple contacts, each with separate login 
-credentials (for audit purposes — separate logins allow tracking who did what).
+credentials (for audit purposes: separate logins allow tracking who did what).
 
 | Column | Type | Notes |
 |---|---|---|
@@ -102,11 +102,11 @@ A case/contract the firm is handling for a client.
 | title | string | |
 | description | text | Nullable |
 | status | enum | intake, in_progress, closed |
-| is_visible_to_client | boolean | Default false — staff toggles this on when ready to share with the client |
+| is_visible_to_client | boolean | Default false: staff toggles this on when ready to share with the client |
 | created_at / updated_at | timestamp | |
 
 ### `matter_assignments`
-Many-to-many junction — multiple staff members can be assigned to one matter, 
+Many-to-many junction: multiple staff members can be assigned to one matter, 
 each with their own role.
 
 | Column | Type | Notes |
@@ -143,30 +143,30 @@ Staff tokens and client tokens are cryptographically distinguishable.
 Client tokens carry an explicit `"type": "client"` claim; staff tokens do 
 not. Each side's auth dependency (`get_current_user` for staff, 
 `get_current_contact` for clients) checks for this and rejects tokens that 
-don't match — confirmed via testing that neither token type can be used 
+don't match. This was confirmed via testing that neither token type can be used 
 on the other's protected routes.
 
 ### Staff auth flow
-- `POST /auth/register` — creates a law firm + its first admin user in one 
+- `POST /auth/register`: creates a law firm + its first admin user in one 
   call. **Gated** behind a shared secret (`admin_secret` in the request 
   body, checked against `REGISTER_SECRET` in environment config) since 
   only the SaaS owner should be able to onboard new firms. `REGISTER_SECRET` 
-  is deliberately a *different* value from `OWNER_SECRET` (below) — this 
+  is deliberately a *different* value from `OWNER_SECRET` (below). This 
   secret only unlocks "create one new firm," so it can be handed to an 
   onboarding flow without also handing out full owner access to every 
   existing firm's data.
-- `POST /auth/login` — email + password → JWT. Rate limited to 5 
+- `POST /auth/login`: email + password → JWT. Rate limited to 5 
   attempts/minute per IP.
-- `GET /auth/me` — returns the logged-in staff member's own profile.
-- `GET /auth/users` — lists all staff at the logged-in user's own firm 
+- `GET /auth/me`: returns the logged-in staff member's own profile.
+- `GET /auth/users`: lists all staff at the logged-in user's own firm 
   (used to populate "assign staff" dropdowns).
 
-### Client (portal) auth flow — invitation-based, not self-registration
+### Client (portal) auth flow: invitation-based, not self-registration
 Clients cannot sign up on their own. The flow is:
 1. Firm staff creates a `Client` record (the company).
 2. Firm staff invites a `ClientContact` (an individual person) via 
    `POST /clients/{client_id}/contacts`. This generates a unique 
-   `invitation_token` (48-hour expiry) and — currently — prints a stub 
+   `invitation_token` (48-hour expiry) and, currently, prints a stub 
    invite link to the server console (real email sending via SendGrid is 
    not yet integrated).
 3. The contact visits the invite link and submits a password via 
@@ -180,7 +180,7 @@ Clients cannot sign up on their own. The flow is:
 
 ### Firm-scoping and cross-tenant isolation
 Every staff-facing endpoint pulls `firm_id` from the authenticated user's 
-own token — never from a client-supplied parameter. This was specifically 
+own token, never from a client-supplied parameter. This was specifically 
 fixed after an early version allowed `firm_id` to be passed as an open 
 query parameter (a real vulnerability, caught and corrected before any 
 real use).
@@ -188,7 +188,7 @@ real use).
 Cross-firm isolation has been manually tested with two independent real 
 firms (Okafor Legal and Delacroix & Partners): staff at one firm 
 consistently receive `404 Not Found` (not `403`) when attempting to 
-access another firm's clients or matters — this is deliberate, so the 
+access another firm's clients or matters. This is deliberate, so the 
 system never confirms that another firm's resource even exists.
 
 ---
@@ -199,15 +199,15 @@ Staff can create matters, list them, view details, update status, toggle
 client visibility, and assign multiple staff members with distinct roles.
 
 **Key endpoints:**
-- `POST /matters` — create (client_id must belong to the caller's own firm)
-- `GET /matters` — list all matters for the caller's firm
-- `GET /matters/{id}` — get one (404 if not found or wrong firm)
-- `PATCH /matters/{id}/status` — update status
-- `PATCH /matters/{id}/visibility` — toggle client visibility
-- `POST /matters/{id}/assignments` — assign a staff member with a role
-- `GET /matters/{id}/assignments` — list who's assigned
+- `POST /matters`: create (client_id must belong to the caller's own firm)
+- `GET /matters`: list all matters for the caller's firm
+- `GET /matters/{id}`: get one (404 if not found or wrong firm)
+- `PATCH /matters/{id}/status`: update status
+- `PATCH /matters/{id}/visibility`: toggle client visibility
+- `POST /matters/{id}/assignments`: assign a staff member with a role
+- `GET /matters/{id}/assignments`: list who's assigned
 
-The `is_visible_to_client` flag is the bridge to the client portal — when 
+The `is_visible_to_client` flag is the bridge to the client portal: when 
 true, the matter is intended to become visible to the client (client-side 
 matter viewing is not yet built as of this writing; the flag exists and 
 is toggleable, but no client-facing "list my matters" endpoint has been 
@@ -222,17 +222,17 @@ which are stored in Cloudflare R2. Both staff and clients can list and
 download templates belonging to their own firm.
 
 **Staff endpoints:**
-- `POST /templates` — upload (multipart form: title, description, 
+- `POST /templates`: upload (multipart form: title, description, 
   category, file)
-- `GET /templates` — list firm's templates
-- `GET /templates/{id}/download` — get a signed, time-limited (1 hour) 
+- `GET /templates`: list firm's templates
+- `GET /templates/{id}/download`: get a signed, time-limited (1 hour) 
   download URL
 
 **Client-facing endpoints:**
-- `GET /client-templates` — list templates belonging to the client's own firm
-- `GET /client-templates/{id}/download` — signed download URL
+- `GET /client-templates`: list templates belonging to the client's own firm
+- `GET /client-templates/{id}/download`: signed download URL
 
-Files are never made public directly — R2 bucket public access is 
+Files are never made public directly: R2 bucket public access is 
 disabled, and all downloads go through signed URLs generated per-request, 
 scoped to the requester's own firm.
 
@@ -267,27 +267,27 @@ has no free tier and is meant for rarely-accessed archival data).
 `app/core/config.py` checks `ENVIRONMENT` on startup. If set to 
 `"production"`, the app refuses to start if `SECRET_KEY`, `REGISTER_SECRET`, 
 or `OWNER_SECRET` are still set to placeholder values, or if `OWNER_SECRET` 
-equals `REGISTER_SECRET` — safeguards against accidentally deploying with 
+equals `REGISTER_SECRET`: these safeguard against accidentally deploying with 
 default secrets or collapsing the owner/registration trust boundary back 
 into one shared value. The same check also requires `RUNTIME_DATABASE_URL` 
-to be set (see below) — without it, RLS is silently a no-op in production.
+to be set (see below). Without it, RLS is silently a no-op in production.
 
 ### Row-level security (defense in depth)
 Every tenant-data table (`clients`, `matters`, `templates`, 
 `signed_contracts`, `support_requests`, `audit_logs`, and the matter-child 
 tables) has Postgres row-level security enabled as a second, DB-level 
 enforcement layer on top of the application-level `firm_id` filtering that 
-already exists in every repository — see the `add_row_level_security` 
-Alembic migration for the exact policies. `users`, `law_firms`, and 
+already exists in every repository (see the `add_row_level_security` 
+Alembic migration for the exact policies). `users`, `law_firms`, and 
 `client_contacts` are deliberately excluded (see that migration's docstring) 
 since staff/client login and invite-acceptance have to look someone up with 
 no firm context yet.
 
-**This requires a second, restricted database role.** Postgres RLS — even 
-with `FORCE ROW LEVEL SECURITY` — has no effect on a role with the 
+**This requires a second, restricted database role.** Postgres RLS, even 
+with `FORCE ROW LEVEL SECURITY`, has no effect on a role with the 
 `BYPASSRLS` attribute, and Neon's default project-owner role (e.g. 
 `neondb_owner`) has it. That role stays the migration-time connection 
-(`DATABASE_URL` — it needs to own the tables to run `ALTER TABLE`/
+(`DATABASE_URL`, which needs to own the tables to run `ALTER TABLE`/
 `CREATE POLICY`), while the app's actual request-serving connection 
 (`RUNTIME_DATABASE_URL`) must be a separate role without `BYPASSRLS`. Set up 
 once per database (dev/staging/production each need their own), run as the 
@@ -321,17 +321,17 @@ has resolved who's making the request.
 
 ## Known Gaps / Not Yet Built
 
-- **Real email sending** — SendGrid integration is planned but not yet 
+- **Real email sending**: SendGrid integration is planned but not yet 
   implemented; invitation emails are currently stubbed (printed to 
   server console).
-- **Client-facing "view my matters" endpoint** — the `is_visible_to_client` 
+- **Client-facing "view my matters" endpoint**: the `is_visible_to_client` 
   flag exists and works, but no endpoint yet lets a client actually 
   retrieve their own visible matters.
-- **HTTPS** — not yet relevant since the system is still in local 
+- **HTTPS**: not yet relevant since the system is still in local 
   development; must be addressed before any public deployment.
-- **Refresh tokens** — access tokens currently expire after 24 hours 
+- **Refresh tokens**: access tokens currently expire after 24 hours 
   (staff) with no refresh mechanism; users must log in again after expiry.
-- **No "list matter assignments" pagination** — fine at current scale, 
+- **No "list matter assignments" pagination**: fine at current scale, 
   would need revisiting if a firm has many staff/matters.
 
 ---
@@ -350,5 +350,5 @@ before being considered complete, including:
 - File upload/download round-trip (confirmed actual file content is 
   retrievable after upload)
 
-No formal automated test suite exists yet — all testing to date has been 
+No formal automated test suite exists yet. All testing to date has been 
 manual, endpoint-by-endpoint.
