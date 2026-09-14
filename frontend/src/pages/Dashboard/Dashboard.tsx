@@ -2,10 +2,8 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Dashboard.css'
+import '../MatterDetail/MatterDetail.css'
 import {
-  IconChevron,
-  IconPlus,
-  IconMinus,
   IconFlag,
   IconDownload,
   IconCheckCircle,
@@ -17,6 +15,8 @@ import ProfileMenu from '../../components/ProfileMenu'
 import type { User } from '../../api/auth'
 import { getDashboardSummary } from '../../api/dashboard'
 import type { DashboardSummary } from '../../api/dashboard'
+import { listMyPendingStaffSignatures } from '../../api/signatures'
+import type { SignatureRequest } from '../../api/signatures'
 
 interface DashboardProps {
   user: User
@@ -33,6 +33,7 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
   const [status, setStatus] = useState<LoadState>(previewSummary ? 'ready' : 'loading')
   const [attempt, setAttempt] = useState(0)
   const [dashboardQuery, setDashboardQuery] = useState('')
+  const [pendingSignatures, setPendingSignatures] = useState<SignatureRequest[]>([])
 
   function handleDashboardSearch(e: FormEvent) {
     e.preventDefault()
@@ -62,6 +63,15 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
         if (cancelled) return
         setStatus('error')
       })
+
+    // Non-critical to the dashboard's main load state — a failure here shouldn't block
+    // the rest of the page, so it's fetched and failed independently.
+    listMyPendingStaffSignatures(token)
+      .then((data) => {
+        if (cancelled) return
+        setPendingSignatures(data)
+      })
+      .catch(() => {})
 
     return () => {
       cancelled = true
@@ -108,13 +118,43 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
 
       {status === 'ready' && summary && (
         <>
+          {pendingSignatures.length > 0 && (
+            <section className="card" style={{ marginBottom: 16 }}>
+              <div className="card-header">
+                <span>Awaiting Your Signature</span>
+                <span className="chip">
+                  Pending <span className="chip-badge">{pendingSignatures.length}</span>
+                </span>
+              </div>
+              <div className="list-rows">
+                {pendingSignatures.map((sr) => {
+                  const myRecipient = sr.recipients.find(
+                    (r) => r.recipient_type === 'staff' && r.recipient_id === user.id,
+                  )
+                  return (
+                    <div key={sr.id} className="matter-doc-row">
+                      <span className="matter-doc-title">{sr.title}</span>
+                      {myRecipient && (
+                        <a
+                          className="btn-ghost"
+                          href={myRecipient.signing_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Sign now
+                        </a>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
+          )}
+
           <section className="dash-row row-1">
             <div className="card active-cases">
               <div className="card-header">
                 <span>Active Cases</span>
-                <button className="icon-btn" type="button" aria-label="Add active case">
-                  <IconPlus />
-                </button>
               </div>
               <div className="stat-line">
                 <span className="stat-big">{summary.activeCases.count}</span>
@@ -128,9 +168,6 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
             <div className="card contract-status">
               <div className="card-header">
                 <span>Contract Status</span>
-                <button className="icon-btn" type="button" aria-label="Add contract">
-                  <IconPlus />
-                </button>
               </div>
               <div className="contract-status-list">
                 <div className="stat-line">
@@ -150,16 +187,9 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
             <div className="card key-deadlines">
               <div className="card-header">
                 <span>Key Deadlines</span>
-                <button className="chip">
-                  Filter <IconChevron /> <span className="chip-badge">{summary.keyDeadlines.length}</span>
-                </button>
-              </div>
-              <div className="deadlines-filter">
-                <span className="deadlines-filter-label">Urgency</span>
-                <button className="chip small">
-                  Select <IconChevron />
-                </button>
-                <span className="urgency-badge">High</span>
+                <span className="chip">
+                  Upcoming <span className="chip-badge">{summary.keyDeadlines.length}</span>
+                </span>
               </div>
               <div className="deadlines-list">
                 {summary.keyDeadlines.map((d, i) => (
@@ -180,9 +210,6 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
             <div className="card recent-documents">
               <div className="card-header">
                 <span>Recent Documents</span>
-                <button className="icon-btn" type="button" aria-label="Collapse">
-                  <IconMinus />
-                </button>
               </div>
               <span className="card-subtitle">last 5 files</span>
               <div className="list-rows">
@@ -204,9 +231,6 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
             <div className="card tasks-deadlines">
               <div className="card-header">
                 <span>Tasks &amp; Deadlines</span>
-                <button className="icon-btn" type="button" aria-label="Collapse">
-                  <IconMinus />
-                </button>
               </div>
               <div className="list-rows">
                 {summary.tasks.map((t, i) => (
@@ -227,9 +251,6 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
             <div className="card recent-communication">
               <div className="card-header">
                 <span>Recent Communication</span>
-                <button className="icon-btn" type="button" aria-label="Collapse">
-                  <IconMinus />
-                </button>
               </div>
               <div className="list-rows">
                 {summary.recentCommunications.map((c, i) => (

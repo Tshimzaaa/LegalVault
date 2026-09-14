@@ -79,22 +79,6 @@
 
 /* Key deadlines */
 
-.deadlines-filter {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.urgency-badge {
-  margin-left: auto;
-  background: rgba(var(--danger-rgb), 0.16);
-  color: var(--danger);
-  font-size: 10.5px;
-  padding: 3px 9px;
-  border-radius: 999px;
-}
-
 .deadlines-list {
   display: flex;
   flex-direction: column;

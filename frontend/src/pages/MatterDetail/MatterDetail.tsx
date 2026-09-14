@@ -824,14 +824,24 @@ function MatterDetail() {
                       )}
                     </div>
                     <div className="matter-doc-history">
-                      {sr.recipients.map((r) => (
-                        <div key={r.id} className="matter-doc-row muted">
-                          <span className="matter-doc-title">
-                            {r.name} {r.recipient_type === 'client_contact' ? '(client)' : ''}
-                          </span>
-                          <span className="chip small">{r.status}</span>
-                        </div>
-                      ))}
+                      {sr.recipients.map((r) => {
+                        const isMe =
+                          r.recipient_type === 'staff' && currentUser && r.recipient_id === currentUser.id
+                        return (
+                          <div key={r.id} className="matter-doc-row muted">
+                            <span className="matter-doc-title">
+                              {r.name} {r.recipient_type === 'client_contact' ? '(client)' : ''}
+                            </span>
+                            {isMe && r.status === 'pending' ? (
+                              <a className="btn-ghost" href={r.signing_url} target="_blank" rel="noopener noreferrer">
+                                Sign now
+                              </a>
+                            ) : (
+                              <span className="chip small">{r.status}</span>
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
                 ))}
