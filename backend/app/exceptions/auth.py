@@ -2,7 +2,7 @@ class InvalidCredentials(Exception):
     pass
 
 
-class LawFirmAlreadyExists(Exception):
+class OrganizationAlreadyExists(Exception):
     pass
 
 

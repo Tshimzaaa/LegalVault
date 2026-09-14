@@ -4,7 +4,7 @@ from sqlalchemy import event, text
 from sqlalchemy.orm import Session
 
 
-def set_tenant_context(db: Session, firm_id: UUID | str | None, is_owner: bool = False) -> None:
+def set_tenant_context(db: Session, org_id: UUID | str | None, is_owner: bool = False) -> None:
     """
     Sets the Postgres session-local GUCs the row-level-security policies
     (see the `add_row_level_security` migration) key off of.
@@ -27,16 +27,16 @@ def set_tenant_context(db: Session, firm_id: UUID | str | None, is_owner: bool =
     from a real concurrent deletion, even though nothing was ever deleted.
     """
     db.info["tenant_is_owner"] = "true" if is_owner else "false"
-    db.info["tenant_firm_id"] = str(firm_id) if firm_id else ""
+    db.info["tenant_org_id"] = str(org_id) if org_id else ""
     _apply_tenant_context(db, db.info)
 
 
 def _apply_tenant_context(executable, info: dict) -> None:
     executable.execute(text("SET LOCAL app.is_owner = :is_owner"), {"is_owner": info["tenant_is_owner"]})
-    executable.execute(text("SET LOCAL app.current_firm_id = :firm_id"), {"firm_id": info["tenant_firm_id"]})
+    executable.execute(text("SET LOCAL app.current_org_id = :org_id"), {"org_id": info["tenant_org_id"]})
 
 
 @event.listens_for(Session, "after_begin")
 def _reapply_tenant_context_on_new_transaction(session, transaction, connection) -> None:
-    if "tenant_firm_id" in session.info:
+    if "tenant_org_id" in session.info:
         _apply_tenant_context(connection, session.info)

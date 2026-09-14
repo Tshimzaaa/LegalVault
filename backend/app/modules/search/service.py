@@ -32,13 +32,13 @@ class SearchService:
     def __init__(self, db: Session):
         self.db = db
 
-    def search(self, firm_id, query: str) -> SearchResponse:
+    def search(self, org_id, query: str) -> SearchResponse:
         tsquery = func.websearch_to_tsquery("english", query)
 
         client_vector = _tsvector(Client.company_name)
         clients = self.db.scalars(
             select(Client)
-            .where(Client.firm_id == firm_id, client_vector.op("@@")(tsquery))
+            .where(Client.org_id == org_id, client_vector.op("@@")(tsquery))
             .order_by(func.ts_rank(client_vector, tsquery).desc())
             .limit(RESULTS_PER_CATEGORY)
         ).all()
@@ -47,7 +47,7 @@ class SearchService:
         contacts = self.db.scalars(
             select(ClientContact)
             .join(Client, ClientContact.client_id == Client.id)
-            .where(Client.firm_id == firm_id, contact_vector.op("@@")(tsquery))
+            .where(Client.org_id == org_id, contact_vector.op("@@")(tsquery))
             .order_by(func.ts_rank(contact_vector, tsquery).desc())
             .limit(RESULTS_PER_CATEGORY)
         ).all()
@@ -55,7 +55,7 @@ class SearchService:
         matter_vector = _tsvector(Matter.title, Matter.description)
         matters = self.db.scalars(
             select(Matter)
-            .where(Matter.firm_id == firm_id, matter_vector.op("@@")(tsquery))
+            .where(Matter.org_id == org_id, matter_vector.op("@@")(tsquery))
             .order_by(func.ts_rank(matter_vector, tsquery).desc())
             .limit(RESULTS_PER_CATEGORY)
         ).all()
@@ -63,7 +63,7 @@ class SearchService:
         staff_vector = _tsvector(User.first_name, User.last_name, User.email)
         staff = self.db.scalars(
             select(User)
-            .where(User.firm_id == firm_id, staff_vector.op("@@")(tsquery))
+            .where(User.org_id == org_id, staff_vector.op("@@")(tsquery))
             .order_by(func.ts_rank(staff_vector, tsquery).desc())
             .limit(RESULTS_PER_CATEGORY)
         ).all()
@@ -72,7 +72,7 @@ class SearchService:
         documents = self.db.scalars(
             select(MatterDocument)
             .join(Matter, MatterDocument.matter_id == Matter.id)
-            .where(Matter.firm_id == firm_id, document_vector.op("@@")(tsquery))
+            .where(Matter.org_id == org_id, document_vector.op("@@")(tsquery))
             .order_by(func.ts_rank(document_vector, tsquery).desc())
             .limit(RESULTS_PER_CATEGORY)
         ).all()

@@ -6,7 +6,7 @@ from app.exceptions.clients import InvalidOrExpiredResetToken as ClientInvalidRe
 
 from app.exceptions.auth import (
     InvalidCredentials,
-    LawFirmAlreadyExists,
+    OrganizationAlreadyExists,
     UserAlreadyExists,
     InactiveUser,
     InsufficientPermissions,
@@ -66,11 +66,11 @@ from app.exceptions.signatures import SignatureRequestNotFound, InvalidSignature
 
 def register_exception_handlers(app: FastAPI):
 
-    @app.exception_handler(LawFirmAlreadyExists)
-    async def law_firm_exists(_, __):
+    @app.exception_handler(OrganizationAlreadyExists)
+    async def organization_exists(_, __):
         raise HTTPException(
             status_code=409,
-            detail="A law firm with this email already exists.",
+            detail="A law org with this email already exists.",
         )
 
     @app.exception_handler(UserAlreadyExists)

@@ -102,13 +102,13 @@ class MatterService:
         self.audit = AuditService(db)
         self.notifications = NotificationService(db)
 
-    def create_matter(self, firm_id, actor_id, request: CreateMatterRequest) -> Matter:
+    def create_matter(self, org_id, actor_id, request: CreateMatterRequest) -> Matter:
         client = self.client_repository.get_client_by_id(request.client_id)
-        if not client or str(client.firm_id) != str(firm_id):
+        if not client or str(client.org_id) != str(org_id):
             raise ClientNotFoundForMatter()
 
         matter = Matter(
-            firm_id=firm_id,
+            org_id=org_id,
             client_id=request.client_id,
             title=request.title,
             description=request.description,
@@ -119,7 +119,7 @@ class MatterService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.MATTER_CREATED,
             target_type="matter",
             target_id=matter.id,
@@ -130,7 +130,7 @@ class MatterService:
 
     def _commit_and_refresh(self, matter: Matter) -> Matter:
         # expire_on_commit means the next attribute access re-SELECTs matter;
-        # if it was deleted by a concurrent request (e.g. firm deletion) in
+        # if it was deleted by a concurrent request (e.g. org deletion) in
         # between our read and this commit, that SELECT returns no rows and
         # raises ObjectDeletedError instead of a normal 404.
         self.db.commit()
@@ -140,24 +140,24 @@ class MatterService:
             raise MatterNotFound()
         return matter
 
-    def get_matter(self, matter_id, firm_id) -> Matter:
+    def get_matter(self, matter_id, org_id) -> Matter:
         matter = self.repository.get_by_id(matter_id)
-        if not matter or str(matter.firm_id) != str(firm_id):
+        if not matter or str(matter.org_id) != str(org_id):
             raise MatterNotFound()
         return matter
 
-    def list_matters_for_firm(self, firm_id) -> list[Matter]:
-        return self.repository.list_by_firm(firm_id)
+    def list_matters_for_org(self, org_id) -> list[Matter]:
+        return self.repository.list_by_org(org_id)
 
-    def update_details(self, matter_id, firm_id, actor_id, request: UpdateMatterDetailsRequest) -> Matter:
-        matter = self.get_matter(matter_id, firm_id)
+    def update_details(self, matter_id, org_id, actor_id, request: UpdateMatterDetailsRequest) -> Matter:
+        matter = self.get_matter(matter_id, org_id)
         matter.title = request.title
         matter.description = request.description
 
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.MATTER_DETAILS_UPDATED,
             target_type="matter",
             target_id=matter.id,
@@ -165,8 +165,8 @@ class MatterService:
         )
         return self._commit_and_refresh(matter)
 
-    def update_status(self, matter_id, firm_id, actor_id, request: UpdateMatterStatusRequest) -> Matter:
-        matter = self.get_matter(matter_id, firm_id)
+    def update_status(self, matter_id, org_id, actor_id, request: UpdateMatterStatusRequest) -> Matter:
+        matter = self.get_matter(matter_id, org_id)
         previous_status = matter.status
         target = request.status
 
@@ -182,7 +182,7 @@ class MatterService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.MATTER_STATUS_UPDATED,
             target_type="matter",
             target_id=matter.id,
@@ -190,14 +190,14 @@ class MatterService:
         )
         return self._commit_and_refresh(matter)
 
-    def update_visibility(self, matter_id, firm_id, actor_id, request: UpdateMatterVisibilityRequest) -> Matter:
-        matter = self.get_matter(matter_id, firm_id)
+    def update_visibility(self, matter_id, org_id, actor_id, request: UpdateMatterVisibilityRequest) -> Matter:
+        matter = self.get_matter(matter_id, org_id)
         matter.is_visible_to_client = request.is_visible_to_client
 
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.MATTER_VISIBILITY_UPDATED,
             target_type="matter",
             target_id=matter.id,
@@ -205,15 +205,15 @@ class MatterService:
         )
         return self._commit_and_refresh(matter)
 
-    def update_deadline(self, matter_id, firm_id, actor_id, request: UpdateMatterDeadlineRequest) -> Matter:
-        matter = self.get_matter(matter_id, firm_id)
+    def update_deadline(self, matter_id, org_id, actor_id, request: UpdateMatterDeadlineRequest) -> Matter:
+        matter = self.get_matter(matter_id, org_id)
         previous_due_date = matter.due_date
         matter.due_date = request.due_date
 
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.MATTER_DEADLINE_UPDATED,
             target_type="matter",
             target_id=matter.id,
@@ -224,11 +224,11 @@ class MatterService:
         )
         return self._commit_and_refresh(matter)
 
-    def assign_staff(self, matter_id, firm_id, actor_id, request: AssignStaffRequest) -> MatterAssignment:
-        matter = self.get_matter(matter_id, firm_id)  # also validates firm ownership
+    def assign_staff(self, matter_id, org_id, actor_id, request: AssignStaffRequest) -> MatterAssignment:
+        matter = self.get_matter(matter_id, org_id)  # also validates org ownership
 
         assignee = self.auth_repository.get_user_by_id(request.user_id)
-        if not assignee or str(assignee.firm_id) != str(firm_id):
+        if not assignee or str(assignee.org_id) != str(org_id):
             raise UserNotFoundForAssignment()
 
         existing = self.repository.get_assignment(matter_id, request.user_id, request.role_on_matter)
@@ -245,7 +245,7 @@ class MatterService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.MATTER_STAFF_ASSIGNED,
             target_type="matter_assignment",
             target_id=assignment.id,
@@ -267,8 +267,8 @@ class MatterService:
         matters = self.repository.list_by_client(client_id)
         return [m for m in matters if m.is_visible_to_client]
 
-    def list_assignments(self, matter_id, firm_id):
-        self.get_matter(matter_id, firm_id)  # validates ownership, raises 404 if not found/wrong firm
+    def list_assignments(self, matter_id, org_id):
+        self.get_matter(matter_id, org_id)  # validates ownership, raises 404 if not found/wrong org
         return self.repository.list_assignments_for_matter(matter_id)
 
     def upload_matter_document(
@@ -278,19 +278,19 @@ class MatterService:
         file_bytes: bytes,
         original_filename: str,
         content_type: str,
-        firm_id=None,
+        org_id=None,
         uploaded_by=None,
         client_id=None,
         uploaded_by_contact_id=None,
     ) -> MatterDocument:
-        if firm_id is not None:
-            matter = self.get_matter(matter_id, firm_id)
+        if org_id is not None:
+            matter = self.get_matter(matter_id, org_id)
         elif client_id is not None:
             matter = self.repository.get_by_id(matter_id)
             if not matter or str(matter.client_id) != str(client_id) or not matter.is_visible_to_client:
                 raise MatterNotFound()
         else:
-            raise ValueError("Either firm_id or client_id must be provided")
+            raise ValueError("Either org_id or client_id must be provided")
 
         if content_type not in ALLOWED_DOCUMENT_TYPES:
             from app.exceptions.templates import UnsupportedFileType
@@ -299,11 +299,11 @@ class MatterService:
         try:
             scan_file(file_bytes)
         except MalwareDetected:
-            if firm_id is not None:
+            if org_id is not None:
                 self.audit.log(
                     actor_type=ActorType.STAFF,
                     actor_id=uploaded_by,
-                    firm_id=firm_id,
+                    org_id=org_id,
                     action=audit_actions.FILE_UPLOAD_BLOCKED_MALWARE,
                     target_type="matter_document",
                     target_id=None,
@@ -330,11 +330,11 @@ class MatterService:
         )
         self.repository.create_document(document)
 
-        if firm_id is not None:
+        if org_id is not None:
             self.audit.log(
                 actor_type=ActorType.STAFF,
                 actor_id=uploaded_by,
-                firm_id=firm_id,
+                org_id=org_id,
                 action=audit_actions.MATTER_DOCUMENT_UPLOADED,
                 target_type="matter_document",
                 target_id=document.id,
@@ -369,19 +369,19 @@ class MatterService:
         self.db.commit()
         return document
 
-    def list_matter_documents(self, matter_id, firm_id) -> list[MatterDocument]:
-        self.get_matter(matter_id, firm_id)  # ownership check
+    def list_matter_documents(self, matter_id, org_id) -> list[MatterDocument]:
+        self.get_matter(matter_id, org_id)  # ownership check
         return self.repository.list_documents_for_matter(matter_id)
 
-    def get_matter_document_download(self, matter_id, document_id, firm_id) -> str:
-        self.get_matter(matter_id, firm_id)  # ownership check
+    def get_matter_document_download(self, matter_id, document_id, org_id) -> str:
+        self.get_matter(matter_id, org_id)  # ownership check
         document = self.repository.get_document_by_id(document_id)
         if not document or str(document.matter_id) != str(matter_id):
             raise MatterDocumentNotFound()
         return get_download_url(document.file_key)
 
-    def delete_matter_document(self, matter_id, document_id, firm_id, actor_id) -> None:
-        self.get_matter(matter_id, firm_id)  # ownership check
+    def delete_matter_document(self, matter_id, document_id, org_id, actor_id) -> None:
+        self.get_matter(matter_id, org_id)  # ownership check
         document = self.repository.get_document_by_id(document_id)
         if not document or str(document.matter_id) != str(matter_id):
             raise MatterDocumentNotFound()
@@ -392,7 +392,7 @@ class MatterService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.MATTER_DOCUMENT_DELETED,
             target_type="matter_document",
             target_id=document.id,
@@ -416,16 +416,16 @@ class MatterService:
             raise MatterDocumentNotFound()
         return get_download_url(document.file_key)
 
-    def _validate_assignee(self, assigned_to, firm_id):
+    def _validate_assignee(self, assigned_to, org_id):
         if assigned_to is None:
             return
         assignee = self.auth_repository.get_user_by_id(assigned_to)
-        if not assignee or str(assignee.firm_id) != str(firm_id):
+        if not assignee or str(assignee.org_id) != str(org_id):
             raise UserNotFoundForAssignment()
 
-    def create_task(self, matter_id, firm_id, actor_id, request: CreateMatterTaskRequest) -> MatterTask:
-        matter = self.get_matter(matter_id, firm_id)  # ownership check
-        self._validate_assignee(request.assigned_to, firm_id)
+    def create_task(self, matter_id, org_id, actor_id, request: CreateMatterTaskRequest) -> MatterTask:
+        matter = self.get_matter(matter_id, org_id)  # ownership check
+        self._validate_assignee(request.assigned_to, org_id)
 
         task = MatterTask(
             matter_id=matter.id,
@@ -439,7 +439,7 @@ class MatterService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.MATTER_TASK_CREATED,
             target_type="matter_task",
             target_id=task.id,
@@ -458,12 +458,12 @@ class MatterService:
         self.db.commit()
         return task
 
-    def list_tasks(self, matter_id, firm_id) -> list[MatterTask]:
-        self.get_matter(matter_id, firm_id)  # ownership check
+    def list_tasks(self, matter_id, org_id) -> list[MatterTask]:
+        self.get_matter(matter_id, org_id)  # ownership check
         return self.repository.list_tasks_for_matter(matter_id)
 
-    def update_task(self, matter_id, task_id, firm_id, actor_id, request: UpdateMatterTaskRequest) -> MatterTask:
-        matter = self.get_matter(matter_id, firm_id)  # ownership check
+    def update_task(self, matter_id, task_id, org_id, actor_id, request: UpdateMatterTaskRequest) -> MatterTask:
+        matter = self.get_matter(matter_id, org_id)  # ownership check
 
         task = self.repository.get_task_by_id(task_id)
         if not task or str(task.matter_id) != str(matter_id):
@@ -471,7 +471,7 @@ class MatterService:
 
         updates = request.model_dump(exclude_unset=True)
         if "assigned_to" in updates:
-            self._validate_assignee(updates["assigned_to"], firm_id)
+            self._validate_assignee(updates["assigned_to"], org_id)
 
         for field, value in updates.items():
             setattr(task, field, value)
@@ -479,7 +479,7 @@ class MatterService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.MATTER_TASK_UPDATED,
             target_type="matter_task",
             target_id=task.id,
@@ -537,9 +537,9 @@ class MatterService:
         self.notifications.notify_many(entries)
 
     def post_message_as_staff(
-        self, matter_id, firm_id, actor_id, actor_name: str, request: CreateMatterMessageRequest
+        self, matter_id, org_id, actor_id, actor_name: str, request: CreateMatterMessageRequest
     ) -> MatterMessage:
-        matter = self.get_matter(matter_id, firm_id)  # ownership check
+        matter = self.get_matter(matter_id, org_id)  # ownership check
 
         message = MatterMessage(
             matter_id=matter.id,
@@ -553,12 +553,12 @@ class MatterService:
         self.db.commit()
         return message
 
-    def list_messages(self, matter_id, firm_id) -> list[MatterMessage]:
-        self.get_matter(matter_id, firm_id)  # ownership check
+    def list_messages(self, matter_id, org_id) -> list[MatterMessage]:
+        self.get_matter(matter_id, org_id)  # ownership check
         return self.repository.list_messages_for_matter(matter_id)
 
-    def delete_message(self, matter_id, message_id, firm_id, actor_id, is_admin: bool):
-        self.get_matter(matter_id, firm_id)  # ownership check
+    def delete_message(self, matter_id, message_id, org_id, actor_id, is_admin: bool):
+        self.get_matter(matter_id, org_id)  # ownership check
 
         message = self.repository.get_message_by_id(message_id)
         if not message or str(message.matter_id) != str(matter_id):
@@ -610,8 +610,8 @@ class MatterService:
         self.repository.delete_message(message)
         self.db.commit()
 
-    def delete_task(self, matter_id, task_id, firm_id, actor_id):
-        self.get_matter(matter_id, firm_id)  # ownership check
+    def delete_task(self, matter_id, task_id, org_id, actor_id):
+        self.get_matter(matter_id, org_id)  # ownership check
 
         task = self.repository.get_task_by_id(task_id)
         if not task or str(task.matter_id) != str(matter_id):
@@ -622,7 +622,7 @@ class MatterService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.MATTER_TASK_DELETED,
             target_type="matter_task",
             target_id=task.id,
@@ -630,7 +630,7 @@ class MatterService:
         )
         self.db.commit()
 
-    def get_calendar(self, firm_id, start, end) -> list[CalendarEvent]:
+    def get_calendar(self, org_id, start, end) -> list[CalendarEvent]:
         events = [
             CalendarEvent(
                 date=matter.due_date,
@@ -639,7 +639,7 @@ class MatterService:
                 matter_id=matter.id,
                 matter_title=matter.title,
             )
-            for matter in self.repository.list_matters_with_deadline_in_range(firm_id, start, end)
+            for matter in self.repository.list_matters_with_deadline_in_range(org_id, start, end)
         ]
         events += [
             CalendarEvent(
@@ -650,7 +650,7 @@ class MatterService:
                 matter_title=matter.title,
                 task_id=task.id,
             )
-            for task, matter in self.repository.list_tasks_with_due_date_in_range(firm_id, start, end)
+            for task, matter in self.repository.list_tasks_with_due_date_in_range(org_id, start, end)
         ]
         events.sort(key=lambda e: e.date)
         return events
@@ -683,9 +683,9 @@ class MatterService:
         )
 
     def set_contact_permission(
-        self, matter_id, firm_id, actor_id, request: SetContactPermissionRequest
+        self, matter_id, org_id, actor_id, request: SetContactPermissionRequest
     ) -> MatterContactPermissionResponse:
-        matter = self.get_matter(matter_id, firm_id)  # ownership check
+        matter = self.get_matter(matter_id, org_id)  # ownership check
 
         contact = self.client_repository.get_contact_by_id(request.client_contact_id)
         if not contact or str(contact.client_id) != str(matter.client_id):
@@ -705,7 +705,7 @@ class MatterService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.MATTER_CONTACT_PERMISSION_SET,
             target_type="matter_contact_permission",
             target_id=permission.id,
@@ -724,8 +724,8 @@ class MatterService:
         self.db.refresh(permission)
         return self._to_permission_response(permission, matter, contact)
 
-    def list_contact_permissions(self, matter_id, firm_id) -> list[MatterContactPermissionResponse]:
-        matter = self.get_matter(matter_id, firm_id)  # ownership check
+    def list_contact_permissions(self, matter_id, org_id) -> list[MatterContactPermissionResponse]:
+        matter = self.get_matter(matter_id, org_id)  # ownership check
         permissions = self.repository.list_contact_permissions_for_matter(matter_id)
         contacts_by_id = {c.id: c for c in self.client_repository.list_contacts_for_client(matter.client_id)}
         return [
@@ -734,8 +734,8 @@ class MatterService:
             if p.client_contact_id in contacts_by_id
         ]
 
-    def remove_contact_permission(self, matter_id, firm_id, actor_id, client_contact_id) -> None:
-        matter = self.get_matter(matter_id, firm_id)  # ownership check
+    def remove_contact_permission(self, matter_id, org_id, actor_id, client_contact_id) -> None:
+        matter = self.get_matter(matter_id, org_id)  # ownership check
         permission = self.repository.get_contact_permission(matter_id, client_contact_id)
         if not permission:
             raise MatterContactPermissionNotFound()
@@ -745,7 +745,7 @@ class MatterService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.MATTER_CONTACT_PERMISSION_REMOVED,
             target_type="matter_contact_permission",
             target_id=permission.id,
@@ -764,14 +764,14 @@ class MatterService:
             if p.client_contact_id in contacts_by_id
         ]
 
-    def _eligible_approver_ids(self, firm_id, matter_id, exclude_id=None) -> list[uuid.UUID]:
-        """Firm admins, plus this matter's lead-lawyer assignees — active users only."""
-        firm_users = {u.id: u for u in self.auth_repository.list_by_firm(firm_id)}
-        admin_ids = {u.id for u in firm_users.values() if u.role == UserRole.ADMIN and u.is_active}
+    def _eligible_approver_ids(self, org_id, matter_id, exclude_id=None) -> list[uuid.UUID]:
+        """Organization admins, plus this matter's lead-lawyer assignees — active users only."""
+        org_users = {u.id: u for u in self.auth_repository.list_by_org(org_id)}
+        admin_ids = {u.id for u in org_users.values() if u.role == UserRole.ADMIN and u.is_active}
         lead_lawyer_ids = {
             a.user_id
             for a in self.repository.list_assignments_for_matter(matter_id)
-            if a.role_on_matter == MatterRole.LEAD_LAWYER and a.user_id in firm_users and firm_users[a.user_id].is_active
+            if a.role_on_matter == MatterRole.LEAD_LAWYER and a.user_id in org_users and org_users[a.user_id].is_active
         }
         approver_ids = admin_ids | lead_lawyer_ids
         if exclude_id is not None:
@@ -784,9 +784,9 @@ class MatterService:
         return self.repository.get_assignment(matter_id, actor_id, MatterRole.LEAD_LAWYER) is not None
 
     def request_status_approval(
-        self, matter_id, firm_id, actor_id, request: RequestMatterApprovalRequest
+        self, matter_id, org_id, actor_id, request: RequestMatterApprovalRequest
     ) -> MatterApproval:
-        matter = self.get_matter(matter_id, firm_id)
+        matter = self.get_matter(matter_id, org_id)
         current = matter.status
         target = request.to_status
 
@@ -807,7 +807,7 @@ class MatterService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.MATTER_APPROVAL_REQUESTED,
             target_type="matter_approval",
             target_id=approval.id,
@@ -823,23 +823,23 @@ class MatterService:
                 "target_type": "matter",
                 "target_id": matter.id,
             }
-            for approver_id in self._eligible_approver_ids(firm_id, matter_id, exclude_id=actor_id)
+            for approver_id in self._eligible_approver_ids(org_id, matter_id, exclude_id=actor_id)
         ])
         self.db.commit()
         self.db.refresh(approval)
         return approval
 
-    def list_approvals(self, matter_id, firm_id) -> list[MatterApproval]:
-        self.get_matter(matter_id, firm_id)  # ownership check
+    def list_approvals(self, matter_id, org_id) -> list[MatterApproval]:
+        self.get_matter(matter_id, org_id)  # ownership check
         return self.repository.list_approvals_for_matter(matter_id)
 
-    def list_pending_approvals(self, firm_id) -> list[MatterApproval]:
-        return self.repository.list_pending_approvals_for_firm(firm_id)
+    def list_pending_approvals(self, org_id) -> list[MatterApproval]:
+        return self.repository.list_pending_approvals_for_org(org_id)
 
     def decide_approval(
-        self, matter_id, approval_id, firm_id, actor_id, actor_role, request: DecideMatterApprovalRequest
+        self, matter_id, approval_id, org_id, actor_id, actor_role, request: DecideMatterApprovalRequest
     ) -> MatterApproval:
-        matter = self.get_matter(matter_id, firm_id)
+        matter = self.get_matter(matter_id, org_id)
 
         approval = self.repository.get_approval_by_id(approval_id)
         if not approval or str(approval.matter_id) != str(matter.id):
@@ -860,7 +860,7 @@ class MatterService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.MATTER_APPROVAL_DECIDED,
             target_type="matter_approval",
             target_id=approval.id,
@@ -883,7 +883,7 @@ class MatterService:
         return approval
 
     def generate_document_from_template(
-        self, matter_id, firm_id, actor_id, request: GenerateDocumentRequest
+        self, matter_id, org_id, actor_id, request: GenerateDocumentRequest
     ) -> MatterDocument:
         # Local imports: intake/service.py imports MatterService at module level, so
         # importing intake (or templates, for symmetry) at module level here would be
@@ -897,18 +897,18 @@ class MatterService:
         from xhtml2pdf import pisa
         from io import BytesIO
 
-        matter = self.get_matter(matter_id, firm_id)
+        matter = self.get_matter(matter_id, org_id)
 
         template_repository = TemplateRepository(self.db)
         template = template_repository.get_by_id(request.template_id)
-        if not template or str(template.firm_id) != str(firm_id):
+        if not template or str(template.org_id) != str(org_id):
             raise TemplateNotFound()
         if not template.body:
             raise TemplateHasNoBody()
 
         intake_repository = IntakeRepository(self.db)
         submission = intake_repository.get_submission_by_id(request.intake_submission_id)
-        if not submission or str(submission.firm_id) != str(firm_id):
+        if not submission or str(submission.org_id) != str(org_id):
             raise IntakeSubmissionNotFound()
         if str(submission.client_id) != str(matter.client_id):
             raise IntakeSubmissionClientMismatch()
@@ -938,14 +938,14 @@ class MatterService:
             file_bytes=pdf_bytes,
             original_filename=f"{title}.pdf",
             content_type="application/pdf",
-            firm_id=firm_id,
+            org_id=org_id,
             uploaded_by=actor_id,
         )
 
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.MATTER_DOCUMENT_GENERATED,
             target_type="matter_document",
             target_id=document.id,

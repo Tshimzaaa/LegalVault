@@ -3,12 +3,12 @@ Client company + client-contact CRUD smoke tests: create, invite, accept,
 login, deactivate, delete, and the guard against deleting a client that still
 has matters.
 """
-from tests.conftest import auth_headers, make_client_company, make_contact, make_firm, make_matter, make_staff
+from tests.conftest import auth_headers, make_client_company, make_contact, make_org, make_matter, make_staff
 
 
 def test_create_client(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
 
     res = client.post("/clients", json={"company_name": "Northwind Traders"}, headers=auth_headers(admin))
     assert res.status_code == 201
@@ -16,9 +16,9 @@ def test_create_client(client, db_session):
 
 
 def test_invite_contact_and_accept_and_login(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
 
     invite_res = client.post(
         f"/clients/{client_company.id}/contacts",
@@ -49,9 +49,9 @@ def test_invite_contact_and_accept_and_login(client, db_session):
 
 
 def test_deactivate_client_blocks_login_immediately(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
     contact, password = make_contact(db_session, client_company)
 
     res = client.get("/client-auth/me", headers=auth_headers(contact))
@@ -68,8 +68,8 @@ def test_deactivate_client_blocks_login_immediately(client, db_session):
 
 
 def test_client_password_reset_invalidates_previously_issued_access_token(client, db_session):
-    firm = make_firm(db_session)
-    client_company = make_client_company(db_session, firm)
+    org = make_org(db_session)
+    client_company = make_client_company(db_session, org)
     contact, _ = make_contact(db_session, client_company, email="resetcontact@example.com")
     old_access_token_headers = auth_headers(contact)
 
@@ -91,19 +91,19 @@ def test_client_password_reset_invalidates_previously_issued_access_token(client
 
 
 def test_delete_client_blocked_when_matters_exist(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
-    make_matter(db_session, firm, client_company)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
+    make_matter(db_session, org, client_company)
 
     res = client.delete(f"/clients/{client_company.id}", headers=auth_headers(admin))
     assert res.status_code == 409
 
 
 def test_delete_client_without_matters_succeeds(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
 
     res = client.delete(f"/clients/{client_company.id}", headers=auth_headers(admin))
     assert res.status_code == 204

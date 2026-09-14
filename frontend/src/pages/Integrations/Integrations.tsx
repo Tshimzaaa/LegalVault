@@ -91,7 +91,7 @@ function Integrations({ user }: IntegrationsProps) {
           <h1>Integrations</h1>
         </header>
         <div className="dash-state">
-          <PermissionError message="Only firm admins can view or configure integrations." />
+          <PermissionError message="Only organization admins can view or configure integrations." />
         </div>
       </main>
     )

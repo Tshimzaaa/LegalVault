@@ -18,4 +18,4 @@ def list_audit_log(
     current_user: User = Depends(require_admin),
 ):
     repo = AuditLogRepository(db)
-    return repo.list_for_firm(current_user.firm_id, limit, offset)
+    return repo.list_for_org(current_user.org_id, limit, offset)

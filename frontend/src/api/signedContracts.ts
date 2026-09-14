@@ -6,7 +6,7 @@ export type ContractLifecycleStatus = ContractPersistedStatus | 'expiring'
 
 export interface SignedContract {
   id: string
-  firm_id: string
+  org_id: string
   client_id: string
   client_name: string
   matter_id: string | null

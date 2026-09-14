@@ -22,7 +22,7 @@ class IntakeFormFieldResponse(BaseModel):
 
 class IntakeFormResponse(BaseModel):
     id: UUID
-    firm_id: UUID
+    org_id: UUID
     title: str
     description: str | None
     is_published: bool
@@ -48,7 +48,7 @@ class IntakeSubmissionAnswerResponse(BaseModel):
 
 class IntakeSubmissionResponse(BaseModel):
     id: UUID
-    firm_id: UUID
+    org_id: UUID
     form_id: UUID
     client_id: UUID
     contact_id: UUID

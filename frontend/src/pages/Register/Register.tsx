@@ -8,8 +8,8 @@ import Seo from '../../components/Seo'
 function Register() {
   const navigate = useNavigate()
   const [adminSecret, setAdminSecret] = useState('')
-  const [firmName, setFirmName] = useState('')
-  const [firmEmail, setFirmEmail] = useState('')
+  const [orgName, setOrganizationName] = useState('')
+  const [orgEmail, setOrganizationEmail] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [adminEmail, setAdminEmail] = useState('')
@@ -33,7 +33,7 @@ function Register() {
     }
 
     if (!consent) {
-      setError('You must confirm you have the authority to create this firm account and agree to the Terms and Privacy Policy.')
+      setError('You must confirm you have the authority to create this organization account and agree to the Terms and Privacy Policy.')
       return
     }
 
@@ -41,12 +41,12 @@ function Register() {
     try {
       await register({
         admin_secret: adminSecret,
-        law_firm: { name: firmName, email: firmEmail },
+        organization: { name: orgName, email: orgEmail },
         admin: { first_name: firstName, last_name: lastName, email: adminEmail, password },
       })
       navigate('/login', { state: { staffOnly: true } })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not register the firm.')
+      setError(err instanceof Error ? err.message : 'Could not register the organization.')
     } finally {
       setSubmitting(false)
     }
@@ -54,9 +54,9 @@ function Register() {
 
   return (
     <div className="auth-page">
-      <Seo title="Onboard a Firm" description="Firm onboarding." path="/register" noindex />
+      <Seo title="Onboard a Organization" description="Organization onboarding." path="/register" noindex />
       <div className="modal-box wide">
-        <h2>Onboard a Law Firm</h2>
+        <h2>Onboard a Law Organization</h2>
         <p className="modal-sub">SaaS-owner only: requires the shared onboarding secret.</p>
 
         <form onSubmit={handleSubmit}>
@@ -73,21 +73,21 @@ function Register() {
 
           <div className="modal-field-row">
             <label className="modal-field">
-              <span>Firm name</span>
+              <span>Organization name</span>
               <input
                 type="text"
-                value={firmName}
-                onChange={(e) => setFirmName(e.target.value)}
+                value={orgName}
+                onChange={(e) => setOrganizationName(e.target.value)}
                 required
                 autoComplete="organization"
               />
             </label>
             <label className="modal-field">
-              <span>Firm email</span>
+              <span>Organization email</span>
               <input
                 type="email"
-                value={firmEmail}
-                onChange={(e) => setFirmEmail(e.target.value)}
+                value={orgEmail}
+                onChange={(e) => setOrganizationEmail(e.target.value)}
                 required
                 autoComplete="email"
                 spellCheck={false}
@@ -157,7 +157,7 @@ function Register() {
               required
             />
             <span>
-              I confirm I have the authority to create this firm account, and agree to the{' '}
+              I confirm I have the authority to create this organization account, and agree to the{' '}
               <Link to="/terms" target="_blank" rel="noreferrer">Terms and Conditions</Link> and{' '}
               <Link to="/privacy-policy" target="_blank" rel="noreferrer">Privacy Policy</Link>.
             </span>
@@ -166,7 +166,7 @@ function Register() {
           {error && <p className="modal-error" aria-live="polite">{error}</p>}
 
           <button type="submit" className="modal-submit" disabled={submitting}>
-            {submitting ? 'Creating firm…' : 'Create firm & admin'}
+            {submitting ? 'Creating organization…' : 'Create organization & admin'}
           </button>
         </form>
 

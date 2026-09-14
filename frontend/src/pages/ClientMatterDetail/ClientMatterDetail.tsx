@@ -347,7 +347,7 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
                   <div className="matter-message-meta">
                     <span className="matter-message-author">
                       {m.author_name}
-                      {m.author_type === 'staff' ? ' (firm)' : ''}
+                      {m.author_type === 'staff' ? ' (organization)' : ''}
                     </span>
                     <span className="muted">{dateTimeFormat.format(new Date(m.created_at))}</span>
                     {m.author_type === 'client_contact' && (
@@ -372,7 +372,7 @@ function ClientMatterDetail({ contact, onLogout }: ClientMatterDetailProps) {
               <input
                 type="text"
                 aria-label="Message"
-                placeholder="Write a message to the firm…"
+                placeholder="Write a message to the organization…"
                 value={messageBody}
                 onChange={(e) => setMessageBody(e.target.value)}
               />

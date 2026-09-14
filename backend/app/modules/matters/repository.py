@@ -13,8 +13,8 @@ class MatterRepository:
     def get_by_id(self, matter_id) -> Matter | None:
         return self.db.scalar(select(Matter).where(Matter.id == matter_id))
 
-    def list_by_firm(self, firm_id) -> list[Matter]:
-        return list(self.db.scalars(select(Matter).where(Matter.firm_id == firm_id)))
+    def list_by_org(self, org_id) -> list[Matter]:
+        return list(self.db.scalars(select(Matter).where(Matter.org_id == org_id)))
 
     def list_by_client(self, client_id) -> list[Matter]:
         return list(self.db.scalars(select(Matter).where(Matter.client_id == client_id)))
@@ -42,9 +42,9 @@ class MatterRepository:
         return list(
             self.db.scalars(select(MatterAssignment).where(MatterAssignment.matter_id == matter_id))
         )
-    def count_matters_for_firm(self, firm_id) -> int:
+    def count_matters_for_org(self, org_id) -> int:
         from sqlalchemy import func
-        return self.db.scalar(select(func.count()).select_from(Matter).where(Matter.firm_id == firm_id))
+        return self.db.scalar(select(func.count()).select_from(Matter).where(Matter.org_id == org_id))
     def create_document(self, document: MatterDocument) -> MatterDocument:
         self.db.add(document)
         self.db.flush()
@@ -100,21 +100,21 @@ class MatterRepository:
         statement = select(Matter.status, func.count()).group_by(Matter.status)
         return {status.value: count for status, count in self.db.execute(statement).all()}
 
-    def list_matters_with_deadline_in_range(self, firm_id, start, end) -> list[Matter]:
+    def list_matters_with_deadline_in_range(self, org_id, start, end) -> list[Matter]:
         statement = select(Matter).where(
-            Matter.firm_id == firm_id,
+            Matter.org_id == org_id,
             Matter.due_date.is_not(None),
             Matter.due_date >= start,
             Matter.due_date <= end,
         )
         return list(self.db.scalars(statement))
 
-    def list_tasks_with_due_date_in_range(self, firm_id, start, end) -> list[tuple[MatterTask, Matter]]:
+    def list_tasks_with_due_date_in_range(self, org_id, start, end) -> list[tuple[MatterTask, Matter]]:
         statement = (
             select(MatterTask, Matter)
             .join(Matter, MatterTask.matter_id == Matter.id)
             .where(
-                Matter.firm_id == firm_id,
+                Matter.org_id == org_id,
                 MatterTask.due_date.is_not(None),
                 MatterTask.due_date >= start,
                 MatterTask.due_date <= end,
@@ -122,37 +122,37 @@ class MatterRepository:
         )
         return list(self.db.execute(statement).all())
 
-    def list_assignments_for_firm(self, firm_id) -> list[tuple[MatterAssignment, Matter]]:
+    def list_assignments_for_org(self, org_id) -> list[tuple[MatterAssignment, Matter]]:
         statement = (
             select(MatterAssignment, Matter)
             .join(Matter, MatterAssignment.matter_id == Matter.id)
-            .where(Matter.firm_id == firm_id)
+            .where(Matter.org_id == org_id)
         )
         return list(self.db.execute(statement).all())
 
-    def list_tasks_for_firm(self, firm_id) -> list[tuple[MatterTask, Matter]]:
+    def list_tasks_for_org(self, org_id) -> list[tuple[MatterTask, Matter]]:
         statement = (
             select(MatterTask, Matter)
             .join(Matter, MatterTask.matter_id == Matter.id)
-            .where(Matter.firm_id == firm_id)
+            .where(Matter.org_id == org_id)
         )
         return list(self.db.execute(statement).all())
 
-    def list_recent_documents_for_firm(self, firm_id, limit: int) -> list[tuple[MatterDocument, Matter]]:
+    def list_recent_documents_for_org(self, org_id, limit: int) -> list[tuple[MatterDocument, Matter]]:
         statement = (
             select(MatterDocument, Matter)
             .join(Matter, MatterDocument.matter_id == Matter.id)
-            .where(Matter.firm_id == firm_id)
+            .where(Matter.org_id == org_id)
             .order_by(MatterDocument.created_at.desc())
             .limit(limit)
         )
         return list(self.db.execute(statement).all())
 
-    def list_recent_messages_for_firm(self, firm_id, limit: int) -> list[tuple[MatterMessage, Matter]]:
+    def list_recent_messages_for_org(self, org_id, limit: int) -> list[tuple[MatterMessage, Matter]]:
         statement = (
             select(MatterMessage, Matter)
             .join(Matter, MatterMessage.matter_id == Matter.id)
-            .where(Matter.firm_id == firm_id)
+            .where(Matter.org_id == org_id)
             .order_by(MatterMessage.created_at.desc())
             .limit(limit)
         )
@@ -260,10 +260,10 @@ class MatterRepository:
         )
         return list(self.db.scalars(statement))
 
-    def list_pending_approvals_for_firm(self, firm_id) -> list[MatterApproval]:
+    def list_pending_approvals_for_org(self, org_id) -> list[MatterApproval]:
         statement = (
             select(MatterApproval)
             .join(Matter, MatterApproval.matter_id == Matter.id)
-            .where(Matter.firm_id == firm_id, MatterApproval.status == ApprovalStatus.PENDING)
+            .where(Matter.org_id == org_id, MatterApproval.status == ApprovalStatus.PENDING)
         )
         return list(self.db.scalars(statement))

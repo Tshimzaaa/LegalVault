@@ -15,7 +15,7 @@ from app.modules.intake.models import (
     IntakeSubmissionStatus,
 )
 from app.modules.templates.models import Template
-from tests.conftest import auth_headers, make_client_company, make_contact, make_firm, make_matter, make_staff
+from tests.conftest import auth_headers, make_client_company, make_contact, make_org, make_matter, make_staff
 
 
 @pytest.fixture(autouse=True)
@@ -24,9 +24,9 @@ def _stub_r2_and_scanner(monkeypatch):
     monkeypatch.setattr("app.modules.matters.service.scan_file", lambda *a, **k: None)
 
 
-def make_template(db_session, firm, **overrides):
+def make_template(db_session, org, **overrides):
     template = Template(
-        firm_id=firm.id,
+        org_id=org.id,
         title=overrides.get("title", "Test Template"),
         description=overrides.get("description"),
         category=overrides.get("category", "General"),
@@ -40,8 +40,8 @@ def make_template(db_session, firm, **overrides):
     return template
 
 
-def make_intake_form(db_session, firm, **overrides):
-    form = IntakeForm(firm_id=firm.id, title=overrides.get("title", "Test Form"), is_published=True)
+def make_intake_form(db_session, org, **overrides):
+    form = IntakeForm(org_id=org.id, title=overrides.get("title", "Test Form"), is_published=True)
     db_session.add(form)
     db_session.flush()
     return form
@@ -60,9 +60,9 @@ def make_intake_field(db_session, form, **overrides):
     return field
 
 
-def make_intake_submission(db_session, firm, form, client_company, contact, **overrides):
+def make_intake_submission(db_session, org, form, client_company, contact, **overrides):
     submission = IntakeSubmission(
-        firm_id=firm.id,
+        org_id=org.id,
         form_id=form.id,
         client_id=client_company.id,
         contact_id=contact.id,
@@ -88,17 +88,17 @@ def _generate(client, matter_id, template_id, submission_id, admin, title=None):
 
 
 def test_generate_document_substitutes_answers(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
     contact, _ = make_contact(db_session, client_company)
-    matter = make_matter(db_session, firm, client_company)
+    matter = make_matter(db_session, org, client_company)
     template = make_template(
-        db_session, firm, title="NDA", body="Agreement between {{client_name}} and {{counterparty}}."
+        db_session, org, title="NDA", body="Agreement between {{client_name}} and {{counterparty}}."
     )
-    form = make_intake_form(db_session, firm)
+    form = make_intake_form(db_session, org)
     field = make_intake_field(db_session, form, label="Counterparty")
-    submission = make_intake_submission(db_session, firm, form, client_company, contact)
+    submission = make_intake_submission(db_session, org, form, client_company, contact)
     make_answer(db_session, submission, field, "Acme Corp")
 
     res = _generate(client, matter.id, template.id, submission.id, admin)
@@ -112,57 +112,57 @@ def test_generate_document_with_unanswered_field_still_succeeds(client, db_sessi
     """An unmatched {{placeholder}} renders as [[missing: ...]] rather than erroring —
     confirmed at the render.py unit-test level; here we just confirm the whole request
     still completes and produces a document."""
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
     contact, _ = make_contact(db_session, client_company)
-    matter = make_matter(db_session, firm, client_company)
-    template = make_template(db_session, firm, body="See {{nonexistent_field}}.")
-    form = make_intake_form(db_session, firm)
-    submission = make_intake_submission(db_session, firm, form, client_company, contact)
+    matter = make_matter(db_session, org, client_company)
+    template = make_template(db_session, org, body="See {{nonexistent_field}}.")
+    form = make_intake_form(db_session, org)
+    submission = make_intake_submission(db_session, org, form, client_company, contact)
 
     res = _generate(client, matter.id, template.id, submission.id, admin)
     assert res.status_code == 201
 
 
 def test_generate_document_requires_template_with_body(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
     contact, _ = make_contact(db_session, client_company)
-    matter = make_matter(db_session, firm, client_company)
-    template = make_template(db_session, firm, body=None)
-    form = make_intake_form(db_session, firm)
-    submission = make_intake_submission(db_session, firm, form, client_company, contact)
+    matter = make_matter(db_session, org, client_company)
+    template = make_template(db_session, org, body=None)
+    form = make_intake_form(db_session, org)
+    submission = make_intake_submission(db_session, org, form, client_company, contact)
 
     res = _generate(client, matter.id, template.id, submission.id, admin)
     assert res.status_code == 409
 
 
 def test_generate_document_rejects_submission_from_other_client(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
-    other_client_company = make_client_company(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
+    other_client_company = make_client_company(db_session, org)
     contact, _ = make_contact(db_session, other_client_company)
-    matter = make_matter(db_session, firm, client_company)
-    template = make_template(db_session, firm, body="Hello {{client_name}}.")
-    form = make_intake_form(db_session, firm)
-    submission = make_intake_submission(db_session, firm, form, other_client_company, contact)
+    matter = make_matter(db_session, org, client_company)
+    template = make_template(db_session, org, body="Hello {{client_name}}.")
+    form = make_intake_form(db_session, org)
+    submission = make_intake_submission(db_session, org, form, other_client_company, contact)
 
     res = _generate(client, matter.id, template.id, submission.id, admin)
     assert res.status_code == 400
 
 
 def test_generate_document_twice_bumps_version(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
     contact, _ = make_contact(db_session, client_company)
-    matter = make_matter(db_session, firm, client_company)
-    template = make_template(db_session, firm, body="Hello {{client_name}}.")
-    form = make_intake_form(db_session, firm)
-    submission = make_intake_submission(db_session, firm, form, client_company, contact)
+    matter = make_matter(db_session, org, client_company)
+    template = make_template(db_session, org, body="Hello {{client_name}}.")
+    form = make_intake_form(db_session, org)
+    submission = make_intake_submission(db_session, org, form, client_company, contact)
 
     first = _generate(client, matter.id, template.id, submission.id, admin, title="Draft NDA")
     second = _generate(client, matter.id, template.id, submission.id, admin, title="Draft NDA")

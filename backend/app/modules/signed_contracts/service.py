@@ -49,7 +49,7 @@ class SignedContractService:
 
     def upload_contract(
         self,
-        firm_id,
+        org_id,
         actor_id,
         client_id,
         title: str,
@@ -64,12 +64,12 @@ class SignedContractService:
         matter_id=None,
     ) -> SignedContractResponse:
         client = self.client_repository.get_client_by_id(client_id)
-        if not client or str(client.firm_id) != str(firm_id):
+        if not client or str(client.org_id) != str(org_id):
             raise ClientNotFound()
 
         if matter_id is not None:
             matter = self.matter_repository.get_by_id(matter_id)
-            if not matter or str(matter.firm_id) != str(firm_id) or str(matter.client_id) != str(client_id):
+            if not matter or str(matter.org_id) != str(org_id) or str(matter.client_id) != str(client_id):
                 raise MatterNotFound()
 
         from app.exceptions.templates import UnsupportedFileType
@@ -82,7 +82,7 @@ class SignedContractService:
             self.audit.log(
                 actor_type=ActorType.STAFF,
                 actor_id=actor_id,
-                firm_id=firm_id,
+                org_id=org_id,
                 action=audit_actions.FILE_UPLOAD_BLOCKED_MALWARE,
                 target_type="signed_contract",
                 target_id=None,
@@ -91,11 +91,11 @@ class SignedContractService:
             self.db.commit()
             raise
 
-        file_key = f"signed_contracts/{firm_id}/{uuid.uuid4()}-{original_filename}"
+        file_key = f"signed_contracts/{org_id}/{uuid.uuid4()}-{original_filename}"
         upload_file(file_bytes, file_key, content_type)
 
         contract = SignedContract(
-            firm_id=firm_id,
+            org_id=org_id,
             client_id=client_id,
             matter_id=matter_id,
             uploaded_by=actor_id,
@@ -114,7 +114,7 @@ class SignedContractService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.SIGNED_CONTRACT_UPLOADED,
             target_type="signed_contract",
             target_id=contract.id,
@@ -126,7 +126,7 @@ class SignedContractService:
     def _to_response(self, contract: SignedContract, client_name: str) -> SignedContractResponse:
         return SignedContractResponse(
             id=contract.id,
-            firm_id=contract.firm_id,
+            org_id=contract.org_id,
             client_id=contract.client_id,
             client_name=client_name,
             matter_id=contract.matter_id,
@@ -142,8 +142,8 @@ class SignedContractService:
             created_at=contract.created_at,
         )
 
-    def list_for_firm(self, firm_id) -> list[SignedContractResponse]:
-        return [self._to_response(c, client.company_name) for c, client in self.repository.list_by_firm(firm_id)]
+    def list_for_org(self, org_id) -> list[SignedContractResponse]:
+        return [self._to_response(c, client.company_name) for c, client in self.repository.list_by_org(org_id)]
 
     def list_for_client(self, client_id) -> list[SignedContractResponse]:
         return [self._to_response(c, client.company_name) for c, client in self.repository.list_by_client(client_id)]
@@ -157,15 +157,15 @@ class SignedContractService:
             expiring_soon=sum(1 for s in statuses if s == "expiring"),
         )
 
-    def get_summary_for_firm(self, firm_id) -> SignedContractsSummaryResponse:
-        return self._summary([c for c, _ in self.repository.list_by_firm(firm_id)])
+    def get_summary_for_org(self, org_id) -> SignedContractsSummaryResponse:
+        return self._summary([c for c, _ in self.repository.list_by_org(org_id)])
 
     def get_summary_for_client(self, client_id) -> SignedContractsSummaryResponse:
         return self._summary([c for c, _ in self.repository.list_by_client(client_id)])
 
-    def get_download_link(self, contract_id, firm_id) -> str:
+    def get_download_link(self, contract_id, org_id) -> str:
         contract = self.repository.get_by_id(contract_id)
-        if not contract or str(contract.firm_id) != str(firm_id):
+        if not contract or str(contract.org_id) != str(org_id):
             raise SignedContractNotFound()
         return get_download_url(contract.file_key)
 
@@ -175,9 +175,9 @@ class SignedContractService:
             raise SignedContractNotFound()
         return get_download_url(contract.file_key)
 
-    def update_status(self, contract_id, firm_id, actor_id, status: ContractStatus) -> SignedContractResponse:
+    def update_status(self, contract_id, org_id, actor_id, status: ContractStatus) -> SignedContractResponse:
         contract = self.repository.get_by_id(contract_id)
-        if not contract or str(contract.firm_id) != str(firm_id):
+        if not contract or str(contract.org_id) != str(org_id):
             raise SignedContractNotFound()
 
         contract.status = status
@@ -185,7 +185,7 @@ class SignedContractService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.SIGNED_CONTRACT_STATUS_UPDATED,
             target_type="signed_contract",
             target_id=contract.id,

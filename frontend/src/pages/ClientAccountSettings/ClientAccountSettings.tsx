@@ -211,7 +211,7 @@ function ClientAccountSettings({ contact, onLogout, onContactUpdate }: ClientAcc
             {contact.last_login && ` · Last login ${formatDateTime(contact.last_login)}`}
           </p>
           <p className="muted">
-            To deactivate or remove your account, contact your firm; this is managed on their side.
+            To deactivate or remove your account, contact your organization; this is managed on their side.
           </p>
         </div>
       </section>

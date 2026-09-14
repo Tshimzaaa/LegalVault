@@ -6,7 +6,7 @@ import LoginModal from './components/LoginModal'
 import Home from './pages/Home/Home'
 import { login, getCurrentUser, refreshStaffToken, logoutStaff } from './api/auth'
 import { clientLogin, getCurrentContact, refreshClientToken, logoutClient } from './api/clientAuth'
-import { ownerLogin, listFirms } from './api/owner'
+import { ownerLogin, listOrganizations } from './api/owner'
 import { setUnauthorizedHandler, setRefreshHandler } from './api/client'
 import type { User } from './api/auth'
 import type { ClientContact } from './api/clientAuth'
@@ -129,7 +129,7 @@ function App() {
       actorKind === 'client'
         ? getCurrentContact(token).then((contact) => setActor({ kind: 'client', contact }))
         : actorKind === 'owner'
-          ? listFirms(token).then(() => setActor({ kind: 'owner' }))
+          ? listOrganizations(token).then(() => setActor({ kind: 'owner' }))
           : getCurrentUser(token).then((user) => setActor({ kind: 'staff', user }))
 
     restore

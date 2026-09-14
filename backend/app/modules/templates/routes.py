@@ -34,7 +34,7 @@ async def upload_template(
 
     service = TemplateService(db)
     return service.upload_template(
-        firm_id=current_user.firm_id,
+        org_id=current_user.org_id,
         actor_id=current_user.id,
         title=title,
         description=description,
@@ -51,7 +51,7 @@ def list_templates(
     current_user: User = Depends(get_current_user),
 ):
     service = TemplateService(db)
-    return service.list_templates(current_user.firm_id)
+    return service.list_templates(current_user.org_id)
 
 
 @router.patch("/{template_id}", response_model=TemplateResponse)
@@ -62,7 +62,7 @@ def update_template(
     current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.LAWYER])),
 ):
     service = TemplateService(db)
-    return service.update_template(template_id, current_user.firm_id, current_user.id, request)
+    return service.update_template(template_id, current_user.org_id, current_user.id, request)
 
 
 @router.delete("/{template_id}", status_code=204)
@@ -72,7 +72,7 @@ def delete_template(
     current_user: User = Depends(require_role([UserRole.ADMIN])),
 ):
     service = TemplateService(db)
-    service.delete_template(template_id, current_user.firm_id, current_user.id)
+    service.delete_template(template_id, current_user.org_id, current_user.id)
 
 
 @router.get("/{template_id}/download", response_model=TemplateDownloadResponse)
@@ -82,16 +82,16 @@ def download_template(
     current_user: User = Depends(get_current_user),
 ):
     service = TemplateService(db)
-    url = service.get_download_link(template_id, current_user.firm_id)
+    url = service.get_download_link(template_id, current_user.org_id)
     return TemplateDownloadResponse(download_url=url, expires_in_seconds=3600)
 
 
-def _get_firm_id_for_contact(contact: ClientContact, db: Session) -> str:
+def _get_org_id_for_contact(contact: ClientContact, db: Session) -> str:
     client_repo = ClientRepository(db)
     client = client_repo.get_client_by_id(contact.client_id)
     if not client:
         raise ClientNotFound()
-    return client.firm_id
+    return client.org_id
 
 
 @client_templates_router.get("", response_model=list[TemplateResponse])
@@ -99,9 +99,9 @@ def list_client_templates(
     db: Session = Depends(get_db),
     current_contact: ClientContact = Depends(get_current_contact),
 ):
-    firm_id = _get_firm_id_for_contact(current_contact, db)
+    org_id = _get_org_id_for_contact(current_contact, db)
     service = TemplateService(db)
-    return service.list_templates(firm_id)
+    return service.list_templates(org_id)
 
 
 @client_templates_router.get("/{template_id}/download", response_model=TemplateDownloadResponse)
@@ -110,7 +110,7 @@ def download_client_template(
     db: Session = Depends(get_db),
     current_contact: ClientContact = Depends(get_current_contact),
 ):
-    firm_id = _get_firm_id_for_contact(current_contact, db)
+    org_id = _get_org_id_for_contact(current_contact, db)
     service = TemplateService(db)
-    url = service.get_download_link(template_id, firm_id)
+    url = service.get_download_link(template_id, org_id)
     return TemplateDownloadResponse(download_url=url, expires_in_seconds=3600)

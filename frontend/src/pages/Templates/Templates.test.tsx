@@ -10,7 +10,7 @@ vi.mock('../../api/templates')
 function makeTemplate(overrides: Partial<Template> = {}): Template {
   return {
     id: 't1',
-    firm_id: 'firm-1',
+    org_id: 'org-1',
     title: 'Mutual NDA',
     description: 'Standard mutual NDA',
     category: 'Confidentiality',

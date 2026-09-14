@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.database.rls import set_tenant_context
 from app.database.session import get_db_session
-from app.modules.auth.models import LawFirm, User
+from app.modules.auth.models import Organization, User
 from app.modules.matters.models import Matter, MatterAssignment, MatterStatus
 from app.modules.notifications.models import Notification, RecipientType
 from app.modules.notifications.service import NotificationService
@@ -45,13 +45,13 @@ def scan_and_notify_due_matters(db: Session) -> int:
     matters = list(
         db.scalars(
             select(Matter)
-            .join(LawFirm, LawFirm.id == Matter.firm_id)
+            .join(Organization, Organization.id == Matter.org_id)
             .where(
                 Matter.due_date.is_not(None),
                 Matter.due_date >= today,
                 Matter.due_date <= window_end,
                 Matter.status.not_in(INACTIVE_MATTER_STATUSES),
-                LawFirm.is_active.is_(True),
+                Organization.is_active.is_(True),
             )
         )
     )
@@ -103,14 +103,14 @@ def scan_and_notify_expiring_contracts(db: Session) -> int:
     contracts = list(
         db.scalars(
             select(SignedContract)
-            .join(LawFirm, LawFirm.id == SignedContract.firm_id)
+            .join(Organization, Organization.id == SignedContract.org_id)
             .where(
                 SignedContract.expiry_date.is_not(None),
                 SignedContract.expiry_date >= today,
                 SignedContract.expiry_date <= window_end,
                 SignedContract.status != ContractStatus.ARCHIVED,
                 SignedContract.uploaded_by.is_not(None),
-                LawFirm.is_active.is_(True),
+                Organization.is_active.is_(True),
             )
         )
     )
@@ -168,12 +168,12 @@ def _existing_reminders(
 @celery_app.task(name="app.tasks.reminders.send_matter_due_date_reminders")
 def send_matter_due_date_reminders() -> int:
     with get_db_session() as db:
-        set_tenant_context(db, firm_id=None, is_owner=True)
+        set_tenant_context(db, org_id=None, is_owner=True)
         return scan_and_notify_due_matters(db)
 
 
 @celery_app.task(name="app.tasks.reminders.send_contract_expiry_reminders")
 def send_contract_expiry_reminders() -> int:
     with get_db_session() as db:
-        set_tenant_context(db, firm_id=None, is_owner=True)
+        set_tenant_context(db, org_id=None, is_owner=True)
         return scan_and_notify_expiring_contracts(db)

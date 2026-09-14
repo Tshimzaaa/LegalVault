@@ -2,7 +2,7 @@ import { apiRequest } from './client'
 
 export interface KnowledgeArticle {
   id: string
-  firm_id: string
+  org_id: string
   title: string
   category: string
   content: string

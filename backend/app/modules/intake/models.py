@@ -9,7 +9,7 @@ import enum
 from app.database.base import BaseModel
 
 if TYPE_CHECKING:
-    from app.modules.auth.models.law_firm import LawFirm
+    from app.modules.auth.models.organization import Organization
     from app.modules.clients.models import Client, ClientContact
     from app.modules.matters.models import Matter
 
@@ -35,8 +35,8 @@ class IntakeSubmissionStatus(str, enum.Enum):
 class IntakeForm(BaseModel):
     __tablename__ = "intake_forms"
 
-    firm_id: Mapped[UUID] = mapped_column(
-        ForeignKey("law_firms.id"),
+    org_id: Mapped[UUID] = mapped_column(
+        ForeignKey("organizations.id"),
         nullable=False,
         index=True,
     )
@@ -47,7 +47,7 @@ class IntakeForm(BaseModel):
 
     is_published: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
-    # True only for the per-firm "Request Support" form seeded at firm creation (see
+    # True only for the per-org "Request Support" form seeded at org creation (see
     # app.modules.intake.system_forms) — locks its fields against deletion/type changes
     # in IntakeService so the unified request flow always has a stable base form to fill.
     is_system: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
@@ -83,7 +83,7 @@ class IntakeFormField(BaseModel):
 
     # Stable, non-staff-editable slug (e.g. "request_type", "priority") set only by system
     # form seeding (app.modules.intake.system_forms) — lets code find "the priority answer"
-    # without depending on a human-editable label or a firm-specific field UUID. Never
+    # without depending on a human-editable label or a org-specific field UUID. Never
     # accepted from IntakeFormFieldCreateRequest/IntakeFormFieldUpdateRequest.
     key: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
@@ -107,8 +107,8 @@ class IntakeFormField(BaseModel):
 class IntakeSubmission(BaseModel):
     __tablename__ = "intake_submissions"
 
-    firm_id: Mapped[UUID] = mapped_column(
-        ForeignKey("law_firms.id"),
+    org_id: Mapped[UUID] = mapped_column(
+        ForeignKey("organizations.id"),
         nullable=False,
         index=True,
     )

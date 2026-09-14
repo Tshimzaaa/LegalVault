@@ -1,4 +1,4 @@
-"""Seeds the per-firm "Request Support" system intake form.
+"""Seeds the per-org "Request Support" system intake form.
 
 This form replaces what used to be the separate, fixed-schema SupportRequest feature —
 folding it into intake so clients fill out one kind of form and staff triage one kind of
@@ -44,11 +44,11 @@ SUPPORT_REQUEST_FIELDS: list[tuple[str, str, IntakeFieldType, bool, list[str] | 
 ]
 
 
-def seed_system_support_form(db: Session, firm_id: UUID) -> IntakeForm:
+def seed_system_support_form(db: Session, org_id: UUID) -> IntakeForm:
     repository = IntakeRepository(db)
 
     form = IntakeForm(
-        firm_id=firm_id,
+        org_id=org_id,
         title=SUPPORT_REQUEST_FORM_TITLE,
         description=SUPPORT_REQUEST_FORM_DESCRIPTION,
         is_published=True,

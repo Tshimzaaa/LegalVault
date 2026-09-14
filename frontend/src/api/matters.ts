@@ -4,7 +4,7 @@ export type MatterStatus = 'intake' | 'in_review' | 'awaiting_signature' | 'sign
 
 export interface Matter {
   id: string
-  firm_id: string
+  org_id: string
   client_id: string
   title: string
   description: string | null

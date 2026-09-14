@@ -17,14 +17,14 @@ class KnowledgeRepository:
     def get_by_id(self, article_id) -> KnowledgeArticle | None:
         return self.db.scalar(select(KnowledgeArticle).where(KnowledgeArticle.id == article_id))
 
-    def list_by_firm(self, firm_id) -> list[KnowledgeArticle]:
-        return list(self.db.scalars(select(KnowledgeArticle).where(KnowledgeArticle.firm_id == firm_id)))
+    def list_by_org(self, org_id) -> list[KnowledgeArticle]:
+        return list(self.db.scalars(select(KnowledgeArticle).where(KnowledgeArticle.org_id == org_id)))
 
-    def list_published_by_firm(self, firm_id) -> list[KnowledgeArticle]:
+    def list_published_by_org(self, org_id) -> list[KnowledgeArticle]:
         return list(
             self.db.scalars(
                 select(KnowledgeArticle).where(
-                    KnowledgeArticle.firm_id == firm_id,
+                    KnowledgeArticle.org_id == org_id,
                     KnowledgeArticle.is_published.is_(True),
                 )
             )

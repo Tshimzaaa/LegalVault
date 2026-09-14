@@ -1,13 +1,13 @@
 """
-SaaS-owner console: login, firm CRUD (create/list/detail/activate-suspend/
-delete/export), platform metrics, system health, and the cross-firm audit
+SaaS-owner console: login, org CRUD (create/list/detail/activate-suspend/
+delete/export), platform metrics, system health, and the cross-org audit
 log. `get_current_owner` has no DB-backed identity — see owner_headers() in
 conftest.py.
 """
 import pytest
 
 from app.core.config import settings
-from tests.conftest import make_firm, make_staff, owner_headers
+from tests.conftest import make_org, make_staff, owner_headers
 
 
 @pytest.fixture(autouse=True)
@@ -30,11 +30,11 @@ def test_owner_login_success_and_wrong_secret(client):
     assert bad.status_code == 401
 
 
-def test_owner_create_firm(client):
+def test_owner_create_org(client):
     res = client.post(
-        "/owner/firms",
+        "/owner/orgs",
         json={
-            "law_firm": {"name": "Owner Created Firm", "email": "owner-created@example.com"},
+            "organization": {"name": "Owner Created Org", "email": "owner-created@example.com"},
             "admin": {
                 "first_name": "Ola",
                 "last_name": "Admin",
@@ -45,58 +45,58 @@ def test_owner_create_firm(client):
         headers=owner_headers(),
     )
     assert res.status_code == 201
-    assert res.json()["law_firm_id"]
+    assert res.json()["organization_id"]
 
 
-def test_owner_list_and_get_firm(client, db_session):
-    firm = make_firm(db_session)
-    make_staff(db_session, firm)
+def test_owner_list_and_get_org(client, db_session):
+    org = make_org(db_session)
+    make_staff(db_session, org)
 
-    list_res = client.get("/owner/firms", headers=owner_headers())
+    list_res = client.get("/owner/orgs", headers=owner_headers())
     assert list_res.status_code == 200
-    assert str(firm.id) in {f["id"] for f in list_res.json()}
+    assert str(org.id) in {f["id"] for f in list_res.json()}
 
-    detail_res = client.get(f"/owner/firms/{firm.id}", headers=owner_headers())
+    detail_res = client.get(f"/owner/orgs/{org.id}", headers=owner_headers())
     assert detail_res.status_code == 200
     assert detail_res.json()["staff_count"] == 1
 
 
-def test_owner_update_firm_status(client, db_session):
-    firm = make_firm(db_session)
+def test_owner_update_org_status(client, db_session):
+    org = make_org(db_session)
 
-    res = client.patch(f"/owner/firms/{firm.id}/status", json={"is_active": False}, headers=owner_headers())
+    res = client.patch(f"/owner/orgs/{org.id}/status", json={"is_active": False}, headers=owner_headers())
     assert res.status_code == 200
     assert res.json()["is_active"] is False
 
 
-def test_owner_delete_firm_requires_deactivation_first(client, db_session):
-    firm = make_firm(db_session)
+def test_owner_delete_org_requires_deactivation_first(client, db_session):
+    org = make_org(db_session)
 
-    blocked = client.delete(f"/owner/firms/{firm.id}", headers=owner_headers())
+    blocked = client.delete(f"/owner/orgs/{org.id}", headers=owner_headers())
     assert blocked.status_code == 409
 
-    client.patch(f"/owner/firms/{firm.id}/status", json={"is_active": False}, headers=owner_headers())
-    allowed = client.delete(f"/owner/firms/{firm.id}", headers=owner_headers())
+    client.patch(f"/owner/orgs/{org.id}/status", json={"is_active": False}, headers=owner_headers())
+    allowed = client.delete(f"/owner/orgs/{org.id}", headers=owner_headers())
     assert allowed.status_code == 204
 
 
-def test_owner_export_firm_data(client, db_session):
-    firm = make_firm(db_session)
-    make_staff(db_session, firm)
+def test_owner_export_org_data(client, db_session):
+    org = make_org(db_session)
+    make_staff(db_session, org)
 
-    res = client.get(f"/owner/firms/{firm.id}/export", headers=owner_headers())
+    res = client.get(f"/owner/orgs/{org.id}/export", headers=owner_headers())
     assert res.status_code == 200
     body = res.json()
     assert len(body["staff"]) == 1
-    assert body["firm"]["id"] == str(firm.id)
+    assert body["org"]["id"] == str(org.id)
 
 
 def test_owner_platform_metrics(client, db_session):
-    make_firm(db_session)
+    make_org(db_session)
 
     res = client.get("/owner/metrics", headers=owner_headers())
     assert res.status_code == 200
-    assert res.json()["usage"]["total_firms"] >= 1
+    assert res.json()["usage"]["total_orgs"] >= 1
 
 
 def test_owner_system_health(client):
@@ -105,22 +105,22 @@ def test_owner_system_health(client):
     assert res.json()["status"] in {"operational", "degraded", "down"}
 
 
-def test_owner_audit_log_visible_across_firms(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
+def test_owner_audit_log_visible_across_orgs(client, db_session):
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
 
-    status_res = client.patch(f"/owner/firms/{firm.id}/status", json={"is_active": False}, headers=owner_headers())
+    status_res = client.patch(f"/owner/orgs/{org.id}/status", json={"is_active": False}, headers=owner_headers())
     assert status_res.status_code == 200
 
-    res = client.get(f"/owner/firms/audit-log?firm_id={firm.id}", headers=owner_headers())
+    res = client.get(f"/owner/orgs/audit-log?org_id={org.id}", headers=owner_headers())
     assert res.status_code == 200
-    assert any(e["action"] == "firm.status_updated" for e in res.json())
+    assert any(e["action"] == "org.status_updated" for e in res.json())
 
 
 def test_non_owner_token_rejected(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
     from tests.conftest import auth_headers
 
-    res = client.get("/owner/firms", headers=auth_headers(admin))
+    res = client.get("/owner/orgs", headers=auth_headers(admin))
     assert res.status_code == 401

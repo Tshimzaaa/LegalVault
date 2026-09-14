@@ -65,7 +65,7 @@ function ResetPassword() {
             <label className="modal-field">
               <span>Account type</span>
               <select value={accountType} onChange={(e) => setAccountType(e.target.value as 'staff' | 'client')}>
-                <option value="staff">Firm staff</option>
+                <option value="staff">Organization staff</option>
                 <option value="client">Client portal</option>
               </select>
             </label>

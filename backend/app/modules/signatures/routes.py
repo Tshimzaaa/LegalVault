@@ -29,7 +29,7 @@ def send_for_signature(
     current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     service = SignatureService(db)
-    return service.create_and_send(matter_id, current_user.firm_id, current_user.id, request)
+    return service.create_and_send(matter_id, current_user.org_id, current_user.id, request)
 
 
 @router.get("/{matter_id}/signatures", response_model=list[SignatureRequestResponse])
@@ -39,7 +39,7 @@ def list_signature_requests(
     current_user: User = Depends(get_current_user),
 ):
     service = SignatureService(db)
-    return service.list_for_matter(matter_id, current_user.firm_id)
+    return service.list_for_matter(matter_id, current_user.org_id)
 
 
 @router.post("/{matter_id}/signatures/{signature_request_id}/void", response_model=SignatureRequestResponse)
@@ -50,7 +50,7 @@ def void_signature_request(
     current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     service = SignatureService(db)
-    return service.void(signature_request_id, current_user.firm_id, current_user.id)
+    return service.void(signature_request_id, current_user.org_id, current_user.id)
 
 
 @my_signatures_router.get("/mine", response_model=list[SignatureRequestResponse])
@@ -97,9 +97,9 @@ async def documenso_webhook(request: Request, db: Session = Depends(get_db)):
     if not documenso_document_id:
         return {"received": True}
 
-    # A verified webhook is a trusted, cross-firm system call — same rationale as the
-    # owner console (see app/modules/owner/dependencies.py) for bypassing per-firm RLS.
-    set_tenant_context(db, firm_id=None, is_owner=True)
+    # A verified webhook is a trusted, cross-org system call — same rationale as the
+    # owner console (see app/modules/owner/dependencies.py) for bypassing per-org RLS.
+    set_tenant_context(db, org_id=None, is_owner=True)
 
     service = SignatureService(db)
     if event in (_EVENT_RECIPIENT_SIGNED, _EVENT_RECIPIENT_COMPLETED):

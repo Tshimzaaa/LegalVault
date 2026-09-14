@@ -27,7 +27,7 @@ def create_knowledge_article(
     current_user: User = Depends(require_role(_AUTHORS)),
 ):
     service = KnowledgeService(db)
-    return service.create_article(current_user.firm_id, current_user.id, request)
+    return service.create_article(current_user.org_id, current_user.id, request)
 
 
 @router.get("", response_model=list[KnowledgeArticleResponse])
@@ -36,7 +36,7 @@ def list_knowledge_articles(
     current_user: User = Depends(get_current_user),
 ):
     service = KnowledgeService(db)
-    return service.list_articles(current_user.firm_id)
+    return service.list_articles(current_user.org_id)
 
 
 @router.get("/{article_id}", response_model=KnowledgeArticleResponse)
@@ -46,7 +46,7 @@ def get_knowledge_article(
     current_user: User = Depends(get_current_user),
 ):
     service = KnowledgeService(db)
-    return service.get_article(article_id, current_user.firm_id)
+    return service.get_article(article_id, current_user.org_id)
 
 
 @router.patch("/{article_id}", response_model=KnowledgeArticleResponse)
@@ -57,7 +57,7 @@ def update_knowledge_article(
     current_user: User = Depends(require_role(_AUTHORS)),
 ):
     service = KnowledgeService(db)
-    return service.update_article(article_id, current_user.firm_id, current_user.id, request)
+    return service.update_article(article_id, current_user.org_id, current_user.id, request)
 
 
 @router.delete("/{article_id}", status_code=204)
@@ -67,7 +67,7 @@ def delete_knowledge_article(
     current_user: User = Depends(require_role(_AUTHORS)),
 ):
     service = KnowledgeService(db)
-    service.delete_article(article_id, current_user.firm_id, current_user.id)
+    service.delete_article(article_id, current_user.org_id, current_user.id)
 
 
 @client_knowledge_router.get("", response_model=list[KnowledgeArticleResponse])
@@ -76,7 +76,7 @@ def list_client_knowledge_articles(
     current_contact: ClientContact = Depends(get_current_contact),
 ):
     service = KnowledgeService(db)
-    return service.list_published_articles(current_contact.client.firm_id)
+    return service.list_published_articles(current_contact.client.org_id)
 
 
 @client_knowledge_router.get("/{article_id}", response_model=KnowledgeArticleResponse)
@@ -86,4 +86,4 @@ def get_client_knowledge_article(
     current_contact: ClientContact = Depends(get_current_contact),
 ):
     service = KnowledgeService(db)
-    return service.get_published_article(article_id, current_contact.client.firm_id)
+    return service.get_published_article(article_id, current_contact.client.org_id)

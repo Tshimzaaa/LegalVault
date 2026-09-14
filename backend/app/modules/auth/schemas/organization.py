@@ -10,7 +10,7 @@ from app.core.constants import (
 )
 
 
-class FirmProfileResponse(BaseModel):
+class OrganizationProfileResponse(BaseModel):
     id: UUID
     name: str
     email: str
@@ -23,7 +23,7 @@ class FirmProfileResponse(BaseModel):
         from_attributes = True
 
 
-class UpdateFirmProfileRequest(BaseModel):
+class UpdateOrganizationProfileRequest(BaseModel):
     name: str | None = Field(default=None, min_length=2, max_length=NAME_MAX_LENGTH)
     email: EmailStr | None = None
     phone: str | None = Field(default=None, max_length=PHONE_MAX_LENGTH)

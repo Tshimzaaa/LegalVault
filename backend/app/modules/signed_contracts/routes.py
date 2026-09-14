@@ -45,7 +45,7 @@ async def upload_signed_contract(
 
     service = SignedContractService(db)
     return service.upload_contract(
-        firm_id=current_user.firm_id,
+        org_id=current_user.org_id,
         actor_id=current_user.id,
         client_id=client_id,
         title=title,
@@ -67,7 +67,7 @@ def list_signed_contracts(
     current_user: User = Depends(get_current_user),
 ):
     service = SignedContractService(db)
-    return service.list_for_firm(current_user.firm_id)
+    return service.list_for_org(current_user.org_id)
 
 
 @router.get("/summary", response_model=SignedContractsSummaryResponse)
@@ -76,7 +76,7 @@ def get_signed_contracts_summary(
     current_user: User = Depends(get_current_user),
 ):
     service = SignedContractService(db)
-    return service.get_summary_for_firm(current_user.firm_id)
+    return service.get_summary_for_org(current_user.org_id)
 
 
 @router.get("/{contract_id}/download", response_model=SignedContractDownloadResponse)
@@ -86,7 +86,7 @@ def download_signed_contract(
     current_user: User = Depends(get_current_user),
 ):
     service = SignedContractService(db)
-    url = service.get_download_link(contract_id, current_user.firm_id)
+    url = service.get_download_link(contract_id, current_user.org_id)
     return SignedContractDownloadResponse(download_url=url, expires_in_seconds=3600)
 
 
@@ -100,7 +100,7 @@ def update_signed_contract_status(
     ),
 ):
     service = SignedContractService(db)
-    return service.update_status(contract_id, current_user.firm_id, current_user.id, request.status)
+    return service.update_status(contract_id, current_user.org_id, current_user.id, request.status)
 
 
 @client_signed_contracts_router.get("", response_model=list[SignedContractResponse])

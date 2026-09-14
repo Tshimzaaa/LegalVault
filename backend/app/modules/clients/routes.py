@@ -39,7 +39,7 @@ def create_client(
     current_user: User = Depends(require_admin),
 ):
     service = ClientService(db)
-    return service.create_client(current_user.firm_id, request)
+    return service.create_client(current_user.org_id, request)
 
 
 @router.post("/{client_id}/contacts", response_model=ContactResponse, status_code=201)
@@ -50,7 +50,7 @@ def invite_contact(
     current_user: User = Depends(require_admin),
 ):
     service = ClientService(db)
-    return service.invite_contact(client_id, request, staff_firm_id=current_user.firm_id)
+    return service.invite_contact(client_id, request, staff_org_id=current_user.org_id)
 
 
 @router.get("/{client_id}/contacts", response_model=list[ContactResponse])
@@ -60,7 +60,7 @@ def list_contacts(
     current_user: User = Depends(get_current_user),
 ):
     service = ClientService(db)
-    return service.list_contacts(client_id, current_user.firm_id)
+    return service.list_contacts(client_id, current_user.org_id)
 
 
 # --- Client-facing (portal) routes ---
@@ -120,7 +120,7 @@ def list_clients(
     current_user: User = Depends(get_current_user),
 ):
     service = ClientService(db)
-    return service.list_clients(current_user.firm_id)
+    return service.list_clients(current_user.org_id)
 @router.post("/contacts/resend-invite", status_code=200)
 def resend_invite(
     request: ResendInviteRequest,
@@ -128,7 +128,7 @@ def resend_invite(
     current_user: User = Depends(require_admin),
 ):
     service = ClientService(db)
-    service.resend_invite(request.email, current_user.firm_id)
+    service.resend_invite(request.email, current_user.org_id)
     return {"message": "Invitation resent."}
 @client_auth_router.post("/forgot-password", status_code=200)
 def client_forgot_password(request: ClientForgotPasswordRequest, db: Session = Depends(get_db)):
@@ -151,7 +151,7 @@ def update_client_status(
     current_user: User = Depends(require_admin),
 ):
     service = ClientService(db)
-    return service.update_client_status(client_id, current_user.firm_id, current_user.id, request.is_active)
+    return service.update_client_status(client_id, current_user.org_id, current_user.id, request.is_active)
 
 
 @router.delete("/{client_id}", status_code=204)
@@ -161,7 +161,7 @@ def delete_client(
     current_user: User = Depends(require_admin),
 ):
     service = ClientService(db)
-    service.delete_client(client_id, current_user.firm_id, current_user.id)
+    service.delete_client(client_id, current_user.org_id, current_user.id)
 
 
 @router.patch("/{client_id}/contacts/{contact_id}/status", response_model=ContactResponse)
@@ -174,7 +174,7 @@ def update_contact_status(
 ):
     service = ClientService(db)
     return service.update_contact_status(
-        client_id, contact_id, current_user.firm_id, current_user.id, request.is_active
+        client_id, contact_id, current_user.org_id, current_user.id, request.is_active
     )
 
 
@@ -186,7 +186,7 @@ def force_logout_contact(
     current_user: User = Depends(require_admin),
 ):
     service = ClientService(db)
-    return service.force_logout_contact(client_id, contact_id, current_user.firm_id, current_user.id)
+    return service.force_logout_contact(client_id, contact_id, current_user.org_id, current_user.id)
 
 
 @router.delete("/{client_id}/contacts/{contact_id}", status_code=204)
@@ -197,5 +197,5 @@ def delete_contact(
     current_user: User = Depends(require_admin),
 ):
     service = ClientService(db)
-    service.delete_contact(client_id, contact_id, current_user.firm_id, current_user.id)
+    service.delete_contact(client_id, contact_id, current_user.org_id, current_user.id)
 

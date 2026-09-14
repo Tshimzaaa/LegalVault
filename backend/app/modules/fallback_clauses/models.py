@@ -7,17 +7,17 @@ from typing import TYPE_CHECKING
 from app.database.base import BaseModel
 
 if TYPE_CHECKING:
-    from app.modules.auth.models.law_firm import LawFirm
+    from app.modules.auth.models.organization import Organization
 
 
 class FallbackClause(BaseModel):
-    """A firm's pre-approved fallback negotiating position for a clause type,
+    """A org's pre-approved fallback negotiating position for a clause type,
     surfaced to clients in the portal's "My Learned Friend" page."""
 
     __tablename__ = "fallback_clauses"
 
-    firm_id: Mapped[UUID] = mapped_column(
-        ForeignKey("law_firms.id"),
+    org_id: Mapped[UUID] = mapped_column(
+        ForeignKey("organizations.id"),
         nullable=False,
         index=True,
     )

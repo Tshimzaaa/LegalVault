@@ -14,7 +14,7 @@ class AuditService:
         self,
         actor_type: ActorType,
         actor_id,
-        firm_id,
+        org_id,
         action: str,
         target_type: str,
         target_id=None,
@@ -23,7 +23,7 @@ class AuditService:
         entry = AuditLog(
             actor_type=actor_type,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=action,
             target_type=target_type,
             target_id=target_id,

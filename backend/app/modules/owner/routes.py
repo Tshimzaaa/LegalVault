@@ -12,7 +12,7 @@ from datetime import datetime, UTC
 from fastapi import Depends, Query
 from sqlalchemy.orm import Session
 from app.database.session import get_db
-from app.modules.auth.schemas.register import RegisterLawFirmRequest, RegisterAdminRequest
+from app.modules.auth.schemas.register import RegisterOrganizationRequest, RegisterAdminRequest
 from app.modules.auth.services.register import RegisterService
 from app.modules.owner.dependencies import get_current_owner
 from pydantic import BaseModel
@@ -20,24 +20,24 @@ from app.modules.auth.repository import AuthRepository
 from app.modules.clients.repository import ClientRepository
 from app.modules.matters.repository import MatterRepository
 from app.modules.owner.schemas import (
-    FirmSummary,
-    FirmDetail,
-    UpdateFirmStatusRequest,
-    FirmExportResponse,
-    FirmExportProfile,
-    FirmExportStaff,
-    FirmExportContact,
-    FirmExportClient,
-    FirmExportAssignment,
-    FirmExportTask,
-    FirmExportDocument,
-    FirmExportMatter,
+    OrganizationSummary,
+    OrganizationDetail,
+    UpdateOrganizationStatusRequest,
+    OrganizationExportResponse,
+    OrganizationExportProfile,
+    OrganizationExportStaff,
+    OrganizationExportContact,
+    OrganizationExportClient,
+    OrganizationExportAssignment,
+    OrganizationExportTask,
+    OrganizationExportDocument,
+    OrganizationExportMatter,
     UsageMetrics,
     PlatformMetricsResponse,
     SystemHealthResponse,
 )
 from app.modules.monitoring.schemas import RequestErrorEntry, DependencyHealth
-from app.exceptions.auth import LawFirmAlreadyExists  # reuse or add a FirmNotFound exception
+from app.exceptions.auth import OrganizationAlreadyExists  # reuse or add a OrganizationNotFound exception
 from app.modules.audit.service import AuditService
 from app.modules.audit.repository import AuditLogRepository
 from app.modules.audit.models import ActorType
@@ -92,20 +92,20 @@ def _overall_status(dependencies: list[DependencyHealth], error_rate_percent: fl
         return "degraded"
     return "operational"
 
-class OwnerCreateFirmRequest(BaseModel):
-    law_firm: RegisterLawFirmRequest
+class OwnerCreateOrganizationRequest(BaseModel):
+    organization: RegisterOrganizationRequest
     admin: RegisterAdminRequest
 
 
-@router.post("/firms", status_code=201)
-def create_firm(
-    request: OwnerCreateFirmRequest,
+@router.post("/orgs", status_code=201)
+def create_org(
+    request: OwnerCreateOrganizationRequest,
     db: Session = Depends(get_db),
     _owner=Depends(get_current_owner),
 ):
     service = RegisterService(db)
     # reuse existing register logic, but skip the admin_secret check since owner auth already covers it
-    return service.register_as_owner(request.law_firm, request.admin)
+    return service.register_as_owner(request.organization, request.admin)
 
 @router.post("/login", response_model=OwnerTokenResponse)
 def owner_login(request: OwnerLoginRequest):
@@ -117,22 +117,22 @@ def owner_login(request: OwnerLoginRequest):
         extra_claims={"type": "owner"},
     )
     return OwnerTokenResponse(access_token=token)
-@router.get("/firms", response_model=list[FirmSummary])
-def list_firms(db: Session = Depends(get_db), _owner=Depends(get_current_owner)):
+@router.get("/orgs", response_model=list[OrganizationSummary])
+def list_orgs(db: Session = Depends(get_db), _owner=Depends(get_current_owner)):
     repo = AuthRepository(db)
-    return repo.list_all_firms()
+    return repo.list_all_orgs()
 
 
-@router.get("/firms/audit-log", response_model=list[AuditLogResponse])
+@router.get("/orgs/audit-log", response_model=list[AuditLogResponse])
 def list_audit_log(
-    firm_id: str | None = Query(default=None),
+    org_id: str | None = Query(default=None),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
     _owner=Depends(get_current_owner),
 ):
     repo = AuditLogRepository(db)
-    return repo.list_all(limit, offset, firm_id=firm_id)
+    return repo.list_all(limit, offset, org_id=org_id)
 
 
 @router.get("/metrics", response_model=PlatformMetricsResponse)
@@ -145,19 +145,19 @@ def get_platform_metrics(
     client_repo = ClientRepository(db)
     matter_repo = MatterRepository(db)
 
-    total_firms = auth_repo.count_all_firms()
-    active_firms = auth_repo.count_active_firms()
+    total_orgs = auth_repo.count_all_orgs()
+    active_orgs = auth_repo.count_active_orgs()
 
     usage = UsageMetrics(
-        total_firms=total_firms,
-        active_firms=active_firms,
-        inactive_firms=total_firms - active_firms,
+        total_orgs=total_orgs,
+        active_orgs=active_orgs,
+        inactive_orgs=total_orgs - active_orgs,
         total_staff=auth_repo.count_all_users(),
         total_clients=client_repo.count_all_clients(),
         total_matters=matter_repo.count_all_matters(),
         matters_by_status=matter_repo.count_all_matters_by_status(),
-        new_firms_last_7_days=auth_repo.count_firms_created_since(datetime.now(UTC) - timedelta(days=7)),
-        new_firms_last_30_days=auth_repo.count_firms_created_since(datetime.now(UTC) - timedelta(days=30)),
+        new_orgs_last_7_days=auth_repo.count_orgs_created_since(datetime.now(UTC) - timedelta(days=7)),
+        new_orgs_last_30_days=auth_repo.count_orgs_created_since(datetime.now(UTC) - timedelta(days=30)),
     )
 
     requests = MonitoringService(db).get_request_metrics(hours)
@@ -188,7 +188,7 @@ def get_system_health(
 ):
     monitoring = MonitoringService(db)
     requests = monitoring.get_request_metrics(hours)
-    active_users, online_firms = monitoring.get_active_usage(hours)
+    active_users, online_orgs = monitoring.get_active_usage(hours)
 
     dependencies = [_check_database(db), _check_storage()]
 
@@ -199,7 +199,7 @@ def get_system_health(
         window_hours=hours,
         requests=requests,
         active_users=active_users,
-        online_firms=online_firms,
+        online_orgs=online_orgs,
         dependencies=dependencies,
         services=monitoring.get_service_health(hours),
         worst_endpoints=monitoring.get_worst_endpoints(hours),
@@ -207,48 +207,48 @@ def get_system_health(
     )
 
 
-@router.get("/firms/{firm_id}", response_model=FirmDetail)
-def get_firm(firm_id: str, db: Session = Depends(get_db), _owner=Depends(get_current_owner)):
+@router.get("/orgs/{org_id}", response_model=OrganizationDetail)
+def get_org(org_id: str, db: Session = Depends(get_db), _owner=Depends(get_current_owner)):
     auth_repo = AuthRepository(db)
-    firm = auth_repo.get_firm_by_id(firm_id)
-    if not firm:
-        raise HTTPException(status_code=404, detail="Firm not found.")
+    org = auth_repo.get_org_by_id(org_id)
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found.")
 
     client_repo = ClientRepository(db)
     matter_repo = MatterRepository(db)
 
-    return FirmDetail(
-        id=firm.id,
-        name=firm.name,
-        email=firm.email,
-        phone=firm.phone,
-        website=firm.website,
-        address=firm.address,
-        is_active=firm.is_active,
-        staff_count=auth_repo.count_users_for_firm(firm.id),
-        client_count=client_repo.count_clients_for_firm(firm.id),
-        matter_count=matter_repo.count_matters_for_firm(firm.id),
+    return OrganizationDetail(
+        id=org.id,
+        name=org.name,
+        email=org.email,
+        phone=org.phone,
+        website=org.website,
+        address=org.address,
+        is_active=org.is_active,
+        staff_count=auth_repo.count_users_for_org(org.id),
+        client_count=client_repo.count_clients_for_org(org.id),
+        matter_count=matter_repo.count_matters_for_org(org.id),
     )
 
 
-@router.get("/firms/{firm_id}/export", response_model=FirmExportResponse)
-def export_firm_data(firm_id: str, db: Session = Depends(get_db), _owner=Depends(get_current_owner)):
+@router.get("/orgs/{org_id}/export", response_model=OrganizationExportResponse)
+def export_org_data(org_id: str, db: Session = Depends(get_db), _owner=Depends(get_current_owner)):
     auth_repo = AuthRepository(db)
-    firm = auth_repo.get_firm_by_id(firm_id)
-    if not firm:
-        raise HTTPException(status_code=404, detail="Firm not found.")
+    org = auth_repo.get_org_by_id(org_id)
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found.")
 
     client_repo = ClientRepository(db)
     matter_repo = MatterRepository(db)
     audit_repo = AuditLogRepository(db)
 
-    staff = [FirmExportStaff.model_validate(u) for u in auth_repo.list_by_firm(firm.id)]
+    staff = [OrganizationExportStaff.model_validate(u) for u in auth_repo.list_by_org(org.id)]
 
     clients = []
-    for c in client_repo.list_by_firm(firm.id):
-        contacts = [FirmExportContact.model_validate(ct) for ct in client_repo.list_contacts_for_client(c.id)]
+    for c in client_repo.list_by_org(org.id):
+        contacts = [OrganizationExportContact.model_validate(ct) for ct in client_repo.list_contacts_for_client(c.id)]
         clients.append(
-            FirmExportClient(
+            OrganizationExportClient(
                 id=c.id,
                 company_name=c.company_name,
                 is_active=c.is_active,
@@ -258,14 +258,14 @@ def export_firm_data(firm_id: str, db: Session = Depends(get_db), _owner=Depends
         )
 
     matters = []
-    for m in matter_repo.list_by_firm(firm.id):
+    for m in matter_repo.list_by_org(org.id):
         assignments = [
-            FirmExportAssignment(user_id=a.user_id, role_on_matter=a.role_on_matter)
+            OrganizationExportAssignment(user_id=a.user_id, role_on_matter=a.role_on_matter)
             for a in matter_repo.list_assignments_for_matter(m.id)
         ]
-        tasks = [FirmExportTask.model_validate(t) for t in matter_repo.list_tasks_for_matter(m.id)]
+        tasks = [OrganizationExportTask.model_validate(t) for t in matter_repo.list_tasks_for_matter(m.id)]
         documents = [
-            FirmExportDocument(
+            OrganizationExportDocument(
                 id=d.id,
                 title=d.title,
                 version=d.version,
@@ -279,7 +279,7 @@ def export_firm_data(firm_id: str, db: Session = Depends(get_db), _owner=Depends
             for d in matter_repo.list_documents_for_matter(m.id)
         ]
         matters.append(
-            FirmExportMatter(
+            OrganizationExportMatter(
                 id=m.id,
                 client_id=m.client_id,
                 title=m.title,
@@ -295,23 +295,23 @@ def export_firm_data(firm_id: str, db: Session = Depends(get_db), _owner=Depends
         )
 
     audit_log = [
-        AuditLogResponse.model_validate(e) for e in audit_repo.list_for_firm(firm.id, limit=1_000_000, offset=0)
+        AuditLogResponse.model_validate(e) for e in audit_repo.list_for_org(org.id, limit=1_000_000, offset=0)
     ]
 
     AuditService(db).log(
         actor_type=ActorType.OWNER,
         actor_id=None,
-        firm_id=firm.id,
-        action=audit_actions.FIRM_DATA_EXPORTED,
-        target_type="law_firm",
-        target_id=firm.id,
-        details={"name": firm.name},
+        org_id=org.id,
+        action=audit_actions.ORG_DATA_EXPORTED,
+        target_type="organization",
+        target_id=org.id,
+        details={"name": org.name},
     )
     db.commit()
 
-    return FirmExportResponse(
+    return OrganizationExportResponse(
         exported_at=datetime.now(UTC),
-        firm=FirmExportProfile.model_validate(firm),
+        org=OrganizationExportProfile.model_validate(org),
         staff=staff,
         clients=clients,
         matters=matters,
@@ -319,55 +319,55 @@ def export_firm_data(firm_id: str, db: Session = Depends(get_db), _owner=Depends
     )
 
 
-@router.patch("/firms/{firm_id}/status", response_model=FirmSummary)
-def update_firm_status(
-    firm_id: str,
-    request: UpdateFirmStatusRequest,
+@router.patch("/orgs/{org_id}/status", response_model=OrganizationSummary)
+def update_org_status(
+    org_id: str,
+    request: UpdateOrganizationStatusRequest,
     db: Session = Depends(get_db),
     _owner=Depends(get_current_owner),
 ):
     auth_repo = AuthRepository(db)
-    firm = auth_repo.get_firm_by_id(firm_id)
-    if not firm:
-        raise HTTPException(status_code=404, detail="Firm not found.")
+    org = auth_repo.get_org_by_id(org_id)
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found.")
 
-    firm.is_active = request.is_active
+    org.is_active = request.is_active
 
     AuditService(db).log(
         actor_type=ActorType.OWNER,
         actor_id=None,
-        firm_id=firm.id,
-        action=audit_actions.FIRM_STATUS_UPDATED,
-        target_type="law_firm",
-        target_id=firm.id,
-        details={"name": firm.name, "is_active": request.is_active},
+        org_id=org.id,
+        action=audit_actions.ORG_STATUS_UPDATED,
+        target_type="organization",
+        target_id=org.id,
+        details={"name": org.name, "is_active": request.is_active},
     )
     db.commit()
-    return firm
+    return org
 
 
-@router.delete("/firms/{firm_id}", status_code=204)
-def delete_firm(
-    firm_id: str,
+@router.delete("/orgs/{org_id}", status_code=204)
+def delete_org(
+    org_id: str,
     db: Session = Depends(get_db),
     _owner=Depends(get_current_owner),
 ):
     auth_repo = AuthRepository(db)
-    firm = auth_repo.get_firm_by_id(firm_id)
-    if not firm:
-        raise HTTPException(status_code=404, detail="Firm not found.")
+    org = auth_repo.get_org_by_id(org_id)
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found.")
 
-    if firm.is_active:
-        raise HTTPException(status_code=409, detail="Deactivate the firm before deleting it.")
+    if org.is_active:
+        raise HTTPException(status_code=409, detail="Deactivate the org before deleting it.")
 
     AuditService(db).log(
         actor_type=ActorType.OWNER,
         actor_id=None,
-        firm_id=firm.id,
-        action=audit_actions.FIRM_DELETED,
-        target_type="law_firm",
-        target_id=firm.id,
-        details={"name": firm.name, "email": firm.email},
+        org_id=org.id,
+        action=audit_actions.ORG_DELETED,
+        target_type="organization",
+        target_id=org.id,
+        details={"name": org.name, "email": org.email},
     )
 
     client_repo = ClientRepository(db)
@@ -382,33 +382,33 @@ def delete_firm(
 
     # Signed contracts hold their own FKs into matters/clients/contacts, so they must go
     # before those rows are deleted below or the delete fails with an IntegrityError (this
-    # was the bug — firm delete 500'd for any firm with real usage data).
-    for contract in signed_contract_repo.list_plain_by_firm(firm.id):
+    # was the bug — org delete 500'd for any org with real usage data).
+    for contract in signed_contract_repo.list_plain_by_org(org.id):
         signed_contract_repo.delete(contract)
 
-    for template in template_repo.list_by_firm(firm.id):
+    for template in template_repo.list_by_org(org.id):
         template_repo.delete(template)
 
     # Intake submissions carry their own FKs into matters/clients/contacts (same class of bug
     # as above), so their answers and the submissions themselves must go before those rows —
     # and before the fields/forms they reference.
-    for submission in intake_repo.list_submissions_by_firm(firm.id):
+    for submission in intake_repo.list_submissions_by_org(org.id):
         for answer in submission.answers:
             intake_repo.delete_answer(answer)
         intake_repo.delete_submission(submission)
 
-    for form in intake_repo.list_forms_by_firm(firm.id):
+    for form in intake_repo.list_forms_by_org(org.id):
         for field in form.fields:
             intake_repo.delete_field(field)
         intake_repo.delete_form(form)
 
-    for article in knowledge_repo.list_by_firm(firm.id):
+    for article in knowledge_repo.list_by_org(org.id):
         knowledge_repo.delete(article)
 
-    for integration in integration_repo.list_by_firm(firm.id):
+    for integration in integration_repo.list_by_org(org.id):
         integration_repo.delete(integration)
 
-    for matter in matter_repo.list_by_firm(firm.id):
+    for matter in matter_repo.list_by_org(org.id):
         for document in matter_repo.list_documents_for_matter(matter.id):
             matter_repo.delete_document(document)
         for assignment in matter_repo.list_assignments_for_matter(matter.id):
@@ -419,17 +419,17 @@ def delete_firm(
             matter_repo.delete_message(message)
         matter_repo.delete_matter(matter)
 
-    for client in client_repo.list_by_firm(firm.id):
+    for client in client_repo.list_by_org(org.id):
         for contact in client_repo.list_contacts_for_client(client.id):
             notification_repo.delete_for_recipient(RecipientType.CLIENT_CONTACT, contact.id)
             refresh_token_repo.delete_all_for_actor(RefreshTokenActorType.CLIENT, contact.id)
             client_repo.delete_contact(contact)
         client_repo.delete_client(client)
 
-    for user in auth_repo.list_by_firm(firm.id):
+    for user in auth_repo.list_by_org(org.id):
         notification_repo.delete_for_recipient(RecipientType.STAFF, user.id)
         refresh_token_repo.delete_all_for_actor(RefreshTokenActorType.STAFF, user.id)
         auth_repo.delete_user(user)
 
-    auth_repo.delete_firm(firm)
+    auth_repo.delete_org(org)
     db.commit()

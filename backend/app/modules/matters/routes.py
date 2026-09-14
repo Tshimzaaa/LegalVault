@@ -64,7 +64,7 @@ def create_matter(
     current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     service = MatterService(db)
-    return service.create_matter(current_user.firm_id, current_user.id, request)
+    return service.create_matter(current_user.org_id, current_user.id, request)
 
 
 @router.get("", response_model=list[MatterResponse])
@@ -73,7 +73,7 @@ def list_matters(
     current_user: User = Depends(get_current_user),
 ):
     service = MatterService(db)
-    return service.list_matters_for_firm(current_user.firm_id)
+    return service.list_matters_for_org(current_user.org_id)
 
 
 @router.get("/calendar", response_model=list[CalendarEvent])
@@ -86,7 +86,7 @@ def get_calendar(
     range_start = start or datetime.now(UTC).date()
     range_end = end or (range_start + timedelta(days=30))
     service = MatterService(db)
-    return service.get_calendar(current_user.firm_id, range_start, range_end)
+    return service.get_calendar(current_user.org_id, range_start, range_end)
 
 
 @client_matters_router.get("/calendar", response_model=list[CalendarEvent])
@@ -108,7 +108,7 @@ def list_pending_approvals(
     current_user: User = Depends(get_current_user),
 ):
     service = MatterService(db)
-    return service.list_pending_approvals(current_user.firm_id)
+    return service.list_pending_approvals(current_user.org_id)
 
 
 @router.get("/{matter_id}", response_model=MatterResponse)
@@ -118,7 +118,7 @@ def get_matter(
     current_user: User = Depends(get_current_user),
 ):
     service = MatterService(db)
-    return service.get_matter(matter_id, current_user.firm_id)
+    return service.get_matter(matter_id, current_user.org_id)
 
 
 @router.patch("/{matter_id}", response_model=MatterResponse)
@@ -129,7 +129,7 @@ def update_details(
     current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     service = MatterService(db)
-    return service.update_details(matter_id, current_user.firm_id, current_user.id, request)
+    return service.update_details(matter_id, current_user.org_id, current_user.id, request)
 
 
 @router.patch("/{matter_id}/status", response_model=MatterResponse)
@@ -140,7 +140,7 @@ def update_status(
     current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     service = MatterService(db)
-    return service.update_status(matter_id, current_user.firm_id, current_user.id, request)
+    return service.update_status(matter_id, current_user.org_id, current_user.id, request)
 
 
 @router.post("/{matter_id}/approvals", response_model=MatterApprovalResponse, status_code=201)
@@ -151,7 +151,7 @@ def request_status_approval(
     current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     service = MatterService(db)
-    return service.request_status_approval(matter_id, current_user.firm_id, current_user.id, request)
+    return service.request_status_approval(matter_id, current_user.org_id, current_user.id, request)
 
 
 @router.get("/{matter_id}/approvals", response_model=list[MatterApprovalResponse])
@@ -161,7 +161,7 @@ def list_matter_approvals(
     current_user: User = Depends(get_current_user),
 ):
     service = MatterService(db)
-    return service.list_approvals(matter_id, current_user.firm_id)
+    return service.list_approvals(matter_id, current_user.org_id)
 
 
 @router.patch("/{matter_id}/approvals/{approval_id}", response_model=MatterApprovalResponse)
@@ -174,7 +174,7 @@ def decide_matter_approval(
 ):
     service = MatterService(db)
     return service.decide_approval(
-        matter_id, approval_id, current_user.firm_id, current_user.id, current_user.role, request
+        matter_id, approval_id, current_user.org_id, current_user.id, current_user.role, request
     )
 
 
@@ -186,7 +186,7 @@ def update_visibility(
     current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     service = MatterService(db)
-    return service.update_visibility(matter_id, current_user.firm_id, current_user.id, request)
+    return service.update_visibility(matter_id, current_user.org_id, current_user.id, request)
 
 
 @router.patch("/{matter_id}/deadline", response_model=MatterResponse)
@@ -197,7 +197,7 @@ def update_deadline(
     current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     service = MatterService(db)
-    return service.update_deadline(matter_id, current_user.firm_id, current_user.id, request)
+    return service.update_deadline(matter_id, current_user.org_id, current_user.id, request)
 
 
 @router.post("/{matter_id}/assignments", response_model=MatterAssignmentResponse, status_code=201)
@@ -208,7 +208,7 @@ def assign_staff(
     current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     service = MatterService(db)
-    return service.assign_staff(matter_id, current_user.firm_id, current_user.id, request)
+    return service.assign_staff(matter_id, current_user.org_id, current_user.id, request)
 
 
 @router.get("/{matter_id}/assignments", response_model=list[MatterAssignmentResponse])
@@ -218,7 +218,7 @@ def list_assignments(
     current_user: User = Depends(get_current_user),
 ):
     service = MatterService(db)
-    return service.list_assignments(matter_id, current_user.firm_id)
+    return service.list_assignments(matter_id, current_user.org_id)
 
 
 @router.post("/{matter_id}/documents", response_model=MatterDocumentResponse, status_code=201)
@@ -236,7 +236,7 @@ async def upload_matter_document(
     service = MatterService(db)
     return service.upload_matter_document(
         matter_id=matter_id,
-        firm_id=current_user.firm_id,
+        org_id=current_user.org_id,
         uploaded_by=current_user.id,
         title=title,
         file_bytes=file_bytes,
@@ -253,7 +253,7 @@ def generate_matter_document(
     current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     service = MatterService(db)
-    return service.generate_document_from_template(matter_id, current_user.firm_id, current_user.id, request)
+    return service.generate_document_from_template(matter_id, current_user.org_id, current_user.id, request)
 
 
 @router.get("/{matter_id}/documents", response_model=list[MatterDocumentResponse])
@@ -263,7 +263,7 @@ def list_matter_documents(
     current_user: User = Depends(get_current_user),
 ):
     service = MatterService(db)
-    return service.list_matter_documents(matter_id, current_user.firm_id)
+    return service.list_matter_documents(matter_id, current_user.org_id)
 
 
 @router.get("/{matter_id}/documents/{document_id}/download", response_model=MatterDocumentDownloadResponse)
@@ -274,7 +274,7 @@ def download_matter_document(
     current_user: User = Depends(get_current_user),
 ):
     service = MatterService(db)
-    url = service.get_matter_document_download(matter_id, document_id, current_user.firm_id)
+    url = service.get_matter_document_download(matter_id, document_id, current_user.org_id)
     return MatterDocumentDownloadResponse(download_url=url, expires_in_seconds=3600)
 
 
@@ -286,7 +286,7 @@ def delete_matter_document(
     current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     service = MatterService(db)
-    service.delete_matter_document(matter_id, document_id, current_user.firm_id, current_user.id)
+    service.delete_matter_document(matter_id, document_id, current_user.org_id, current_user.id)
 
 
 @router.post("/{matter_id}/tasks", response_model=MatterTaskResponse, status_code=201)
@@ -297,7 +297,7 @@ def create_task(
     current_user: User = Depends(require_role(_COORDINATION)),
 ):
     service = MatterService(db)
-    return service.create_task(matter_id, current_user.firm_id, current_user.id, request)
+    return service.create_task(matter_id, current_user.org_id, current_user.id, request)
 
 
 @router.get("/{matter_id}/tasks", response_model=list[MatterTaskResponse])
@@ -307,7 +307,7 @@ def list_tasks(
     current_user: User = Depends(get_current_user),
 ):
     service = MatterService(db)
-    return service.list_tasks(matter_id, current_user.firm_id)
+    return service.list_tasks(matter_id, current_user.org_id)
 
 
 @router.patch("/{matter_id}/tasks/{task_id}", response_model=MatterTaskResponse)
@@ -319,7 +319,7 @@ def update_task(
     current_user: User = Depends(require_role(_COORDINATION)),
 ):
     service = MatterService(db)
-    return service.update_task(matter_id, task_id, current_user.firm_id, current_user.id, request)
+    return service.update_task(matter_id, task_id, current_user.org_id, current_user.id, request)
 
 
 @router.delete("/{matter_id}/tasks/{task_id}", status_code=204)
@@ -330,7 +330,7 @@ def delete_task(
     current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     service = MatterService(db)
-    service.delete_task(matter_id, task_id, current_user.firm_id, current_user.id)
+    service.delete_task(matter_id, task_id, current_user.org_id, current_user.id)
 
 
 @router.post("/{matter_id}/messages", response_model=MatterMessageResponse, status_code=201)
@@ -342,7 +342,7 @@ def post_message(
 ):
     service = MatterService(db)
     return service.post_message_as_staff(
-        matter_id, current_user.firm_id, current_user.id, f"{current_user.first_name} {current_user.last_name}", request
+        matter_id, current_user.org_id, current_user.id, f"{current_user.first_name} {current_user.last_name}", request
     )
 
 
@@ -353,7 +353,7 @@ def list_messages(
     current_user: User = Depends(get_current_user),
 ):
     service = MatterService(db)
-    return service.list_messages(matter_id, current_user.firm_id)
+    return service.list_messages(matter_id, current_user.org_id)
 
 
 @router.delete("/{matter_id}/messages/{message_id}", status_code=204)
@@ -364,7 +364,7 @@ def delete_message(
     current_user: User = Depends(require_role(_COORDINATION)),
 ):
     service = MatterService(db)
-    service.delete_message(matter_id, message_id, current_user.firm_id, current_user.id, current_user.role == UserRole.ADMIN)
+    service.delete_message(matter_id, message_id, current_user.org_id, current_user.id, current_user.role == UserRole.ADMIN)
 
 
 @client_matters_router.get("/{matter_id}/documents", response_model=list[MatterDocumentResponse])
@@ -454,7 +454,7 @@ def set_contact_permission(
     current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     service = MatterService(db)
-    return service.set_contact_permission(matter_id, current_user.firm_id, current_user.id, request)
+    return service.set_contact_permission(matter_id, current_user.org_id, current_user.id, request)
 
 
 @router.get("/{matter_id}/contact-permissions", response_model=list[MatterContactPermissionResponse])
@@ -464,7 +464,7 @@ def list_contact_permissions(
     current_user: User = Depends(get_current_user),
 ):
     service = MatterService(db)
-    return service.list_contact_permissions(matter_id, current_user.firm_id)
+    return service.list_contact_permissions(matter_id, current_user.org_id)
 
 
 @router.delete("/{matter_id}/contact-permissions/{client_contact_id}", status_code=204)
@@ -475,7 +475,7 @@ def remove_contact_permission(
     current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     service = MatterService(db)
-    service.remove_contact_permission(matter_id, current_user.firm_id, current_user.id, client_contact_id)
+    service.remove_contact_permission(matter_id, current_user.org_id, current_user.id, client_contact_id)
 
 
 @client_matters_router.get("/contact-permissions", response_model=list[MatterContactPermissionResponse])

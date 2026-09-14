@@ -9,7 +9,7 @@ import enum
 from app.database.base import BaseModel
 
 if TYPE_CHECKING:
-    from app.modules.auth.models.law_firm import LawFirm
+    from app.modules.auth.models.organization import Organization
 
 
 class IntegrationProvider(str, enum.Enum):
@@ -19,12 +19,12 @@ class IntegrationProvider(str, enum.Enum):
     CLOUD_STORAGE = "cloud_storage"
 
 
-class FirmIntegration(BaseModel):
-    __tablename__ = "firm_integrations"
-    __table_args__ = (UniqueConstraint("firm_id", "provider", name="uq_firm_integrations_firm_provider"),)
+class OrganizationIntegration(BaseModel):
+    __tablename__ = "org_integrations"
+    __table_args__ = (UniqueConstraint("org_id", "provider", name="uq_org_integrations_org_provider"),)
 
-    firm_id: Mapped[UUID] = mapped_column(
-        ForeignKey("law_firms.id"),
+    org_id: Mapped[UUID] = mapped_column(
+        ForeignKey("organizations.id"),
         nullable=False,
         index=True,
     )

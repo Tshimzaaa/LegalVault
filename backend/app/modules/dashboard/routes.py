@@ -54,9 +54,9 @@ def get_dashboard_summary(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    firm_id = current_user.firm_id
+    org_id = current_user.org_id
     matter_repository = MatterRepository(db)
-    matters = MatterService(db).list_matters_for_firm(firm_id)
+    matters = MatterService(db).list_matters_for_org(org_id)
 
     total = len(matters)
     counts = {status: sum(1 for m in matters if m.status == status) for status, _, _ in STATUS_META}
@@ -86,7 +86,7 @@ def get_dashboard_summary(
     open_tasks = sorted(
         (
             (task, matter)
-            for task, matter in matter_repository.list_tasks_for_firm(firm_id)
+            for task, matter in matter_repository.list_tasks_for_org(org_id)
             if task.status != TaskStatus.DONE and task.due_date is not None
         ),
         key=lambda pair: pair[0].due_date,
@@ -98,12 +98,12 @@ def get_dashboard_summary(
 
     recent_documents = [
         RecentDocument(title=document.title, subtitle=f"{matter.title} · v{document.version}")
-        for document, matter in matter_repository.list_recent_documents_for_firm(firm_id, limit=ACTIVE_LIMIT)
+        for document, matter in matter_repository.list_recent_documents_for_org(org_id, limit=ACTIVE_LIMIT)
     ]
 
     recent_communications = [
         RecentCommunication(text=f'{message.author_name} on "{matter.title}": {_preview(message.body)}')
-        for message, matter in matter_repository.list_recent_messages_for_firm(firm_id, limit=ACTIVE_LIMIT)
+        for message, matter in matter_repository.list_recent_messages_for_org(org_id, limit=ACTIVE_LIMIT)
     ]
 
     return DashboardSummaryResponse(

@@ -64,7 +64,7 @@ function AuditLog({ user }: AuditLogProps) {
           <h1>Audit Log</h1>
         </header>
         <div className="dash-state">
-          <p>Only firm admins can view the audit log.</p>
+          <p>Only organization admins can view the audit log.</p>
         </div>
       </main>
     )

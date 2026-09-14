@@ -1,9 +1,9 @@
 """
-Fallback clauses: firm staff CRUD on the pre-approved clause library, and the
+Fallback clauses: org staff CRUD on the pre-approved clause library, and the
 client-portal read-only view backing "My Learned Friend".
 """
 from app.modules.auth.models.role import UserRole
-from tests.conftest import auth_headers, make_client_company, make_contact, make_firm, make_staff
+from tests.conftest import auth_headers, make_client_company, make_contact, make_org, make_staff
 
 
 def _create(client, admin, **overrides):
@@ -21,8 +21,8 @@ def _create(client, admin, **overrides):
 
 
 def test_create_and_list_fallback_clause(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
 
     create_res = _create(client, admin)
     assert create_res.status_code == 201
@@ -34,8 +34,8 @@ def test_create_and_list_fallback_clause(client, db_session):
 
 
 def test_update_and_delete_fallback_clause(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
     clause_id = _create(client, admin).json()["id"]
 
     update_res = client.patch(
@@ -51,10 +51,10 @@ def test_update_and_delete_fallback_clause(client, db_session):
     assert list_res.json() == []
 
 
-def test_client_can_list_firm_fallback_clauses(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
+def test_client_can_list_org_fallback_clauses(client, db_session):
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
     contact, _ = make_contact(db_session, client_company)
     _create(client, admin)
 
@@ -64,9 +64,9 @@ def test_client_can_list_firm_fallback_clauses(client, db_session):
 
 
 def test_non_admin_lawyer_cannot_delete_fallback_clause(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    lawyer, _ = make_staff(db_session, firm, role=UserRole.LAWYER)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    lawyer, _ = make_staff(db_session, org, role=UserRole.LAWYER)
     clause_id = _create(client, admin).json()["id"]
 
     delete_res = client.delete(f"/fallback-clauses/{clause_id}", headers=auth_headers(lawyer))

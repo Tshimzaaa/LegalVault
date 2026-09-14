@@ -34,11 +34,11 @@ def get_current_user(
         if token_issued_at < user.tokens_invalid_before:
             raise InvalidCredentials()
 
-    firm = repo.get_firm_by_id(user.firm_id)
-    if not firm or not firm.is_active:
+    org = repo.get_org_by_id(user.org_id)
+    if not org or not org.is_active:
         raise InactiveUser()
 
-    set_tenant_context(db, firm_id=user.firm_id)
+    set_tenant_context(db, org_id=user.org_id)
 
     return user
 

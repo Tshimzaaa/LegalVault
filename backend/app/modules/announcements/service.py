@@ -28,7 +28,7 @@ class AnnouncementService:
         self.audit.log(
             actor_type=ActorType.OWNER,
             actor_id=None,
-            firm_id=None,
+            org_id=None,
             action=audit_actions.ANNOUNCEMENT_CREATED,
             target_type="announcement",
             target_id=announcement.id,
@@ -55,7 +55,7 @@ class AnnouncementService:
         self.audit.log(
             actor_type=ActorType.OWNER,
             actor_id=None,
-            firm_id=None,
+            org_id=None,
             action=audit_actions.ANNOUNCEMENT_UPDATED,
             target_type="announcement",
             target_id=announcement.id,
@@ -74,7 +74,7 @@ class AnnouncementService:
         self.audit.log(
             actor_type=ActorType.OWNER,
             actor_id=None,
-            firm_id=None,
+            org_id=None,
             action=audit_actions.ANNOUNCEMENT_DELETED,
             target_type="announcement",
             target_id=announcement.id,

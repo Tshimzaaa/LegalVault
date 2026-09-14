@@ -9,7 +9,7 @@ interface Step {
 
 const steps: Step[] = [
   { title: 'Check your Dashboard', description: 'Start here for an overview of your open matters, recent activity, and quick actions.' },
-  { title: 'Submit a request', description: 'Use Request Support to send a new legal request to the firm instead of email.' },
+  { title: 'Submit a request', description: 'Use Request Support to send a new legal request to the organization instead of email.' },
   { title: 'Track progress in Workflow', description: 'Watch your request move from Submitted through In Progress, In Review, and Complete.' },
   { title: 'Review signed contracts', description: 'Once a matter is finalized, the executed document appears in Signed Contracts.' },
   { title: 'Use Templates for simple agreements', description: 'For low-risk agreements, generate a document yourself from a pre-approved template.' },

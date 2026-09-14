@@ -8,7 +8,7 @@ interface PermissionErrorProps {
 function PermissionError({ message }: PermissionErrorProps) {
   return (
     <p className="matter-error" aria-live="polite">
-      {message ?? 'You do not have permission to perform this action. Contact your firm admin if you believe this is a mistake.'}
+      {message ?? 'You do not have permission to perform this action. Contact your organization admin if you believe this is a mistake.'}
     </p>
   )
 }

@@ -10,7 +10,7 @@ import enum
 from app.database.base import BaseModel
 
 if TYPE_CHECKING:
-    from app.modules.auth.models.law_firm import LawFirm
+    from app.modules.auth.models.organization import Organization
     from app.modules.clients.models import Client, ClientContact
     from app.modules.auth.models.user import User
 
@@ -57,8 +57,8 @@ class ApprovalStatus(str, enum.Enum):
 class Matter(BaseModel):
     __tablename__ = "matters"
 
-    firm_id: Mapped[UUID] = mapped_column(
-        ForeignKey("law_firms.id"),
+    org_id: Mapped[UUID] = mapped_column(
+        ForeignKey("organizations.id"),
         nullable=False,
         index=True,
     )

@@ -29,7 +29,7 @@ export async function getReportingOverview(token: string): Promise<ReportingOver
   return apiRequest<ReportingOverview>('/reporting/overview', { token })
 }
 
-/** Downloads the firm's matters as a CSV file directly (not JSON, so this bypasses apiRequest). */
+/** Downloads the org's matters as a CSV file directly (not JSON, so this bypasses apiRequest). */
 export async function downloadMattersCsv(token: string): Promise<void> {
   const res = await fetch(`${BASE_URL}/reporting/matters/export`, {
     headers: { Authorization: `Bearer ${token}` },

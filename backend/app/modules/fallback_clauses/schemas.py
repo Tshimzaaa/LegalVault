@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 class FallbackClauseResponse(BaseModel):
     id: UUID
-    firm_id: UUID
+    org_id: UUID
     name: str
     category: str
     description: str

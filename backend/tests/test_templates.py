@@ -7,7 +7,7 @@ test_malware_scanning.py.
 """
 import pytest
 
-from tests.conftest import auth_headers, make_firm, make_staff
+from tests.conftest import auth_headers, make_org, make_staff
 
 
 @pytest.fixture(autouse=True)
@@ -32,8 +32,8 @@ def _upload(client, admin, **overrides):
 
 
 def test_upload_and_list_template(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
 
     upload_res = _upload(client, admin)
     assert upload_res.status_code == 201
@@ -45,8 +45,8 @@ def test_upload_and_list_template(client, db_session):
 
 
 def test_reuploading_same_title_bumps_version(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
 
     _upload(client, admin, title="NDA")
     second_res = _upload(client, admin, title="NDA")
@@ -54,8 +54,8 @@ def test_reuploading_same_title_bumps_version(client, db_session):
 
 
 def test_update_body_round_trips(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
     template_id = _upload(client, admin).json()["id"]
 
     update_res = client.patch(
@@ -71,8 +71,8 @@ def test_update_body_round_trips(client, db_session):
 
 
 def test_update_and_delete_template(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
     template_id = _upload(client, admin).json()["id"]
 
     update_res = client.patch(

@@ -1,13 +1,13 @@
 """
 Request Support was merged into the intake-submission system (see
 app.modules.intake.system_forms) — a client's "request support" is now just
-a submission against the per-firm system-seeded "Request Support" intake
+a submission against the per-org system-seeded "Request Support" intake
 form. This covers the client submitting against that form, staff triaging
 it through the unified intake inbox, and the merged status vocabulary
 (including the new `resolved` status carried over from the old feature).
 """
 from app.modules.intake.system_forms import seed_system_support_form
-from tests.conftest import auth_headers, make_client_company, make_contact, make_firm, make_staff
+from tests.conftest import auth_headers, make_client_company, make_contact, make_org, make_staff
 
 
 def _request_type_field_id(form_json: dict) -> str:
@@ -15,10 +15,10 @@ def _request_type_field_id(form_json: dict) -> str:
 
 
 def test_client_submits_request_support_form_and_staff_can_see_it(client, db_session):
-    firm = make_firm(db_session)
-    seed_system_support_form(db_session, firm.id)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
+    org = make_org(db_session)
+    seed_system_support_form(db_session, org.id)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
     contact, _ = make_contact(db_session, client_company)
 
     forms_res = client.get("/client-intake/forms", headers=auth_headers(contact))
@@ -55,10 +55,10 @@ def test_client_submits_request_support_form_and_staff_can_see_it(client, db_ses
 
 
 def test_staff_resolves_request_support_submission(client, db_session):
-    firm = make_firm(db_session)
-    seed_system_support_form(db_session, firm.id)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
+    org = make_org(db_session)
+    seed_system_support_form(db_session, org.id)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
     contact, _ = make_contact(db_session, client_company)
 
     form = client.get("/client-intake/forms", headers=auth_headers(contact)).json()[0]
@@ -87,9 +87,9 @@ def test_client_submits_other_request_type_with_uploaded_document(client, db_ses
     monkeypatch.setattr("app.modules.intake.service.scan_file", lambda *a, **k: None)
     monkeypatch.setattr("app.modules.intake.service.upload_file", lambda *a, **k: "intake/fake-key")
 
-    firm = make_firm(db_session)
-    seed_system_support_form(db_session, firm.id)
-    client_company = make_client_company(db_session, firm)
+    org = make_org(db_session)
+    seed_system_support_form(db_session, org.id)
+    client_company = make_client_company(db_session, org)
     contact, _ = make_contact(db_session, client_company)
 
     form = client.get("/client-intake/forms", headers=auth_headers(contact)).json()[0]
@@ -120,11 +120,11 @@ def test_client_submits_other_request_type_with_uploaded_document(client, db_ses
 
 
 def test_staff_can_list_and_get_the_system_form_read_only(client, db_session):
-    # There's no form builder — every firm has exactly the one system-seeded form, and
+    # There's no form builder — every org has exactly the one system-seeded form, and
     # staff can only read it (to label submission answers), never create/edit/delete it.
-    firm = make_firm(db_session)
-    seed_system_support_form(db_session, firm.id)
-    admin, _ = make_staff(db_session, firm)
+    org = make_org(db_session)
+    seed_system_support_form(db_session, org.id)
+    admin, _ = make_staff(db_session, org)
 
     list_res = client.get("/intake-forms", headers=auth_headers(admin))
     assert list_res.status_code == 200

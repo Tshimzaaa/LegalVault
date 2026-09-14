@@ -25,7 +25,7 @@ from app.database.rls import set_tenant_context
 from app.core.limiter import limiter
 from app.core.security import hash_password, create_access_token
 from app.core.config import settings
-from app.modules.auth.models import LawFirm, User
+from app.modules.auth.models import Organization, User
 from app.modules.auth.models.role import UserRole
 from app.modules.clients.models import Client, ClientContact
 from app.modules.matters.models import Matter, MatterAssignment, MatterRole, MatterStatus
@@ -45,11 +45,11 @@ def db_session():
     connection = _engine.connect()
     outer_tx = connection.begin()
     session = SQLAlchemySession(bind=connection, join_transaction_mode="create_savepoint")
-    # Factories below insert rows for arbitrary firms directly (bypassing the app's
+    # Factories below insert rows for arbitrary orgs directly (bypassing the app's
     # normal auth-dependency flow that would otherwise set this), so start every test
     # in RLS "owner mode" — an actual HTTP request through the `client` fixture
-    # re-sets this to the real actor's firm before its own queries run.
-    set_tenant_context(session, firm_id=None, is_owner=True)
+    # re-sets this to the real actor's org before its own queries run.
+    set_tenant_context(session, org_id=None, is_owner=True)
     try:
         yield session
     finally:
@@ -78,25 +78,25 @@ def client(db_session):
 
 
 # ---- factories --------------------------------------------------------
-# Plain helper functions (not fixtures) so tests can create as many firms/
+# Plain helper functions (not fixtures) so tests can create as many orgs/
 # users/matters as a given scenario needs, with sensible defaults for
 # everything a test doesn't care about.
 
 
-def make_firm(db_session, **overrides) -> LawFirm:
-    firm = LawFirm(
-        name=overrides.get("name", f"Test Firm {uuid.uuid4().hex[:8]}"),
-        email=overrides.get("email", f"firm-{uuid.uuid4().hex[:8]}@example.com"),
+def make_org(db_session, **overrides) -> Organization:
+    org = Organization(
+        name=overrides.get("name", f"Test Org {uuid.uuid4().hex[:8]}"),
+        email=overrides.get("email", f"org-{uuid.uuid4().hex[:8]}@example.com"),
         is_active=overrides.get("is_active", True),
     )
-    db_session.add(firm)
+    db_session.add(org)
     db_session.flush()
-    return firm
+    return org
 
 
-def make_staff(db_session, firm: LawFirm, *, role: UserRole = UserRole.ADMIN, password: str = DEFAULT_PASSWORD, **overrides) -> tuple[User, str]:
+def make_staff(db_session, org: Organization, *, role: UserRole = UserRole.ADMIN, password: str = DEFAULT_PASSWORD, **overrides) -> tuple[User, str]:
     user = User(
-        firm_id=firm.id,
+        org_id=org.id,
         first_name=overrides.get("first_name", "Test"),
         last_name=overrides.get("last_name", "Staffer"),
         email=overrides.get("email", f"staff-{uuid.uuid4().hex[:8]}@example.com"),
@@ -109,9 +109,9 @@ def make_staff(db_session, firm: LawFirm, *, role: UserRole = UserRole.ADMIN, pa
     return user, password
 
 
-def make_client_company(db_session, firm: LawFirm, **overrides) -> Client:
+def make_client_company(db_session, org: Organization, **overrides) -> Client:
     client_company = Client(
-        firm_id=firm.id,
+        org_id=org.id,
         company_name=overrides.get("company_name", f"Test Client {uuid.uuid4().hex[:8]}"),
         is_active=overrides.get("is_active", True),
     )
@@ -135,9 +135,9 @@ def make_contact(db_session, client_company: Client, *, password: str = DEFAULT_
     return contact, password
 
 
-def make_matter(db_session, firm: LawFirm, client_company: Client, **overrides) -> Matter:
+def make_matter(db_session, org: Organization, client_company: Client, **overrides) -> Matter:
     matter = Matter(
-        firm_id=firm.id,
+        org_id=org.id,
         client_id=client_company.id,
         title=overrides.get("title", "Test Matter"),
         description=overrides.get("description"),
@@ -161,9 +161,9 @@ def make_matter_assignment(db_session, matter: Matter, user: User, *, role_on_ma
     return assignment
 
 
-def make_signed_contract(db_session, firm: LawFirm, client_company: Client, **overrides) -> SignedContract:
+def make_signed_contract(db_session, org: Organization, client_company: Client, **overrides) -> SignedContract:
     contract = SignedContract(
-        firm_id=firm.id,
+        org_id=org.id,
         client_id=client_company.id,
         matter_id=overrides.get("matter_id"),
         uploaded_by=overrides.get("uploaded_by"),
@@ -205,21 +205,21 @@ def auth_headers(actor) -> dict:
     return {"Authorization": f"Bearer {token}"}
 
 
-class TwoFirms:
-    """Two fully-populated firms (own admin, client, matter each) for isolation tests."""
+class TwoOrgs:
+    """Two fully-populated orgs (own admin, client, matter each) for isolation tests."""
 
     def __init__(self, db_session):
-        self.firm_a = make_firm(db_session)
-        self.staff_a, self.staff_a_password = make_staff(db_session, self.firm_a)
-        self.client_a = make_client_company(db_session, self.firm_a)
-        self.matter_a = make_matter(db_session, self.firm_a, self.client_a)
+        self.org_a = make_org(db_session)
+        self.staff_a, self.staff_a_password = make_staff(db_session, self.org_a)
+        self.client_a = make_client_company(db_session, self.org_a)
+        self.matter_a = make_matter(db_session, self.org_a, self.client_a)
 
-        self.firm_b = make_firm(db_session)
-        self.staff_b, self.staff_b_password = make_staff(db_session, self.firm_b)
-        self.client_b = make_client_company(db_session, self.firm_b)
-        self.matter_b = make_matter(db_session, self.firm_b, self.client_b)
+        self.org_b = make_org(db_session)
+        self.staff_b, self.staff_b_password = make_staff(db_session, self.org_b)
+        self.client_b = make_client_company(db_session, self.org_b)
+        self.matter_b = make_matter(db_session, self.org_b, self.client_b)
 
 
 @pytest.fixture()
-def two_firms(db_session) -> TwoFirms:
-    return TwoFirms(db_session)
+def two_orgs(db_session) -> TwoOrgs:
+    return TwoOrgs(db_session)

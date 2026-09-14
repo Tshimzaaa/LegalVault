@@ -29,7 +29,7 @@ class TemplateService:
 
     def upload_template(
         self,
-        firm_id,
+        org_id,
         actor_id,
         title: str,
         description: str | None,
@@ -47,7 +47,7 @@ class TemplateService:
             self.audit.log(
                 actor_type=ActorType.STAFF,
                 actor_id=actor_id,
-                firm_id=firm_id,
+                org_id=org_id,
                 action=audit_actions.FILE_UPLOAD_BLOCKED_MALWARE,
                 target_type="template",
                 target_id=None,
@@ -56,14 +56,14 @@ class TemplateService:
             self.db.commit()
             raise
 
-        latest = self.repository.get_latest_version(firm_id, title)
+        latest = self.repository.get_latest_version(org_id, title)
         next_version = (latest.version + 1) if latest else 1
 
-        file_key = f"templates/{firm_id}/{uuid.uuid4()}-{original_filename}"
+        file_key = f"templates/{org_id}/{uuid.uuid4()}-{original_filename}"
         upload_file(file_bytes, file_key, content_type)
 
         template = Template(
-            firm_id=firm_id,
+            org_id=org_id,
             title=title,
             description=description,
             category=category,
@@ -77,7 +77,7 @@ class TemplateService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.TEMPLATE_UPLOADED,
             target_type="template",
             target_id=template.id,
@@ -86,18 +86,18 @@ class TemplateService:
         self.db.commit()
         return template
 
-    def list_templates(self, firm_id) -> list[Template]:
-        return self.repository.list_by_firm(firm_id)
+    def list_templates(self, org_id) -> list[Template]:
+        return self.repository.list_by_org(org_id)
 
-    def get_download_link(self, template_id, firm_id) -> str:
+    def get_download_link(self, template_id, org_id) -> str:
         template = self.repository.get_by_id(template_id)
-        if not template or str(template.firm_id) != str(firm_id):
+        if not template or str(template.org_id) != str(org_id):
             raise TemplateNotFound()
         return get_download_url(template.file_key)
 
-    def update_template(self, template_id, firm_id, actor_id, request: UpdateTemplateRequest) -> Template:
+    def update_template(self, template_id, org_id, actor_id, request: UpdateTemplateRequest) -> Template:
         template = self.repository.get_by_id(template_id)
-        if not template or str(template.firm_id) != str(firm_id):
+        if not template or str(template.org_id) != str(org_id):
             raise TemplateNotFound()
 
         updates = request.model_dump(exclude_unset=True)
@@ -107,7 +107,7 @@ class TemplateService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.TEMPLATE_UPDATED,
             target_type="template",
             target_id=template.id,
@@ -116,9 +116,9 @@ class TemplateService:
         self.db.commit()
         return template
 
-    def delete_template(self, template_id, firm_id, actor_id) -> None:
+    def delete_template(self, template_id, org_id, actor_id) -> None:
         template = self.repository.get_by_id(template_id)
-        if not template or str(template.firm_id) != str(firm_id):
+        if not template or str(template.org_id) != str(org_id):
             raise TemplateNotFound()
 
         delete_file(template.file_key)
@@ -127,7 +127,7 @@ class TemplateService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.TEMPLATE_DELETED,
             target_type="template",
             target_id=template.id,

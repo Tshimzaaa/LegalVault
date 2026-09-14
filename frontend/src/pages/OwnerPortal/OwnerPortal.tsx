@@ -5,17 +5,17 @@ import '../../styles/dashboard.css'
 import './OwnerPortal.css'
 import { IconDollar, IconLayers, IconPlus, IconUser, IconTrash, IconDownload, IconChevron } from '../../components/icons'
 import {
-  listFirms,
-  getFirm,
-  updateFirmStatus,
-  createFirm,
-  deleteFirm,
-  exportFirm,
+  listOrganizations,
+  getOrganization,
+  updateOrganizationStatus,
+  createOrganization,
+  deleteOrganization,
+  exportOrganization,
   getPlatformMetrics,
   listRecentErrors,
   getSystemHealth,
 } from '../../api/owner'
-import type { FirmDetail, PlatformMetrics, RequestErrorEntry, SystemHealth } from '../../api/owner'
+import type { OrganizationDetail, PlatformMetrics, RequestErrorEntry, SystemHealth } from '../../api/owner'
 import { listOwnerAuditLog, auditActionLabel, formatAuditDetails } from '../../api/auditLog'
 import type { AuditLogEntry } from '../../api/auditLog'
 import { listOwnerAnnouncements, createAnnouncement, updateAnnouncement, deleteAnnouncement } from '../../api/announcements'
@@ -71,11 +71,11 @@ function formatHour(iso: string): string {
 }
 
 const emptyCreateForm = {
-  firmName: '',
-  firmEmail: '',
-  firmPhone: '',
-  firmWebsite: '',
-  firmAddress: '',
+  orgName: '',
+  orgEmail: '',
+  orgPhone: '',
+  orgWebsite: '',
+  orgAddress: '',
   adminFirstName: '',
   adminLastName: '',
   adminEmail: '',
@@ -88,7 +88,7 @@ interface OwnerPortalProps {
 
 function OwnerPortal({ onLogout }: OwnerPortalProps) {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [firms, setFirms] = useState<FirmDetail[]>([])
+  const [orgs, setOrganizations] = useState<OrganizationDetail[]>([])
   const [status, setStatus] = useState<LoadState>('loading')
   const [togglingId, setTogglingId] = useState<string | null>(null)
 
@@ -99,7 +99,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
 
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [exportingId, setExportingId] = useState<string | null>(null)
-  const [firmActionError, setFirmActionError] = useState<string | null>(null)
+  const [orgActionError, setOrganizationActionError] = useState<string | null>(null)
 
   const [metrics, setMetrics] = useState<PlatformMetrics | null>(null)
   const [metricsStatus, setMetricsStatus] = useState<LoadState>('loading')
@@ -137,14 +137,14 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
 
   const [auditEntries, setAuditEntries] = useState<AuditLogEntry[]>([])
   const [auditStatus, setAuditStatus] = useState<LoadState>('loading')
-  const auditFirmFilter = searchParams.get('firm') ?? ''
-  function setAuditFirmFilter(next: string) {
+  const auditOrganizationFilter = searchParams.get('org') ?? ''
+  function setAuditOrganizationFilter(next: string) {
     setSearchParams((prev) => {
       const params = new URLSearchParams(prev)
       if (next) {
-        params.set('firm', next)
+        params.set('org', next)
       } else {
-        params.delete('firm')
+        params.delete('org')
       }
       return params
     })
@@ -172,10 +172,10 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
       return
     }
     setStatus('loading')
-    listFirms(token)
-      .then((summaries) => Promise.all(summaries.map((s) => getFirm(token, s.id))))
+    listOrganizations(token)
+      .then((summaries) => Promise.all(summaries.map((s) => getOrganization(token, s.id))))
       .then((details) => {
-        setFirms(details)
+        setOrganizations(details)
         setStatus('ready')
       })
       .catch(() => setStatus('error'))
@@ -190,7 +190,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
     }
     setAuditStatus('loading')
     listOwnerAuditLog(token, {
-      firmId: auditFirmFilter || undefined,
+      orgId: auditOrganizationFilter || undefined,
       limit: AUDIT_PAGE_SIZE,
       offset: targetPage * AUDIT_PAGE_SIZE,
     })
@@ -203,7 +203,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
       .catch(() => setAuditStatus('error'))
   }
 
-  useEffect(() => loadAudit(0), [auditFirmFilter]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => loadAudit(0), [auditOrganizationFilter]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function loadMetrics() {
     if (!token) {
@@ -334,48 +334,48 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
     }
   }
 
-  async function handleToggleStatus(firm: FirmDetail) {
+  async function handleToggleStatus(org: OrganizationDetail) {
     if (!token) return
-    setFirmActionError(null)
-    setTogglingId(firm.id)
+    setOrganizationActionError(null)
+    setTogglingId(org.id)
     try {
-      const updated = await updateFirmStatus(token, firm.id, !firm.is_active)
-      setFirms((prev) => prev.map((f) => (f.id === firm.id ? { ...f, is_active: updated.is_active } : f)))
+      const updated = await updateOrganizationStatus(token, org.id, !org.is_active)
+      setOrganizations((prev) => prev.map((f) => (f.id === org.id ? { ...f, is_active: updated.is_active } : f)))
     } finally {
       setTogglingId(null)
     }
   }
 
-  async function handleDeleteFirm(firm: FirmDetail) {
+  async function handleDeleteOrganization(org: OrganizationDetail) {
     if (!token) return
-    if (!window.confirm(`Permanently delete ${firm.name} and all its staff, clients, and matters?`)) return
-    setFirmActionError(null)
-    setDeletingId(firm.id)
+    if (!window.confirm(`Permanently delete ${org.name} and all its staff, clients, and matters?`)) return
+    setOrganizationActionError(null)
+    setDeletingId(org.id)
     try {
-      await deleteFirm(token, firm.id)
-      setFirms((prev) => prev.filter((f) => f.id !== firm.id))
+      await deleteOrganization(token, org.id)
+      setOrganizations((prev) => prev.filter((f) => f.id !== org.id))
     } catch (err) {
-      setFirmActionError(err instanceof Error ? err.message : 'Could not delete this firm.')
+      setOrganizationActionError(err instanceof Error ? err.message : 'Could not delete this organization.')
     } finally {
       setDeletingId(null)
     }
   }
 
-  async function handleExportFirm(firm: FirmDetail) {
+  async function handleExportOrganization(org: OrganizationDetail) {
     if (!token) return
-    setFirmActionError(null)
-    setExportingId(firm.id)
+    setOrganizationActionError(null)
+    setExportingId(org.id)
     try {
-      const data = await exportFirm(token, firm.id)
+      const data = await exportOrganization(token, org.id)
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `${firm.name.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-export.json`
+      a.download = `${org.name.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-export.json`
       a.click()
       URL.revokeObjectURL(url)
     } catch (err) {
-      setFirmActionError(err instanceof Error ? err.message : 'Could not export this firm.')
+      setOrganizationActionError(err instanceof Error ? err.message : 'Could not export this organization.')
     } finally {
       setExportingId(null)
     }
@@ -385,7 +385,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
     setForm((prev) => ({ ...prev, [key]: value }))
   }
 
-  async function handleCreateFirm(e: FormEvent) {
+  async function handleCreateOrganization(e: FormEvent) {
     e.preventDefault()
     if (!token) return
     setCreateError('')
@@ -397,13 +397,13 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
 
     setCreating(true)
     try {
-      await createFirm(token, {
-        law_firm: {
-          name: form.firmName,
-          email: form.firmEmail,
-          phone: form.firmPhone || null,
-          website: form.firmWebsite || null,
-          address: form.firmAddress || null,
+      await createOrganization(token, {
+        organization: {
+          name: form.orgName,
+          email: form.orgEmail,
+          phone: form.orgPhone || null,
+          website: form.orgWebsite || null,
+          address: form.orgAddress || null,
         },
         admin: {
           first_name: form.adminFirstName,
@@ -416,30 +416,30 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
       setShowCreateForm(false)
       loadAll()
     } catch (err) {
-      setCreateError(err instanceof Error ? err.message : 'Could not create the firm.')
+      setCreateError(err instanceof Error ? err.message : 'Could not create the organization.')
     } finally {
       setCreating(false)
     }
   }
 
-  const activeCount = firms.filter((f) => f.is_active).length
+  const activeCount = orgs.filter((f) => f.is_active).length
   const platformNumberFormat = new Intl.NumberFormat()
   const platformStats = [
-    { label: 'Total firms', value: platformNumberFormat.format(firms.length), icon: <IconLayers /> },
-    { label: 'Active firms', value: platformNumberFormat.format(activeCount), icon: <IconLayers /> },
+    { label: 'Total organizations', value: platformNumberFormat.format(orgs.length), icon: <IconLayers /> },
+    { label: 'Active organizations', value: platformNumberFormat.format(activeCount), icon: <IconLayers /> },
     {
       label: 'Staff across platform',
-      value: platformNumberFormat.format(firms.reduce((s, f) => s + f.staff_count, 0)),
+      value: platformNumberFormat.format(orgs.reduce((s, f) => s + f.staff_count, 0)),
       icon: <IconUser />,
     },
     {
       label: 'Clients onboarded',
-      value: platformNumberFormat.format(firms.reduce((s, f) => s + f.client_count, 0)),
+      value: platformNumberFormat.format(orgs.reduce((s, f) => s + f.client_count, 0)),
       icon: <IconUser />,
     },
     {
       label: 'Matters open',
-      value: platformNumberFormat.format(firms.reduce((s, f) => s + f.matter_count, 0)),
+      value: platformNumberFormat.format(orgs.reduce((s, f) => s + f.matter_count, 0)),
       icon: <IconDollar />,
     },
   ]
@@ -450,10 +450,10 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
         <h1>Owner Portal</h1>
         <div className="topbar-actions">
           <span className="chip">
-            Firms <span className="chip-badge">{firms.length}</span>
+            Organizations <span className="chip-badge">{orgs.length}</span>
           </span>
           <button type="button" className="btn-solid" onClick={() => setShowCreateForm((v) => !v)}>
-            <IconPlus /> New Firm
+            <IconPlus /> New Organization
           </button>
           <ThemeToggle />
           <button type="button" className="btn-ghost" onClick={onLogout}>
@@ -463,27 +463,27 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
       </header>
 
       {showCreateForm && (
-        <section className="card owner-create-firm-card">
+        <section className="card owner-create-org-card">
           <div className="card-header">
-            <h2>Onboard a New Firm</h2>
+            <h2>Onboard a New Organization</h2>
           </div>
-          <form onSubmit={handleCreateFirm} className="owner-create-firm-form">
+          <form onSubmit={handleCreateOrganization} className="owner-create-org-form">
             <div className="field-row">
               <label className="field">
-                <span>Firm name</span>
+                <span>Organization name</span>
                 <input
-                  value={form.firmName}
-                  onChange={(e) => updateField('firmName', e.target.value)}
+                  value={form.orgName}
+                  onChange={(e) => updateField('orgName', e.target.value)}
                   required
                   autoComplete="organization"
                 />
               </label>
               <label className="field">
-                <span>Firm email</span>
+                <span>Organization email</span>
                 <input
                   type="email"
-                  value={form.firmEmail}
-                  onChange={(e) => updateField('firmEmail', e.target.value)}
+                  value={form.orgEmail}
+                  onChange={(e) => updateField('orgEmail', e.target.value)}
                   required
                   autoComplete="email"
                   spellCheck={false}
@@ -492,29 +492,29 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
             </div>
             <div className="field-row">
               <label className="field">
-                <span>Firm phone (optional)</span>
+                <span>Organization phone (optional)</span>
                 <input
                   type="tel"
-                  value={form.firmPhone}
-                  onChange={(e) => updateField('firmPhone', e.target.value)}
+                  value={form.orgPhone}
+                  onChange={(e) => updateField('orgPhone', e.target.value)}
                   autoComplete="tel"
                 />
               </label>
               <label className="field">
-                <span>Firm website (optional)</span>
+                <span>Organization website (optional)</span>
                 <input
                   type="url"
-                  value={form.firmWebsite}
-                  onChange={(e) => updateField('firmWebsite', e.target.value)}
+                  value={form.orgWebsite}
+                  onChange={(e) => updateField('orgWebsite', e.target.value)}
                   autoComplete="url"
                 />
               </label>
             </div>
             <label className="field">
-              <span>Firm address (optional)</span>
+              <span>Organization address (optional)</span>
               <input
-                value={form.firmAddress}
-                onChange={(e) => updateField('firmAddress', e.target.value)}
+                value={form.orgAddress}
+                onChange={(e) => updateField('orgAddress', e.target.value)}
                 autoComplete="street-address"
               />
             </label>
@@ -571,7 +571,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                 Cancel
               </button>
               <button type="submit" className="btn-solid" disabled={creating}>
-                {creating ? 'Creating…' : 'Create firm & admin'}
+                {creating ? 'Creating…' : 'Create organization & admin'}
               </button>
             </div>
           </form>
@@ -581,7 +581,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
       {status === 'loading' && (
         <div className="dash-state" role="status" aria-live="polite">
           <span className="dash-spinner" aria-hidden="true" />
-          <p>Loading firms…</p>
+          <p>Loading organizations…</p>
         </div>
       )}
 
@@ -610,16 +610,16 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
             ))}
           </section>
 
-          <section className="card owner-firms-table-card">
+          <section className="card owner-orgs-table-card">
             <div className="card-header">
-              <h2>Firms on the Platform</h2>
+              <h2>Organizations on the Platform</h2>
             </div>
-            {firmActionError && <p className="matter-error" aria-live="polite">{firmActionError}</p>}
+            {orgActionError && <p className="matter-error" aria-live="polite">{orgActionError}</p>}
             <div className="table-scroll">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Firm</th>
+                  <th>Organization</th>
                   <th>Email</th>
                   <th>Staff</th>
                   <th>Clients</th>
@@ -629,7 +629,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                 </tr>
               </thead>
               <tbody>
-                {firms.map((f) => (
+                {orgs.map((f) => (
                   <tr key={f.id}>
                     <td>{f.name}</td>
                     <td className="muted">{f.email}</td>
@@ -651,7 +651,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                       <div className="clients-row-actions">
                         <button
                           type="button"
-                          className="btn-ghost owner-firm-toggle"
+                          className="btn-ghost owner-org-toggle"
                           disabled={togglingId === f.id}
                           onClick={() => handleToggleStatus(f)}
                         >
@@ -661,9 +661,9 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                           type="button"
                           className="icon-btn"
                           disabled={exportingId === f.id}
-                          onClick={() => handleExportFirm(f)}
+                          onClick={() => handleExportOrganization(f)}
                           aria-label={`Export ${f.name} data`}
-                          title="Export firm data"
+                          title="Export organization data"
                         >
                           <IconDownload />
                         </button>
@@ -671,9 +671,9 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                           type="button"
                           className="icon-btn"
                           disabled={f.is_active || deletingId === f.id}
-                          onClick={() => handleDeleteFirm(f)}
+                          onClick={() => handleDeleteOrganization(f)}
                           aria-label={`Delete ${f.name}`}
-                          title={f.is_active ? 'Suspend the firm before deleting it' : 'Delete permanently'}
+                          title={f.is_active ? 'Suspend the organization before deleting it' : 'Delete permanently'}
                         >
                           <IconTrash />
                         </button>
@@ -681,10 +681,10 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                     </td>
                   </tr>
                 ))}
-                {firms.length === 0 && (
+                {orgs.length === 0 && (
                   <tr>
                     <td colSpan={7} className="muted">
-                      No firms yet. Onboard one with New Firm.
+                      No organizations yet. Onboard one with New Organization.
                     </td>
                   </tr>
                 )}
@@ -789,15 +789,15 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                     <span className="stat-big">{new Intl.NumberFormat().format(systemHealth.active_users)}</span>
                   </div>
                   <div className="owner-monitoring-stat">
-                    <span className="muted">Online firms</span>
-                    <span className="stat-big">{new Intl.NumberFormat().format(systemHealth.online_firms)}</span>
+                    <span className="muted">Online organizations</span>
+                    <span className="stat-big">{new Intl.NumberFormat().format(systemHealth.online_orgs)}</span>
                   </div>
                   {metricsStatus === 'ready' && metrics && (
                     <div className="owner-monitoring-stat">
-                      <span className="muted">New firms (7d / 30d)</span>
+                      <span className="muted">New organizations (7d / 30d)</span>
                       <span className="stat-big">
-                        {new Intl.NumberFormat().format(metrics.usage.new_firms_last_7_days)} /{' '}
-                        {new Intl.NumberFormat().format(metrics.usage.new_firms_last_30_days)}
+                        {new Intl.NumberFormat().format(metrics.usage.new_orgs_last_7_days)} /{' '}
+                        {new Intl.NumberFormat().format(metrics.usage.new_orgs_last_30_days)}
                       </span>
                     </div>
                   )}
@@ -1115,7 +1115,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                     <div className="clients-row-actions">
                       <button
                         type="button"
-                        className="btn-ghost owner-firm-toggle"
+                        className="btn-ghost owner-org-toggle"
                         disabled={announcementBusyId === a.id}
                         onClick={() => handleToggleAnnouncementActive(a)}
                       >
@@ -1148,12 +1148,12 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
               <div className="topbar-actions">
                 <select
                   className="select-input"
-                  aria-label="Filter audit log by firm"
-                  value={auditFirmFilter}
-                  onChange={(e) => setAuditFirmFilter(e.target.value)}
+                  aria-label="Filter audit log by organization"
+                  value={auditOrganizationFilter}
+                  onChange={(e) => setAuditOrganizationFilter(e.target.value)}
                 >
-                  <option value="">All firms</option>
-                  {firms.map((f) => (
+                  <option value="">All organizations</option>
+                  {orgs.map((f) => (
                     <option key={f.id} value={f.id}>
                       {f.name}
                     </option>

@@ -51,19 +51,19 @@ class ClientService:
         self.audit = AuditService(db)
         self.refresh_tokens = RefreshTokenRepository(db)
 
-    def create_client(self, firm_id, request: CreateClientRequest) -> Client:
-        client = Client(firm_id=firm_id, company_name=request.company_name)
+    def create_client(self, org_id, request: CreateClientRequest) -> Client:
+        client = Client(org_id=org_id, company_name=request.company_name)
         self.repository.create_client(client)
         self.db.commit()
         return client
 
-    def invite_contact(self, client_id, request: InviteContactRequest, staff_firm_id):
+    def invite_contact(self, client_id, request: InviteContactRequest, staff_org_id):
         client = self.repository.get_client_by_id(client_id)
         if not client:
             raise ClientNotFound()
 
-        if str(client.firm_id) != str(staff_firm_id):
-            raise ClientNotFound()  # deliberately vague — don't reveal the client exists under another firm
+        if str(client.org_id) != str(staff_org_id):
+            raise ClientNotFound()  # deliberately vague — don't reveal the client exists under another org
 
         existing = self.repository.get_contact_by_email(request.email)
         if existing:
@@ -163,22 +163,22 @@ class ClientService:
             self.refresh_tokens.revoke(record)
             self.db.commit()
 
-    def list_clients(self, firm_id):
-        return self.repository.list_by_firm(firm_id)
+    def list_clients(self, org_id):
+        return self.repository.list_by_org(org_id)
 
-    def list_contacts(self, client_id, firm_id):
+    def list_contacts(self, client_id, org_id):
         client = self.repository.get_client_by_id(client_id)
-        if not client or str(client.firm_id) != str(firm_id):
+        if not client or str(client.org_id) != str(org_id):
             raise ClientNotFound()
         return self.repository.list_contacts_for_client(client_id)
-    def resend_invite(self, email: str, firm_id):
+    def resend_invite(self, email: str, org_id):
         contact = self.repository.get_contact_by_email(email)
         if not contact:
             raise ContactNotFound()  # new exception, see below
 
         client = self.repository.get_client_by_id(contact.client_id)
-        if not client or str(client.firm_id) != str(firm_id):
-            raise ContactNotFound()  # don't reveal cross-firm existence
+        if not client or str(client.org_id) != str(org_id):
+            raise ContactNotFound()  # don't reveal cross-org existence
 
         if contact.invitation_status == "accepted":
             raise InviteAlreadyAccepted()
@@ -238,9 +238,9 @@ class ClientService:
         self.refresh_tokens.revoke_all_for_actor(RefreshTokenActorType.CLIENT, contact.id)
         self.db.commit()
 
-    def update_client_status(self, client_id, firm_id, actor_id, is_active: bool) -> Client:
+    def update_client_status(self, client_id, org_id, actor_id, is_active: bool) -> Client:
         client = self.repository.get_client_by_id(client_id)
-        if not client or str(client.firm_id) != str(firm_id):
+        if not client or str(client.org_id) != str(org_id):
             raise ClientNotFound()
 
         client.is_active = is_active
@@ -248,7 +248,7 @@ class ClientService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.CLIENT_STATUS_UPDATED,
             target_type="client",
             target_id=client.id,
@@ -257,9 +257,9 @@ class ClientService:
         self.db.commit()
         return client
 
-    def delete_client(self, client_id, firm_id, actor_id):
+    def delete_client(self, client_id, org_id, actor_id):
         client = self.repository.get_client_by_id(client_id)
-        if not client or str(client.firm_id) != str(firm_id):
+        if not client or str(client.org_id) != str(org_id):
             raise ClientNotFound()
 
         matter_repository = MatterRepository(self.db)
@@ -273,7 +273,7 @@ class ClientService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.CLIENT_DELETED,
             target_type="client",
             target_id=client.id,
@@ -281,9 +281,9 @@ class ClientService:
         )
         self.db.commit()
 
-    def update_contact_status(self, client_id, contact_id, firm_id, actor_id, is_active: bool) -> ClientContact:
+    def update_contact_status(self, client_id, contact_id, org_id, actor_id, is_active: bool) -> ClientContact:
         client = self.repository.get_client_by_id(client_id)
-        if not client or str(client.firm_id) != str(firm_id):
+        if not client or str(client.org_id) != str(org_id):
             raise ClientNotFound()
 
         contact = self.repository.get_contact_by_id(contact_id)
@@ -297,7 +297,7 @@ class ClientService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.CONTACT_STATUS_UPDATED,
             target_type="client_contact",
             target_id=contact.id,
@@ -306,11 +306,11 @@ class ClientService:
         self.db.commit()
         return contact
 
-    def force_logout_contact(self, client_id, contact_id, firm_id, actor_id) -> ClientContact:
+    def force_logout_contact(self, client_id, contact_id, org_id, actor_id) -> ClientContact:
         """Kills a contact's active sessions right now, without deactivating the
         account — same rationale as force_logout_staff in auth/routes.py."""
         client = self.repository.get_client_by_id(client_id)
-        if not client or str(client.firm_id) != str(firm_id):
+        if not client or str(client.org_id) != str(org_id):
             raise ClientNotFound()
 
         contact = self.repository.get_contact_by_id(contact_id)
@@ -323,7 +323,7 @@ class ClientService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.CONTACT_FORCE_LOGOUT,
             target_type="client_contact",
             target_id=contact.id,
@@ -332,9 +332,9 @@ class ClientService:
         self.db.commit()
         return contact
 
-    def delete_contact(self, client_id, contact_id, firm_id, actor_id):
+    def delete_contact(self, client_id, contact_id, org_id, actor_id):
         client = self.repository.get_client_by_id(client_id)
-        if not client or str(client.firm_id) != str(firm_id):
+        if not client or str(client.org_id) != str(org_id):
             raise ClientNotFound()
 
         contact = self.repository.get_contact_by_id(contact_id)
@@ -347,7 +347,7 @@ class ClientService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.CONTACT_DELETED,
             target_type="client_contact",
             target_id=contact.id,

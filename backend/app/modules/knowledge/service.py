@@ -16,9 +16,9 @@ class KnowledgeService:
         self.repository = KnowledgeRepository(db)
         self.audit = AuditService(db)
 
-    def create_article(self, firm_id, actor_id, request: CreateKnowledgeArticleRequest) -> KnowledgeArticle:
+    def create_article(self, org_id, actor_id, request: CreateKnowledgeArticleRequest) -> KnowledgeArticle:
         article = KnowledgeArticle(
-            firm_id=firm_id,
+            org_id=org_id,
             title=request.title,
             category=request.category,
             content=request.content,
@@ -29,7 +29,7 @@ class KnowledgeService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.KNOWLEDGE_ARTICLE_CREATED,
             target_type="knowledge_article",
             target_id=article.id,
@@ -38,26 +38,26 @@ class KnowledgeService:
         self.db.commit()
         return article
 
-    def get_article(self, article_id, firm_id) -> KnowledgeArticle:
+    def get_article(self, article_id, org_id) -> KnowledgeArticle:
         article = self.repository.get_by_id(article_id)
-        if not article or str(article.firm_id) != str(firm_id):
+        if not article or str(article.org_id) != str(org_id):
             raise KnowledgeArticleNotFound()
         return article
 
-    def list_articles(self, firm_id) -> list[KnowledgeArticle]:
-        return self.repository.list_by_firm(firm_id)
+    def list_articles(self, org_id) -> list[KnowledgeArticle]:
+        return self.repository.list_by_org(org_id)
 
     def update_article(
-        self, article_id, firm_id, actor_id, request: UpdateKnowledgeArticleRequest
+        self, article_id, org_id, actor_id, request: UpdateKnowledgeArticleRequest
     ) -> KnowledgeArticle:
-        article = self.get_article(article_id, firm_id)
+        article = self.get_article(article_id, org_id)
         updates = request.model_dump(exclude_unset=True)
         for field, value in updates.items():
             setattr(article, field, value)
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.KNOWLEDGE_ARTICLE_UPDATED,
             target_type="knowledge_article",
             target_id=article.id,
@@ -66,14 +66,14 @@ class KnowledgeService:
         self.db.commit()
         return article
 
-    def delete_article(self, article_id, firm_id, actor_id) -> None:
-        article = self.get_article(article_id, firm_id)
+    def delete_article(self, article_id, org_id, actor_id) -> None:
+        article = self.get_article(article_id, org_id)
         title = article.title
         self.repository.delete(article)
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.KNOWLEDGE_ARTICLE_DELETED,
             target_type="knowledge_article",
             target_id=article_id,
@@ -81,11 +81,11 @@ class KnowledgeService:
         )
         self.db.commit()
 
-    def list_published_articles(self, firm_id) -> list[KnowledgeArticle]:
-        return self.repository.list_published_by_firm(firm_id)
+    def list_published_articles(self, org_id) -> list[KnowledgeArticle]:
+        return self.repository.list_published_by_org(org_id)
 
-    def get_published_article(self, article_id, firm_id) -> KnowledgeArticle:
-        article = self.get_article(article_id, firm_id)
+    def get_published_article(self, article_id, org_id) -> KnowledgeArticle:
+        article = self.get_article(article_id, org_id)
         if not article.is_published:
             raise KnowledgeArticleNotFound()
         return article

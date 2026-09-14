@@ -2,7 +2,7 @@ import { apiRequest, BASE_URL, ApiError } from './client'
 
 export interface Template {
   id: string
-  firm_id: string
+  org_id: string
   title: string
   description: string | null
   category: string

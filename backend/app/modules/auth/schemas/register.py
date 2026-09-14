@@ -13,7 +13,7 @@ from app.core.constants import (
 )
 
 
-class RegisterLawFirmRequest(BaseModel):
+class RegisterOrganizationRequest(BaseModel):
     name: str = Field(
         min_length=2,
         max_length=NAME_MAX_LENGTH,
@@ -58,13 +58,13 @@ class RegisterAdminRequest(BaseModel):
 
 class RegisterRequest(BaseModel):
     admin_secret: str
-    law_firm: RegisterLawFirmRequest
+    organization: RegisterOrganizationRequest
     admin: RegisterAdminRequest
 
 
 class RegisterResponse(BaseModel):
     message: str
-    law_firm_id: UUID
+    organization_id: UUID
     user_id: UUID
     access_token: str
     token_type: str = "bearer"

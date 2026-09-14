@@ -19,7 +19,7 @@ class UpdateKnowledgeArticleRequest(BaseModel):
 
 class KnowledgeArticleResponse(BaseModel):
     id: UUID
-    firm_id: UUID
+    org_id: UUID
     title: str
     category: str
     content: str

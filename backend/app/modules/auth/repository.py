@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.modules.auth.models import LawFirm, User
+from app.modules.auth.models import Organization, User
 
 
 class AuthRepository:
@@ -9,18 +9,18 @@ class AuthRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_law_firm_by_email(self, email: str) -> LawFirm | None:
-        statement = select(LawFirm).where(LawFirm.email == email)
+    def get_organization_by_email(self, email: str) -> Organization | None:
+        statement = select(Organization).where(Organization.email == email)
         return self.db.scalar(statement)
 
     def get_user_by_email(self, email: str) -> User | None:
         statement = select(User).where(User.email == email)
         return self.db.scalar(statement)
 
-    def create_law_firm(self, law_firm: LawFirm) -> LawFirm:
-        self.db.add(law_firm)
+    def create_organization(self, organization: Organization) -> Organization:
+        self.db.add(organization)
         self.db.flush()
-        return law_firm
+        return organization
 
     def create_user(self, user: User) -> User:
         self.db.add(user)
@@ -33,8 +33,8 @@ class AuthRepository:
         if not user_ids:
             return []
         return list(self.db.scalars(select(User).where(User.id.in_(user_ids))))
-    def list_by_firm(self, firm_id) -> list[User]:
-        statement = select(User).where(User.firm_id == firm_id)
+    def list_by_org(self, org_id) -> list[User]:
+        statement = select(User).where(User.org_id == org_id)
         return list(self.db.scalars(statement))
     def get_user_by_reset_token(self, token: str) -> User | None:
         statement = select(User).where(User.reset_token == token)
@@ -51,15 +51,15 @@ class AuthRepository:
         user.reset_token_expires_at = None
         self.db.flush()
         return user
-    def get_firm_by_id(self, firm_id) -> LawFirm | None:
-        return self.db.scalar(select(LawFirm).where(LawFirm.id == firm_id))
+    def get_org_by_id(self, org_id) -> Organization | None:
+        return self.db.scalar(select(Organization).where(Organization.id == org_id))
 
-    def list_all_firms(self) -> list[LawFirm]:
-        return list(self.db.scalars(select(LawFirm)))
+    def list_all_orgs(self) -> list[Organization]:
+        return list(self.db.scalars(select(Organization)))
 
-    def count_users_for_firm(self, firm_id) -> int:
+    def count_users_for_org(self, org_id) -> int:
         from sqlalchemy import func
-        return self.db.scalar(select(func.count()).select_from(User).where(User.firm_id == firm_id))
+        return self.db.scalar(select(func.count()).select_from(User).where(User.org_id == org_id))
 
     def get_user_by_invitation_token(self, token: str) -> User | None:
         statement = select(User).where(User.invitation_token == token)
@@ -74,26 +74,26 @@ class AuthRepository:
         self.db.delete(user)
         self.db.flush()
 
-    def delete_firm(self, law_firm: LawFirm):
-        self.db.delete(law_firm)
+    def delete_org(self, organization: Organization):
+        self.db.delete(organization)
         self.db.flush()
 
-    def count_all_firms(self) -> int:
+    def count_all_orgs(self) -> int:
         from sqlalchemy import func
-        return self.db.scalar(select(func.count()).select_from(LawFirm))
+        return self.db.scalar(select(func.count()).select_from(Organization))
 
-    def count_active_firms(self) -> int:
+    def count_active_orgs(self) -> int:
         from sqlalchemy import func
         return self.db.scalar(
-            select(func.count()).select_from(LawFirm).where(LawFirm.is_active.is_(True))
+            select(func.count()).select_from(Organization).where(Organization.is_active.is_(True))
         )
 
     def count_all_users(self) -> int:
         from sqlalchemy import func
         return self.db.scalar(select(func.count()).select_from(User))
 
-    def count_firms_created_since(self, since) -> int:
+    def count_orgs_created_since(self, since) -> int:
         from sqlalchemy import func
         return self.db.scalar(
-            select(func.count()).select_from(LawFirm).where(LawFirm.created_at >= since)
+            select(func.count()).select_from(Organization).where(Organization.created_at >= since)
         )

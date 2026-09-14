@@ -14,19 +14,19 @@ class AuditLogRepository:
         self.db.flush()
         return entry
 
-    def list_for_firm(self, firm_id, limit: int, offset: int) -> list[AuditLog]:
+    def list_for_org(self, org_id, limit: int, offset: int) -> list[AuditLog]:
         statement = (
             select(AuditLog)
-            .where(AuditLog.firm_id == firm_id)
+            .where(AuditLog.org_id == org_id)
             .order_by(AuditLog.created_at.desc())
             .limit(limit)
             .offset(offset)
         )
         return list(self.db.scalars(statement))
 
-    def list_all(self, limit: int, offset: int, firm_id=None) -> list[AuditLog]:
+    def list_all(self, limit: int, offset: int, org_id=None) -> list[AuditLog]:
         statement = select(AuditLog).order_by(AuditLog.created_at.desc())
-        if firm_id is not None:
-            statement = statement.where(AuditLog.firm_id == firm_id)
+        if org_id is not None:
+            statement = statement.where(AuditLog.org_id == org_id)
         statement = statement.limit(limit).offset(offset)
         return list(self.db.scalars(statement))

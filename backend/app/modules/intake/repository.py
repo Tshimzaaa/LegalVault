@@ -30,20 +30,20 @@ class IntakeRepository:
             )
         )
 
-    def list_forms_by_firm(self, firm_id) -> list[IntakeForm]:
+    def list_forms_by_org(self, org_id) -> list[IntakeForm]:
         return list(
             self.db.scalars(
                 select(IntakeForm)
-                .where(IntakeForm.firm_id == firm_id)
+                .where(IntakeForm.org_id == org_id)
                 .options(selectinload(IntakeForm.fields))
             )
         )
 
-    def list_published_forms_by_firm(self, firm_id) -> list[IntakeForm]:
+    def list_published_forms_by_org(self, org_id) -> list[IntakeForm]:
         return list(
             self.db.scalars(
                 select(IntakeForm)
-                .where(IntakeForm.firm_id == firm_id, IntakeForm.is_published.is_(True))
+                .where(IntakeForm.org_id == org_id, IntakeForm.is_published.is_(True))
                 .options(selectinload(IntakeForm.fields))
             )
         )
@@ -85,11 +85,11 @@ class IntakeRepository:
             .options(selectinload(IntakeSubmission.answers))
         )
 
-    def list_submissions_by_firm(self, firm_id) -> list[IntakeSubmission]:
+    def list_submissions_by_org(self, org_id) -> list[IntakeSubmission]:
         return list(
             self.db.scalars(
                 select(IntakeSubmission)
-                .where(IntakeSubmission.firm_id == firm_id)
+                .where(IntakeSubmission.org_id == org_id)
                 .options(selectinload(IntakeSubmission.answers))
                 .order_by(IntakeSubmission.created_at.desc())
             )

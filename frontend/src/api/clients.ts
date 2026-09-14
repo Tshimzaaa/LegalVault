@@ -2,7 +2,7 @@ import { apiRequest } from './client'
 
 export interface Client {
   id: string
-  firm_id: string
+  org_id: string
   company_name: string
   is_active: boolean
 }

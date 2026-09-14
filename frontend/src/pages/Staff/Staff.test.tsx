@@ -9,7 +9,7 @@ vi.mock('../../api/auth')
 
 const admin: User = {
   id: 'admin-1',
-  firm_id: 'firm-1',
+  org_id: 'org-1',
   first_name: 'Ada',
   last_name: 'Admin',
   email: 'ada@example.com',
@@ -21,7 +21,7 @@ const admin: User = {
 
 const lawyer: User = {
   id: 'lawyer-1',
-  firm_id: 'firm-1',
+  org_id: 'org-1',
   first_name: 'Lou',
   last_name: 'Lawyer',
   email: 'lou@example.com',
@@ -57,7 +57,7 @@ describe('Staff page', () => {
 
     // The component fetches staff regardless of role — it's the render, not the
     // fetch, that's gated — so only the message is asserted here.
-    expect(await screen.findByText(/only firm admins can manage staff/i)).toBeInTheDocument()
+    expect(await screen.findByText(/only org admins can manage staff/i)).toBeInTheDocument()
     expect(screen.queryByText('Lou Lawyer')).not.toBeInTheDocument()
   })
 
@@ -65,7 +65,7 @@ describe('Staff page', () => {
     const user = userEvent.setup()
     vi.mocked(authApi.inviteStaff).mockResolvedValue({
       id: 'new-1',
-      firm_id: 'firm-1',
+      org_id: 'org-1',
       first_name: 'New',
       last_name: 'Hire',
       email: 'new@example.com',

@@ -22,15 +22,15 @@ class AuditLog(BaseModel):
         nullable=False,
     )
 
-    # Intentionally not a ForeignKey — audit rows must outlive the actor/firm/target
-    # they reference (e.g. a firm-deletion entry has to remain readable after the
-    # firm row is gone). `details` carries a snapshot for that case.
+    # Intentionally not a ForeignKey — audit rows must outlive the actor/org/target
+    # they reference (e.g. a org-deletion entry has to remain readable after the
+    # org row is gone). `details` carries a snapshot for that case.
     actor_id: Mapped[UUID | None] = mapped_column(
         PG_UUID(as_uuid=True),
         nullable=True,
     )
 
-    firm_id: Mapped[UUID | None] = mapped_column(
+    org_id: Mapped[UUID | None] = mapped_column(
         PG_UUID(as_uuid=True),
         nullable=True,
         index=True,

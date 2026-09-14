@@ -8,14 +8,14 @@ from app.database.base import BaseModel
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from app.modules.auth.models.law_firm import LawFirm
+    from app.modules.auth.models.organization import Organization
 
 
 class Client(BaseModel):
     __tablename__ = "clients"
 
-    firm_id: Mapped[UUID] = mapped_column(
-        ForeignKey("law_firms.id"),
+    org_id: Mapped[UUID] = mapped_column(
+        ForeignKey("organizations.id"),
         nullable=False,
         index=True,
     )

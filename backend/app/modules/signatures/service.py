@@ -39,12 +39,12 @@ class SignatureService:
         self.audit = AuditService(db)
         self.notifications = NotificationService(db)
 
-    def _resolve_recipients(self, recipients_input, firm_id, client_id) -> list[dict]:
+    def _resolve_recipients(self, recipients_input, org_id, client_id) -> list[dict]:
         resolved = []
         for entry in recipients_input:
             if entry.recipient_type == RecipientType.STAFF:
                 user = self.auth_repository.get_user_by_id(entry.recipient_id)
-                if not user or str(user.firm_id) != str(firm_id):
+                if not user or str(user.org_id) != str(org_id):
                     raise InvalidSignatureRecipient()
                 resolved.append(
                     {
@@ -69,17 +69,17 @@ class SignatureService:
         return resolved
 
     def create_and_send(
-        self, matter_id, firm_id, actor_id, request: CreateSignatureRequestRequest
+        self, matter_id, org_id, actor_id, request: CreateSignatureRequestRequest
     ) -> SignatureRequestResponse:
         matter = self.matter_repository.get_by_id(matter_id)
-        if not matter or str(matter.firm_id) != str(firm_id):
+        if not matter or str(matter.org_id) != str(org_id):
             raise MatterNotFound()
 
         document = self.matter_repository.get_document_by_id(request.source_document_id)
         if not document or str(document.matter_id) != str(matter_id):
             raise MatterDocumentNotFound()
 
-        recipients_input = self._resolve_recipients(request.recipients, firm_id, matter.client_id)
+        recipients_input = self._resolve_recipients(request.recipients, org_id, matter.client_id)
 
         file_bytes = download_file(document.file_key)
         sent = documenso_client.create_and_send_document(
@@ -89,7 +89,7 @@ class SignatureService:
         )
 
         signature_request = SignatureRequest(
-            firm_id=firm_id,
+            org_id=org_id,
             matter_id=matter_id,
             client_id=matter.client_id,
             source_document_id=document.id,
@@ -118,7 +118,7 @@ class SignatureService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.SIGNATURE_REQUEST_SENT,
             target_type="signature_request",
             target_id=signature_request.id,
@@ -145,21 +145,21 @@ class SignatureService:
     def _to_response(self, signature_request: SignatureRequest) -> SignatureRequestResponse:
         return SignatureRequestResponse.model_validate(signature_request)
 
-    def list_for_matter(self, matter_id, firm_id) -> list[SignatureRequestResponse]:
+    def list_for_matter(self, matter_id, org_id) -> list[SignatureRequestResponse]:
         matter = self.matter_repository.get_by_id(matter_id)
-        if not matter or str(matter.firm_id) != str(firm_id):
+        if not matter or str(matter.org_id) != str(org_id):
             raise MatterNotFound()
         return [self._to_response(sr) for sr in self.repository.list_by_matter(matter_id)]
 
-    def get(self, signature_request_id, firm_id) -> SignatureRequestResponse:
+    def get(self, signature_request_id, org_id) -> SignatureRequestResponse:
         signature_request = self.repository.get_by_id(signature_request_id)
-        if not signature_request or str(signature_request.firm_id) != str(firm_id):
+        if not signature_request or str(signature_request.org_id) != str(org_id):
             raise SignatureRequestNotFound()
         return self._to_response(signature_request)
 
-    def void(self, signature_request_id, firm_id, actor_id) -> SignatureRequestResponse:
+    def void(self, signature_request_id, org_id, actor_id) -> SignatureRequestResponse:
         signature_request = self.repository.get_by_id(signature_request_id)
-        if not signature_request or str(signature_request.firm_id) != str(firm_id):
+        if not signature_request or str(signature_request.org_id) != str(org_id):
             raise SignatureRequestNotFound()
 
         documenso_client.void_document(signature_request.documenso_document_id)
@@ -168,7 +168,7 @@ class SignatureService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.SIGNATURE_REQUEST_VOIDED,
             target_type="signature_request",
             target_id=signature_request.id,
@@ -222,7 +222,7 @@ class SignatureService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=signature_request.requested_by,
-            firm_id=signature_request.firm_id,
+            org_id=signature_request.org_id,
             action=audit_actions.SIGNATURE_REQUEST_DECLINED,
             target_type="signature_request",
             target_id=signature_request.id,
@@ -241,11 +241,11 @@ class SignatureService:
         source_document = self.matter_repository.get_document_by_id(signature_request.source_document_id)
         client = self.client_repository.get_client_by_id(signature_request.client_id)
 
-        file_key = f"signed_contracts/{signature_request.firm_id}/{uuid.uuid4()}-{signature_request.title}.pdf"
+        file_key = f"signed_contracts/{signature_request.org_id}/{uuid.uuid4()}-{signature_request.title}.pdf"
         upload_file(signed_pdf, file_key, "application/pdf")
 
         signed_contract = SignedContract(
-            firm_id=signature_request.firm_id,
+            org_id=signature_request.org_id,
             client_id=signature_request.client_id,
             matter_id=signature_request.matter_id,
             uploaded_by=signature_request.requested_by,
@@ -267,7 +267,7 @@ class SignatureService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=signature_request.requested_by,
-            firm_id=signature_request.firm_id,
+            org_id=signature_request.org_id,
             action=audit_actions.SIGNATURE_COMPLETED,
             target_type="signature_request",
             target_id=signature_request.id,

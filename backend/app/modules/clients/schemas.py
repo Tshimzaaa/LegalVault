@@ -11,7 +11,7 @@ class CreateClientRequest(BaseModel):
 
 class ClientResponse(BaseModel):
     id: UUID
-    firm_id: UUID
+    org_id: UUID
     company_name: str
     is_active: bool
 

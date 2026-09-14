@@ -35,16 +35,16 @@ class ReportingService:
         self.auth_repository = AuthRepository(db)
         self.client_repository = ClientRepository(db)
 
-    def get_overview(self, firm_id) -> ReportingOverviewResponse:
-        matters = self.matter_repository.list_by_firm(firm_id)
+    def get_overview(self, org_id) -> ReportingOverviewResponse:
+        matters = self.matter_repository.list_by_org(org_id)
 
         status_counts = {status: 0 for status in MatterStatus}
         for matter in matters:
             status_counts[matter.status] += 1
 
-        staff = self.auth_repository.list_by_firm(firm_id)
-        assignments = self.matter_repository.list_assignments_for_firm(firm_id)
-        tasks = self.matter_repository.list_tasks_for_firm(firm_id)
+        staff = self.auth_repository.list_by_org(org_id)
+        assignments = self.matter_repository.list_assignments_for_org(org_id)
+        tasks = self.matter_repository.list_tasks_for_org(org_id)
 
         total_matter_ids_by_user = defaultdict(set)
         active_matter_ids_by_user = defaultdict(set)
@@ -112,10 +112,10 @@ class ReportingService:
             upcoming_deadlines_7_days=upcoming_deadlines,
         )
 
-    def export_matters_csv(self, firm_id) -> str:
-        matters = self.matter_repository.list_by_firm(firm_id)
-        assignments = self.matter_repository.list_assignments_for_firm(firm_id)
-        tasks = self.matter_repository.list_tasks_for_firm(firm_id)
+    def export_matters_csv(self, org_id) -> str:
+        matters = self.matter_repository.list_by_org(org_id)
+        assignments = self.matter_repository.list_assignments_for_org(org_id)
+        tasks = self.matter_repository.list_tasks_for_org(org_id)
 
         users_by_id = {
             user.id: user

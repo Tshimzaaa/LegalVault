@@ -2,13 +2,13 @@
 Force-logout: kills a staff member's or client contact's active sessions
 immediately, without deactivating the account.
 """
-from tests.conftest import auth_headers, make_client_company, make_contact, make_firm, make_staff
+from tests.conftest import auth_headers, make_client_company, make_contact, make_org, make_staff
 
 
 def test_force_logout_staff_kills_live_access_token_immediately(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    target, _ = make_staff(db_session, firm, email="target@example.com")
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    target, _ = make_staff(db_session, org, email="target@example.com")
     target_headers = auth_headers(target)
 
     assert client.get("/auth/me", headers=target_headers).status_code == 200
@@ -25,9 +25,9 @@ def test_force_logout_staff_kills_live_access_token_immediately(client, db_sessi
 
 
 def test_force_logout_staff_revokes_refresh_token(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    target, password = make_staff(db_session, firm, email="target2@example.com")
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    target, password = make_staff(db_session, org, email="target2@example.com")
 
     login_res = client.post("/auth/login", json={"email": "target2@example.com", "password": password})
     refresh_token = login_res.json()["refresh_token"]
@@ -39,9 +39,9 @@ def test_force_logout_staff_revokes_refresh_token(client, db_session):
 
 
 def test_force_logout_contact_kills_live_access_token_immediately(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
     contact, _ = make_contact(db_session, client_company)
     contact_headers = auth_headers(contact)
 

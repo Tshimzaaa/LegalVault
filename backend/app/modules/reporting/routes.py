@@ -16,7 +16,7 @@ def get_overview(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return ReportingService(db).get_overview(current_user.firm_id)
+    return ReportingService(db).get_overview(current_user.org_id)
 
 
 @router.get("/matters/export")
@@ -24,7 +24,7 @@ def export_matters(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    csv_content = ReportingService(db).export_matters_csv(current_user.firm_id)
+    csv_content = ReportingService(db).export_matters_csv(current_user.org_id)
     return Response(
         content=csv_content,
         media_type="text/csv",

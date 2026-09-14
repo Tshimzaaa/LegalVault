@@ -14,7 +14,7 @@ from app.modules.monitoring.schemas import (
 )
 
 
-class FirmSummary(BaseModel):
+class OrganizationSummary(BaseModel):
     id: UUID
     name: str
     email: str
@@ -23,7 +23,7 @@ class FirmSummary(BaseModel):
     class Config:
         from_attributes = True
 
-class FirmDetail(BaseModel):
+class OrganizationDetail(BaseModel):
     id: UUID
     name: str
     email: str
@@ -35,7 +35,7 @@ class FirmDetail(BaseModel):
     client_count: int
     matter_count: int
 
-class UpdateFirmStatusRequest(BaseModel):
+class UpdateOrganizationStatusRequest(BaseModel):
     is_active: bool
 class OwnerLoginRequest(BaseModel):
     secret: str
@@ -45,7 +45,7 @@ class OwnerTokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
-class FirmExportProfile(BaseModel):
+class OrganizationExportProfile(BaseModel):
     id: UUID
     name: str
     email: str
@@ -59,7 +59,7 @@ class FirmExportProfile(BaseModel):
         from_attributes = True
 
 
-class FirmExportStaff(BaseModel):
+class OrganizationExportStaff(BaseModel):
     id: UUID
     first_name: str
     last_name: str
@@ -74,7 +74,7 @@ class FirmExportStaff(BaseModel):
         from_attributes = True
 
 
-class FirmExportContact(BaseModel):
+class OrganizationExportContact(BaseModel):
     id: UUID
     first_name: str
     last_name: str
@@ -88,20 +88,20 @@ class FirmExportContact(BaseModel):
         from_attributes = True
 
 
-class FirmExportClient(BaseModel):
+class OrganizationExportClient(BaseModel):
     id: UUID
     company_name: str
     is_active: bool
     created_at: datetime
-    contacts: list[FirmExportContact]
+    contacts: list[OrganizationExportContact]
 
 
-class FirmExportAssignment(BaseModel):
+class OrganizationExportAssignment(BaseModel):
     user_id: UUID
     role_on_matter: MatterRole
 
 
-class FirmExportTask(BaseModel):
+class OrganizationExportTask(BaseModel):
     id: UUID
     title: str
     description: str | None
@@ -115,7 +115,7 @@ class FirmExportTask(BaseModel):
         from_attributes = True
 
 
-class FirmExportDocument(BaseModel):
+class OrganizationExportDocument(BaseModel):
     id: UUID
     title: str
     version: int
@@ -127,7 +127,7 @@ class FirmExportDocument(BaseModel):
     download_url: str | None
 
 
-class FirmExportMatter(BaseModel):
+class OrganizationExportMatter(BaseModel):
     id: UUID
     client_id: UUID
     title: str
@@ -136,30 +136,30 @@ class FirmExportMatter(BaseModel):
     is_visible_to_client: bool
     created_at: datetime
     updated_at: datetime
-    assignments: list[FirmExportAssignment]
-    tasks: list[FirmExportTask]
-    documents: list[FirmExportDocument]
+    assignments: list[OrganizationExportAssignment]
+    tasks: list[OrganizationExportTask]
+    documents: list[OrganizationExportDocument]
 
 
-class FirmExportResponse(BaseModel):
+class OrganizationExportResponse(BaseModel):
     exported_at: datetime
-    firm: FirmExportProfile
-    staff: list[FirmExportStaff]
-    clients: list[FirmExportClient]
-    matters: list[FirmExportMatter]
+    org: OrganizationExportProfile
+    staff: list[OrganizationExportStaff]
+    clients: list[OrganizationExportClient]
+    matters: list[OrganizationExportMatter]
     audit_log: list[AuditLogResponse]
 
 
 class UsageMetrics(BaseModel):
-    total_firms: int
-    active_firms: int
-    inactive_firms: int
+    total_orgs: int
+    active_orgs: int
+    inactive_orgs: int
     total_staff: int
     total_clients: int
     total_matters: int
     matters_by_status: dict[str, int]
-    new_firms_last_7_days: int
-    new_firms_last_30_days: int
+    new_orgs_last_7_days: int
+    new_orgs_last_30_days: int
 
 
 class PlatformMetricsResponse(BaseModel):
@@ -175,7 +175,7 @@ class SystemHealthResponse(BaseModel):
     window_hours: int
     requests: RequestMetrics
     active_users: int
-    online_firms: int
+    online_orgs: int
     dependencies: list[DependencyHealth]
     services: list[ServiceHealthEntry]
     worst_endpoints: list[EndpointStat]

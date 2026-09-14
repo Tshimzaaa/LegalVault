@@ -15,8 +15,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .user import User
 
-class LawFirm(BaseModel):
-    __tablename__ = "law_firms"
+class Organization(BaseModel):
+    __tablename__ = "organizations"
 
     name: Mapped[str] = mapped_column(
         String(NAME_MAX_LENGTH),
@@ -53,5 +53,5 @@ class LawFirm(BaseModel):
 
     users: Mapped[list["User"]] = relationship(
         "User",
-        back_populates="law_firm"
+        back_populates="organization"
     )

@@ -18,7 +18,7 @@ def list_integrations(
     current_user: User = Depends(require_role([UserRole.ADMIN])),
 ):
     service = IntegrationService(db)
-    return service.list_for_firm(current_user.firm_id)
+    return service.list_for_org(current_user.org_id)
 
 
 @router.put("/{provider}", response_model=IntegrationStatusResponse)
@@ -29,7 +29,7 @@ def configure_integration(
     current_user: User = Depends(require_role([UserRole.ADMIN])),
 ):
     service = IntegrationService(db)
-    return service.configure(current_user.firm_id, current_user.id, provider, request)
+    return service.configure(current_user.org_id, current_user.id, provider, request)
 
 
 @router.post("/{provider}/disable", response_model=IntegrationStatusResponse)
@@ -39,7 +39,7 @@ def disable_integration(
     current_user: User = Depends(require_role([UserRole.ADMIN])),
 ):
     service = IntegrationService(db)
-    return service.disable(current_user.firm_id, current_user.id, provider)
+    return service.disable(current_user.org_id, current_user.id, provider)
 
 
 @router.delete("/{provider}", response_model=IntegrationStatusResponse)
@@ -49,4 +49,4 @@ def disconnect_integration(
     current_user: User = Depends(require_role([UserRole.ADMIN])),
 ):
     service = IntegrationService(db)
-    return service.disconnect(current_user.firm_id, current_user.id, provider)
+    return service.disconnect(current_user.org_id, current_user.id, provider)

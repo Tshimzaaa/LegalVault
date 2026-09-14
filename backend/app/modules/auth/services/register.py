@@ -1,13 +1,13 @@
 from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.exceptions.auth import (
-    LawFirmAlreadyExists,
+    OrganizationAlreadyExists,
     UserAlreadyExists,
     InvalidCredentials
 )
 from app.modules.auth.repository import AuthRepository
 from app.modules.auth.models import (
-    LawFirm,
+    Organization,
     User,
     UserRole,
 )
@@ -37,11 +37,11 @@ class RegisterService:
         if request.admin_secret != settings.REGISTER_SECRET:
             raise InvalidCredentials()
 
-        existing_firm = self.repository.get_law_firm_by_email(
-            request.law_firm.email
+        existing_org = self.repository.get_organization_by_email(
+            request.organization.email
         )
-        if existing_firm:
-            raise LawFirmAlreadyExists()
+        if existing_org:
+            raise OrganizationAlreadyExists()
 
         existing_user = self.repository.get_user_by_email(
             request.admin.email
@@ -51,27 +51,27 @@ class RegisterService:
 
         hashed_password = hash_password(request.admin.password)
 
-        law_firm = LawFirm(
-            name=request.law_firm.name,
-            email=request.law_firm.email,
-            phone=request.law_firm.phone,
-            website=request.law_firm.website,
-            address=request.law_firm.address,
+        organization = Organization(
+            name=request.organization.name,
+            email=request.organization.email,
+            phone=request.organization.phone,
+            website=request.organization.website,
+            address=request.organization.address,
         )
 
         # No auth dependency has run before this endpoint (it's the public, secret-gated
-        # bootstrap flow, and the firm being created doesn't exist yet to scope to) — so
+        # bootstrap flow, and the org being created doesn't exist yet to scope to) — so
         # unlike every other write path, tenant context was never set. Without this, the
         # audit-log insert below is rejected outright by RLS the moment the runtime role
         # lacks BYPASSRLS, same rationale as get_current_contact's owner-mode bootstrap.
-        set_tenant_context(self.db, firm_id=None, is_owner=True)
+        set_tenant_context(self.db, org_id=None, is_owner=True)
 
         try:
-            self.repository.create_law_firm(law_firm)
-            seed_system_support_form(self.db, law_firm.id)
+            self.repository.create_organization(organization)
+            seed_system_support_form(self.db, organization.id)
 
             user = User(
-                firm_id=law_firm.id,
+                org_id=organization.id,
                 first_name=request.admin.first_name,
                 last_name=request.admin.last_name,
                 email=request.admin.email,
@@ -84,11 +84,11 @@ class RegisterService:
             self.audit.log(
                 actor_type=ActorType.STAFF,
                 actor_id=user.id,
-                firm_id=law_firm.id,
-                action=audit_actions.FIRM_CREATED,
-                target_type="law_firm",
-                target_id=law_firm.id,
-                details={"name": law_firm.name, "email": law_firm.email},
+                org_id=organization.id,
+                action=audit_actions.ORG_CREATED,
+                target_type="organization",
+                target_id=organization.id,
+                details={"name": organization.name, "email": organization.email},
             )
             self.db.commit()
 
@@ -96,7 +96,7 @@ class RegisterService:
 
             return RegisterResponse(
                 message="Registration successful.",
-                law_firm_id=law_firm.id,
+                organization_id=organization.id,
                 user_id=user.id,
                 access_token=access_token,
             )
@@ -104,10 +104,10 @@ class RegisterService:
         except Exception:
             self.db.rollback()
             raise
-    def register_as_owner(self, law_firm_request, admin_request) -> RegisterResponse:
-        existing_firm = self.repository.get_law_firm_by_email(law_firm_request.email)
-        if existing_firm:
-            raise LawFirmAlreadyExists()
+    def register_as_owner(self, organization_request, admin_request) -> RegisterResponse:
+        existing_org = self.repository.get_organization_by_email(organization_request.email)
+        if existing_org:
+            raise OrganizationAlreadyExists()
 
         existing_user = self.repository.get_user_by_email(admin_request.email)
         if existing_user:
@@ -115,20 +115,20 @@ class RegisterService:
 
         hashed_password = hash_password(admin_request.password)
 
-        law_firm = LawFirm(
-            name=law_firm_request.name,
-            email=law_firm_request.email,
-            phone=law_firm_request.phone,
-            website=law_firm_request.website,
-            address=law_firm_request.address,
+        organization = Organization(
+            name=organization_request.name,
+            email=organization_request.email,
+            phone=organization_request.phone,
+            website=organization_request.website,
+            address=organization_request.address,
         )
 
         try:
-            self.repository.create_law_firm(law_firm)
-            seed_system_support_form(self.db, law_firm.id)
+            self.repository.create_organization(organization)
+            seed_system_support_form(self.db, organization.id)
 
             user = User(
-                firm_id=law_firm.id,
+                org_id=organization.id,
                 first_name=admin_request.first_name,
                 last_name=admin_request.last_name,
                 email=admin_request.email,
@@ -141,11 +141,11 @@ class RegisterService:
             self.audit.log(
                 actor_type=ActorType.OWNER,
                 actor_id=None,
-                firm_id=law_firm.id,
-                action=audit_actions.FIRM_CREATED,
-                target_type="law_firm",
-                target_id=law_firm.id,
-                details={"name": law_firm.name, "email": law_firm.email},
+                org_id=organization.id,
+                action=audit_actions.ORG_CREATED,
+                target_type="organization",
+                target_id=organization.id,
+                details={"name": organization.name, "email": organization.email},
             )
             self.db.commit()
 
@@ -153,7 +153,7 @@ class RegisterService:
 
             return RegisterResponse(
                 message="Registration successful.",
-                law_firm_id=law_firm.id,
+                organization_id=organization.id,
                 user_id=user.id,
                 access_token=access_token,
             )

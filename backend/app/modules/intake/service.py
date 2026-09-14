@@ -58,35 +58,35 @@ class IntakeService:
 
     # ---- Forms (staff: read-only — see routes.py's note on why there's no builder) ----
 
-    def get_form(self, form_id, firm_id) -> IntakeForm:
+    def get_form(self, form_id, org_id) -> IntakeForm:
         form = self.repository.get_form_by_id(form_id)
-        if not form or str(form.firm_id) != str(firm_id):
+        if not form or str(form.org_id) != str(org_id):
             raise IntakeFormNotFound()
         return form
 
-    def list_forms(self, firm_id) -> list[IntakeForm]:
-        return self.repository.list_forms_by_firm(firm_id)
+    def list_forms(self, org_id) -> list[IntakeForm]:
+        return self.repository.list_forms_by_org(org_id)
 
     # ---- Submissions (staff triage) ----
 
-    def get_submission(self, submission_id, firm_id) -> IntakeSubmission:
+    def get_submission(self, submission_id, org_id) -> IntakeSubmission:
         submission = self.repository.get_submission_by_id(submission_id)
-        if not submission or str(submission.firm_id) != str(firm_id):
+        if not submission or str(submission.org_id) != str(org_id):
             raise IntakeSubmissionNotFound()
         return submission
 
-    def list_submissions(self, firm_id) -> list[IntakeSubmission]:
-        return self.repository.list_submissions_by_firm(firm_id)
+    def list_submissions(self, org_id) -> list[IntakeSubmission]:
+        return self.repository.list_submissions_by_org(org_id)
 
     def update_submission_status(
-        self, submission_id, firm_id, actor_id, request: UpdateIntakeSubmissionStatusRequest
+        self, submission_id, org_id, actor_id, request: UpdateIntakeSubmissionStatusRequest
     ) -> IntakeSubmission:
-        submission = self.get_submission(submission_id, firm_id)
+        submission = self.get_submission(submission_id, org_id)
         submission.status = request.status
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.INTAKE_SUBMISSION_STATUS_UPDATED,
             target_type="intake_submission",
             target_id=submission.id,
@@ -96,20 +96,20 @@ class IntakeService:
         return submission
 
     def convert_to_matter(
-        self, submission_id, firm_id, actor_id, request: ConvertIntakeSubmissionRequest
+        self, submission_id, org_id, actor_id, request: ConvertIntakeSubmissionRequest
     ) -> IntakeSubmission:
-        submission = self.get_submission(submission_id, firm_id)
-        form = self.get_form(submission.form_id, firm_id)
+        submission = self.get_submission(submission_id, org_id)
+        form = self.get_form(submission.form_id, org_id)
 
         client = self.client_repository.get_client_by_id(submission.client_id)
-        if not client or str(client.firm_id) != str(firm_id):
+        if not client or str(client.org_id) != str(org_id):
             raise ClientNotFoundForMatter()
 
         title = request.matter_title or f"{client.company_name} – {form.title}"
 
         matter_service = MatterService(self.db)
         matter = matter_service.create_matter(
-            firm_id,
+            org_id,
             actor_id,
             CreateMatterRequest(client_id=submission.client_id, title=title, description=None, due_date=None),
         )
@@ -119,7 +119,7 @@ class IntakeService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.INTAKE_SUBMISSION_CONVERTED,
             target_type="intake_submission",
             target_id=submission.id,
@@ -128,8 +128,8 @@ class IntakeService:
         self.db.commit()
         return submission
 
-    def get_answer_download_link(self, submission_id, firm_id, answer_id) -> str:
-        submission = self.get_submission(submission_id, firm_id)
+    def get_answer_download_link(self, submission_id, org_id, answer_id) -> str:
+        submission = self.get_submission(submission_id, org_id)
         answer = self.repository.get_answer_by_id(answer_id)
         if not answer or str(answer.submission_id) != str(submission.id) or not answer.file_key:
             raise IntakeAnswerNotFound()
@@ -137,18 +137,18 @@ class IntakeService:
 
     # ---- Client-portal ----
 
-    def list_published_forms(self, firm_id) -> list[IntakeForm]:
-        return self.repository.list_published_forms_by_firm(firm_id)
+    def list_published_forms(self, org_id) -> list[IntakeForm]:
+        return self.repository.list_published_forms_by_org(org_id)
 
-    def get_published_form(self, form_id, firm_id) -> IntakeForm:
-        form = self.get_form(form_id, firm_id)
+    def get_published_form(self, form_id, org_id) -> IntakeForm:
+        form = self.get_form(form_id, org_id)
         if not form.is_published:
             raise IntakeFormNotPublished()
         return form
 
     def submit(
         self,
-        firm_id,
+        org_id,
         client_id,
         contact_id,
         form_id,
@@ -159,7 +159,7 @@ class IntakeService:
         answers: field_id (str) -> scalar text value, for non-file fields.
         files: field_id (str) -> (file_bytes, original_filename, content_type), for file fields.
         """
-        form = self.get_published_form(form_id, firm_id)
+        form = self.get_published_form(form_id, org_id)
 
         # Pass 1: validate required fields + file constraints before touching the DB or R2.
         for field in form.fields:
@@ -188,7 +188,7 @@ class IntakeService:
                 scan_file(file_entry[0])
 
         # Pass 3: everything validated — persist the submission, uploading files as we go.
-        submission = IntakeSubmission(firm_id=firm_id, form_id=form.id, client_id=client_id, contact_id=contact_id)
+        submission = IntakeSubmission(org_id=org_id, form_id=form.id, client_id=client_id, contact_id=contact_id)
         self.repository.create_submission(submission)
 
         for field in form.fields:
@@ -198,7 +198,7 @@ class IntakeService:
                 if file_entry is None:
                     continue
                 file_bytes, original_filename, content_type = file_entry
-                file_key = f"intake/{firm_id}/{uuid.uuid4()}-{original_filename}"
+                file_key = f"intake/{org_id}/{uuid.uuid4()}-{original_filename}"
                 upload_file(file_bytes, file_key, content_type)
                 answer = IntakeSubmissionAnswer(
                     submission_id=submission.id,
@@ -224,7 +224,7 @@ class IntakeService:
                 "target_type": "intake_submission",
                 "target_id": submission.id,
             }
-            for staff in self.auth_repository.list_by_firm(firm_id)
+            for staff in self.auth_repository.list_by_org(org_id)
             if staff.is_active
         ])
         self.db.commit()

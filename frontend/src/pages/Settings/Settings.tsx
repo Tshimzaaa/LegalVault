@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import './Settings.css'
-import { getFirmProfile, updateFirmProfile } from '../../api/auth'
-import type { FirmProfile, User } from '../../api/auth'
+import { getOrganizationProfile, updateOrganizationProfile } from '../../api/auth'
+import type { OrganizationProfile, User } from '../../api/auth'
 
 type LoadState = 'loading' | 'error' | 'ready'
 
@@ -13,7 +13,7 @@ interface SettingsProps {
 function Settings({ user }: SettingsProps) {
   const isAdmin = user.role === 'admin'
 
-  const [firm, setFirm] = useState<FirmProfile | null>(null)
+  const [org, setOrganization] = useState<OrganizationProfile | null>(null)
   const [status, setStatus] = useState<LoadState>('loading')
 
   const [name, setName] = useState('')
@@ -28,15 +28,15 @@ function Settings({ user }: SettingsProps) {
 
   const token = localStorage.getItem('access_token')
 
-  function loadFirm() {
+  function loadOrganization() {
     if (!token) {
       setStatus('error')
       return
     }
     setStatus('loading')
-    getFirmProfile(token)
+    getOrganizationProfile(token)
       .then((data) => {
-        setFirm(data)
+        setOrganization(data)
         setName(data.name)
         setEmail(data.email)
         setPhone(data.phone ?? '')
@@ -47,7 +47,7 @@ function Settings({ user }: SettingsProps) {
       .catch(() => setStatus('error'))
   }
 
-  useEffect(loadFirm, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(loadOrganization, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleSave(e: FormEvent) {
     e.preventDefault()
@@ -56,17 +56,17 @@ function Settings({ user }: SettingsProps) {
     setSaved(false)
     setSaving(true)
     try {
-      const updated = await updateFirmProfile(token, {
+      const updated = await updateOrganizationProfile(token, {
         name,
         email,
         phone: phone || null,
         website: website || null,
         address: address || null,
       })
-      setFirm(updated)
+      setOrganization(updated)
       setSaved(true)
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Could not save firm settings.')
+      setSaveError(err instanceof Error ? err.message : 'Could not save organization settings.')
     } finally {
       setSaving(false)
     }
@@ -75,36 +75,36 @@ function Settings({ user }: SettingsProps) {
   return (
     <main className="dash-main">
       <header className="dash-topbar">
-        <h1>Firm Settings</h1>
+        <h1>Organization Settings</h1>
       </header>
 
       {status === 'loading' && (
         <div className="dash-state" role="status" aria-live="polite">
           <span className="dash-spinner" aria-hidden="true" />
-          <p>Loading firm settings…</p>
+          <p>Loading organization settings…</p>
         </div>
       )}
 
       {status === 'error' && (
         <div className="dash-state" role="status" aria-live="polite">
-          <p>Couldn&rsquo;t reach the backend for firm settings.</p>
-          <button type="button" className="btn-ghost" onClick={loadFirm}>
+          <p>Couldn&rsquo;t reach the backend for organization settings.</p>
+          <button type="button" className="btn-ghost" onClick={loadOrganization}>
             Retry
           </button>
         </div>
       )}
 
-      {status === 'ready' && firm && (
+      {status === 'ready' && org && (
         <section className="card settings-card">
           <div className="card-header">
-            <span>Firm profile</span>
+            <span>Organization profile</span>
             {!isAdmin && <span className="chip small">View only</span>}
           </div>
 
           <form onSubmit={handleSave} className="settings-form">
             <div className="field-row">
               <label className="field">
-                <span>Firm name</span>
+                <span>Organization name</span>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -114,7 +114,7 @@ function Settings({ user }: SettingsProps) {
                 />
               </label>
               <label className="field">
-                <span>Firm email</span>
+                <span>Organization email</span>
                 <input
                   type="email"
                   value={email}
@@ -159,7 +159,7 @@ function Settings({ user }: SettingsProps) {
             </label>
 
             {saveError && <p className="matter-error" aria-live="polite">{saveError}</p>}
-            {saved && <p className="settings-saved" aria-live="polite">Firm settings saved.</p>}
+            {saved && <p className="settings-saved" aria-live="polite">Organization settings saved.</p>}
 
             {isAdmin && (
               <div className="matter-actions">

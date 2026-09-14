@@ -1,4 +1,30 @@
 services:
+  # Primary application database (replaces Neon for this pivot — see backend/.env). The
+  # app_runtime role below is created on first boot via docker/postgres-init/ so it exists
+  # before Alembic ever runs; ALTER DEFAULT PRIVILEGES means every table the migrations
+  # (run as the `legalvault` owner role) create is automatically readable/writable by
+  # app_runtime too, without a manual GRANT step after each migration (unlike the CI
+  # workflow's one-off GRANT ALL TABLES, which only covers tables that already exist).
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: legalvault
+      POSTGRES_PASSWORD: legalvault
+      POSTGRES_DB: legalvault
+    ports:
+      # Host port 5433, not 5432 — this machine already has a native Postgres service
+      # bound to 5432 (see `Get-Service *postgres*`), which silently intercepted
+      # connections meant for this container during setup.
+      - "5433:5432"
+    volumes:
+      - app-db-data:/var/lib/postgresql/data
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U legalvault"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # Celery broker for background jobs (matter due-date / contract expiry reminders — see
   # backend/app/tasks/). No persistence needed — job state lives in Postgres (via
   # Notification rows); Redis here is purely a task queue.
@@ -86,5 +112,6 @@ services:
       NEXT_PRIVATE_UPLOAD_FORCE_PATH_STYLE: "false"
 
 volumes:
+  app-db-data:
   clamav-data:
   documenso-db-data:

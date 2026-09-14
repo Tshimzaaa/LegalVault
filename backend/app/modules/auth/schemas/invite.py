@@ -12,7 +12,7 @@ class InviteStaffRequest(BaseModel):
 
 class InviteStaffResponse(UserResponse):
     # Only ever returned to the admin who just created the invite — not exposed via
-    # the general staff-list endpoint, since any firm member could otherwise hijack
+    # the general staff-list endpoint, since any org member could otherwise hijack
     # a pending invite meant for someone else.
     invitation_token: str | None = None
 

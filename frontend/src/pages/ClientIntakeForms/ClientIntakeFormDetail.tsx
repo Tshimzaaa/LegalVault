@@ -38,7 +38,7 @@ function ClientIntakeFormDetail({ contact, onLogout }: ClientIntakeFormDetailPro
       setStatus('error')
       return
     }
-    // Every firm has exactly one request form (the system-seeded one) — no picker needed.
+    // Every organization has exactly one request form (the system-seeded one) — no picker needed.
     listPublishedIntakeForms(token)
       .then((forms) => {
         if (cancelled) return

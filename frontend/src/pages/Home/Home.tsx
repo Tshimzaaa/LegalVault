@@ -20,7 +20,7 @@ import { SITE_DESCRIPTION } from '../../constants/site'
 
 const demoUser: User = {
   id: 'demo',
-  firm_id: 'demo',
+  org_id: 'demo',
   first_name: 'Demo',
   last_name: 'User',
   email: 'demo@example.com',

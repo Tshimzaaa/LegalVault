@@ -51,10 +51,10 @@ class Settings(BaseSettings):
     #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
     ENCRYPTION_KEY: str
 
-    # Self-hosted Documenso instance (e-signature) shared by every firm on the
+    # Self-hosted Documenso instance (e-signature) shared by every org on the
     # platform — see docker-compose.yml's `documenso` service for local dev.
-    # Firms never see or configure these; it's a platform-level dependency,
-    # not a per-firm integration (unlike app/modules/integrations).
+    # Organizations never see or configure these; it's a platform-level dependency,
+    # not a per-org integration (unlike app/modules/integrations).
     DOCUMENSO_API_URL: str = "http://localhost:3000/api/v1"
     DOCUMENSO_API_KEY: str = "change-me"
 
@@ -89,9 +89,9 @@ if settings.ENVIRONMENT == "production":
     if settings.OWNER_SECRET in ("change-me", ""):
         sys.exit("OWNER_SECRET must be set before running in production.")
     if settings.OWNER_SECRET == settings.REGISTER_SECRET:
-        sys.exit("OWNER_SECRET must differ from REGISTER_SECRET — sharing one secret between firm "
+        sys.exit("OWNER_SECRET must differ from REGISTER_SECRET — sharing one secret between org "
                   "self-registration and full platform owner access lets anyone with the registration "
-                  "secret export or delete every firm's data.")
+                  "secret export or delete every org's data.")
     if settings.FRONTEND_URL == "http://localhost:5173":
         sys.exit("FRONTEND_URL must be set to the deployed frontend's real origin before running in "
                   "production — otherwise CORS falls back to a dev-only origin and the deployed "

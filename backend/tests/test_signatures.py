@@ -10,7 +10,7 @@ import pytest
 
 from app.modules.auth.models.role import UserRole
 from app.modules.matters.models import MatterDocument
-from tests.conftest import auth_headers, make_client_company, make_contact, make_firm, make_matter, make_staff
+from tests.conftest import auth_headers, make_client_company, make_contact, make_org, make_matter, make_staff
 
 
 @pytest.fixture(autouse=True)
@@ -50,12 +50,12 @@ def _make_document(db_session, matter, admin):
 
 
 def test_staff_sends_document_for_signature_to_client_and_staff_recipients(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    lawyer, _ = make_staff(db_session, firm, role=UserRole.LAWYER)
-    client_company = make_client_company(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    lawyer, _ = make_staff(db_session, org, role=UserRole.LAWYER)
+    client_company = make_client_company(db_session, org)
     contact, _ = make_contact(db_session, client_company)
-    matter = make_matter(db_session, firm, client_company)
+    matter = make_matter(db_session, org, client_company)
     document = _make_document(db_session, matter, admin)
 
     res = client.post(
@@ -82,12 +82,12 @@ def test_staff_sends_document_for_signature_to_client_and_staff_recipients(clien
 
 
 def test_non_case_work_role_cannot_send_for_signature(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    secretary, _ = make_staff(db_session, firm, role=UserRole.SECRETARY)
-    client_company = make_client_company(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    secretary, _ = make_staff(db_session, org, role=UserRole.SECRETARY)
+    client_company = make_client_company(db_session, org)
     contact, _ = make_contact(db_session, client_company)
-    matter = make_matter(db_session, firm, client_company)
+    matter = make_matter(db_session, org, client_company)
     document = _make_document(db_session, matter, admin)
 
     res = client.post(
@@ -103,11 +103,11 @@ def test_non_case_work_role_cannot_send_for_signature(client, db_session):
 
 
 def test_staff_voids_a_pending_signature_request(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
     contact, _ = make_contact(db_session, client_company)
-    matter = make_matter(db_session, firm, client_company)
+    matter = make_matter(db_session, org, client_company)
     document = _make_document(db_session, matter, admin)
 
     request_id = client.post(
@@ -126,12 +126,12 @@ def test_staff_voids_a_pending_signature_request(client, db_session):
 
 
 def test_client_and_staff_recipients_see_their_own_pending_signatures(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    lawyer, _ = make_staff(db_session, firm, role=UserRole.LAWYER)
-    client_company = make_client_company(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    lawyer, _ = make_staff(db_session, org, role=UserRole.LAWYER)
+    client_company = make_client_company(db_session, org)
     contact, _ = make_contact(db_session, client_company)
-    matter = make_matter(db_session, firm, client_company)
+    matter = make_matter(db_session, org, client_company)
     document = _make_document(db_session, matter, admin)
 
     client.post(

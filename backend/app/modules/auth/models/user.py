@@ -16,13 +16,13 @@ from .role import UserRole
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .law_firm import LawFirm
+    from .organization import Organization
 
 class User(BaseModel):
     __tablename__ = "users"
 
-    firm_id: Mapped[UUID] = mapped_column(
-        ForeignKey("law_firms.id"),
+    org_id: Mapped[UUID] = mapped_column(
+        ForeignKey("organizations.id"),
         nullable=False,
         index=True,
     )
@@ -65,8 +65,8 @@ class User(BaseModel):
         nullable=True,
     )
 
-    law_firm: Mapped["LawFirm"] = relationship(
-        "LawFirm",
+    organization: Mapped["Organization"] = relationship(
+        "Organization",
         back_populates="users",
     )
     reset_token: Mapped[str | None] = mapped_column(

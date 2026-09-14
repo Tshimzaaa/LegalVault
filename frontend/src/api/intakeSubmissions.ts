@@ -12,7 +12,7 @@ export interface IntakeAnswer {
 
 export interface IntakeSubmission {
   id: string
-  firm_id: string
+  org_id: string
   form_id: string
   client_id: string
   contact_id: string

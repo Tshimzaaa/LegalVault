@@ -78,7 +78,7 @@ function Search() {
 
       {state === 'idle' && (
         <div className="dash-state" role="status" aria-live="polite">
-          <p>Search across your firm&rsquo;s data.</p>
+          <p>Search across your organization&rsquo;s data.</p>
         </div>
       )}
 

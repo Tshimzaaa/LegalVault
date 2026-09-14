@@ -1,13 +1,13 @@
 import { apiRequest } from './client'
 
-export interface FirmSummary {
+export interface OrganizationSummary {
   id: string
   name: string
   email: string
   is_active: boolean
 }
 
-export interface FirmDetail extends FirmSummary {
+export interface OrganizationDetail extends OrganizationSummary {
   phone: string | null
   website: string | null
   address: string | null
@@ -16,8 +16,8 @@ export interface FirmDetail extends FirmSummary {
   matter_count: number
 }
 
-export interface CreateFirmPayload {
-  law_firm: {
+export interface CreateOrganizationPayload {
+  organization: {
     name: string
     email: string
     phone?: string | null
@@ -32,9 +32,9 @@ export interface CreateFirmPayload {
   }
 }
 
-export interface CreateFirmResponse {
+export interface CreateOrganizationResponse {
   message: string
-  law_firm_id: string
+  organization_id: string
   user_id: string
 }
 
@@ -47,53 +47,53 @@ export async function ownerLogin(secret: string): Promise<string> {
   return data.access_token
 }
 
-export async function listFirms(token: string): Promise<FirmSummary[]> {
-  return apiRequest<FirmSummary[]>('/owner/firms', { token })
+export async function listOrganizations(token: string): Promise<OrganizationSummary[]> {
+  return apiRequest<OrganizationSummary[]>('/owner/orgs', { token })
 }
 
-export async function getFirm(token: string, firmId: string): Promise<FirmDetail> {
-  return apiRequest<FirmDetail>(`/owner/firms/${firmId}`, { token })
+export async function getOrganization(token: string, orgId: string): Promise<OrganizationDetail> {
+  return apiRequest<OrganizationDetail>(`/owner/orgs/${orgId}`, { token })
 }
 
-export async function updateFirmStatus(token: string, firmId: string, isActive: boolean): Promise<FirmSummary> {
-  return apiRequest<FirmSummary>(`/owner/firms/${firmId}/status`, {
+export async function updateOrganizationStatus(token: string, orgId: string, isActive: boolean): Promise<OrganizationSummary> {
+  return apiRequest<OrganizationSummary>(`/owner/orgs/${orgId}/status`, {
     method: 'PATCH',
     body: { is_active: isActive },
     token,
   })
 }
 
-export async function createFirm(token: string, payload: CreateFirmPayload): Promise<CreateFirmResponse> {
-  return apiRequest<CreateFirmResponse>('/owner/firms', { method: 'POST', body: payload, token })
+export async function createOrganization(token: string, payload: CreateOrganizationPayload): Promise<CreateOrganizationResponse> {
+  return apiRequest<CreateOrganizationResponse>('/owner/orgs', { method: 'POST', body: payload, token })
 }
 
-export async function deleteFirm(token: string, firmId: string): Promise<void> {
-  await apiRequest(`/owner/firms/${firmId}`, { method: 'DELETE', token })
+export async function deleteOrganization(token: string, orgId: string): Promise<void> {
+  await apiRequest(`/owner/orgs/${orgId}`, { method: 'DELETE', token })
 }
 
-export interface FirmExportResponse {
+export interface OrganizationExportResponse {
   exported_at: string
-  firm: Record<string, unknown>
+  org: Record<string, unknown>
   staff: Record<string, unknown>[]
   clients: Record<string, unknown>[]
   matters: Record<string, unknown>[]
   audit_log: Record<string, unknown>[]
 }
 
-export async function exportFirm(token: string, firmId: string): Promise<FirmExportResponse> {
-  return apiRequest<FirmExportResponse>(`/owner/firms/${firmId}/export`, { token })
+export async function exportOrganization(token: string, orgId: string): Promise<OrganizationExportResponse> {
+  return apiRequest<OrganizationExportResponse>(`/owner/orgs/${orgId}/export`, { token })
 }
 
 export interface UsageMetrics {
-  total_firms: number
-  active_firms: number
-  inactive_firms: number
+  total_orgs: number
+  active_orgs: number
+  inactive_orgs: number
   total_staff: number
   total_clients: number
   total_matters: number
   matters_by_status: Record<string, number>
-  new_firms_last_7_days: number
-  new_firms_last_30_days: number
+  new_orgs_last_7_days: number
+  new_orgs_last_30_days: number
 }
 
 export interface TopErrorPath {
@@ -181,7 +181,7 @@ export interface SystemHealth {
   window_hours: number
   requests: RequestMetrics
   active_users: number
-  online_firms: number
+  online_orgs: number
   dependencies: DependencyHealth[]
   services: ServiceHealthEntry[]
   worst_endpoints: EndpointStat[]

@@ -17,4 +17,4 @@ def search(
     current_user: User = Depends(get_current_user),
 ):
     service = SearchService(db)
-    return service.search(current_user.firm_id, q)
+    return service.search(current_user.org_id, q)

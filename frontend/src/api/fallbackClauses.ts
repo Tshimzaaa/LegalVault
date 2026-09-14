@@ -2,7 +2,7 @@ import { apiRequest } from './client'
 
 export interface FallbackClause {
   id: string
-  firm_id: string
+  org_id: string
   name: string
   category: string
   description: string

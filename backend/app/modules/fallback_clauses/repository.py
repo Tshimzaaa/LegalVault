@@ -17,10 +17,10 @@ class FallbackClauseRepository:
     def get_by_id(self, clause_id) -> FallbackClause | None:
         return self.db.scalar(select(FallbackClause).where(FallbackClause.id == clause_id))
 
-    def list_by_firm(self, firm_id) -> list[FallbackClause]:
+    def list_by_org(self, org_id) -> list[FallbackClause]:
         statement = (
             select(FallbackClause)
-            .where(FallbackClause.firm_id == firm_id)
+            .where(FallbackClause.org_id == org_id)
             .order_by(FallbackClause.category, FallbackClause.name)
         )
         return list(self.db.scalars(statement))

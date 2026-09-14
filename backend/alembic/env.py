@@ -18,7 +18,7 @@ sys.path.insert(
 
 from app.core.config import settings
 from app.database.base import Base
-from app.modules.auth.models import LawFirm, User  # noqa: F401
+from app.modules.auth.models import Organization, User  # noqa: F401
 from app.modules.clients.models import Client, ClientContact  # noqa: F401
 from app.modules.matters.models import Matter, MatterAssignment, MatterDocument, MatterTask, MatterMessage  # noqa: F401
 from app.modules.templates.models import Template  # noqa: F401
@@ -29,7 +29,7 @@ from app.modules.notifications.models import Notification  # noqa: F401
 from app.modules.signed_contracts.models import SignedContract  # noqa: F401
 from app.modules.intake.models import IntakeForm, IntakeFormField, IntakeSubmission, IntakeSubmissionAnswer  # noqa: F401
 from app.modules.knowledge.models import KnowledgeArticle  # noqa: F401
-from app.modules.integrations.models import FirmIntegration  # noqa: F401
+from app.modules.integrations.models import OrganizationIntegration  # noqa: F401
 from app.modules.signatures.models import SignatureRequest, SignatureRecipient  # noqa: F401
 from app.modules.fallback_clauses.models import FallbackClause  # noqa: F401
 # this is the Alembic Config object, which provides
@@ -71,6 +71,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        transaction_per_migration=True,
     )
 
     with context.begin_transaction():
@@ -92,7 +93,9 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection,
+            target_metadata=target_metadata,
+            transaction_per_migration=True,
         )
 
         with context.begin_transaction():

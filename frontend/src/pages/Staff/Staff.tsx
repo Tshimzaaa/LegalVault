@@ -125,7 +125,7 @@ function Staff({ user }: StaffProps) {
           <h1>Staff</h1>
         </header>
         <div className="dash-state">
-          <p>Only firm admins can manage staff.</p>
+          <p>Only org admins can manage staff.</p>
         </div>
       </main>
     )

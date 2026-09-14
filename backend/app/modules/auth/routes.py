@@ -19,8 +19,8 @@ from app.main import limiter  # or restructure to avoid circular import — flag
 from app.modules.auth.schemas.password_reset import ForgotPasswordRequest, ResetPasswordRequest
 from app.modules.auth.services.password_reset import request_password_reset, reset_password
 from app.modules.auth.dependencies import require_admin
-from app.exceptions.auth import StaffNotFound, CannotDeactivateSelf, LawFirmAlreadyExists
-from app.modules.auth.schemas.firm import FirmProfileResponse, UpdateFirmProfileRequest
+from app.exceptions.auth import StaffNotFound, CannotDeactivateSelf, OrganizationAlreadyExists
+from app.modules.auth.schemas.organization import OrganizationProfileResponse, UpdateOrganizationProfileRequest
 from app.modules.audit.service import AuditService
 from app.modules.audit.models import ActorType
 from app.modules.audit import actions as audit_actions
@@ -61,7 +61,7 @@ def list_staff(
     current_user: User = Depends(get_current_user),
 ):
     repo = AuthRepository(db)
-    return repo.list_by_firm(current_user.firm_id)
+    return repo.list_by_org(current_user.org_id)
 @router.post("/forgot-password", status_code=200)
 def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
     request_password_reset(db, request)
@@ -77,7 +77,7 @@ def invite_staff_route(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return invite_staff(db, current_user.firm_id, current_user.id, request)
+    return invite_staff(db, current_user.org_id, current_user.id, request)
 
 
 @router.post("/accept-staff-invite", response_model=UserResponse)
@@ -94,7 +94,7 @@ def update_staff_status(
     repo = AuthRepository(db)
     staff = repo.get_user_by_id(staff_id)
 
-    if not staff or str(staff.firm_id) != str(current_user.firm_id):
+    if not staff or str(staff.org_id) != str(current_user.org_id):
         raise StaffNotFound()
 
     if str(staff.id) == str(current_user.id):
@@ -107,7 +107,7 @@ def update_staff_status(
     AuditService(db).log(
         actor_type=ActorType.STAFF,
         actor_id=current_user.id,
-        firm_id=current_user.firm_id,
+        org_id=current_user.org_id,
         action=audit_actions.STAFF_STATUS_UPDATED,
         target_type="user",
         target_id=staff.id,
@@ -130,7 +130,7 @@ def force_logout_staff(
     repo = AuthRepository(db)
     staff = repo.get_user_by_id(staff_id)
 
-    if not staff or str(staff.firm_id) != str(current_user.firm_id):
+    if not staff or str(staff.org_id) != str(current_user.org_id):
         raise StaffNotFound()
 
     staff.tokens_invalid_before = datetime.now(UTC)
@@ -139,7 +139,7 @@ def force_logout_staff(
     AuditService(db).log(
         actor_type=ActorType.STAFF,
         actor_id=current_user.id,
-        firm_id=current_user.firm_id,
+        org_id=current_user.org_id,
         action=audit_actions.STAFF_FORCE_LOGOUT,
         target_type="user",
         target_id=staff.id,
@@ -148,42 +148,42 @@ def force_logout_staff(
     db.commit()
 
 
-@router.get("/firm", response_model=FirmProfileResponse)
-def get_firm_profile(
+@router.get("/org", response_model=OrganizationProfileResponse)
+def get_org_profile(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     repo = AuthRepository(db)
-    return repo.get_firm_by_id(current_user.firm_id)
+    return repo.get_org_by_id(current_user.org_id)
 
 
-@router.patch("/firm", response_model=FirmProfileResponse)
-def update_firm_profile(
-    request: UpdateFirmProfileRequest,
+@router.patch("/org", response_model=OrganizationProfileResponse)
+def update_org_profile(
+    request: UpdateOrganizationProfileRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
 ):
     repo = AuthRepository(db)
-    firm = repo.get_firm_by_id(current_user.firm_id)
+    org = repo.get_org_by_id(current_user.org_id)
 
     updates = request.model_dump(exclude_unset=True)
 
-    if "email" in updates and updates["email"] != firm.email:
-        existing = repo.get_law_firm_by_email(updates["email"])
-        if existing and str(existing.id) != str(firm.id):
-            raise LawFirmAlreadyExists()
+    if "email" in updates and updates["email"] != org.email:
+        existing = repo.get_organization_by_email(updates["email"])
+        if existing and str(existing.id) != str(org.id):
+            raise OrganizationAlreadyExists()
 
     for field, value in updates.items():
-        setattr(firm, field, value)
+        setattr(org, field, value)
 
     AuditService(db).log(
         actor_type=ActorType.STAFF,
         actor_id=current_user.id,
-        firm_id=firm.id,
-        action=audit_actions.FIRM_PROFILE_UPDATED,
-        target_type="law_firm",
-        target_id=firm.id,
+        org_id=org.id,
+        action=audit_actions.ORG_PROFILE_UPDATED,
+        target_type="organization",
+        target_id=org.id,
         details=updates,
     )
     db.commit()
-    return firm
+    return org

@@ -6,7 +6,7 @@ from app.modules.auth.models.role import UserRole
 
 class UserResponse(BaseModel):
     id: UUID
-    firm_id: UUID
+    org_id: UUID
     first_name: str
     last_name: str
     email: EmailStr

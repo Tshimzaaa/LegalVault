@@ -16,7 +16,7 @@ export interface IntakeField {
 
 export interface IntakeForm {
   id: string
-  firm_id: string
+  org_id: string
   title: string
   description: string | null
   is_published: boolean
@@ -26,7 +26,7 @@ export interface IntakeForm {
   fields: IntakeField[]
 }
 
-// Read-only: there's no form builder — every firm has exactly the one system-seeded
+// Read-only: there's no form builder — every org has exactly the one system-seeded
 // request form (see backend/app/modules/intake/system_forms.py). Staff only ever read
 // it, to label answers in the submission-triage views.
 

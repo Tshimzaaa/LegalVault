@@ -39,7 +39,7 @@ class UpdateMatterDeadlineRequest(BaseModel):
 
 class MatterResponse(BaseModel):
     id: UUID
-    firm_id: UUID
+    org_id: UUID
     client_id: UUID
     title: str
     description: str | None

@@ -16,9 +16,9 @@ class FallbackClauseService:
         self.repository = FallbackClauseRepository(db)
         self.audit = AuditService(db)
 
-    def create_clause(self, firm_id, actor_id, request: CreateFallbackClauseRequest) -> FallbackClause:
+    def create_clause(self, org_id, actor_id, request: CreateFallbackClauseRequest) -> FallbackClause:
         clause = FallbackClause(
-            firm_id=firm_id,
+            org_id=org_id,
             name=request.name,
             category=request.category,
             description=request.description,
@@ -30,7 +30,7 @@ class FallbackClauseService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.FALLBACK_CLAUSE_CREATED,
             target_type="fallback_clause",
             target_id=clause.id,
@@ -39,12 +39,12 @@ class FallbackClauseService:
         self.db.commit()
         return clause
 
-    def list_clauses(self, firm_id) -> list[FallbackClause]:
-        return self.repository.list_by_firm(firm_id)
+    def list_clauses(self, org_id) -> list[FallbackClause]:
+        return self.repository.list_by_org(org_id)
 
-    def update_clause(self, clause_id, firm_id, actor_id, request: UpdateFallbackClauseRequest) -> FallbackClause:
+    def update_clause(self, clause_id, org_id, actor_id, request: UpdateFallbackClauseRequest) -> FallbackClause:
         clause = self.repository.get_by_id(clause_id)
-        if not clause or str(clause.firm_id) != str(firm_id):
+        if not clause or str(clause.org_id) != str(org_id):
             raise FallbackClauseNotFound()
 
         updates = request.model_dump(exclude_unset=True)
@@ -54,7 +54,7 @@ class FallbackClauseService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.FALLBACK_CLAUSE_UPDATED,
             target_type="fallback_clause",
             target_id=clause.id,
@@ -63,9 +63,9 @@ class FallbackClauseService:
         self.db.commit()
         return clause
 
-    def delete_clause(self, clause_id, firm_id, actor_id) -> None:
+    def delete_clause(self, clause_id, org_id, actor_id) -> None:
         clause = self.repository.get_by_id(clause_id)
-        if not clause or str(clause.firm_id) != str(firm_id):
+        if not clause or str(clause.org_id) != str(org_id):
             raise FallbackClauseNotFound()
 
         self.repository.delete(clause)
@@ -73,7 +73,7 @@ class FallbackClauseService:
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
-            firm_id=firm_id,
+            org_id=org_id,
             action=audit_actions.FALLBACK_CLAUSE_DELETED,
             target_type="fallback_clause",
             target_id=clause.id,

@@ -6,7 +6,7 @@ export interface AuditLogEntry {
   id: string
   actor_type: ActorType
   actor_id: string | null
-  firm_id: string | null
+  org_id: string | null
   action: string
   target_type: string
   target_id: string | null
@@ -20,12 +20,12 @@ export async function listAuditLog(token: string, limit = 50, offset = 0): Promi
 
 export async function listOwnerAuditLog(
   token: string,
-  options: { firmId?: string; limit?: number; offset?: number } = {},
+  options: { orgId?: string; limit?: number; offset?: number } = {},
 ): Promise<AuditLogEntry[]> {
-  const { firmId, limit = 50, offset = 0 } = options
+  const { orgId, limit = 50, offset = 0 } = options
   const params = new URLSearchParams({ limit: String(limit), offset: String(offset) })
-  if (firmId) params.set('firm_id', firmId)
-  return apiRequest<AuditLogEntry[]>(`/owner/firms/audit-log?${params.toString()}`, { token })
+  if (orgId) params.set('org_id', orgId)
+  return apiRequest<AuditLogEntry[]>(`/owner/orgs/audit-log?${params.toString()}`, { token })
 }
 
 export const auditActionLabel: Record<string, string> = {
@@ -35,9 +35,9 @@ export const auditActionLabel: Record<string, string> = {
   'client.deleted': 'Client deleted',
   'contact.status_updated': 'Contact status updated',
   'contact.deleted': 'Contact deleted',
-  'firm.created': 'Firm created',
-  'firm.status_updated': 'Firm status updated',
-  'firm.deleted': 'Firm deleted',
+  'org.created': 'Organization created',
+  'org.status_updated': 'Organization status updated',
+  'org.deleted': 'Organization deleted',
   'matter.created': 'Matter created',
   'matter.status_updated': 'Matter status updated',
   'matter.visibility_updated': 'Matter visibility updated',

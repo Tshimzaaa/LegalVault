@@ -9,7 +9,7 @@ class AuditLogResponse(BaseModel):
     id: UUID
     actor_type: ActorType
     actor_id: UUID | None
-    firm_id: UUID | None
+    org_id: UUID | None
     action: str
     target_type: str
     target_id: UUID | None

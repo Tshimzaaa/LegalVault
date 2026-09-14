@@ -4,7 +4,7 @@ staff assignment, and the task/document/message sub-resources.
 """
 import pytest
 
-from tests.conftest import auth_headers, make_client_company, make_contact, make_firm, make_matter, make_staff
+from tests.conftest import auth_headers, make_client_company, make_contact, make_org, make_matter, make_staff
 
 
 @pytest.fixture(autouse=True)
@@ -16,9 +16,9 @@ def _stub_r2_and_scanner(monkeypatch):
 
 
 def test_create_and_get_matter(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
 
     create_res = client.post(
         "/matters",
@@ -35,10 +35,10 @@ def test_create_and_get_matter(client, db_session):
 
 
 def test_update_matter_details(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
-    matter = make_matter(db_session, firm, client_company, title="Old Title")
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
+    matter = make_matter(db_session, org, client_company, title="Old Title")
 
     res = client.patch(
         f"/matters/{matter.id}",
@@ -51,10 +51,10 @@ def test_update_matter_details(client, db_session):
 
 
 def test_update_matter_status_and_visibility(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
-    matter = make_matter(db_session, firm, client_company)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
+    matter = make_matter(db_session, org, client_company)
 
     status_res = client.patch(
         f"/matters/{matter.id}/status", json={"status": "in_review"}, headers=auth_headers(admin)
@@ -72,11 +72,11 @@ def test_update_matter_status_and_visibility(client, db_session):
 
 
 def test_assign_staff_to_matter(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    lawyer, _ = make_staff(db_session, firm, email="lawyer@example.com")
-    client_company = make_client_company(db_session, firm)
-    matter = make_matter(db_session, firm, client_company)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    lawyer, _ = make_staff(db_session, org, email="lawyer@example.com")
+    client_company = make_client_company(db_session, org)
+    matter = make_matter(db_session, org, client_company)
 
     res = client.post(
         f"/matters/{matter.id}/assignments",
@@ -91,10 +91,10 @@ def test_assign_staff_to_matter(client, db_session):
 
 
 def test_matter_tasks_crud(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
-    matter = make_matter(db_session, firm, client_company)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
+    matter = make_matter(db_session, org, client_company)
 
     create_res = client.post(
         f"/matters/{matter.id}/tasks", json={"title": "Draft NDA"}, headers=auth_headers(admin)
@@ -116,10 +116,10 @@ def test_matter_tasks_crud(client, db_session):
 
 
 def test_matter_messages(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
-    matter = make_matter(db_session, firm, client_company)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
+    matter = make_matter(db_session, org, client_company)
 
     post_res = client.post(
         f"/matters/{matter.id}/messages", json={"body": "Please review the attached draft."}, headers=auth_headers(admin)
@@ -132,10 +132,10 @@ def test_matter_messages(client, db_session):
 
 
 def test_matter_document_upload_download_delete(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
-    matter = make_matter(db_session, firm, client_company)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
+    matter = make_matter(db_session, org, client_company)
 
     upload_res = client.post(
         f"/matters/{matter.id}/documents",
@@ -161,11 +161,11 @@ def test_matter_document_upload_download_delete(client, db_session):
 
 
 def test_set_list_and_remove_contact_permission(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
     contact, contact_password = make_contact(db_session, client_company)
-    matter = make_matter(db_session, firm, client_company, is_visible_to_client=True)
+    matter = make_matter(db_session, org, client_company, is_visible_to_client=True)
 
     set_res = client.post(
         f"/matters/{matter.id}/contact-permissions",
@@ -203,12 +203,12 @@ def test_set_list_and_remove_contact_permission(client, db_session):
 
 
 def test_contact_permission_rejects_contact_from_another_client(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
-    other_client_company = make_client_company(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
+    other_client_company = make_client_company(db_session, org)
     other_contact, _ = make_contact(db_session, other_client_company)
-    matter = make_matter(db_session, firm, client_company)
+    matter = make_matter(db_session, org, client_company)
 
     res = client.post(
         f"/matters/{matter.id}/contact-permissions",

@@ -23,9 +23,9 @@ submissions_router = APIRouter(prefix="/intake-submissions", tags=["intake-submi
 client_intake_router = APIRouter(prefix="/client-intake", tags=["client-intake"])
 
 
-# ---- Staff: read-only access to the firm's system request form (used to label answers
+# ---- Staff: read-only access to the org's system request form (used to label answers
 # in the submission-triage views below — there's no builder to create/edit forms, every
-# firm has exactly the one system-seeded "Request Support" form, see system_forms.py) ----
+# org has exactly the one system-seeded "Request Support" form, see system_forms.py) ----
 
 @router.get("", response_model=list[IntakeFormResponse])
 def list_intake_forms(
@@ -33,7 +33,7 @@ def list_intake_forms(
     current_user: User = Depends(get_current_user),
 ):
     service = IntakeService(db)
-    return service.list_forms(current_user.firm_id)
+    return service.list_forms(current_user.org_id)
 
 
 @router.get("/{form_id}", response_model=IntakeFormResponse)
@@ -43,7 +43,7 @@ def get_intake_form(
     current_user: User = Depends(get_current_user),
 ):
     service = IntakeService(db)
-    return service.get_form(form_id, current_user.firm_id)
+    return service.get_form(form_id, current_user.org_id)
 
 
 # ---- Staff: submission triage ----
@@ -54,7 +54,7 @@ def list_intake_submissions(
     current_user: User = Depends(get_current_user),
 ):
     service = IntakeService(db)
-    return service.list_submissions(current_user.firm_id)
+    return service.list_submissions(current_user.org_id)
 
 
 @submissions_router.get("/{submission_id}", response_model=IntakeSubmissionResponse)
@@ -64,7 +64,7 @@ def get_intake_submission(
     current_user: User = Depends(get_current_user),
 ):
     service = IntakeService(db)
-    return service.get_submission(submission_id, current_user.firm_id)
+    return service.get_submission(submission_id, current_user.org_id)
 
 
 @submissions_router.patch("/{submission_id}/status", response_model=IntakeSubmissionResponse)
@@ -75,7 +75,7 @@ def update_intake_submission_status(
     current_user: User = Depends(get_current_user),
 ):
     service = IntakeService(db)
-    return service.update_submission_status(submission_id, current_user.firm_id, current_user.id, request)
+    return service.update_submission_status(submission_id, current_user.org_id, current_user.id, request)
 
 
 @submissions_router.post("/{submission_id}/convert", response_model=IntakeSubmissionResponse)
@@ -86,7 +86,7 @@ def convert_intake_submission(
     current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.LAWYER, UserRole.PARALEGAL])),
 ):
     service = IntakeService(db)
-    return service.convert_to_matter(submission_id, current_user.firm_id, current_user.id, request)
+    return service.convert_to_matter(submission_id, current_user.org_id, current_user.id, request)
 
 
 @submissions_router.get("/{submission_id}/answers/{answer_id}/download", response_model=IntakeAnswerDownloadResponse)
@@ -97,7 +97,7 @@ def download_intake_answer_file(
     current_user: User = Depends(get_current_user),
 ):
     service = IntakeService(db)
-    url = service.get_answer_download_link(submission_id, current_user.firm_id, answer_id)
+    url = service.get_answer_download_link(submission_id, current_user.org_id, answer_id)
     return IntakeAnswerDownloadResponse(download_url=url, expires_in_seconds=3600)
 
 
@@ -109,7 +109,7 @@ def list_client_intake_forms(
     current_contact: ClientContact = Depends(get_current_contact),
 ):
     service = IntakeService(db)
-    return service.list_published_forms(current_contact.client.firm_id)
+    return service.list_published_forms(current_contact.client.org_id)
 
 
 @client_intake_router.get("/forms/{form_id}", response_model=IntakeFormResponse)
@@ -119,7 +119,7 @@ def get_client_intake_form(
     current_contact: ClientContact = Depends(get_current_contact),
 ):
     service = IntakeService(db)
-    return service.get_published_form(form_id, current_contact.client.firm_id)
+    return service.get_published_form(form_id, current_contact.client.org_id)
 
 
 @client_intake_router.post("/forms/{form_id}/submit", response_model=IntakeSubmissionResponse, status_code=201)
@@ -149,7 +149,7 @@ async def submit_client_intake_form(
 
     service = IntakeService(db)
     return service.submit(
-        firm_id=current_contact.client.firm_id,
+        org_id=current_contact.client.org_id,
         client_id=current_contact.client_id,
         contact_id=current_contact.id,
         form_id=form_id,

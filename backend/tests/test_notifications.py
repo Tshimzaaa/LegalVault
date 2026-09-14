@@ -5,15 +5,15 @@ side) and a staff-authored message on a client-visible matter (client side)
 as the two notification-generating events, since notifications are only ever
 a side effect of some other action, never created directly via their own API.
 """
-from tests.conftest import auth_headers, make_client_company, make_contact, make_firm, make_matter, make_staff
+from tests.conftest import auth_headers, make_client_company, make_contact, make_org, make_matter, make_staff
 
 
 def test_staff_notification_lifecycle(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    lawyer, _ = make_staff(db_session, firm, email="lawyer@example.com")
-    client_company = make_client_company(db_session, firm)
-    matter = make_matter(db_session, firm, client_company)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    lawyer, _ = make_staff(db_session, org, email="lawyer@example.com")
+    client_company = make_client_company(db_session, org)
+    matter = make_matter(db_session, org, client_company)
 
     assert client.get("/notifications/unread-count", headers=auth_headers(lawyer)).json()["unread_count"] == 0
 
@@ -40,11 +40,11 @@ def test_staff_notification_lifecycle(client, db_session):
 
 
 def test_staff_mark_all_notifications_read(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    lawyer, _ = make_staff(db_session, firm, email="lawyer2@example.com")
-    client_company = make_client_company(db_session, firm)
-    matter = make_matter(db_session, firm, client_company)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    lawyer, _ = make_staff(db_session, org, email="lawyer2@example.com")
+    client_company = make_client_company(db_session, org)
+    matter = make_matter(db_session, org, client_company)
 
     client.post(
         f"/matters/{matter.id}/assignments",
@@ -64,11 +64,11 @@ def test_staff_mark_all_notifications_read(client, db_session):
 
 
 def test_client_contact_gets_notified_of_staff_message(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
     contact, _ = make_contact(db_session, client_company)
-    matter = make_matter(db_session, firm, client_company, is_visible_to_client=True)
+    matter = make_matter(db_session, org, client_company, is_visible_to_client=True)
 
     client.post(
         f"/matters/{matter.id}/messages", json={"body": "Your documents are ready for review."}, headers=auth_headers(admin)

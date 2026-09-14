@@ -14,7 +14,7 @@ from app.modules.audit import actions as audit_actions
 INVITE_EXPIRY_HOURS = 48
 
 
-def invite_staff(db: Session, firm_id, actor_id, request: InviteStaffRequest) -> User:
+def invite_staff(db: Session, org_id, actor_id, request: InviteStaffRequest) -> User:
     repo = AuthRepository(db)
     existing = repo.get_user_by_email(request.email)
     if existing:
@@ -24,7 +24,7 @@ def invite_staff(db: Session, firm_id, actor_id, request: InviteStaffRequest) ->
     expires_at = datetime.now(UTC) + timedelta(hours=INVITE_EXPIRY_HOURS)
 
     user = User(
-        firm_id=firm_id,
+        org_id=org_id,
         first_name=request.first_name,
         last_name=request.last_name,
         email=request.email,
@@ -39,7 +39,7 @@ def invite_staff(db: Session, firm_id, actor_id, request: InviteStaffRequest) ->
     AuditService(db).log(
         actor_type=ActorType.STAFF,
         actor_id=actor_id,
-        firm_id=firm_id,
+        org_id=org_id,
         action=audit_actions.STAFF_INVITED,
         target_type="user",
         target_id=user.id,

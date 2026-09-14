@@ -144,7 +144,7 @@ class MonitoringService:
         ]
 
     def get_active_usage(self, window_hours: int) -> tuple[int, int]:
-        """Distinct signed-in actors, and distinct firms they belong to, in the window."""
+        """Distinct signed-in actors, and distinct orgs they belong to, in the window."""
         since = datetime.now(UTC) - timedelta(hours=window_hours)
         actors = self.repository.distinct_actors(since)
 
@@ -154,13 +154,13 @@ class MonitoringService:
         auth_repo = AuthRepository(self.db)
         client_repo = ClientRepository(self.db)
 
-        firm_ids = {u.firm_id for u in auth_repo.list_users_by_ids(staff_ids)}
+        org_ids = {u.org_id for u in auth_repo.list_users_by_ids(staff_ids)}
 
         contacts = client_repo.list_contacts_by_ids(client_contact_ids)
         clients = client_repo.list_clients_by_ids({c.client_id for c in contacts})
-        firm_ids |= {c.firm_id for c in clients}
+        org_ids |= {c.org_id for c in clients}
 
-        return len(actors), len(firm_ids)
+        return len(actors), len(org_ids)
 
     def list_recent_errors(self, window_hours: int, limit: int, offset: int) -> list[RequestErrorEntry]:
         since = datetime.now(UTC) - timedelta(hours=window_hours)

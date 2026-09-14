@@ -4,7 +4,7 @@ status. Upload goes through R2 + the malware scanner, so both are stubbed.
 """
 import pytest
 
-from tests.conftest import auth_headers, make_client_company, make_firm, make_staff
+from tests.conftest import auth_headers, make_client_company, make_org, make_staff
 
 
 @pytest.fixture(autouse=True)
@@ -29,9 +29,9 @@ def _upload(client, admin, client_company, **overrides):
 
 
 def test_upload_and_list_signed_contract(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
 
     upload_res = _upload(client, admin, client_company)
     assert upload_res.status_code == 201
@@ -48,9 +48,9 @@ def test_upload_and_list_signed_contract(client, db_session):
 
 
 def test_download_and_archive_signed_contract(client, db_session):
-    firm = make_firm(db_session)
-    admin, _ = make_staff(db_session, firm)
-    client_company = make_client_company(db_session, firm)
+    org = make_org(db_session)
+    admin, _ = make_staff(db_session, org)
+    client_company = make_client_company(db_session, org)
     contract_id = _upload(client, admin, client_company).json()["id"]
 
     download_res = client.get(f"/signed-contracts/{contract_id}/download", headers=auth_headers(admin))

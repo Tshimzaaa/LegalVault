@@ -11,7 +11,7 @@ from app.database.base import BaseModel
 from app.modules.notifications.models import RecipientType
 
 if TYPE_CHECKING:
-    from app.modules.auth.models.law_firm import LawFirm
+    from app.modules.auth.models.organization import Organization
     from app.modules.clients.models import Client
     from app.modules.matters.models import Matter, MatterDocument
     from app.modules.signed_contracts.models import SignedContract
@@ -33,7 +33,7 @@ class SignatureRecipientStatus(str, enum.Enum):
 class SignatureRequest(BaseModel):
     __tablename__ = "signature_requests"
 
-    firm_id: Mapped[UUID] = mapped_column(ForeignKey("law_firms.id"), nullable=False, index=True)
+    org_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id"), nullable=False, index=True)
 
     matter_id: Mapped[UUID] = mapped_column(ForeignKey("matters.id"), nullable=False, index=True)
 

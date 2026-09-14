@@ -4,7 +4,7 @@ export type UserRole = 'admin' | 'lawyer' | 'paralegal' | 'secretary' | 'recepti
 
 export interface User {
   id: string
-  firm_id: string
+  org_id: string
   first_name: string
   last_name: string
   email: string
@@ -106,7 +106,7 @@ export async function resetPassword(token: string, newPassword: string): Promise
 
 export interface RegisterPayload {
   admin_secret: string
-  law_firm: {
+  organization: {
     name: string
     email: string
     phone?: string | null
@@ -123,7 +123,7 @@ export interface RegisterPayload {
 
 export interface RegisterResponse {
   message: string
-  law_firm_id: string
+  organization_id: string
   user_id: string
   access_token: string
   token_type: string
@@ -137,7 +137,7 @@ export async function register(payload: RegisterPayload): Promise<RegisterRespon
   })
 }
 
-export interface FirmProfile {
+export interface OrganizationProfile {
   id: string
   name: string
   email: string
@@ -147,7 +147,7 @@ export interface FirmProfile {
   is_active: boolean
 }
 
-export interface UpdateFirmProfilePayload {
+export interface UpdateOrganizationProfilePayload {
   name?: string
   email?: string
   phone?: string | null
@@ -155,10 +155,10 @@ export interface UpdateFirmProfilePayload {
   address?: string | null
 }
 
-export async function getFirmProfile(token: string): Promise<FirmProfile> {
-  return apiRequest<FirmProfile>('/auth/firm', { token })
+export async function getOrganizationProfile(token: string): Promise<OrganizationProfile> {
+  return apiRequest<OrganizationProfile>('/auth/org', { token })
 }
 
-export async function updateFirmProfile(token: string, payload: UpdateFirmProfilePayload): Promise<FirmProfile> {
-  return apiRequest<FirmProfile>('/auth/firm', { method: 'PATCH', body: payload, token })
+export async function updateOrganizationProfile(token: string, payload: UpdateOrganizationProfilePayload): Promise<OrganizationProfile> {
+  return apiRequest<OrganizationProfile>('/auth/org', { method: 'PATCH', body: payload, token })
 }
