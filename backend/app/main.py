@@ -61,9 +61,9 @@ from app.modules.signatures.routes import (
 )
 
 app = FastAPI(
-    title="LegalHub API",
+    title="LegalVault API",
     version="1.0.0",
-    description="Backend API for the LegalHub Legal Practice Management System",
+    description="Backend API for the LegalVault Legal Practice Management System",
 )
 
 app.state.limiter = limiter
@@ -139,6 +139,6 @@ async def add_hsts_header(request: Request, call_next):
 @app.get("/")
 def root():
     return {
-        "message": "Welcome to the LegalHub API",
+        "message": "Welcome to the LegalVault API",
         "status": "running",
     }

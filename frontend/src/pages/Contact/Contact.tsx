@@ -108,7 +108,7 @@ function Contact() {
         <div className="contact-info">
           <div className="contact-card">
             <span className="contact-info-label">Email</span>
-            <span className="contact-info-value">hello@indexlegal.com</span>
+            <span className="contact-info-value">hello@legalvault.example.com</span>
           </div>
           <div className="contact-card">
             <span className="contact-info-label">Phone</span>

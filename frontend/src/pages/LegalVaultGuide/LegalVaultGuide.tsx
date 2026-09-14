@@ -1,4 +1,4 @@
-import './LegalHubGuide.css'
+import './LegalVaultGuide.css'
 import ProfileMenu from '../../components/ProfileMenu'
 import type { ClientContact } from '../../api/clientAuth'
 

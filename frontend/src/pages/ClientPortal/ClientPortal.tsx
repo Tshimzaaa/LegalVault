@@ -18,7 +18,7 @@ const ClientSignedContracts = lazy(() => import('../ClientSignedContracts/Client
 const ClientReporting = lazy(() => import('../ClientReporting/ClientReporting'))
 const Resources = lazy(() => import('../Resources/Resources'))
 const LearnedFriend = lazy(() => import('../LearnedFriend/LearnedFriend'))
-const LegalGuide = lazy(() => import('../LegalHubGuide/LegalHubGuide'))
+const LegalGuide = lazy(() => import('../LegalVaultGuide/LegalVaultGuide'))
 const MatterAdmin = lazy(() => import('../MatterAdmin/MatterAdmin'))
 const ClientTemplates = lazy(() => import('../ClientTemplates/ClientTemplates'))
 const ClientAccountSettings = lazy(() => import('../ClientAccountSettings/ClientAccountSettings'))
@@ -48,7 +48,7 @@ function ClientPortal({ contact, onLogout, onContactUpdate }: ClientPortalProps)
         navItems={clientNavItems}
         user={contact}
         onLogout={onLogout}
-        brandName="Legal"
+        brandName="LegalVault"
         brandSub="client portal"
         notificationBell={<NotificationBell scope="client" />}
       />

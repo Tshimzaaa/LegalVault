@@ -694,7 +694,7 @@ button.chip {
 }
 
 /* Dashboard summary widgets (stat rows, status breakdowns, recent-activity lists) — used by
-   both the staff Dashboard and the client portal's Dashboard/Workflow/LegalHubGuide pages. */
+   both the staff Dashboard and the client portal's Dashboard/Workflow/LegalVaultGuide pages. */
 .dash-row {
   display: grid;
   gap: 12px;

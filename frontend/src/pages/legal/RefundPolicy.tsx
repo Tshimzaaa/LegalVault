@@ -8,7 +8,7 @@ function RefundPolicy() {
     <main className="legal-page" id="main-content">
       <Seo
         title="Billing & Refund Policy"
-        description="Index Legal’s billing and refund policy for law firm subscriptions."
+        description="LegalVault’s billing and refund policy for law firm subscriptions."
         path="/refund-policy"
       />
       <div className="legal-page-inner">
@@ -69,7 +69,7 @@ function RefundPolicy() {
         </p>
 
         <h2>Contact us</h2>
-        <p>Email: hello@indexlegal.com &nbsp;·&nbsp; Phone: +27 11 555 0134</p>
+        <p>Email: hello@legalvault.example.com &nbsp;·&nbsp; Phone: +27 11 555 0134</p>
       </div>
     </main>
   )

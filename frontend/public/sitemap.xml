@@ -8,27 +8,27 @@
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://legalhub.example.com/</loc>
+    <loc>https://legalvault.example.com/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://legalhub.example.com/privacy-policy</loc>
+    <loc>https://legalvault.example.com/privacy-policy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://legalhub.example.com/terms</loc>
+    <loc>https://legalvault.example.com/terms</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://legalhub.example.com/cookie-policy</loc>
+    <loc>https://legalvault.example.com/cookie-policy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://legalhub.example.com/refund-policy</loc>
+    <loc>https://legalvault.example.com/refund-policy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>

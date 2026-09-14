@@ -8,7 +8,7 @@ function PrivacyPolicy() {
     <main className="legal-page" id="main-content">
       <Seo
         title="Privacy Policy"
-        description="How Index Legal collects, uses, and protects personal information under South Africa’s POPIA."
+        description="How LegalVault collects, uses, and protects personal information under South Africa’s POPIA."
         path="/privacy-policy"
       />
       <div className="legal-page-inner">
@@ -29,8 +29,8 @@ function PrivacyPolicy() {
 
         <h2>1. Who we are</h2>
         <p>
-          This Privacy Policy explains how <span className="legal-placeholder">[Index Legal (Pty) Ltd, registration
-          no. PLACEHOLDER]</span> ("we", "us", "Index Legal") collects, uses, and protects personal information when
+          This Privacy Policy explains how <span className="legal-placeholder">[LegalVault (Pty) Ltd, registration
+          no. PLACEHOLDER]</span> ("we", "us", "LegalVault") collects, uses, and protects personal information when
           you visit our website, use our practice management platform, or interact with us as a law firm, a member
           of law firm staff, or a firm’s client.
         </p>
@@ -172,7 +172,7 @@ function PrivacyPolicy() {
 
         <h2>14. Contact us</h2>
         <p>
-          Email: hello@indexlegal.com &nbsp;·&nbsp; Phone: +27 11 555 0134 &nbsp;·&nbsp; Address: 12 Fredman Drive,
+          Email: hello@legalvault.example.com &nbsp;·&nbsp; Phone: +27 11 555 0134 &nbsp;·&nbsp; Address: 12 Fredman Drive,
           Sandton, Johannesburg, 2196, South Africa
         </p>
       </div>

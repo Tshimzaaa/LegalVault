@@ -42,7 +42,7 @@ export const clientNavItems: NavItem[] = [
   { label: 'Resources', icon: <IconHelp />, page: 'resources' },
   { label: 'Knowledge Base', icon: <IconHelp />, page: 'knowledge-base' },
   { label: 'My Learned Friend', icon: <IconLearnedFriend />, page: 'learned-friend' },
-  { label: 'How to Use LegalHub', icon: <IconGrid />, page: 'guide' },
+  { label: 'How to Use LegalVault', icon: <IconGrid />, page: 'guide' },
   { label: 'Matter Admin', icon: <IconShield />, page: 'matter-admin' },
   { label: 'Templates', icon: <IconTemplates />, page: 'templates' },
   { label: 'Account Settings', icon: <IconUser />, page: 'account-settings' },

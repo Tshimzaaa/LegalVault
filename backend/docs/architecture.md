@@ -1,8 +1,8 @@
-# LegalHub Backend: Architecture & Feature Documentation
+# LegalVault Backend: Architecture & Feature Documentation
 
 ## Overview
 
-LegalHub is a multi-tenant SaaS platform for law firm practice management. 
+LegalVault is a multi-tenant SaaS platform for law firm practice management. 
 The system has three tiers of users:
 
 1. **SaaS Owner (you)**: onboards law firms onto the platform

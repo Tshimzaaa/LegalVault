@@ -52,7 +52,7 @@ function Navbar({ onLoginClick }: NavbarProps) {
             strokeLinecap="round"
           />
         </svg>
-        <span>Index</span>
+        <span>LegalVault</span>
       </a>
 
       <nav className="navbar-links">

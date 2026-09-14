@@ -16,7 +16,7 @@ const articles: Article[] = [
   { name: 'Understanding request statuses', category: 'Workflow', description: 'What Submitted, In Progress, In Review and Complete mean for your matters.', icon: <IconWorkflow /> },
   { name: 'Working with e-signatures', category: 'Signed Contracts', description: 'How SigningHub and Trackado are used to finalize your agreements.', icon: <IconSignedContract /> },
   { name: 'Using fallback positions', category: 'Negotiation', description: 'How to use My Learned Friend to keep negotiations moving within approved risk limits.', icon: <IconShield /> },
-  { name: 'Connecting your tools', category: 'Integrations', description: 'Linking cloud storage and e-sign providers to your LegalHub account.', icon: <IconGear /> },
+  { name: 'Connecting your tools', category: 'Integrations', description: 'Linking cloud storage and e-sign providers to your LegalVault account.', icon: <IconGear /> },
   { name: 'Choosing the right template', category: 'Templates', description: 'Picking the correct master template for low-risk, self-service agreements.', icon: <IconTemplates /> },
 ]
 

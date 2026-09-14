@@ -1,7 +1,7 @@
-# LegalHub → LightHub-class Product Roadmap
+# LegalVault → LightHub-class Product Roadmap
 
 **Prepared:** 2026-07-23
-**Purpose:** Compare the current state of this project (backend `FastAPI` + frontend `React`, working name "LegalHub"/"LightHub") against the live product at lighthub.law, and lay out what backend and frontend work is required to reach (and exceed) that level of functionality.
+**Purpose:** Compare the current state of this project (backend `FastAPI` + frontend `React`, working name "LegalVault"/"LightHub") against the live product at lighthub.law, and lay out what backend and frontend work is required to reach (and exceed) that level of functionality.
 
 ---
 

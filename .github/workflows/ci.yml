@@ -18,7 +18,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: legalhub_test
+          POSTGRES_DB: legalvault_test
         ports:
           - 5432:5432
         options: >-
@@ -30,12 +30,12 @@ jobs:
     env:
       # Owner role (postgres superuser in the service container) — used for
       # migrations, which need to ALTER TABLE / CREATE POLICY.
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/legalhub_test
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/legalvault_test
       # A Postgres superuser always bypasses row-level security, same as
       # Neon's default owner role does in real environments (see
       # backend/docs/architecture.md) — so tests need a separate, restricted
       # role for RLS to mean anything here. Created by the step below.
-      RUNTIME_DATABASE_URL: postgresql://app_runtime:app_runtime_ci_password@localhost:5432/legalhub_test
+      RUNTIME_DATABASE_URL: postgresql://app_runtime:app_runtime_ci_password@localhost:5432/legalvault_test
       SECRET_KEY: ci-only-secret-not-for-production
       ACCESS_TOKEN_EXPIRE_MINUTES: "30"
       REGISTER_SECRET: ci-register-secret
@@ -65,10 +65,10 @@ jobs:
 
       - name: Create restricted app_runtime role (RLS only applies to non-BYPASSRLS roles)
         run: |
-          PGPASSWORD=postgres psql -h localhost -U postgres -d legalhub_test <<'SQL'
+          PGPASSWORD=postgres psql -h localhost -U postgres -d legalvault_test <<'SQL'
           CREATE ROLE app_runtime WITH LOGIN PASSWORD 'app_runtime_ci_password'
             NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS;
-          GRANT CONNECT ON DATABASE legalhub_test TO app_runtime;
+          GRANT CONNECT ON DATABASE legalvault_test TO app_runtime;
           GRANT USAGE ON SCHEMA public TO app_runtime;
           GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_runtime;
           GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO app_runtime;

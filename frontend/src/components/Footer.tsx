@@ -15,7 +15,7 @@ function Footer() {
                 strokeLinecap="round"
               />
             </svg>
-            <span>Index</span>
+            <span>LegalVault</span>
           </Link>
           <p className="site-footer-tagline">
             The modern practice management platform for growing law firms: matters, clients, and documents in one
@@ -53,7 +53,7 @@ function Footer() {
 
       <div className="site-footer-bottom">
         <span className="site-footer-copyright">
-          &copy; {new Date().getFullYear()} Index Legal (Pty) Ltd. Reg. no. [ADD COMPANY REGISTRATION NUMBER]. All
+          &copy; {new Date().getFullYear()} LegalVault (Pty) Ltd. Reg. no. [ADD COMPANY REGISTRATION NUMBER]. All
           rights reserved.
         </span>
         <span className="site-footer-address">12 Fredman Drive, Sandton, Johannesburg, 2196, South Africa</span>

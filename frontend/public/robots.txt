@@ -18,4 +18,4 @@ Disallow: /owner/
 Disallow: /staff/
 Disallow: /client/
 
-Sitemap: https://legalhub.example.com/sitemap.xml
+Sitemap: https://legalvault.example.com/sitemap.xml

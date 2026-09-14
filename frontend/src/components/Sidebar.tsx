@@ -34,7 +34,7 @@ function Sidebar({
   navItems,
   user,
   onLogout,
-  brandName = 'LEGAL',
+  brandName = 'LegalVault',
   brandSub = 'matter management platform',
   notificationBell,
 }: SidebarProps) {

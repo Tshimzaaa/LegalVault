@@ -1,6 +1,6 @@
-# LegalHub
+# LegalVault
 
-A multi-tenant SaaS platform for law firm practice management, working name "LegalHub" (product-positioned against lighthub.law). FastAPI backend + React frontend.
+A multi-tenant SaaS platform for law firm practice management, working name "LegalVault" (product-positioned against lighthub.law). FastAPI backend + React frontend.
 
 Three tiers of users, each with its own auth system and JWT token type:
 
@@ -85,7 +85,7 @@ frontend/
 | Area | Pages |
 |---|---|
 | Marketing | `Home`, `About`, `Blog`, `Resources`, `Contact` |
-| Staff app | `Dashboard`, `Matters`, `MatterDetail`, `NewMatter`, `Clients`, `Templates`, `Staff`, `Workflow`, `Reporting`, `MatterAdmin`, `SignedContracts`, `ContractData`, `IntakeFormBuilder`, `IntakeSubmissions`, `KnowledgeArticles`, `Integrations`, `AuditLog`, `Calendar`, `Search`, `Settings`, `SupportRequests`, `LearnedFriend`, `LegalHubGuide` |
+| Staff app | `Dashboard`, `Matters`, `MatterDetail`, `NewMatter`, `Clients`, `Templates`, `Staff`, `Workflow`, `Reporting`, `MatterAdmin`, `SignedContracts`, `ContractData`, `IntakeFormBuilder`, `IntakeSubmissions`, `KnowledgeArticles`, `Integrations`, `AuditLog`, `Calendar`, `Search`, `Settings`, `SupportRequests`, `LearnedFriend`, `LegalVaultGuide` |
 | Client portal | `ClientPortal`, `ClientDashboard`, `ClientMatterDetail`, `ClientWorkflow`, `ClientTemplates`, `ClientReporting`, `ClientSignedContracts`, `ClientIntakeForms`, `ClientMyIntakeSubmissions`, `ClientKnowledgeBase`, `ClientAccountSettings`, `Workspace` |
 | Auth / onboarding | `AuthPage`, `Register`, `AcceptInvite` (client), `AcceptStaffInvite`, `ResetPassword` |
 | SaaS owner console | `OwnerLogin`, `OwnerPortal` |

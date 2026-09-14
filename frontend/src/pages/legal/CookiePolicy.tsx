@@ -8,7 +8,7 @@ function CookiePolicy() {
     <main className="legal-page" id="main-content">
       <Seo
         title="Cookie Policy"
-        description="How Index Legal uses cookies and local storage on its website and platform."
+        description="How LegalVault uses cookies and local storage on its website and platform."
         path="/cookie-policy"
       />
       <div className="legal-page-inner">
@@ -61,7 +61,7 @@ function CookiePolicy() {
         </p>
 
         <h2>Contact us</h2>
-        <p>Email: hello@indexlegal.com</p>
+        <p>Email: hello@legalvault.example.com</p>
       </div>
     </main>
   )

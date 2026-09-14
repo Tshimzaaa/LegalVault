@@ -158,7 +158,7 @@ function Home() {
       <Seo title="Home" description={SITE_DESCRIPTION} path="/" />
       <section id="home" className="hero">
 
-        <h1>The Modern Practice Management</h1>
+        <h1>Kelusi Legal Consultancy (KLC)</h1>
         <h2>Manage matters, clients, and documents in one secure workspace.</h2>
 
         <div className="hero-actions">
@@ -173,7 +173,7 @@ function Home() {
         <div className="hero-mockup">
           <div className="mockup-window">
             <div className="mockup-topbar">
-              <span className="mockup-brand">Index</span>
+              <span className="mockup-brand">LegalVault</span>
               <span className="mockup-search" />
               <span className="mockup-dots">
                 <span />

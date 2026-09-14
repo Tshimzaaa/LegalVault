@@ -8,7 +8,7 @@ function TermsAndConditions() {
     <main className="legal-page" id="main-content">
       <Seo
         title="Terms & Conditions"
-        description="The terms and conditions governing use of the Index Legal practice management platform."
+        description="The terms and conditions governing use of the LegalVault practice management platform."
         path="/terms"
       />
       <div className="legal-page-inner">
@@ -28,7 +28,7 @@ function TermsAndConditions() {
         <h2>1. Acceptance of these terms</h2>
         <p>
           These Terms and Conditions govern access to and use of the practice management platform operated by{' '}
-          <span className="legal-placeholder">[Index Legal (Pty) Ltd, registration no. PLACEHOLDER]</span> ("we",
+          <span className="legal-placeholder">[LegalVault (Pty) Ltd, registration no. PLACEHOLDER]</span> ("we",
           "us", the "Platform"). By creating an account, or by a law firm’s staff or clients using the Platform, you
           agree to these Terms. If you don’t agree, don’t use the Platform.
         </p>
@@ -46,7 +46,7 @@ function TermsAndConditions() {
           <li>Firm accounts are provisioned by us on a law firm’s request; the firm’s administrator is responsible for managing staff access within their account.</li>
           <li>Client-portal access is provisioned by the law firm that represents you.</li>
           <li>You’re responsible for keeping your login credentials confidential and for all activity under your account.</li>
-          <li>Notify us immediately at hello@indexlegal.com if you suspect unauthorized access to your account.</li>
+          <li>Notify us immediately at hello@legalvault.example.com if you suspect unauthorized access to your account.</li>
         </ul>
 
         <h2>4. Acceptable use</h2>
@@ -123,7 +123,7 @@ function TermsAndConditions() {
 
         <h2>15. Contact us</h2>
         <p>
-          Email: hello@indexlegal.com &nbsp;·&nbsp; Phone: +27 11 555 0134 &nbsp;·&nbsp; Address: 12 Fredman Drive,
+          Email: hello@legalvault.example.com &nbsp;·&nbsp; Phone: +27 11 555 0134 &nbsp;·&nbsp; Address: 12 Fredman Drive,
           Sandton, Johannesburg, 2196, South Africa
         </p>
       </div>
