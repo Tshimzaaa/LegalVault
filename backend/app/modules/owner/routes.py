@@ -104,7 +104,8 @@ def create_org(
     _owner=Depends(get_current_owner),
 ):
     service = RegisterService(db)
-    # reuse existing register logic, but skip the admin_secret check since owner auth already covers it
+    # separate from the public self-serve /auth/register — attributes the audit-log entry
+    # to the owner console rather than the org's own new admin (see register_as_owner)
     return service.register_as_owner(request.organization, request.admin)
 
 @router.post("/login", response_model=OwnerTokenResponse)

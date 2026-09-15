@@ -7,7 +7,6 @@ import Seo from '../../components/Seo'
 
 function Register() {
   const navigate = useNavigate()
-  const [adminSecret, setAdminSecret] = useState('')
   const [orgName, setOrganizationName] = useState('')
   const [orgEmail, setOrganizationEmail] = useState('')
   const [firstName, setFirstName] = useState('')
@@ -40,7 +39,6 @@ function Register() {
     setSubmitting(true)
     try {
       await register({
-        admin_secret: adminSecret,
         organization: { name: orgName, email: orgEmail },
         admin: { first_name: firstName, last_name: lastName, email: adminEmail, password },
       })
@@ -54,23 +52,12 @@ function Register() {
 
   return (
     <div className="auth-page">
-      <Seo title="Onboard a Organization" description="Organization onboarding." path="/register" noindex />
+      <Seo title="Create Your Account" description="Sign up your organization." path="/register" noindex />
       <div className="modal-box wide">
-        <h2>Onboard a Law Organization</h2>
-        <p className="modal-sub">SaaS-owner only: requires the shared onboarding secret.</p>
+        <h2>Create Your Organization</h2>
+        <p className="modal-sub">Set up your organization and admin account to get started.</p>
 
         <form onSubmit={handleSubmit}>
-          <label className="modal-field">
-            <span>Onboarding secret</span>
-            <input
-              type="password"
-              value={adminSecret}
-              onChange={(e) => setAdminSecret(e.target.value)}
-              required
-              autoComplete="off"
-            />
-          </label>
-
           <div className="modal-field-row">
             <label className="modal-field">
               <span>Organization name</span>

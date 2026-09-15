@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent as ReactKeyboardEvent } from 'react'
+import { Link } from 'react-router-dom'
 import './LoginModal.css'
 import { forgotPassword } from '../api/auth'
 import { clientForgotPassword } from '../api/clientAuth'
@@ -238,6 +239,12 @@ function LoginModal({ onClose, onSubmit, staffOnly }: LoginModalProps) {
           >
             Forgot Password?
           </button>
+
+          {staffOnly && (
+            <Link to="/register" className="modal-link-back" onClick={onClose}>
+              Don&rsquo;t have an organization yet? Create one
+            </Link>
+          )}
         </form>
       </div>
     </div>

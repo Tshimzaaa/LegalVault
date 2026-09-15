@@ -105,7 +105,6 @@ export async function resetPassword(token: string, newPassword: string): Promise
 }
 
 export interface RegisterPayload {
-  admin_secret: string
   organization: {
     name: string
     email: string

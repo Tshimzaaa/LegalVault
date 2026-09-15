@@ -57,7 +57,6 @@ class RegisterAdminRequest(BaseModel):
 
 
 class RegisterRequest(BaseModel):
-    admin_secret: str
     organization: RegisterOrganizationRequest
     admin: RegisterAdminRequest
 

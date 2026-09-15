@@ -1,9 +1,7 @@
 from sqlalchemy.orm import Session
-from app.core.config import settings
 from app.exceptions.auth import (
     OrganizationAlreadyExists,
     UserAlreadyExists,
-    InvalidCredentials
 )
 from app.modules.auth.repository import AuthRepository
 from app.modules.auth.models import (
@@ -34,9 +32,9 @@ class RegisterService:
         self.audit = AuditService(db)
 
     def register(self, request: RegisterRequest) -> RegisterResponse:
-        if request.admin_secret != settings.REGISTER_SECRET:
-            raise InvalidCredentials()
-
+        """Public, self-serve signup — anyone can create an organization + its
+        first admin. Rate-limited at the route level (see auth/routes.py) since
+        this is the one auth endpoint reachable with no prior credential at all."""
         existing_org = self.repository.get_organization_by_email(
             request.organization.email
         )

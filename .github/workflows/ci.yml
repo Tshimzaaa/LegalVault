@@ -38,7 +38,6 @@ jobs:
       RUNTIME_DATABASE_URL: postgresql://app_runtime:app_runtime_ci_password@localhost:5432/legalvault_test
       SECRET_KEY: ci-only-secret-not-for-production
       ACCESS_TOKEN_EXPIRE_MINUTES: "30"
-      REGISTER_SECRET: ci-register-secret
       OWNER_SECRET: ci-owner-secret
       ENVIRONMENT: development
       R2_ACCESS_KEY_ID: ci-placeholder

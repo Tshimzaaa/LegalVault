@@ -46,9 +46,10 @@ def logout(request: RefreshTokenRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/register", response_model=RegisterResponse, status_code=201)
-def register(request: RegisterRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def register(request: Request, body: RegisterRequest, db: Session = Depends(get_db)):
     service = RegisterService(db)
-    return service.register(request)
+    return service.register(body)
 
 
 @router.get("/me", response_model=UserResponse)

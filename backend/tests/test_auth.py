@@ -4,13 +4,11 @@ revocation, and deactivation being enforced immediately (not just on next login)
 """
 from datetime import UTC, datetime
 
-from app.core.config import settings
 from tests.conftest import auth_headers, make_org, make_staff
 
 
 def _register_payload(**overrides):
     return {
-        "admin_secret": overrides.get("admin_secret", settings.REGISTER_SECRET),
         "organization": {
             "name": "Acme Legal",
             "email": overrides.get("org_email", "acme-legal@example.com"),
@@ -31,11 +29,6 @@ def test_register_creates_org_and_admin(client):
     assert body["organization_id"]
     assert body["user_id"]
     assert body["access_token"]
-
-
-def test_register_rejects_wrong_admin_secret(client):
-    res = client.post("/auth/register", json=_register_payload(admin_secret="not-the-secret"))
-    assert res.status_code == 401
 
 
 def test_login_success(client, db_session):

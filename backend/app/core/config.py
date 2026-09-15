@@ -41,7 +41,6 @@ class Settings(BaseSettings):
     CLAMD_PORT: int = 3310
 
     ENVIRONMENT: str = "development"
-    REGISTER_SECRET: str = "change-me"
     OWNER_SECRET: str = "change-me"
 
     # Fernet key used to encrypt third-party integration credentials at rest
@@ -84,14 +83,8 @@ settings = Settings()
 if settings.ENVIRONMENT == "production":
     if settings.SECRET_KEY in ("your-long-random-secret", "change-me", ""):
         sys.exit("SECRET_KEY must be set to a real random value before running in production.")
-    if settings.REGISTER_SECRET in ("change-me", ""):
-        sys.exit("REGISTER_SECRET must be set before running in production.")
     if settings.OWNER_SECRET in ("change-me", ""):
         sys.exit("OWNER_SECRET must be set before running in production.")
-    if settings.OWNER_SECRET == settings.REGISTER_SECRET:
-        sys.exit("OWNER_SECRET must differ from REGISTER_SECRET — sharing one secret between org "
-                  "self-registration and full platform owner access lets anyone with the registration "
-                  "secret export or delete every org's data.")
     if settings.FRONTEND_URL == "http://localhost:5173":
         sys.exit("FRONTEND_URL must be set to the deployed frontend's real origin before running in "
                   "production — otherwise CORS falls back to a dev-only origin and the deployed "
