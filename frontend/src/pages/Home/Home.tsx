@@ -49,14 +49,14 @@ const demoSummary: DashboardSummary = {
   ],
   tasks: [
     { title: 'Review NDA: Apex Corp', deadline: '15 Mar' },
-    { title: 'File motion: Estate of J. Botha', deadline: '18 Mar' },
+    { title: 'Renew supplier agreement: Coastal Retail', deadline: '18 Mar' },
   ],
   recentDocuments: [
     { title: 'Share Purchase Agreement.pdf', subtitle: 'Meridian Capital' },
     { title: 'Master Services Agreement.pdf', subtitle: 'Vantage Logistics' },
   ],
   recentCommunications: [
-    { text: 'Client portal message from Coastal Retail re: lease renewal' },
+    { text: 'Fallback clause suggested for lease renewal: Coastal Retail' },
     { text: 'E-sign completed on Trademark Licensing: Kaya Software' },
   ],
 }
@@ -104,7 +104,7 @@ function useCapturedSlides() {
         try {
           // Dynamically imported: html2canvas is a large library only needed for this
           // one-time hero screenshot capture, so it shouldn't ship in the main bundle
-          // for every visitor (including staff/client logins that never see this page).
+          // for every visitor (including logged-in staff who never see this page).
           const { default: html2canvas } = await import('html2canvas')
           // html2canvas needs a resolved color, not a var() reference — read the
           // current theme's shell background off the root element at capture time
@@ -159,7 +159,7 @@ function Home() {
       <section id="home" className="hero">
 
         <h1>Kelusi Legal Consultancy (KLC)</h1>
-        <h2>Manage contracts, clients, and documents in one secure workspace.</h2>
+        <h2>Ready-to-execute contract templates and step-by-step tools to conclude agreements.</h2>
 
         <div className="hero-actions">
           <a href="#contact" className="btn btn-primary">

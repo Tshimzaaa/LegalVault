@@ -27,24 +27,24 @@ function TermsAndConditions() {
 
         <h2>1. Acceptance of these terms</h2>
         <p>
-          These Terms and Conditions govern access to and use of the practice management platform operated by{' '}
-          <span className="legal-placeholder">[LegalVault (Pty) Ltd, registration no. PLACEHOLDER]</span> ("we",
-          "us", the "Platform"). By creating an account, or by a law firm’s staff or clients using the Platform, you
-          agree to these Terms. If you don’t agree, don’t use the Platform.
+          These Terms and Conditions govern access to and use of the contract and practice management platform
+          operated by <span className="legal-placeholder">[LegalVault (Pty) Ltd, registration no. PLACEHOLDER]</span>{' '}
+          ("we", "us", the "Platform"). By creating an account, or by your organization’s staff using the Platform,
+          you agree to these Terms. If you don’t agree, don’t use the Platform.
         </p>
 
         <h2>2. What the Platform is, and isn’t</h2>
         <p>
-          The Platform is practice-management software: contract tracking, client communication, document storage,
-          templates, e-signature requests, and reporting for law firms. We are a software provider, not a law firm.
-          We don’t provide legal advice, don’t represent any user in any legal contract, and aren’t responsible for
-          the legal accuracy or adequacy of any document, template, or advice a firm produces using the Platform.
+          The Platform is contract and practice-management software: a template library, contract tracking,
+          document storage, e-signature requests, and reporting for businesses. We are a software provider, not a
+          law firm. We don’t provide legal advice, don’t represent any user in any legal matter, and aren’t
+          responsible for the legal accuracy or adequacy of any document, template, or contract an organization
+          produces using the Platform.
         </p>
 
         <h2>3. Accounts and eligibility</h2>
         <ul>
-          <li>Firm accounts are provisioned by us on a law firm’s request; the firm’s administrator is responsible for managing staff access within their account.</li>
-          <li>Client-portal access is provisioned by the law firm that represents you.</li>
+          <li>Organization accounts are created directly through our self-serve signup; the organization’s administrator is responsible for managing staff access within their account.</li>
           <li>You’re responsible for keeping your login credentials confidential and for all activity under your account.</li>
           <li>Notify us immediately at hello@legalvault.example.com if you suspect unauthorized access to your account.</li>
         </ul>
@@ -53,24 +53,24 @@ function TermsAndConditions() {
         <p>You agree not to:</p>
         <ul>
           <li>Use the Platform for any unlawful purpose or in violation of any applicable law.</li>
-          <li>Attempt to gain unauthorized access to another firm’s data or another user’s account.</li>
+          <li>Attempt to gain unauthorized access to another organization’s data or another user’s account.</li>
           <li>Upload malicious code, or attempt to disrupt, overload, or reverse-engineer the Platform.</li>
           <li>Use the Platform to store or transmit content you don’t have the right to share.</li>
         </ul>
 
-        <h2>5. Client data and confidentiality</h2>
+        <h2>5. Your contract data and confidentiality</h2>
         <p>
-          Law firms using the Platform remain responsible for their professional and ethical obligations to their
-          own clients, including attorney-client privilege and confidentiality. We process firm-client data only on
-          the firm’s instructions, as described in our <Link to="/privacy-policy">Privacy Policy</Link>, and take
-          the security measures described there.
+          Organizations using the Platform remain responsible for the confidentiality and accuracy of the contracts
+          and documents they upload, and for their own obligations to any counterparty named in them. We process
+          that data only on the organization’s instructions, as described in our{' '}
+          <Link to="/privacy-policy">Privacy Policy</Link>, and take the security measures described there.
         </p>
 
         <h2>6. Fees and payment</h2>
         <p>
           Subscription fees are arranged directly with our team and invoiced outside the Platform (there is no
-          in-app billing or card processing). Fees, billing frequency, and payment terms are set out in your firm’s
-          order form or agreement with us. See our <Link to="/refund-policy">Refund Policy</Link> for cancellation
+          in-app billing or card processing). Fees, billing frequency, and payment terms are set out in your
+          organization’s order form or agreement with us. See our <Link to="/refund-policy">Refund Policy</Link> for cancellation
           and refund terms.
         </p>
 
@@ -82,7 +82,7 @@ function TermsAndConditions() {
 
         <h2>8. Intellectual property</h2>
         <p>
-          We own the Platform, its software, design, and branding. You (or your firm) retain ownership of the
+          We own the Platform, its software, design, and branding. You (or your organization) retain ownership of the
           contract data, documents, and content you upload; we don’t claim ownership of it, and use it only to
           provide the service to you.
         </p>
@@ -90,7 +90,7 @@ function TermsAndConditions() {
         <h2>9. Suspension and termination</h2>
         <p>
           We may suspend or terminate access if these Terms are violated, if required by law, or for non-payment
-          under your agreement with us. You may stop using the Platform at any time; your firm remains responsible
+          under your agreement with us. You may stop using the Platform at any time; your organization remains responsible
           for exporting any data it needs before an account is closed.
         </p>
 

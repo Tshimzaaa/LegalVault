@@ -8,7 +8,7 @@ function RefundPolicy() {
     <main className="legal-page" id="main-content">
       <Seo
         title="Billing & Refund Policy"
-        description="LegalVault’s billing and refund policy for law firm subscriptions."
+        description="LegalVault’s billing and refund policy for organization subscriptions."
         path="/refund-policy"
       />
       <div className="legal-page-inner">
@@ -21,14 +21,14 @@ function RefundPolicy() {
 
         <div className="legal-notice">
           <strong>Before you publish this:</strong> we don’t process payments in-app; fees are arranged directly
-          with your firm and invoiced outside the Platform. Fill in the placeholders below with your actual
+          with your organization and invoiced outside the Platform. Fill in the placeholders below with your actual
           commercial terms (cancellation notice period, proration approach, etc.) before publishing.
         </div>
 
         <h2>How billing works</h2>
         <p>
           Subscription fees aren’t collected through the Platform. Instead, they’re agreed directly with our team
-          and paid by bank transfer or invoice, per the order form or agreement signed with your firm. No card
+          and paid by bank transfer or invoice, per the order form or agreement signed with your organization. No card
           details are collected or stored by the Platform.
         </p>
 

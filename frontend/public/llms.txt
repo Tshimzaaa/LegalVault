@@ -1,9 +1,10 @@
 # LegalVault
 
-> LegalVault is a practice management platform for growing
-> law firms: matters, clients, and documents in one secure, compliant workspace, with a
-> client portal, document templates, e-signatures, and workflow tracking. South African
-> B2B SaaS; subscriptions are invoiced directly, not processed in-app.
+> LegalVault is an online contract library and practice management platform for
+> businesses: ready-to-execute contract templates, practical contracting guidance, and
+> step-by-step tools to understand, negotiate, and conclude agreements, plus e-signatures
+> and workflow tracking. South African B2B SaaS; subscriptions are invoiced directly, not
+> processed in-app.
 
 [PLACEHOLDER] Replace https://legalvault.example.com below with the real production domain
 before launch (see frontend/src/constants/site.ts).

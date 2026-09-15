@@ -46,7 +46,3 @@ export async function deleteAnnouncement(token: string, announcementId: string):
 export async function listAnnouncements(token: string): Promise<Announcement[]> {
   return apiRequest<Announcement[]>('/announcements', { token })
 }
-
-export async function listClientAnnouncements(token: string): Promise<Announcement[]> {
-  return apiRequest<Announcement[]>('/client-announcements', { token })
-}

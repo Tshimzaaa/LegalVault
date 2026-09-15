@@ -162,11 +162,11 @@ function FallbackClauses() {
             </label>
           </div>
           <label className="field">
-            <span>Description (shown to clients as a summary)</span>
+            <span>Description (shown as a quick summary)</span>
             <textarea rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
           </label>
           <label className="field">
-            <span>Clause text (shown when a client opens "View Fallback Position")</span>
+            <span>Clause text (shown when a staff member opens "View Fallback Position")</span>
             <textarea rows={6} value={form.content} onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))} />
           </label>
           <label className="field field-checkbox">
@@ -175,7 +175,7 @@ function FallbackClauses() {
               checked={form.pre_approved}
               onChange={(e) => setForm((f) => ({ ...f, pre_approved: e.target.checked }))}
             />
-            <span>Pre-approved (clients can rely on this without further sign-off)</span>
+            <span>Pre-approved (staff can rely on this without further sign-off)</span>
           </label>
           <div className="contract-actions">
             <button type="button" className="btn-ghost" onClick={() => setShowCreate(false)}>

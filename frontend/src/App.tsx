@@ -138,7 +138,7 @@ function App() {
   async function handleOwnerLogin(secret: string) {
     const ownerToken = await ownerLogin(secret)
     localStorage.setItem('access_token', ownerToken)
-    // Owner sessions don't have a refresh token — drop any leftover from a prior staff/client login.
+    // Owner sessions don't have a refresh token — drop any leftover from a prior staff login.
     localStorage.removeItem('refresh_token')
     localStorage.setItem('actor_kind', 'owner')
     setActor({ kind: 'owner' })

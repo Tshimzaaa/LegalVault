@@ -3,6 +3,6 @@
 // render.yaml's FRONTEND_URL / VITE_API_BASE_URL once the API has its own real domain too.
 export const SITE_URL = 'https://legalvault.example.com'
 export const SITE_NAME = 'LegalVault'
-export const SITE_TAGLINE = 'Modern Practice Management for Law Firms'
+export const SITE_TAGLINE = 'Contracts, Understood and Concluded'
 export const SITE_DESCRIPTION =
-  'LegalVault is a practice management platform for growing law firms: contracts, clients, and documents in one secure, compliant workspace.'
+  'LegalVault is an online contract library and practice management platform for businesses: ready-to-execute templates, practical contracting guidance, and step-by-step tools to understand, negotiate, and conclude agreements, all in one secure workspace.'

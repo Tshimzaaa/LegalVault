@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import './AnnouncementBanner.css'
 import { IconMegaphone, IconX } from './icons'
-import { listAnnouncements, listClientAnnouncements } from '../api/announcements'
+import { listAnnouncements } from '../api/announcements'
 import type { Announcement, AnnouncementSeverity } from '../api/announcements'
 
 const severityColor: Record<AnnouncementSeverity, string> = {
@@ -20,22 +20,17 @@ function getDismissed(): string[] {
   }
 }
 
-interface AnnouncementBannerProps {
-  scope: 'staff' | 'client'
-}
-
-function AnnouncementBanner({ scope }: AnnouncementBannerProps) {
+function AnnouncementBanner() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [dismissed, setDismissed] = useState<string[]>(getDismissed())
 
   useEffect(() => {
     const token = localStorage.getItem('access_token')
     if (!token) return
-    const fetcher = scope === 'staff' ? listAnnouncements : listClientAnnouncements
-    fetcher(token)
+    listAnnouncements(token)
       .then(setAnnouncements)
       .catch(() => setAnnouncements([]))
-  }, [scope])
+  }, [])
 
   function dismiss(id: string) {
     const next = [...dismissed, id]

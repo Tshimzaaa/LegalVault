@@ -18,7 +18,7 @@ export interface SidebarUser {
 
 interface SidebarProps {
   activePage: string
-  /** Route prefix each nav item's page is appended to, e.g. "/staff" or "/client". */
+  /** Route prefix each nav item's page is appended to, e.g. "/staff". */
   basePath: string
   navItems: NavItem[]
   user: SidebarUser

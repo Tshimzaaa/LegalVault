@@ -23,10 +23,10 @@ const plans: Plan[] = [
     name: 'Starter',
     price: 1499,
     period: '/ month',
-    description: 'For solo practitioners getting organized.',
+    description: 'For small teams getting organized.',
     features: [
       'Up to 25 active contracts',
-      'Client portal access',
+      'Shared template library access',
       'Document storage (10GB)',
       'Document templates & e-signatures',
       'Email support',
@@ -38,10 +38,10 @@ const plans: Plan[] = [
     name: 'Professional',
     price: 3299,
     period: '/ month',
-    description: 'For growing firms that need more workflow.',
+    description: 'For growing organizations that need more workflow.',
     features: [
       'Unlimited active contracts',
-      'Client portal + e-signatures',
+      'Custom template library + e-signatures',
       'Document storage (100GB)',
       'Workflow automation',
       'Reporting & CSV export',
@@ -52,10 +52,10 @@ const plans: Plan[] = [
     ctaHref: '/register',
   },
   {
-    name: 'Firm',
+    name: 'Enterprise',
     price: null,
     period: 'pricing',
-    description: 'For multi-partner firms with larger teams.',
+    description: 'For larger organizations with multiple teams.',
     features: [
       'Everything in Professional',
       'Unlimited storage',
@@ -94,7 +94,7 @@ function Pricing() {
     <section id="pricing" className="pricing-page">
       <div className="pricing-hero">
         <h1>Simple, transparent pricing</h1>
-        <h2>Pick a plan that fits your firm today, and scales as you grow.</h2>
+        <h2>Pick a plan that fits your organization today, and scales as you grow.</h2>
       </div>
 
       <div className="pricing-grid">

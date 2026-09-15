@@ -348,7 +348,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
 
   async function handleDeleteOrganization(org: OrganizationDetail) {
     if (!token) return
-    if (!window.confirm(`Permanently delete ${org.name} and all its staff, clients, and contracts?`)) return
+    if (!window.confirm(`Permanently delete ${org.name} and all its staff and contracts?`)) return
     setOrganizationActionError(null)
     setDeletingId(org.id)
     try {

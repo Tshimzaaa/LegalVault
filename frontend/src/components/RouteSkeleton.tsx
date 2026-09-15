@@ -1,6 +1,6 @@
 import './RouteSkeleton.css'
 
-// Suspense fallback for lazy-loaded pages inside the staff/client dashboard shell — shown
+// Suspense fallback for lazy-loaded pages inside the staff dashboard shell — shown
 // for the brief moment a page's chunk is downloading after clicking a sidebar nav item.
 // Mirrors the shape of a typical dashboard page (topbar + card grid) so the swap-in feels
 // like a continuation rather than a blank flash.

@@ -88,8 +88,8 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
               <IconSearch />
               <input
                 type="search"
-                aria-label="Search clients, contracts, staff"
-                placeholder="Search clients, contracts, staff…"
+                aria-label="Search contracts, staff, documents"
+                placeholder="Search contracts, staff, documents…"
                 value={dashboardQuery}
                 onChange={(e) => setDashboardQuery(e.target.value)}
                 autoComplete="off"
@@ -274,7 +274,7 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
               <div className="deadline-text">
                 <span className="deadline-title">Need help?</span>
                 <span className="deadline-sub">
-                  View our client resources if you need instructions for specific requests.
+                  Visit the Knowledge Base if you need instructions for specific tasks.
                 </span>
               </div>
             </div>

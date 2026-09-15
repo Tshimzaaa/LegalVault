@@ -6,7 +6,7 @@ import './Contact.css'
 function Contact() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [firm, setFirm] = useState('')
+  const [organization, setOrganization] = useState('')
   const [message, setMessage] = useState('')
   const [consent, setConsent] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -53,7 +53,7 @@ function Contact() {
                     name="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="jane@firm.com…"
+                    placeholder="jane@company.com…"
                     required
                     autoComplete="email"
                     spellCheck={false}
@@ -62,13 +62,13 @@ function Contact() {
               </div>
 
               <label className="contact-field">
-                <span>Firm name</span>
+                <span>Organization name</span>
                 <input
                   type="text"
                   name="organization"
-                  value={firm}
-                  onChange={(e) => setFirm(e.target.value)}
-                  placeholder="Doe & Associates…"
+                  value={organization}
+                  onChange={(e) => setOrganization(e.target.value)}
+                  placeholder="Acme Inc…"
                   autoComplete="organization"
                 />
               </label>
@@ -79,7 +79,7 @@ function Contact() {
                   name="message"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Tell us a bit about your firm and what you’re looking for…"
+                  placeholder="Tell us a bit about your organization and what you’re looking for…"
                   rows={5}
                   required
                 />

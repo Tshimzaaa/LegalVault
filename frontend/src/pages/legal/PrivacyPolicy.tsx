@@ -31,8 +31,8 @@ function PrivacyPolicy() {
         <p>
           This Privacy Policy explains how <span className="legal-placeholder">[LegalVault (Pty) Ltd, registration
           no. PLACEHOLDER]</span> ("we", "us", "LegalVault") collects, uses, and protects personal information when
-          you visit our website, use our practice management platform, or interact with us as a law firm, a member
-          of law firm staff, or a firm’s client.
+          you visit our website or use our contract and practice management platform as an organization or a
+          member of its staff.
         </p>
         <p>
           Registered address: 12 Fredman Drive, Sandton, Johannesburg, 2196, South Africa (
@@ -50,41 +50,33 @@ function PrivacyPolicy() {
         <ul>
           <li>
             <strong>Responsible party</strong>: for information about our website visitors, prospective customers,
-            and law firm staff accounts (name, email, login activity), where we decide why and how it’s processed.
+            and staff accounts (name, email, login activity), where we decide why and how it’s processed.
           </li>
           <li>
-            <strong>Operator</strong>: for personal information that a law firm using our platform uploads about
-            its own clients (contracts, documents, intake submissions, messages). The firm is the responsible party
-            for that data; we only process it on the firm’s instructions, under a data processing agreement with
-            that firm.
+            <strong>Operator</strong>: for personal information an organization using our platform uploads as part
+            of its own contracts and documents (which may include details of counterparties or other third
+            parties). The organization is the responsible party for that data; we only process it on the
+            organization’s instructions, under a data processing agreement with that organization.
           </li>
         </ul>
 
         <h2>3. What we collect</h2>
         <h3>Website visitors</h3>
         <ul>
-          <li>Contact form submissions: name, work email, firm name, and message content.</li>
+          <li>Contact form submissions: name, work email, organization name, and message content.</li>
           <li>Basic technical data your browser sends to any website (IP address, browser type) via standard server logs.</li>
         </ul>
-        <h3>Firm staff and SaaS-owner accounts</h3>
+        <h3>Staff and SaaS-owner accounts</h3>
         <ul>
           <li>Name, email address, role, and a securely hashed password (we never store passwords in plain text).</li>
           <li>Login activity and actions taken in the platform, kept in an audit log for security and accountability.</li>
-        </ul>
-        <h3>Firm clients (client portal)</h3>
-        <ul>
-          <li>
-            Information the law firm invites you to submit: contact details, contract/case information, documents,
-            and intake-form answers. This is collected on the firm’s instructions; the firm controls what is asked
-            for and why. Contact your firm directly with questions about what they collect.
-          </li>
         </ul>
         <p>We only ask website and account forms for the information needed to provide the service; we don’t request data we don’t need.</p>
 
         <h2>4. How we use it</h2>
         <ul>
           <li>To create and secure your account, and authenticate you when you log in.</li>
-          <li>To operate core features: contracts, documents, templates, e-signatures, intake forms, and reporting.</li>
+          <li>To operate core features: contracts, documents, templates, e-signatures, and reporting.</li>
           <li>To respond to enquiries submitted through our contact form.</li>
           <li>To send operational emails (e.g. invitations, password resets, deadline reminders).</li>
           <li>To detect, investigate, and prevent security incidents, fraud, and misuse.</li>
@@ -127,7 +119,7 @@ function PrivacyPolicy() {
 
         <h2>8. How long we keep it</h2>
         <p>
-          We keep account and contract data for as long as your firm’s account is active, plus a reasonable period
+          We keep account and contract data for as long as your organization’s account is active, plus a reasonable period
           afterward to meet legal, accounting, or dispute-resolution needs. Contact form submissions are kept only
           as long as needed to respond to and resolve the enquiry.
         </p>
@@ -135,7 +127,7 @@ function PrivacyPolicy() {
         <h2>9. Security</h2>
         <p>
           Passwords are hashed with argon2id, data in transit is encrypted, uploaded files are scanned for malware,
-          and access to each firm’s data is isolated using row-level security in our database, on top of
+          and access to each organization’s data is isolated using row-level security in our database, on top of
           application-level access controls and an audit log.
         </p>
 
@@ -165,7 +157,7 @@ function PrivacyPolicy() {
         </p>
 
         <h2>12. Children’s information</h2>
-        <p>This platform is intended for use by law firms and their authorized adult staff and clients; it is not directed at children.</p>
+        <p>This platform is intended for use by organizations and their authorized adult staff; it is not directed at children.</p>
 
         <h2>13. Changes to this policy</h2>
         <p>We’ll update this page when our practices change and update the "last updated" date above.</p>

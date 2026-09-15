@@ -11,37 +11,37 @@ interface Post {
 
 const posts: Post[] = [
   {
-    slug: 'billable-hours-manual-admin',
-    title: '5 ways firms lose billable hours to manual admin',
+    slug: 'hours-lost-to-manual-contract-admin',
+    title: '5 ways businesses lose hours to manual contract admin',
     excerpt:
-      'Contract intake, document chasing, and status updates quietly eat into your week. Here is where the time actually goes, and how to claw it back.',
+      'Drafting from scratch, document chasing, and status updates quietly eat into your week. Here is where the time actually goes, and how to claw it back.',
     date: '02 Jul 2026',
     tag: 'Operations',
     readTime: '6 min read',
   },
   {
-    slug: 'trust-accounting-compliance',
-    title: 'A practical guide to trust accounting compliance',
+    slug: 'choosing-the-right-nda-template',
+    title: 'Choosing the right NDA template for the deal in front of you',
     excerpt:
-      'Trust accounting mistakes are one of the top reasons for bar complaints. A walkthrough of the controls every firm should have in place.',
+      'Mutual, one-way, or something in between? A practical guide to picking a starting template instead of drafting from a blank page.',
     date: '24 Jun 2026',
-    tag: 'Compliance',
+    tag: 'Templates',
     readTime: '8 min read',
   },
   {
-    slug: 'client-portals-what-clients-want',
-    title: 'Client portals: what clients actually want to see',
+    slug: 'negotiating-with-confidence',
+    title: 'Negotiating with confidence: fallback positions that actually work',
     excerpt:
-      'We looked at portal usage across dozens of firms. The features clients open most are rarely the ones firms invest in first.',
+      'Pre-approved fallback clauses keep a negotiation moving without waiting on legal for every redline. Here is how to set risk limits your team can act on.',
     date: '15 Jun 2026',
-    tag: 'Client Experience',
+    tag: 'Negotiation',
     readTime: '5 min read',
   },
   {
-    slug: 'contract-intake-workflow-that-scales',
-    title: 'Building a contract intake workflow that scales',
+    slug: 'contract-workflow-that-scales',
+    title: 'Building a contract workflow that scales',
     excerpt:
-      'From first inquiry to signed engagement letter, a repeatable intake process is the difference between a chaotic queue and a calm one.',
+      'From first draft to signed agreement, a repeatable workflow is the difference between a chaotic queue and a calm one.',
     date: '03 Jun 2026',
     tag: 'Workflow',
     readTime: '7 min read',
@@ -57,9 +57,9 @@ const posts: Post[] = [
   },
   {
     slug: 'reporting-metrics-that-change-decisions',
-    title: 'Reporting metrics that actually change firm decisions',
+    title: 'Reporting metrics that actually change contracting decisions',
     excerpt:
-      'Dashboards are easy to build and easy to ignore. These are the handful of numbers partners at well-run firms check weekly.',
+      'Dashboards are easy to build and easy to ignore. These are the handful of numbers well-run teams check weekly.',
     date: '09 May 2026',
     tag: 'Reporting',
     readTime: '6 min read',

@@ -20,7 +20,7 @@ function NewContract() {
   const [practiceArea, setPracticeArea] = useState('')
   const [feeType, setFeeType] = useState('hourly')
   const [conflictCheck, setConflictCheck] = useState('')
-  const [clientGoal, setClientGoal] = useState('')
+  const [desiredOutcome, setDesiredOutcome] = useState('')
   const [caseStrategyNotes, setCaseStrategyNotes] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -47,7 +47,7 @@ function NewContract() {
       contractType ||
       practiceArea ||
       conflictCheck ||
-      clientGoal ||
+      desiredOutcome ||
       caseStrategyNotes,
   )
 
@@ -85,14 +85,14 @@ function NewContract() {
     setSubmitting(true)
     try {
       // The backend's contract record has no dedicated columns for contract type, practice
-      // area, fee type, conflict check, client goal, or case strategy notes yet, so we
+      // area, fee type, conflict check, desired outcome, or case strategy notes yet, so we
       // fold them into the description to avoid silently discarding what the user typed.
       const extraDetails = [
         contractType && `Contract Type: ${contractType}`,
         practiceArea && `Practice Area: ${practiceArea}`,
         feeType && `Fee Type: ${feeType}`,
         conflictCheck && `Conflict Check: ${conflictCheck}`,
-        clientGoal && `Client's Goal: ${clientGoal}`,
+        desiredOutcome && `Desired Outcome: ${desiredOutcome}`,
         caseStrategyNotes && `Case Strategy Notes: ${caseStrategyNotes}`,
       ].filter(Boolean)
       const fullDescription = [description, ...extraDetails].filter(Boolean).join('\n')
@@ -274,13 +274,13 @@ function NewContract() {
             </label>
 
             <label className="field">
-              <span>Client&rsquo;s Goal</span>
+              <span>Desired Outcome</span>
               <input
                 type="text"
-                placeholder="Client's Goal…"
+                placeholder="Desired Outcome…"
                 autoComplete="off"
-                value={clientGoal}
-                onChange={(e) => setClientGoal(e.target.value)}
+                value={desiredOutcome}
+                onChange={(e) => setDesiredOutcome(e.target.value)}
               />
             </label>
 

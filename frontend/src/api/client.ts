@@ -8,7 +8,7 @@ export function setUnauthorizedHandler(handler: () => void) {
 }
 
 /**
- * Called on a 401 to silently obtain a fresh access token (via the staff/client refresh-token
+ * Called on a 401 to silently obtain a fresh access token (via the staff refresh-token
  * endpoint) before giving up and logging the user out. Returns the new access token, or null if
  * no refresh was possible/it failed. Wired up once by the app shell, alongside the actor's session.
  */
