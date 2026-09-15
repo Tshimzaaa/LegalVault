@@ -20,3 +20,11 @@ class MissingRequiredIntakeAnswer(Exception):
 
 class UnsupportedIntakeFileType(Exception):
     pass
+
+
+class SystemFormNotEditable(Exception):
+    pass
+
+
+class IntakeFormFieldNotFound(Exception):
+    pass

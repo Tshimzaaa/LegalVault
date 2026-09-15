@@ -39,6 +39,8 @@ from app.modules.signed_contracts.routes import router as signed_contracts_route
 from app.modules.fallback_clauses.routes import router as fallback_clauses_router
 from app.modules.knowledge.routes import router as knowledge_router
 from app.modules.integrations.routes import router as integrations_router
+from app.modules.ai_assistant.routes import router as ai_assistant_router
+from app.modules.intake.routes import router as intake_forms_router, submissions_router as intake_submissions_router
 from app.modules.signatures.routes import (
     router as signatures_router,
     my_signatures_router,
@@ -69,6 +71,9 @@ app.include_router(signed_contracts_router)
 app.include_router(fallback_clauses_router)
 app.include_router(knowledge_router)
 app.include_router(integrations_router)
+app.include_router(ai_assistant_router)
+app.include_router(intake_forms_router)
+app.include_router(intake_submissions_router)
 app.include_router(signatures_router)
 app.include_router(my_signatures_router)
 app.include_router(documenso_webhook_router)

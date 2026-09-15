@@ -6,7 +6,7 @@ from app.modules.auth.repository import AuthRepository
 from app.database.session import get_db
 from app.modules.auth.schemas.login import LoginRequest
 from app.modules.auth.schemas.token import TokenResponse, RefreshTokenRequest
-from app.modules.auth.schemas.user import UserResponse, UpdateStaffStatusRequest
+from app.modules.auth.schemas.user import UserResponse, UpdateStaffStatusRequest, UpdateStaffCapacityRequest
 from app.modules.auth.schemas.register import RegisterRequest, RegisterResponse
 from app.modules.auth.services.login import login_user
 from app.modules.auth.services.refresh import refresh_staff_token, logout_staff
@@ -113,6 +113,34 @@ def update_staff_status(
         target_type="user",
         target_id=staff.id,
         details={"email": staff.email, "is_active": request.is_active},
+    )
+    db.commit()
+    return staff
+
+
+@router.patch("/users/{staff_id}/capacity", response_model=UserResponse)
+def update_staff_capacity(
+    staff_id: str,
+    request: UpdateStaffCapacityRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    repo = AuthRepository(db)
+    staff = repo.get_user_by_id(staff_id)
+
+    if not staff or str(staff.org_id) != str(current_user.org_id):
+        raise StaffNotFound()
+
+    staff.weekly_capacity_hours = request.weekly_capacity_hours
+
+    AuditService(db).log(
+        actor_type=ActorType.STAFF,
+        actor_id=current_user.id,
+        org_id=current_user.org_id,
+        action=audit_actions.STAFF_CAPACITY_UPDATED,
+        target_type="user",
+        target_id=staff.id,
+        details={"weekly_capacity_hours": request.weekly_capacity_hours},
     )
     db.commit()
     return staff

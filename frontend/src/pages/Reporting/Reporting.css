@@ -161,3 +161,52 @@
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
+
+.capacity-edit-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 8px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font: inherit;
+  white-space: nowrap;
+}
+
+.capacity-edit-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.capacity-input {
+  width: 70px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 8px;
+  color: var(--text);
+  font: inherit;
+}
+
+.utilization-bar {
+  width: 80px;
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* Reporting.tsx doesn't import Dashboard.css, so these two shared-in-spirit classes
+   (also defined there) need their own copy here. */
+.progress-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(var(--overlay-rgb), 0.08);
+  overflow: hidden;
+}
+
+.progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+}

@@ -12,6 +12,7 @@ export interface User {
   is_active: boolean
   invitation_status: string
   last_login: string | null
+  weekly_capacity_hours?: number | null
 }
 
 export interface AuthTokens {
@@ -84,6 +85,14 @@ export async function updateStaffStatus(token: string, staffId: string, isActive
   return apiRequest<User>(`/auth/users/${staffId}/status`, {
     method: 'PATCH',
     body: { is_active: isActive },
+    token,
+  })
+}
+
+export async function updateStaffCapacity(token: string, staffId: string, weeklyCapacityHours: number | null): Promise<User> {
+  return apiRequest<User>(`/auth/users/${staffId}/capacity`, {
+    method: 'PATCH',
+    body: { weekly_capacity_hours: weeklyCapacityHours },
     token,
   })
 }

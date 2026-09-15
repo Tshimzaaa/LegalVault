@@ -62,6 +62,18 @@ class Settings(BaseSettings):
     # handler. Configured on the Documenso side as the webhook's "secret".
     DOCUMENSO_WEBHOOK_SECRET: str = "change-me"
 
+    # Powers the "Learned Friend" AI assistant (app/modules/ai_assistant). Two interchangeable
+    # backends, both speaking the OpenAI chat-completions API shape:
+    #   "ollama" (default) — a locally-installed model via https://ollama.com, no token,
+    #     no account, no cost; only requires `ollama pull` + `ollama serve` running on
+    #     this machine. Good for local dev/demo without provisioning any secret.
+    #   "github_models" — GitHub's free-tier hosted inference (https://docs.github.com/en/github-models),
+    #     needs GITHUB_MODELS_TOKEN (a PAT with `models: read`, or CI's GITHUB_TOKEN).
+    LLM_PROVIDER: str = "ollama"
+    OLLAMA_BASE_URL: str = "http://localhost:11434/v1"
+    OLLAMA_MODEL: str = "llama3.2:1b"
+    GITHUB_MODELS_TOKEN: str = "change-me"
+
     # Celery broker for background jobs (contract due-date reminders —
     # see app/tasks/). See docker-compose.yml's `redis` service for local dev.
     REDIS_URL: str = "redis://localhost:6379/0"
@@ -105,6 +117,8 @@ if settings.ENVIRONMENT == "production":
         sys.exit("REDIS_URL must be set to a real Redis instance before running in production — "
                   "background jobs (contract reminders) have no broker to run against "
                   "otherwise.")
+    if settings.LLM_PROVIDER == "github_models" and settings.GITHUB_MODELS_TOKEN in ("change-me", ""):
+        sys.exit("GITHUB_MODELS_TOKEN must be set before running in production with LLM_PROVIDER=github_models.")
     try:
         Fernet(settings.ENCRYPTION_KEY.encode())
     except Exception:

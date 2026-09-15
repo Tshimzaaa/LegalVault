@@ -46,6 +46,17 @@ from app.exceptions.intake import (
 )
 from app.exceptions.knowledge import KnowledgeArticleNotFound
 from app.exceptions.signatures import SignatureRequestNotFound, InvalidSignatureRecipient, SigningProviderUnavailable
+from app.exceptions.ai_assistant import ConversationNotFound, AiAssistantUnavailable
+from app.exceptions.intake import (
+    IntakeFormNotFound,
+    IntakeSubmissionNotFound,
+    IntakeAnswerNotFound,
+    IntakeFormNotPublished,
+    MissingRequiredIntakeAnswer,
+    UnsupportedIntakeFileType,
+    SystemFormNotEditable,
+    IntakeFormFieldNotFound,
+)
 
 def register_exception_handlers(app: FastAPI):
 
@@ -239,3 +250,46 @@ def register_exception_handlers(app: FastAPI):
             status_code=503,
             detail="The e-signature service is temporarily unavailable, please try again shortly.",
         )
+
+    @app.exception_handler(ConversationNotFound)
+    async def conversation_not_found(_, __):
+        raise HTTPException(status_code=404, detail="Conversation not found.")
+
+    @app.exception_handler(AiAssistantUnavailable)
+    async def ai_assistant_unavailable(_, __):
+        raise HTTPException(
+            status_code=503,
+            detail="The assistant is temporarily unavailable, please try again shortly.",
+        )
+
+    @app.exception_handler(IntakeFormNotFound)
+    async def intake_form_not_found(_, __):
+        raise HTTPException(status_code=404, detail="Intake form not found.")
+
+    @app.exception_handler(IntakeSubmissionNotFound)
+    async def intake_submission_not_found(_, __):
+        raise HTTPException(status_code=404, detail="Intake submission not found.")
+
+    @app.exception_handler(IntakeAnswerNotFound)
+    async def intake_answer_not_found(_, __):
+        raise HTTPException(status_code=404, detail="Intake submission answer not found.")
+
+    @app.exception_handler(IntakeFormNotPublished)
+    async def intake_form_not_published(_, __):
+        raise HTTPException(status_code=404, detail="Intake form not found.")
+
+    @app.exception_handler(MissingRequiredIntakeAnswer)
+    async def missing_required_intake_answer(_, __):
+        raise HTTPException(status_code=422, detail="One or more required fields were not answered.")
+
+    @app.exception_handler(UnsupportedIntakeFileType)
+    async def unsupported_intake_file_type(_, __):
+        raise HTTPException(status_code=400, detail="Unsupported or oversized file for this field.")
+
+    @app.exception_handler(SystemFormNotEditable)
+    async def system_form_not_editable(_, __):
+        raise HTTPException(status_code=403, detail="The system-seeded Contract Request form can't be edited or deleted.")
+
+    @app.exception_handler(IntakeFormFieldNotFound)
+    async def intake_form_field_not_found(_, __):
+        raise HTTPException(status_code=404, detail="Field not found on this form.")

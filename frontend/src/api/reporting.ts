@@ -13,6 +13,8 @@ export interface StaffWorkloadItem {
   total_contracts: number
   open_tasks: number
   overdue_tasks: number
+  weekly_capacity_hours: number | null
+  utilization_percent: number | null
 }
 
 export interface ReportingOverview {

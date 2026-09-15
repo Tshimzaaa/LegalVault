@@ -30,6 +30,8 @@ from app.modules.knowledge.models import KnowledgeArticle  # noqa: F401
 from app.modules.integrations.models import OrganizationIntegration  # noqa: F401
 from app.modules.signatures.models import SignatureRequest, SignatureRecipient  # noqa: F401
 from app.modules.fallback_clauses.models import FallbackClause  # noqa: F401
+from app.modules.ai_assistant.models import AiConversation, AiMessage  # noqa: F401
+from app.modules.intake.models import IntakeForm, IntakeFormField, IntakeSubmission, IntakeSubmissionAnswer  # noqa: F401
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

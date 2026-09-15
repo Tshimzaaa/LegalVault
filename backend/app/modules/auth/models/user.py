@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, String
+from sqlalchemy import Boolean, DateTime, Enum, Float, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.constants import (
@@ -97,5 +97,13 @@ class User(BaseModel):
 
     invitation_expires_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
+        nullable=True,
+    )
+
+    # Self-reported weekly working-hours capacity, set by an admin — backs the Resource
+    # Planning utilization view (reporting/service.py). Null means "not configured yet",
+    # distinct from 0, so the frontend can show "Not set" instead of a false 100%+ overload.
+    weekly_capacity_hours: Mapped[float | None] = mapped_column(
+        Float,
         nullable=True,
     )

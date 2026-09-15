@@ -1,0 +1,202 @@
+.learned-friend-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.lf-chat-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 768px) {
+  .lf-chat-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lf-chat-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.lf-new-chat-btn {
+  width: 100%;
+  text-align: center;
+}
+
+.lf-conversation-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lf-conversation-item {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lf-conversation-item:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.lf-conversation-item.active {
+  background: rgba(var(--accent-rgb), 0.15);
+  color: var(--accent-text);
+}
+
+.lf-chat-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.lf-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 240px;
+}
+
+.lf-empty-chat {
+  max-width: 480px;
+  margin: auto;
+  text-align: center;
+}
+
+.lf-message {
+  max-width: 70%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.lf-message-user {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.lf-message-assistant {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.lf-message-role {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-subtle);
+}
+
+.lf-message-content {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  white-space: pre-wrap;
+  color: var(--text);
+}
+
+.lf-message-user .lf-message-content {
+  background: rgba(var(--accent-rgb), 0.18);
+}
+
+.lf-message-assistant .lf-message-content {
+  background: var(--surface-2);
+}
+
+.lf-message-pending .lf-message-content {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .lf-message {
+    max-width: 90%;
+  }
+}
+
+.lf-send-error {
+  margin: 0 20px 12px;
+  color: var(--danger-light);
+  font-size: 13px;
+}
+
+.lf-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.lf-composer-input {
+  flex: 1;
+  resize: none;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
+  min-height: 40px;
+  max-height: 160px;
+}
+
+.lf-composer-input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.lf-send-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent);
+  color: var(--accent-on);
+  cursor: pointer;
+}
+
+.lf-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lf-send-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

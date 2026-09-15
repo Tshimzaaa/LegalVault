@@ -18,6 +18,9 @@ import {
   IconCalendar,
   IconGear,
   IconHelp,
+  IconMessageCircle,
+  IconMail,
+  IconFilePlus,
 } from '../../components/icons'
 
 export type StaffPage =
@@ -29,6 +32,9 @@ export type StaffPage =
   | 'reporting'
   | 'templates'
   | 'fallback-clauses'
+  | 'learned-friend'
+  | 'intake-forms'
+  | 'intake-submissions'
   | 'staff'
   | 'search'
   | 'audit-log'
@@ -51,6 +57,9 @@ export const staffNavItems: NavItem[] = [
   { label: 'Reporting', icon: <IconReport />, page: 'reporting' },
   { label: 'Templates', icon: <IconTemplates />, page: 'templates' },
   { label: 'Fallback Clauses', icon: <IconLearnedFriend />, page: 'fallback-clauses' },
+  { label: 'Learned Friend', icon: <IconMessageCircle />, page: 'learned-friend' },
+  { label: 'Requests', icon: <IconMail />, page: 'intake-submissions' },
+  { label: 'Intake Forms', icon: <IconFilePlus />, page: 'intake-forms' },
   { label: 'Knowledge Base', icon: <IconHelp />, page: 'knowledge-articles' },
   { label: 'Search', icon: <IconSearch />, page: 'search' },
   { label: 'Staff', icon: <IconShield />, page: 'staff' },

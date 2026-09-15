@@ -21,6 +21,9 @@ const SignedContracts = lazy(() => import('../SignedContracts/SignedContracts'))
 const Reporting = lazy(() => import('../Reporting/Reporting'))
 const Templates = lazy(() => import('../Templates/Templates'))
 const FallbackClauses = lazy(() => import('../FallbackClauses/FallbackClauses'))
+const LearnedFriend = lazy(() => import('../LearnedFriend/LearnedFriend'))
+const IntakeFormBuilder = lazy(() => import('../IntakeFormBuilder/IntakeFormBuilder'))
+const IntakeSubmissions = lazy(() => import('../IntakeSubmissions/IntakeSubmissions'))
 const Staff = lazy(() => import('../Staff/Staff'))
 const Search = lazy(() => import('../Search/Search'))
 const AuditLog = lazy(() => import('../AuditLog/AuditLog'))
@@ -62,9 +65,12 @@ function Workspace({ user, onLogout }: WorkspaceProps) {
             <Route path="contracts/:contractId" element={<ContractDetail />} />
             <Route path="workflow" element={<Workflow />} />
             <Route path="signed-contracts" element={<SignedContracts />} />
-            <Route path="reporting" element={<Reporting />} />
+            <Route path="reporting" element={<Reporting user={user} />} />
             <Route path="templates" element={<Templates />} />
             <Route path="fallback-clauses" element={<FallbackClauses />} />
+            <Route path="learned-friend" element={<LearnedFriend />} />
+            <Route path="intake-forms" element={<IntakeFormBuilder />} />
+            <Route path="intake-submissions" element={<IntakeSubmissions />} />
             <Route path="search" element={<Search />} />
             <Route path="calendar" element={<Calendar />} />
             <Route path="knowledge-articles" element={<KnowledgeArticles user={user} />} />

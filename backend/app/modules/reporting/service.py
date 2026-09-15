@@ -25,6 +25,12 @@ STATUS_LABELS = {
 
 INACTIVE_STATUSES = {ContractStage.CLOSED, ContractStage.DECLINED}
 
+# Rough, explicitly-approximate hours-per-open-task used to translate a raw task count into
+# a utilization percentage against a staff member's weekly_capacity_hours — contract tasks
+# don't carry their own time estimates (see ContractTask), so this is a baseline assumption,
+# not measured time. Revisit if/when tasks gain real hour estimates.
+ASSUMED_HOURS_PER_OPEN_TASK = 2.0
+
 
 class ReportingService:
 
@@ -76,6 +82,17 @@ class ReportingService:
                 total_contracts=len(total_contract_ids_by_user.get(user.id, ())),
                 open_tasks=open_tasks_by_user.get(user.id, 0),
                 overdue_tasks=overdue_tasks_by_user.get(user.id, 0),
+                weekly_capacity_hours=user.weekly_capacity_hours,
+                utilization_percent=(
+                    round(
+                        open_tasks_by_user.get(user.id, 0) * ASSUMED_HOURS_PER_OPEN_TASK
+                        / user.weekly_capacity_hours
+                        * 100,
+                        1,
+                    )
+                    if user.weekly_capacity_hours
+                    else None
+                ),
             )
             for user in staff
         ]

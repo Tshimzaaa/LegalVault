@@ -22,6 +22,7 @@ from app.modules.audit.service import AuditService
 from app.modules.audit.models import ActorType
 from app.modules.audit import actions as audit_actions
 from app.database.rls import set_tenant_context
+from app.modules.intake.system_forms import seed_system_support_form
 
 class RegisterService:
 
@@ -76,6 +77,7 @@ class RegisterService:
             )
 
             self.repository.create_user(user)
+            seed_system_support_form(self.db, organization.id)
 
             self.audit.log(
                 actor_type=ActorType.STAFF,
@@ -132,6 +134,7 @@ class RegisterService:
             )
 
             self.repository.create_user(user)
+            seed_system_support_form(self.db, organization.id)
 
             self.audit.log(
                 actor_type=ActorType.OWNER,

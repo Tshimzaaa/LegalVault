@@ -11,8 +11,9 @@ if TYPE_CHECKING:
 
 
 class FallbackClause(BaseModel):
-    """A org's pre-approved fallback negotiating position for a clause type,
-    surfaced to clients in the portal's "My Learned Friend" page."""
+    """An org's pre-approved fallback negotiating position for a clause type,
+    referenced by staff directly and by the "Learned Friend" AI assistant
+    (app/modules/ai_assistant) to ground its answers."""
 
     __tablename__ = "fallback_clauses"
 

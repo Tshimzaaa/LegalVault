@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from uuid import UUID
 from datetime import datetime
 
@@ -14,6 +14,7 @@ class UserResponse(BaseModel):
     is_active: bool
     invitation_status: str
     last_login: datetime | None = None
+    weekly_capacity_hours: float | None = None
 
     class Config:
         from_attributes = True
@@ -21,3 +22,6 @@ class UserResponse(BaseModel):
 
 class UpdateStaffStatusRequest(BaseModel):
     is_active: bool
+
+class UpdateStaffCapacityRequest(BaseModel):
+    weekly_capacity_hours: float | None = Field(default=None, ge=0, le=168)
