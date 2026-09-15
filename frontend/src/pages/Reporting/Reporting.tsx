@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import './Reporting.css'
 import '../../styles/dashboard.css'
+import './Reporting.css'
 import { listContracts } from '../../api/contracts'
 import { getDashboardSummary } from '../../api/dashboard'
 import { getReportingOverview, downloadContractsCsv } from '../../api/reporting'

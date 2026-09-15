@@ -7,7 +7,7 @@ import {
 } from '../../api/intakeSubmissions'
 import type { IntakeSubmission, SubmissionStatus } from '../../api/intakeSubmissions'
 import { listIntakeForms, submitIntakeForm } from '../../api/intakeForms'
-import type { IntakeForm } from '../../api/intakeForms'
+import type { IntakeField, IntakeForm } from '../../api/intakeForms'
 import { listUsers } from '../../api/auth'
 import type { User } from '../../api/auth'
 
@@ -87,6 +87,34 @@ function IntakeSubmissions() {
   const publishedForms = forms.filter((f) => f.is_published)
   const selectedForm = publishedForms.find((f) => f.id === newRequestFormId) ?? null
 
+  // Long-content field types get their own full-width line; short ones (text, number,
+  // date, dropdown) are paired up two-per-row so the form doesn't stretch every field
+  // across the full page width for a single word or date.
+  function isLongField(type: IntakeField['field_type']) {
+    return type === 'textarea' || type === 'file'
+  }
+
+  function groupFieldsIntoRows(fields: IntakeField[]): IntakeField[][] {
+    const rows: IntakeField[][] = []
+    let pendingShortField: IntakeField | null = null
+    for (const field of fields) {
+      if (isLongField(field.field_type)) {
+        if (pendingShortField) {
+          rows.push([pendingShortField])
+          pendingShortField = null
+        }
+        rows.push([field])
+      } else if (pendingShortField) {
+        rows.push([pendingShortField, field])
+        pendingShortField = null
+      } else {
+        pendingShortField = field
+      }
+    }
+    if (pendingShortField) rows.push([pendingShortField])
+    return rows
+  }
+
   function openNewRequest() {
     setShowNewRequest(true)
     setSubmitError(null)
@@ -153,41 +181,45 @@ function IntakeSubmissions() {
             </select>
           </label>
 
-          {selectedForm?.fields.map((field) => (
-            <label key={field.id} className="field">
-              <span>
-                {field.label}
-                {field.is_required && ' *'}
-              </span>
-              {field.field_type === 'textarea' ? (
-                <textarea
-                  rows={3}
-                  value={newRequestAnswers[field.id] ?? ''}
-                  onChange={(e) => setNewRequestAnswers((a) => ({ ...a, [field.id]: e.target.value }))}
-                />
-              ) : field.field_type === 'dropdown' ? (
-                <select
-                  value={newRequestAnswers[field.id] ?? ''}
-                  onChange={(e) => setNewRequestAnswers((a) => ({ ...a, [field.id]: e.target.value }))}
-                >
-                  <option value="">Select…</option>
-                  {(field.options ?? []).map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              ) : field.field_type === 'file' ? (
-                <span className="muted">File uploads aren&rsquo;t supported from this quick form yet.</span>
-              ) : (
-                <input
-                  type={field.field_type === 'date' ? 'date' : field.field_type === 'number' ? 'number' : 'text'}
-                  value={newRequestAnswers[field.id] ?? ''}
-                  onChange={(e) => setNewRequestAnswers((a) => ({ ...a, [field.id]: e.target.value }))}
-                  autoComplete="off"
-                />
-              )}
-            </label>
+          {selectedForm && groupFieldsIntoRows(selectedForm.fields).map((row) => (
+            <div key={row.map((f) => f.id).join('-')} className={row.length > 1 ? 'field-row' : undefined}>
+              {row.map((field) => (
+                <label key={field.id} className="field">
+                  <span>
+                    {field.label}
+                    {field.is_required && ' *'}
+                  </span>
+                  {field.field_type === 'textarea' ? (
+                    <textarea
+                      rows={3}
+                      value={newRequestAnswers[field.id] ?? ''}
+                      onChange={(e) => setNewRequestAnswers((a) => ({ ...a, [field.id]: e.target.value }))}
+                    />
+                  ) : field.field_type === 'dropdown' ? (
+                    <select
+                      value={newRequestAnswers[field.id] ?? ''}
+                      onChange={(e) => setNewRequestAnswers((a) => ({ ...a, [field.id]: e.target.value }))}
+                    >
+                      <option value="">Select…</option>
+                      {(field.options ?? []).map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
+                  ) : field.field_type === 'file' ? (
+                    <span className="muted">File uploads aren&rsquo;t supported from this quick form yet.</span>
+                  ) : (
+                    <input
+                      type={field.field_type === 'date' ? 'date' : field.field_type === 'number' ? 'number' : 'text'}
+                      value={newRequestAnswers[field.id] ?? ''}
+                      onChange={(e) => setNewRequestAnswers((a) => ({ ...a, [field.id]: e.target.value }))}
+                      autoComplete="off"
+                    />
+                  )}
+                </label>
+              ))}
+            </div>
           ))}
 
           {submitError && <p className="contract-error" aria-live="polite">{submitError}</p>}
