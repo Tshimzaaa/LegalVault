@@ -10,7 +10,7 @@ from app.database.base import BaseModel
 
 if TYPE_CHECKING:
     from app.modules.auth.models.organization import Organization
-    from app.modules.matters.models import Matter
+    from app.modules.contracts.models import Contract
 
 
 class ContractType(str, enum.Enum):
@@ -34,10 +34,10 @@ class SignedContract(BaseModel):
         index=True,
     )
 
-    # Optional traceability back to the matter this contract was signed under —
+    # Optional traceability back to the contract this contract was signed under —
     # nullable because contracts can also be imported wholesale from an external tool.
-    matter_id: Mapped[UUID | None] = mapped_column(
-        ForeignKey("matters.id"),
+    contract_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("contracts.id"),
         nullable=True,
         index=True,
     )

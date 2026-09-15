@@ -199,7 +199,7 @@ function KnowledgeArticles({ user }: KnowledgeArticlesProps) {
             <span>Content (Markdown)</span>
             <textarea rows={8} value={content} onChange={(e) => setContent(e.target.value)} required />
           </label>
-          <div className="matter-actions">
+          <div className="contract-actions">
             <button type="button" className="btn-ghost" onClick={() => setShowNew(false)}>
               Cancel
             </button>
@@ -207,7 +207,7 @@ function KnowledgeArticles({ user }: KnowledgeArticlesProps) {
               {creating ? 'Creating…' : 'Create Article'}
             </button>
           </div>
-          {createError && <p className="matter-error" aria-live="polite">{createError}</p>}
+          {createError && <p className="contract-error" aria-live="polite">{createError}</p>}
         </form>
       )}
 
@@ -227,7 +227,7 @@ function KnowledgeArticles({ user }: KnowledgeArticlesProps) {
         </div>
       )}
 
-      {actionError && <p className="matter-error" aria-live="polite">{actionError}</p>}
+      {actionError && <p className="contract-error" aria-live="polite">{actionError}</p>}
 
       {status === 'ready' && (
         <section className="templates-grid knowledge-list">
@@ -259,8 +259,8 @@ function KnowledgeArticles({ user }: KnowledgeArticlesProps) {
                   <span>Content (Markdown)</span>
                   <textarea rows={8} value={editContent} onChange={(e) => setEditContent(e.target.value)} />
                 </label>
-                {editError && <p className="matter-error" aria-live="polite">{editError}</p>}
-                <div className="matter-actions">
+                {editError && <p className="contract-error" aria-live="polite">{editError}</p>}
+                <div className="contract-actions">
                   <button type="button" className="btn-ghost" onClick={() => setEditingId(null)}>
                     Cancel
                   </button>

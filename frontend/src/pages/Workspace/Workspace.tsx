@@ -13,9 +13,9 @@ import type { User } from '../../api/auth'
 // Base) only downloads when that page is actually visited, instead of all ~18 shipping in
 // one bundle on every staff login.
 const Dashboard = lazy(() => import('../Dashboard/Dashboard'))
-const NewMatter = lazy(() => import('../NewMatter/NewMatter'))
-const Matters = lazy(() => import('../Matters/Matters'))
-const MatterDetail = lazy(() => import('../MatterDetail/MatterDetail'))
+const NewContract = lazy(() => import('../NewContract/NewContract'))
+const Contracts = lazy(() => import('../Contracts/Contracts'))
+const ContractDetail = lazy(() => import('../ContractDetail/ContractDetail'))
 const Workflow = lazy(() => import('../Workflow/Workflow'))
 const SignedContracts = lazy(() => import('../SignedContracts/SignedContracts'))
 const Reporting = lazy(() => import('../Reporting/Reporting'))
@@ -57,9 +57,9 @@ function Workspace({ user, onLogout }: WorkspaceProps) {
           <Routes>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard user={user} onLogout={onLogout} />} />
-            <Route path="new-matter" element={<NewMatter />} />
-            <Route path="matters" element={<Matters />} />
-            <Route path="matters/:matterId" element={<MatterDetail />} />
+            <Route path="new-contract" element={<NewContract />} />
+            <Route path="contracts" element={<Contracts />} />
+            <Route path="contracts/:contractId" element={<ContractDetail />} />
             <Route path="workflow" element={<Workflow />} />
             <Route path="signed-contracts" element={<SignedContracts />} />
             <Route path="reporting" element={<Reporting />} />

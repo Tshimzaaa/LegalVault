@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import './Calendar.css'
 import { IconFlag, IconCheckCircle } from '../../components/icons'
-import { getCalendar } from '../../api/matters'
-import type { CalendarEvent } from '../../api/matters'
+import { getCalendar } from '../../api/contracts'
+import type { CalendarEvent } from '../../api/contracts'
 
 type LoadState = 'loading' | 'error' | 'ready'
 
@@ -107,16 +107,16 @@ function Calendar() {
                 </span>
                 {dayEvents.map((e, i) => (
                   <Link
-                    key={`${e.matter_id}-${e.task_id ?? 'deadline'}-${i}`}
+                    key={`${e.contract_id}-${e.task_id ?? 'deadline'}-${i}`}
                     className="calendar-event-row"
-                    to={`/staff/matters/${e.matter_id}`}
+                    to={`/staff/contracts/${e.contract_id}`}
                   >
                     <span className="calendar-event-icon">
-                      {e.type === 'matter_deadline' ? <IconFlag color="#ef4444" /> : <IconCheckCircle />}
+                      {e.type === 'contract_deadline' ? <IconFlag color="#ef4444" /> : <IconCheckCircle />}
                     </span>
                     <span className="calendar-event-title">{e.title}</span>
-                    <span className="muted calendar-event-matter" title={e.matter_title}>
-                      {e.matter_title}
+                    <span className="muted calendar-event-contract" title={e.contract_title}>
+                      {e.contract_title}
                     </span>
                   </Link>
                 ))}

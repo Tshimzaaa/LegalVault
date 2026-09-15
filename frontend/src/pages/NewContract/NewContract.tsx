@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import './NewMatter.css'
+import './NewContract.css'
 import { IconCalendar, IconSearch } from '../../components/icons'
-import { createMatter, assignStaff } from '../../api/matters'
+import { createContract, assignStaff } from '../../api/contracts'
 import { listUsers } from '../../api/auth'
 import type { User } from '../../api/auth'
 
-function NewMatter() {
+function NewContract() {
   const navigate = useNavigate()
   const [staff, setStaff] = useState<User[]>([])
   const [title, setTitle] = useState('')
@@ -16,7 +16,7 @@ function NewMatter() {
   const [dueDate, setDueDate] = useState('')
   const [attorneyId, setAttorneyId] = useState('')
   const [caseManagerId, setCaseManagerId] = useState('')
-  const [matterType, setMatterType] = useState('')
+  const [contractType, setContractType] = useState('')
   const [practiceArea, setPracticeArea] = useState('')
   const [feeType, setFeeType] = useState('hourly')
   const [conflictCheck, setConflictCheck] = useState('')
@@ -44,7 +44,7 @@ function NewMatter() {
       description ||
       attorneyId ||
       caseManagerId ||
-      matterType ||
+      contractType ||
       practiceArea ||
       conflictCheck ||
       clientGoal ||
@@ -52,7 +52,7 @@ function NewMatter() {
   )
 
   // Browser back/refresh/tab-close bypass the in-app Cancel confirmation — warn there too
-  // so a half-filled matter form isn't silently discarded.
+  // so a half-filled contract form isn't silently discarded.
   useEffect(() => {
     if (submitted) return
     function handleBeforeUnload(e: BeforeUnloadEvent) {
@@ -71,24 +71,24 @@ function NewMatter() {
 
     const titleMissing = !title.trim()
     if (titleMissing) {
-      setTitleError('Enter a matter name.')
+      setTitleError('Enter a contract name.')
       titleRef.current?.focus()
       return
     }
 
     const token = localStorage.getItem('access_token')
     if (!token) {
-      setError('You need to be logged in to create a matter.')
+      setError('You need to be logged in to create a contract.')
       return
     }
 
     setSubmitting(true)
     try {
-      // The backend's matter record has no dedicated columns for matter type, practice
+      // The backend's contract record has no dedicated columns for contract type, practice
       // area, fee type, conflict check, client goal, or case strategy notes yet, so we
       // fold them into the description to avoid silently discarding what the user typed.
       const extraDetails = [
-        matterType && `Matter Type: ${matterType}`,
+        contractType && `Contract Type: ${contractType}`,
         practiceArea && `Practice Area: ${practiceArea}`,
         feeType && `Fee Type: ${feeType}`,
         conflictCheck && `Conflict Check: ${conflictCheck}`,
@@ -97,7 +97,7 @@ function NewMatter() {
       ].filter(Boolean)
       const fullDescription = [description, ...extraDetails].filter(Boolean).join('\n')
 
-      const matter = await createMatter(token, {
+      const contract = await createContract(token, {
         title,
         description: fullDescription || null,
         due_date: dueDate || null,
@@ -106,43 +106,43 @@ function NewMatter() {
       const assignmentFailures: string[] = []
       if (attorneyId) {
         try {
-          await assignStaff(token, matter.id, { user_id: attorneyId, role_on_matter: 'lead_lawyer' })
+          await assignStaff(token, contract.id, { user_id: attorneyId, role_on_contract: 'lead_lawyer' })
         } catch {
           assignmentFailures.push('attorney')
         }
       }
       if (caseManagerId) {
         try {
-          await assignStaff(token, matter.id, { user_id: caseManagerId, role_on_matter: 'paralegal' })
+          await assignStaff(token, contract.id, { user_id: caseManagerId, role_on_contract: 'paralegal' })
         } catch {
           assignmentFailures.push('case manager')
         }
       }
       if (assignmentFailures.length > 0) {
-        setAssignWarning(`Matter created, but could not assign: ${assignmentFailures.join(', ')}.`)
+        setAssignWarning(`Contract created, but could not assign: ${assignmentFailures.join(', ')}.`)
       }
 
       setSubmitted(true)
     } catch {
-      setError('Could not create the matter. Please try again.')
+      setError('Could not create the contract. Please try again.')
     } finally {
       setSubmitting(false)
     }
   }
 
   return (
-    <main className="dash-main matter-main">
-      <header className="dash-topbar matter-topbar">
-        <h1>Open New Matter</h1>
+    <main className="dash-main contract-main">
+      <header className="dash-topbar contract-topbar">
+        <h1>Open New Contract</h1>
       </header>
 
-      <form className="matter-form" onSubmit={handleSubmit}>
-        <div className="matter-col">
+      <form className="contract-form" onSubmit={handleSubmit}>
+        <div className="contract-col">
           <section className="card form-section">
-            <h3>1. Matter Information</h3>
+            <h3>1. Contract Information</h3>
 
             <label className="field">
-              <span>Matter Name</span>
+              <span>Contract Name</span>
               <input
                 ref={titleRef}
                 type="text"
@@ -151,10 +151,10 @@ function NewMatter() {
                 onChange={(e) => setTitle(e.target.value)}
                 autoComplete="off"
                 aria-invalid={Boolean(titleError)}
-                aria-describedby={titleError ? 'matter-title-error' : undefined}
+                aria-describedby={titleError ? 'contract-title-error' : undefined}
               />
               {titleError && (
-                <span className="matter-error" id="matter-title-error" aria-live="polite">
+                <span className="contract-error" id="contract-title-error" aria-live="polite">
                   {titleError}
                 </span>
               )}
@@ -162,10 +162,10 @@ function NewMatter() {
 
             <div className="field-row">
               <label className="field">
-                <span>Matter Type</span>
-                <select value={matterType} onChange={(e) => setMatterType(e.target.value)}>
+                <span>Contract Type</span>
+                <select value={contractType} onChange={(e) => setContractType(e.target.value)}>
                   <option value="" disabled>
-                    Select matter type
+                    Select contract type
                   </option>
                   <option value="corporate">Corporate</option>
                   <option value="litigation">Litigation</option>
@@ -230,7 +230,7 @@ function NewMatter() {
             <label className="field">
               <span>Description</span>
               <textarea
-                placeholder="Matter Description…"
+                placeholder="Contract Description…"
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -239,7 +239,7 @@ function NewMatter() {
           </section>
         </div>
 
-        <div className="matter-col">
+        <div className="contract-col">
           <section className="card form-section">
             <h3>2. Fee Arrangement</h3>
 
@@ -255,9 +255,9 @@ function NewMatter() {
           </section>
         </div>
 
-        <div className="matter-col">
+        <div className="contract-col">
           <section className="card form-section">
-            <h3>3. Matter Details &amp; Strategy</h3>
+            <h3>3. Contract Details &amp; Strategy</h3>
 
             <label className="field">
               <span>Conflict Check</span>
@@ -287,7 +287,7 @@ function NewMatter() {
             <label className="field">
               <span>Case Strategy Notes</span>
               <textarea
-                placeholder="Reference field for related matters…"
+                placeholder="Reference field for related contracts…"
                 rows={2}
                 value={caseStrategyNotes}
                 onChange={(e) => setCaseStrategyNotes(e.target.value)}
@@ -296,29 +296,29 @@ function NewMatter() {
           </section>
         </div>
 
-        <div className="matter-actions">
+        <div className="contract-actions">
           <button
             type="button"
             className="btn-ghost"
             onClick={() => {
-              if (isDirty && !window.confirm('Discard this new matter? Your changes will be lost.')) {
+              if (isDirty && !window.confirm('Discard this new contract? Your changes will be lost.')) {
                 return
               }
-              navigate('/staff/matters')
+              navigate('/staff/contracts')
             }}
           >
             Cancel
           </button>
           <button type="submit" className="btn-solid" disabled={submitting}>
-            {submitting ? 'Opening…' : 'Open Matter'}
+            {submitting ? 'Opening…' : 'Open Contract'}
           </button>
         </div>
-        {submitted && <p className="matter-success" aria-live="polite">Matter created.</p>}
-        {assignWarning && <p className="matter-error" aria-live="polite">{assignWarning}</p>}
-        {error && <p className="matter-error" aria-live="polite">{error}</p>}
+        {submitted && <p className="contract-success" aria-live="polite">Contract created.</p>}
+        {assignWarning && <p className="contract-error" aria-live="polite">{assignWarning}</p>}
+        {error && <p className="contract-error" aria-live="polite">{error}</p>}
       </form>
     </main>
   )
 }
 
-export default NewMatter
+export default NewContract

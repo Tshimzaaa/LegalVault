@@ -3,44 +3,44 @@ from datetime import datetime, UTC
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import ObjectDeletedError
 
-from app.modules.matters.repository import MatterRepository
-from app.modules.matters.models import (
-    Matter,
-    MatterAssignment,
-    MatterApproval,
-    MatterDocument,
-    MatterTask,
-    MatterMessage,
+from app.modules.contracts.repository import ContractRepository
+from app.modules.contracts.models import (
+    Contract,
+    ContractAssignment,
+    ContractApproval,
+    ContractDocument,
+    ContractTask,
+    ContractMessage,
     MessageAuthorType,
-    MatterStatus,
-    MatterRole,
+    ContractStage,
+    ContractRole,
     ApprovalStatus,
 )
-from app.modules.matters.schemas import (
-    CreateMatterRequest,
-    UpdateMatterDetailsRequest,
-    UpdateMatterStatusRequest,
-    UpdateMatterDeadlineRequest,
+from app.modules.contracts.schemas import (
+    CreateContractRequest,
+    UpdateContractDetailsRequest,
+    UpdateContractStageRequest,
+    UpdateContractDeadlineRequest,
     AssignStaffRequest,
-    CreateMatterTaskRequest,
-    UpdateMatterTaskRequest,
+    CreateContractTaskRequest,
+    UpdateContractTaskRequest,
     CalendarEvent,
-    CreateMatterMessageRequest,
-    RequestMatterApprovalRequest,
-    DecideMatterApprovalRequest,
+    CreateContractMessageRequest,
+    RequestContractApprovalRequest,
+    DecideContractApprovalRequest,
 )
-from app.exceptions.matters import (
-    MatterNotFound,
+from app.exceptions.contracts import (
+    ContractNotFound,
     StaffAlreadyAssigned,
-    MatterDocumentNotFound,
+    ContractDocumentNotFound,
     UserNotFoundForAssignment,
-    MatterTaskNotFound,
-    MatterMessageNotFound,
+    ContractTaskNotFound,
+    ContractMessageNotFound,
     CannotDeleteOthersMessage,
     InvalidStatusTransition,
     ApprovalRequiredForTransition,
     ApprovalAlreadyPending,
-    MatterApprovalNotFound,
+    ContractApprovalNotFound,
     ApprovalAlreadyDecided,
 )
 from app.exceptions.auth import InsufficientPermissions
@@ -65,149 +65,149 @@ ALLOWED_DOCUMENT_TYPES = {
 
 # Valid next statuses per current status — replaces the old "any status to any status"
 # behavior. CLOSED and DECLINED are terminal (no outgoing transitions).
-MATTER_STATUS_TRANSITIONS: dict[MatterStatus, set[MatterStatus]] = {
-    MatterStatus.INTAKE: {MatterStatus.IN_REVIEW, MatterStatus.DECLINED},
-    MatterStatus.IN_REVIEW: {MatterStatus.AWAITING_SIGNATURE, MatterStatus.DECLINED, MatterStatus.INTAKE},
-    MatterStatus.AWAITING_SIGNATURE: {MatterStatus.SIGNED, MatterStatus.DECLINED, MatterStatus.IN_REVIEW},
-    MatterStatus.SIGNED: {MatterStatus.CLOSED},
-    MatterStatus.CLOSED: set(),
-    MatterStatus.DECLINED: set(),
+CONTRACT_STATUS_TRANSITIONS: dict[ContractStage, set[ContractStage]] = {
+    ContractStage.INTAKE: {ContractStage.IN_REVIEW, ContractStage.DECLINED},
+    ContractStage.IN_REVIEW: {ContractStage.AWAITING_SIGNATURE, ContractStage.DECLINED, ContractStage.INTAKE},
+    ContractStage.AWAITING_SIGNATURE: {ContractStage.SIGNED, ContractStage.DECLINED, ContractStage.IN_REVIEW},
+    ContractStage.SIGNED: {ContractStage.CLOSED},
+    ContractStage.CLOSED: set(),
+    ContractStage.DECLINED: set(),
 }
 
 # Transitions that can't be applied directly via update_status — they must go through
 # request_status_approval() + decide_approval() instead.
-GATED_TRANSITIONS: set[tuple[MatterStatus, MatterStatus]] = {
-    (MatterStatus.AWAITING_SIGNATURE, MatterStatus.SIGNED),
-    (MatterStatus.SIGNED, MatterStatus.CLOSED),
+GATED_TRANSITIONS: set[tuple[ContractStage, ContractStage]] = {
+    (ContractStage.AWAITING_SIGNATURE, ContractStage.SIGNED),
+    (ContractStage.SIGNED, ContractStage.CLOSED),
 }
 
 
-class MatterService:
+class ContractService:
 
     def __init__(self, db: Session):
         self.db = db
-        self.repository = MatterRepository(db)
+        self.repository = ContractRepository(db)
         self.auth_repository = AuthRepository(db)
         self.audit = AuditService(db)
         self.notifications = NotificationService(db)
 
-    def create_matter(self, org_id, actor_id, request: CreateMatterRequest) -> Matter:
-        matter = Matter(
+    def create_contract(self, org_id, actor_id, request: CreateContractRequest) -> Contract:
+        contract = Contract(
             org_id=org_id,
             title=request.title,
             description=request.description,
             due_date=request.due_date,
         )
-        self.repository.create(matter)
+        self.repository.create(contract)
 
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
             org_id=org_id,
-            action=audit_actions.MATTER_CREATED,
-            target_type="matter",
-            target_id=matter.id,
-            details={"title": matter.title},
+            action=audit_actions.CONTRACT_CREATED,
+            target_type="contract",
+            target_id=contract.id,
+            details={"title": contract.title},
         )
         self.db.commit()
-        return matter
+        return contract
 
-    def _commit_and_refresh(self, matter: Matter) -> Matter:
-        # expire_on_commit means the next attribute access re-SELECTs matter;
+    def _commit_and_refresh(self, contract: Contract) -> Contract:
+        # expire_on_commit means the next attribute access re-SELECTs contract;
         # if it was deleted by a concurrent request (e.g. org deletion) in
         # between our read and this commit, that SELECT returns no rows and
         # raises ObjectDeletedError instead of a normal 404.
         self.db.commit()
         try:
-            self.db.refresh(matter)
+            self.db.refresh(contract)
         except ObjectDeletedError:
-            raise MatterNotFound()
-        return matter
+            raise ContractNotFound()
+        return contract
 
-    def get_matter(self, matter_id, org_id) -> Matter:
-        matter = self.repository.get_by_id(matter_id)
-        if not matter or str(matter.org_id) != str(org_id):
-            raise MatterNotFound()
-        return matter
+    def get_contract(self, contract_id, org_id) -> Contract:
+        contract = self.repository.get_by_id(contract_id)
+        if not contract or str(contract.org_id) != str(org_id):
+            raise ContractNotFound()
+        return contract
 
-    def list_matters_for_org(self, org_id) -> list[Matter]:
+    def list_contracts_for_org(self, org_id) -> list[Contract]:
         return self.repository.list_by_org(org_id)
 
-    def update_details(self, matter_id, org_id, actor_id, request: UpdateMatterDetailsRequest) -> Matter:
-        matter = self.get_matter(matter_id, org_id)
-        matter.title = request.title
-        matter.description = request.description
+    def update_details(self, contract_id, org_id, actor_id, request: UpdateContractDetailsRequest) -> Contract:
+        contract = self.get_contract(contract_id, org_id)
+        contract.title = request.title
+        contract.description = request.description
 
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
             org_id=org_id,
-            action=audit_actions.MATTER_DETAILS_UPDATED,
-            target_type="matter",
-            target_id=matter.id,
+            action=audit_actions.CONTRACT_DETAILS_UPDATED,
+            target_type="contract",
+            target_id=contract.id,
             details={"title": request.title},
         )
-        return self._commit_and_refresh(matter)
+        return self._commit_and_refresh(contract)
 
-    def update_status(self, matter_id, org_id, actor_id, request: UpdateMatterStatusRequest) -> Matter:
-        matter = self.get_matter(matter_id, org_id)
-        previous_status = matter.status
+    def update_status(self, contract_id, org_id, actor_id, request: UpdateContractStageRequest) -> Contract:
+        contract = self.get_contract(contract_id, org_id)
+        previous_status = contract.status
         target = request.status
 
         if target == previous_status:
-            return matter
-        if target not in MATTER_STATUS_TRANSITIONS.get(previous_status, set()):
+            return contract
+        if target not in CONTRACT_STATUS_TRANSITIONS.get(previous_status, set()):
             raise InvalidStatusTransition()
         if (previous_status, target) in GATED_TRANSITIONS:
             raise ApprovalRequiredForTransition()
 
-        matter.status = target
+        contract.status = target
 
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
             org_id=org_id,
-            action=audit_actions.MATTER_STATUS_UPDATED,
-            target_type="matter",
-            target_id=matter.id,
+            action=audit_actions.CONTRACT_STATUS_UPDATED,
+            target_type="contract",
+            target_id=contract.id,
             details={"from": previous_status.value, "to": request.status.value},
         )
-        return self._commit_and_refresh(matter)
+        return self._commit_and_refresh(contract)
 
-    def update_deadline(self, matter_id, org_id, actor_id, request: UpdateMatterDeadlineRequest) -> Matter:
-        matter = self.get_matter(matter_id, org_id)
-        previous_due_date = matter.due_date
-        matter.due_date = request.due_date
+    def update_deadline(self, contract_id, org_id, actor_id, request: UpdateContractDeadlineRequest) -> Contract:
+        contract = self.get_contract(contract_id, org_id)
+        previous_due_date = contract.due_date
+        contract.due_date = request.due_date
 
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
             org_id=org_id,
-            action=audit_actions.MATTER_DEADLINE_UPDATED,
-            target_type="matter",
-            target_id=matter.id,
+            action=audit_actions.CONTRACT_DEADLINE_UPDATED,
+            target_type="contract",
+            target_id=contract.id,
             details={
                 "from": previous_due_date.isoformat() if previous_due_date else None,
                 "to": request.due_date.isoformat() if request.due_date else None,
             },
         )
-        return self._commit_and_refresh(matter)
+        return self._commit_and_refresh(contract)
 
-    def assign_staff(self, matter_id, org_id, actor_id, request: AssignStaffRequest) -> MatterAssignment:
-        matter = self.get_matter(matter_id, org_id)  # also validates org ownership
+    def assign_staff(self, contract_id, org_id, actor_id, request: AssignStaffRequest) -> ContractAssignment:
+        contract = self.get_contract(contract_id, org_id)  # also validates org ownership
 
         assignee = self.auth_repository.get_user_by_id(request.user_id)
         if not assignee or str(assignee.org_id) != str(org_id):
             raise UserNotFoundForAssignment()
 
-        existing = self.repository.get_assignment(matter_id, request.user_id, request.role_on_matter)
+        existing = self.repository.get_assignment(contract_id, request.user_id, request.role_on_contract)
         if existing:
             raise StaffAlreadyAssigned()
 
-        assignment = MatterAssignment(
-            matter_id=matter.id,
+        assignment = ContractAssignment(
+            contract_id=contract.id,
             user_id=request.user_id,
-            role_on_matter=request.role_on_matter,
+            role_on_contract=request.role_on_contract,
         )
         self.repository.create_assignment(assignment)
 
@@ -215,38 +215,38 @@ class MatterService:
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
             org_id=org_id,
-            action=audit_actions.MATTER_STAFF_ASSIGNED,
-            target_type="matter_assignment",
+            action=audit_actions.CONTRACT_STAFF_ASSIGNED,
+            target_type="contract_assignment",
             target_id=assignment.id,
-            details={"user_id": str(request.user_id), "role_on_matter": request.role_on_matter.value},
+            details={"user_id": str(request.user_id), "role_on_contract": request.role_on_contract.value},
         )
         self.notifications.notify(
             recipient_type=RecipientType.STAFF,
             recipient_id=request.user_id,
-            type="matter.staff_assigned",
-            title=f'You were assigned to "{matter.title}"',
-            body=f"Role: {request.role_on_matter.value.replace('_', ' ').title()}",
-            target_type="matter",
-            target_id=matter.id,
+            type="contract.staff_assigned",
+            title=f'You were assigned to "{contract.title}"',
+            body=f"Role: {request.role_on_contract.value.replace('_', ' ').title()}",
+            target_type="contract",
+            target_id=contract.id,
         )
         self.db.commit()
         return assignment
 
-    def list_assignments(self, matter_id, org_id):
-        self.get_matter(matter_id, org_id)  # validates ownership, raises 404 if not found/wrong org
-        return self.repository.list_assignments_for_matter(matter_id)
+    def list_assignments(self, contract_id, org_id):
+        self.get_contract(contract_id, org_id)  # validates ownership, raises 404 if not found/wrong org
+        return self.repository.list_assignments_for_contract(contract_id)
 
-    def upload_matter_document(
+    def upload_contract_document(
         self,
-        matter_id,
+        contract_id,
         org_id,
         title: str,
         file_bytes: bytes,
         original_filename: str,
         content_type: str,
         uploaded_by=None,
-    ) -> MatterDocument:
-        matter = self.get_matter(matter_id, org_id)
+    ) -> ContractDocument:
+        contract = self.get_contract(contract_id, org_id)
 
         if content_type not in ALLOWED_DOCUMENT_TYPES:
             from app.exceptions.templates import UnsupportedFileType
@@ -260,21 +260,21 @@ class MatterService:
                 actor_id=uploaded_by,
                 org_id=org_id,
                 action=audit_actions.FILE_UPLOAD_BLOCKED_MALWARE,
-                target_type="matter_document",
+                target_type="contract_document",
                 target_id=None,
-                details={"matter_id": str(matter.id), "title": title, "original_filename": original_filename},
+                details={"contract_id": str(contract.id), "title": title, "original_filename": original_filename},
             )
             self.db.commit()
             raise
 
-        latest = self.repository.get_latest_version(matter.id, title)
+        latest = self.repository.get_latest_version(contract.id, title)
         next_version = (latest.version + 1) if latest else 1
 
-        file_key = f"matter_documents/{matter.id}/{uuid.uuid4()}-{original_filename}"
+        file_key = f"contract_documents/{contract.id}/{uuid.uuid4()}-{original_filename}"
         upload_file(file_bytes, file_key, content_type)
 
-        document = MatterDocument(
-            matter_id=matter.id,
+        document = ContractDocument(
+            contract_id=contract.id,
             uploaded_by=uploaded_by,
             title=title,
             version=next_version,
@@ -288,8 +288,8 @@ class MatterService:
             actor_type=ActorType.STAFF,
             actor_id=uploaded_by,
             org_id=org_id,
-            action=audit_actions.MATTER_DOCUMENT_UPLOADED,
-            target_type="matter_document",
+            action=audit_actions.CONTRACT_DOCUMENT_UPLOADED,
+            target_type="contract_document",
             target_id=document.id,
             details={"title": document.title, "version": document.version},
         )
@@ -297,34 +297,34 @@ class MatterService:
             {
                 "recipient_type": RecipientType.STAFF,
                 "recipient_id": assignment.user_id,
-                "type": "matter.document_uploaded",
-                "title": f'New document on "{matter.title}"',
+                "type": "contract.document_uploaded",
+                "title": f'New document on "{contract.title}"',
                 "body": f"{document.title} (v{document.version}) was uploaded.",
-                "target_type": "matter",
-                "target_id": matter.id,
+                "target_type": "contract",
+                "target_id": contract.id,
             }
-            for assignment in self.repository.list_assignments_for_matter(matter.id)
+            for assignment in self.repository.list_assignments_for_contract(contract.id)
             if str(assignment.user_id) != str(uploaded_by)
         ])
         self.db.commit()
         return document
 
-    def list_matter_documents(self, matter_id, org_id) -> list[MatterDocument]:
-        self.get_matter(matter_id, org_id)  # ownership check
-        return self.repository.list_documents_for_matter(matter_id)
+    def list_contract_documents(self, contract_id, org_id) -> list[ContractDocument]:
+        self.get_contract(contract_id, org_id)  # ownership check
+        return self.repository.list_documents_for_contract(contract_id)
 
-    def get_matter_document_download(self, matter_id, document_id, org_id) -> str:
-        self.get_matter(matter_id, org_id)  # ownership check
+    def get_contract_document_download(self, contract_id, document_id, org_id) -> str:
+        self.get_contract(contract_id, org_id)  # ownership check
         document = self.repository.get_document_by_id(document_id)
-        if not document or str(document.matter_id) != str(matter_id):
-            raise MatterDocumentNotFound()
+        if not document or str(document.contract_id) != str(contract_id):
+            raise ContractDocumentNotFound()
         return get_download_url(document.file_key)
 
-    def delete_matter_document(self, matter_id, document_id, org_id, actor_id) -> None:
-        self.get_matter(matter_id, org_id)  # ownership check
+    def delete_contract_document(self, contract_id, document_id, org_id, actor_id) -> None:
+        self.get_contract(contract_id, org_id)  # ownership check
         document = self.repository.get_document_by_id(document_id)
-        if not document or str(document.matter_id) != str(matter_id):
-            raise MatterDocumentNotFound()
+        if not document or str(document.contract_id) != str(contract_id):
+            raise ContractDocumentNotFound()
 
         delete_file(document.file_key)
         self.repository.delete_document(document)
@@ -333,8 +333,8 @@ class MatterService:
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
             org_id=org_id,
-            action=audit_actions.MATTER_DOCUMENT_DELETED,
-            target_type="matter_document",
+            action=audit_actions.CONTRACT_DOCUMENT_DELETED,
+            target_type="contract_document",
             target_id=document.id,
             details={"title": document.title, "version": document.version},
         )
@@ -347,12 +347,12 @@ class MatterService:
         if not assignee or str(assignee.org_id) != str(org_id):
             raise UserNotFoundForAssignment()
 
-    def create_task(self, matter_id, org_id, actor_id, request: CreateMatterTaskRequest) -> MatterTask:
-        matter = self.get_matter(matter_id, org_id)  # ownership check
+    def create_task(self, contract_id, org_id, actor_id, request: CreateContractTaskRequest) -> ContractTask:
+        contract = self.get_contract(contract_id, org_id)  # ownership check
         self._validate_assignee(request.assigned_to, org_id)
 
-        task = MatterTask(
-            matter_id=matter.id,
+        task = ContractTask(
+            contract_id=contract.id,
             title=request.title,
             description=request.description,
             assigned_to=request.assigned_to,
@@ -364,8 +364,8 @@ class MatterService:
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
             org_id=org_id,
-            action=audit_actions.MATTER_TASK_CREATED,
-            target_type="matter_task",
+            action=audit_actions.CONTRACT_TASK_CREATED,
+            target_type="contract_task",
             target_id=task.id,
             details={"title": task.title},
         )
@@ -373,25 +373,25 @@ class MatterService:
             self.notifications.notify(
                 recipient_type=RecipientType.STAFF,
                 recipient_id=task.assigned_to,
-                type="matter.task_assigned",
+                type="contract.task_assigned",
                 title=f"New task: {task.title}",
-                body=f'Assigned to you on "{matter.title}".',
-                target_type="matter",
-                target_id=matter.id,
+                body=f'Assigned to you on "{contract.title}".',
+                target_type="contract",
+                target_id=contract.id,
             )
         self.db.commit()
         return task
 
-    def list_tasks(self, matter_id, org_id) -> list[MatterTask]:
-        self.get_matter(matter_id, org_id)  # ownership check
-        return self.repository.list_tasks_for_matter(matter_id)
+    def list_tasks(self, contract_id, org_id) -> list[ContractTask]:
+        self.get_contract(contract_id, org_id)  # ownership check
+        return self.repository.list_tasks_for_contract(contract_id)
 
-    def update_task(self, matter_id, task_id, org_id, actor_id, request: UpdateMatterTaskRequest) -> MatterTask:
-        matter = self.get_matter(matter_id, org_id)  # ownership check
+    def update_task(self, contract_id, task_id, org_id, actor_id, request: UpdateContractTaskRequest) -> ContractTask:
+        contract = self.get_contract(contract_id, org_id)  # ownership check
 
         task = self.repository.get_task_by_id(task_id)
-        if not task or str(task.matter_id) != str(matter_id):
-            raise MatterTaskNotFound()
+        if not task or str(task.contract_id) != str(contract_id):
+            raise ContractTaskNotFound()
 
         updates = request.model_dump(exclude_unset=True)
         if "assigned_to" in updates:
@@ -404,8 +404,8 @@ class MatterService:
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
             org_id=org_id,
-            action=audit_actions.MATTER_TASK_UPDATED,
-            target_type="matter_task",
+            action=audit_actions.CONTRACT_TASK_UPDATED,
+            target_type="contract_task",
             target_id=task.id,
             details={
                 k: (v.value if hasattr(v, "value") else (str(v) if v is not None else None))
@@ -416,63 +416,63 @@ class MatterService:
             self.notifications.notify(
                 recipient_type=RecipientType.STAFF,
                 recipient_id=updates["assigned_to"],
-                type="matter.task_assigned",
+                type="contract.task_assigned",
                 title=f"Task assigned: {task.title}",
-                body=f'You were assigned to a task on "{matter.title}".',
-                target_type="matter",
-                target_id=matter.id,
+                body=f'You were assigned to a task on "{contract.title}".',
+                target_type="contract",
+                target_id=contract.id,
             )
         self.db.commit()
         return task
 
-    def _notify_new_message(self, matter, author_type: MessageAuthorType, author_id, author_name, body):
+    def _notify_new_message(self, contract, author_type: MessageAuthorType, author_id, author_name, body):
         preview = body if len(body) <= 120 else f"{body[:117]}..."
-        title = f'New message on "{matter.title}"'
+        title = f'New message on "{contract.title}"'
         notif_body = f"{author_name}: {preview}"
 
         entries = [
             {
                 "recipient_type": RecipientType.STAFF,
                 "recipient_id": assignment.user_id,
-                "type": "matter.new_message",
+                "type": "contract.new_message",
                 "title": title,
                 "body": notif_body,
-                "target_type": "matter",
-                "target_id": matter.id,
+                "target_type": "contract",
+                "target_id": contract.id,
             }
-            for assignment in self.repository.list_assignments_for_matter(matter.id)
+            for assignment in self.repository.list_assignments_for_contract(contract.id)
             if not (author_type == MessageAuthorType.STAFF and str(assignment.user_id) == str(author_id))
         ]
 
         self.notifications.notify_many(entries)
 
     def post_message_as_staff(
-        self, matter_id, org_id, actor_id, actor_name: str, request: CreateMatterMessageRequest
-    ) -> MatterMessage:
-        matter = self.get_matter(matter_id, org_id)  # ownership check
+        self, contract_id, org_id, actor_id, actor_name: str, request: CreateContractMessageRequest
+    ) -> ContractMessage:
+        contract = self.get_contract(contract_id, org_id)  # ownership check
 
-        message = MatterMessage(
-            matter_id=matter.id,
+        message = ContractMessage(
+            contract_id=contract.id,
             author_type=MessageAuthorType.STAFF,
             author_id=actor_id,
             author_name=actor_name,
             body=request.body,
         )
         self.repository.create_message(message)
-        self._notify_new_message(matter, MessageAuthorType.STAFF, actor_id, actor_name, request.body)
+        self._notify_new_message(contract, MessageAuthorType.STAFF, actor_id, actor_name, request.body)
         self.db.commit()
         return message
 
-    def list_messages(self, matter_id, org_id) -> list[MatterMessage]:
-        self.get_matter(matter_id, org_id)  # ownership check
-        return self.repository.list_messages_for_matter(matter_id)
+    def list_messages(self, contract_id, org_id) -> list[ContractMessage]:
+        self.get_contract(contract_id, org_id)  # ownership check
+        return self.repository.list_messages_for_contract(contract_id)
 
-    def delete_message(self, matter_id, message_id, org_id, actor_id, is_admin: bool):
-        self.get_matter(matter_id, org_id)  # ownership check
+    def delete_message(self, contract_id, message_id, org_id, actor_id, is_admin: bool):
+        self.get_contract(contract_id, org_id)  # ownership check
 
         message = self.repository.get_message_by_id(message_id)
-        if not message or str(message.matter_id) != str(matter_id):
-            raise MatterMessageNotFound()
+        if not message or str(message.contract_id) != str(contract_id):
+            raise ContractMessageNotFound()
 
         if not is_admin and str(message.author_id) != str(actor_id):
             raise CannotDeleteOthersMessage()
@@ -480,12 +480,12 @@ class MatterService:
         self.repository.delete_message(message)
         self.db.commit()
 
-    def delete_task(self, matter_id, task_id, org_id, actor_id):
-        self.get_matter(matter_id, org_id)  # ownership check
+    def delete_task(self, contract_id, task_id, org_id, actor_id):
+        self.get_contract(contract_id, org_id)  # ownership check
 
         task = self.repository.get_task_by_id(task_id)
-        if not task or str(task.matter_id) != str(matter_id):
-            raise MatterTaskNotFound()
+        if not task or str(task.contract_id) != str(contract_id):
+            raise ContractTaskNotFound()
 
         self.repository.delete_task(task)
 
@@ -493,8 +493,8 @@ class MatterService:
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
             org_id=org_id,
-            action=audit_actions.MATTER_TASK_DELETED,
-            target_type="matter_task",
+            action=audit_actions.CONTRACT_TASK_DELETED,
+            target_type="contract_task",
             target_id=task.id,
             details={"title": task.title},
         )
@@ -503,61 +503,61 @@ class MatterService:
     def get_calendar(self, org_id, start, end) -> list[CalendarEvent]:
         events = [
             CalendarEvent(
-                date=matter.due_date,
-                type="matter_deadline",
-                title="Matter due date",
-                matter_id=matter.id,
-                matter_title=matter.title,
+                date=contract.due_date,
+                type="contract_deadline",
+                title="Contract due date",
+                contract_id=contract.id,
+                contract_title=contract.title,
             )
-            for matter in self.repository.list_matters_with_deadline_in_range(org_id, start, end)
+            for contract in self.repository.list_contracts_with_deadline_in_range(org_id, start, end)
         ]
         events += [
             CalendarEvent(
                 date=task.due_date,
                 type="task_due",
                 title=task.title,
-                matter_id=matter.id,
-                matter_title=matter.title,
+                contract_id=contract.id,
+                contract_title=contract.title,
                 task_id=task.id,
             )
-            for task, matter in self.repository.list_tasks_with_due_date_in_range(org_id, start, end)
+            for task, contract in self.repository.list_tasks_with_due_date_in_range(org_id, start, end)
         ]
         events.sort(key=lambda e: e.date)
         return events
 
-    def _eligible_approver_ids(self, org_id, matter_id, exclude_id=None) -> list[uuid.UUID]:
-        """Organization admins, plus this matter's lead-lawyer assignees — active users only."""
+    def _eligible_approver_ids(self, org_id, contract_id, exclude_id=None) -> list[uuid.UUID]:
+        """Organization admins, plus this contract's lead-lawyer assignees — active users only."""
         org_users = {u.id: u for u in self.auth_repository.list_by_org(org_id)}
         admin_ids = {u.id for u in org_users.values() if u.role == UserRole.ADMIN and u.is_active}
         lead_lawyer_ids = {
             a.user_id
-            for a in self.repository.list_assignments_for_matter(matter_id)
-            if a.role_on_matter == MatterRole.LEAD_LAWYER and a.user_id in org_users and org_users[a.user_id].is_active
+            for a in self.repository.list_assignments_for_contract(contract_id)
+            if a.role_on_contract == ContractRole.LEAD_LAWYER and a.user_id in org_users and org_users[a.user_id].is_active
         }
         approver_ids = admin_ids | lead_lawyer_ids
         if exclude_id is not None:
             approver_ids.discard(exclude_id)
         return list(approver_ids)
 
-    def _can_decide_approval(self, actor_id, actor_role, matter_id) -> bool:
+    def _can_decide_approval(self, actor_id, actor_role, contract_id) -> bool:
         if actor_role == UserRole.ADMIN:
             return True
-        return self.repository.get_assignment(matter_id, actor_id, MatterRole.LEAD_LAWYER) is not None
+        return self.repository.get_assignment(contract_id, actor_id, ContractRole.LEAD_LAWYER) is not None
 
     def request_status_approval(
-        self, matter_id, org_id, actor_id, request: RequestMatterApprovalRequest
-    ) -> MatterApproval:
-        matter = self.get_matter(matter_id, org_id)
-        current = matter.status
+        self, contract_id, org_id, actor_id, request: RequestContractApprovalRequest
+    ) -> ContractApproval:
+        contract = self.get_contract(contract_id, org_id)
+        current = contract.status
         target = request.to_status
 
         if (current, target) not in GATED_TRANSITIONS:
             raise InvalidStatusTransition()
-        if self.repository.get_pending_approval(matter_id):
+        if self.repository.get_pending_approval(contract_id):
             raise ApprovalAlreadyPending()
 
-        approval = MatterApproval(
-            matter_id=matter.id,
+        approval = ContractApproval(
+            contract_id=contract.id,
             requested_by=actor_id,
             from_status=current,
             to_status=target,
@@ -569,8 +569,8 @@ class MatterService:
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
             org_id=org_id,
-            action=audit_actions.MATTER_APPROVAL_REQUESTED,
-            target_type="matter_approval",
+            action=audit_actions.CONTRACT_APPROVAL_REQUESTED,
+            target_type="contract_approval",
             target_id=approval.id,
             details={"from": current.value, "to": target.value},
         )
@@ -578,36 +578,36 @@ class MatterService:
             {
                 "recipient_type": RecipientType.STAFF,
                 "recipient_id": approver_id,
-                "type": "matter.approval_requested",
-                "title": f'Approval needed: "{matter.title}"',
+                "type": "contract.approval_requested",
+                "title": f'Approval needed: "{contract.title}"',
                 "body": f"Move from {current.value} to {target.value}?",
-                "target_type": "matter",
-                "target_id": matter.id,
+                "target_type": "contract",
+                "target_id": contract.id,
             }
-            for approver_id in self._eligible_approver_ids(org_id, matter_id, exclude_id=actor_id)
+            for approver_id in self._eligible_approver_ids(org_id, contract_id, exclude_id=actor_id)
         ])
         self.db.commit()
         self.db.refresh(approval)
         return approval
 
-    def list_approvals(self, matter_id, org_id) -> list[MatterApproval]:
-        self.get_matter(matter_id, org_id)  # ownership check
-        return self.repository.list_approvals_for_matter(matter_id)
+    def list_approvals(self, contract_id, org_id) -> list[ContractApproval]:
+        self.get_contract(contract_id, org_id)  # ownership check
+        return self.repository.list_approvals_for_contract(contract_id)
 
-    def list_pending_approvals(self, org_id) -> list[MatterApproval]:
+    def list_pending_approvals(self, org_id) -> list[ContractApproval]:
         return self.repository.list_pending_approvals_for_org(org_id)
 
     def decide_approval(
-        self, matter_id, approval_id, org_id, actor_id, actor_role, request: DecideMatterApprovalRequest
-    ) -> MatterApproval:
-        matter = self.get_matter(matter_id, org_id)
+        self, contract_id, approval_id, org_id, actor_id, actor_role, request: DecideContractApprovalRequest
+    ) -> ContractApproval:
+        contract = self.get_contract(contract_id, org_id)
 
         approval = self.repository.get_approval_by_id(approval_id)
-        if not approval or str(approval.matter_id) != str(matter.id):
-            raise MatterApprovalNotFound()
+        if not approval or str(approval.contract_id) != str(contract.id):
+            raise ContractApprovalNotFound()
         if approval.status != ApprovalStatus.PENDING:
             raise ApprovalAlreadyDecided()
-        if not self._can_decide_approval(actor_id, actor_role, matter_id):
+        if not self._can_decide_approval(actor_id, actor_role, contract_id):
             raise InsufficientPermissions()
 
         approval.status = ApprovalStatus.APPROVED if request.decision == "approved" else ApprovalStatus.REJECTED
@@ -616,28 +616,28 @@ class MatterService:
         approval.decision_note = request.note
 
         if approval.status == ApprovalStatus.APPROVED:
-            matter.status = approval.to_status
+            contract.status = approval.to_status
 
         self.audit.log(
             actor_type=ActorType.STAFF,
             actor_id=actor_id,
             org_id=org_id,
-            action=audit_actions.MATTER_APPROVAL_DECIDED,
-            target_type="matter_approval",
+            action=audit_actions.CONTRACT_APPROVAL_DECIDED,
+            target_type="contract_approval",
             target_id=approval.id,
             details={"decision": approval.status.value, "to": approval.to_status.value},
         )
         self.notifications.notify(
             recipient_type=RecipientType.STAFF,
             recipient_id=approval.requested_by,
-            type="matter.approval_decided",
-            title=f'Approval {approval.status.value}: "{matter.title}"',
+            type="contract.approval_decided",
+            title=f'Approval {approval.status.value}: "{contract.title}"',
             body=(
                 f"Your request to move to {approval.to_status.value} was {approval.status.value}."
                 + (f" Note: {request.note}" if request.note else "")
             ),
-            target_type="matter",
-            target_id=matter.id,
+            target_type="contract",
+            target_id=contract.id,
         )
         self.db.commit()
         self.db.refresh(approval)

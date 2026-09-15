@@ -17,7 +17,7 @@ from app.modules.monitoring.schemas import (
 SERVICE_LABELS = {
     "auth": "Authentication",
     "owner": "Owner / Admin",
-    "matters": "Matters",
+    "contracts": "Contracts",
     "templates": "Templates",
     "support-requests": "Support Requests",
     "search": "Search",

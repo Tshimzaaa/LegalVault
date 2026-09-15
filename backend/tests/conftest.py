@@ -27,7 +27,7 @@ from app.core.security import hash_password, create_access_token
 from app.core.config import settings
 from app.modules.auth.models import Organization, User
 from app.modules.auth.models.role import UserRole
-from app.modules.matters.models import Matter, MatterAssignment, MatterRole, MatterStatus
+from app.modules.contracts.models import Contract, ContractAssignment, ContractRole, ContractStage
 from app.modules.signed_contracts.models import ContractStatus, ContractType, SignedContract
 
 TEST_DATABASE_URL = os.environ.get(
@@ -78,7 +78,7 @@ def client(db_session):
 
 # ---- factories --------------------------------------------------------
 # Plain helper functions (not fixtures) so tests can create as many orgs/
-# users/matters as a given scenario needs, with sensible defaults for
+# users/contracts as a given scenario needs, with sensible defaults for
 # everything a test doesn't care about.
 
 
@@ -108,24 +108,24 @@ def make_staff(db_session, org: Organization, *, role: UserRole = UserRole.ADMIN
     return user, password
 
 
-def make_matter(db_session, org: Organization, **overrides) -> Matter:
-    matter = Matter(
+def make_contract(db_session, org: Organization, **overrides) -> Contract:
+    contract = Contract(
         org_id=org.id,
-        title=overrides.get("title", "Test Matter"),
+        title=overrides.get("title", "Test Contract"),
         description=overrides.get("description"),
         due_date=overrides.get("due_date"),
-        status=overrides.get("status", MatterStatus.INTAKE),
+        status=overrides.get("status", ContractStage.INTAKE),
     )
-    db_session.add(matter)
+    db_session.add(contract)
     db_session.flush()
-    return matter
+    return contract
 
 
-def make_matter_assignment(db_session, matter: Matter, user: User, *, role_on_matter: MatterRole = MatterRole.LEAD_LAWYER) -> MatterAssignment:
-    assignment = MatterAssignment(
-        matter_id=matter.id,
+def make_contract_assignment(db_session, contract: Contract, user: User, *, role_on_contract: ContractRole = ContractRole.LEAD_LAWYER) -> ContractAssignment:
+    assignment = ContractAssignment(
+        contract_id=contract.id,
         user_id=user.id,
-        role_on_matter=role_on_matter,
+        role_on_contract=role_on_contract,
     )
     db_session.add(assignment)
     db_session.flush()
@@ -135,7 +135,7 @@ def make_matter_assignment(db_session, matter: Matter, user: User, *, role_on_ma
 def make_signed_contract(db_session, org: Organization, **overrides) -> SignedContract:
     contract = SignedContract(
         org_id=org.id,
-        matter_id=overrides.get("matter_id"),
+        contract_id=overrides.get("contract_id"),
         uploaded_by=overrides.get("uploaded_by"),
         title=overrides.get("title", "Test Contract"),
         description=overrides.get("description"),
@@ -167,16 +167,16 @@ def auth_headers(actor) -> dict:
 
 
 class TwoOrgs:
-    """Two fully-populated orgs (own admin, matter each) for isolation tests."""
+    """Two fully-populated orgs (own admin, contract each) for isolation tests."""
 
     def __init__(self, db_session):
         self.org_a = make_org(db_session)
         self.staff_a, self.staff_a_password = make_staff(db_session, self.org_a)
-        self.matter_a = make_matter(db_session, self.org_a)
+        self.contract_a = make_contract(db_session, self.org_a)
 
         self.org_b = make_org(db_session)
         self.staff_b, self.staff_b_password = make_staff(db_session, self.org_b)
-        self.matter_b = make_matter(db_session, self.org_b)
+        self.contract_b = make_contract(db_session, self.org_b)
 
 
 @pytest.fixture()

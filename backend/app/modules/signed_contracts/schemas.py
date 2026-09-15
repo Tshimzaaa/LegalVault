@@ -9,7 +9,7 @@ from app.modules.signed_contracts.models import ContractStatus, ContractType
 class SignedContractResponse(BaseModel):
     id: UUID
     org_id: UUID
-    matter_id: UUID | None
+    contract_id: UUID | None
     title: str
     description: str | None
     agreement_type: ContractType

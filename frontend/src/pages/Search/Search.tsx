@@ -10,7 +10,7 @@ import { isDesktopPointer } from '../../utils/device'
 type SearchState = 'idle' | 'loading' | 'error' | 'ready'
 
 const categories: { key: keyof SearchResponse; label: string }[] = [
-  { key: 'matters', label: 'Matters' },
+  { key: 'contracts', label: 'Contracts' },
   { key: 'staff', label: 'Staff' },
   { key: 'documents', label: 'Documents' },
 ]
@@ -61,7 +61,7 @@ function Search() {
             <IconSearch />
             <input
               type="search"
-              placeholder="Search matters, staff, documents…"
+              placeholder="Search contracts, staff, documents…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               autoFocus={isDesktopPointer}
@@ -103,8 +103,8 @@ function Search() {
                   </div>
                   <div className="list-rows">
                     {items.map((item) =>
-                      key === 'matters' ? (
-                        <Link key={item.id} to={`/staff/matters/${item.id}`} className="search-result-row clickable">
+                      key === 'contracts' ? (
+                        <Link key={item.id} to={`/staff/contracts/${item.id}`} className="search-result-row clickable">
                           <span className="search-result-title">{item.title}</span>
                           {item.subtitle && <span className="muted search-result-subtitle">{item.subtitle}</span>}
                         </Link>

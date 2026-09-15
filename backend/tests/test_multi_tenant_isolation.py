@@ -8,39 +8,39 @@ from app.modules.knowledge.models import KnowledgeArticle
 from app.modules.notifications.models import Notification, RecipientType
 from tests.conftest import (
     auth_headers,
-    make_matter,
+    make_contract,
     make_signed_contract,
 )
 
 
-def test_staff_cannot_get_another_orgs_matter_by_id(client, two_orgs):
-    res = client.get(f"/matters/{two_orgs.matter_a.id}", headers=auth_headers(two_orgs.staff_b))
+def test_staff_cannot_get_another_orgs_contract_by_id(client, two_orgs):
+    res = client.get(f"/contracts/{two_orgs.contract_a.id}", headers=auth_headers(two_orgs.staff_b))
     assert res.status_code == 404
 
 
-def test_staff_list_matters_only_returns_own_org(client, two_orgs):
-    res = client.get("/matters", headers=auth_headers(two_orgs.staff_b))
+def test_staff_list_contracts_only_returns_own_org(client, two_orgs):
+    res = client.get("/contracts", headers=auth_headers(two_orgs.staff_b))
     assert res.status_code == 200
-    matter_ids = {m["id"] for m in res.json()}
-    assert str(two_orgs.matter_a.id) not in matter_ids
-    assert str(two_orgs.matter_b.id) in matter_ids
+    contract_ids = {m["id"] for m in res.json()}
+    assert str(two_orgs.contract_a.id) not in contract_ids
+    assert str(two_orgs.contract_b.id) in contract_ids
 
 
-def test_staff_cannot_update_another_orgs_matter_status(client, two_orgs):
+def test_staff_cannot_update_another_orgs_contract_status(client, two_orgs):
     res = client.patch(
-        f"/matters/{two_orgs.matter_a.id}/status",
+        f"/contracts/{two_orgs.contract_a.id}/status",
         json={"status": "closed"},
         headers=auth_headers(two_orgs.staff_b),
     )
     assert res.status_code == 404
 
 
-def test_nested_matter_resource_inherits_isolation(client, db_session, two_orgs):
-    # Tasks/documents/messages all resolve their parent matter (and its org_id) first —
+def test_nested_contract_resource_inherits_isolation(client, db_session, two_orgs):
+    # Tasks/documents/messages all resolve their parent contract (and its org_id) first —
     # this proves that check actually blocks cross-org access for a nested resource too,
-    # not just top-level matter routes.
+    # not just top-level contract routes.
     res = client.post(
-        f"/matters/{two_orgs.matter_a.id}/tasks",
+        f"/contracts/{two_orgs.contract_a.id}/tasks",
         json={"title": "Should not be creatable"},
         headers=auth_headers(two_orgs.staff_b),
     )
@@ -54,7 +54,7 @@ def test_staff_cannot_download_another_orgs_template(client, db_session, two_org
         org_id=two_orgs.org_a.id,
         title="Org A Only",
         category="Confidentiality",
-        file_key="templates/does-not-matter-for-this-test",
+        file_key="templates/does-not-contract-for-this-test",
         original_filename="nda.pdf",
         content_type="application/pdf",
         version=1,
@@ -70,31 +70,31 @@ def test_staff_cannot_download_another_orgs_template(client, db_session, two_org
 # explicit cross-org test before ------------------------------------------------
 
 
-def _advance_to_awaiting_signature(client, matter_id, staff):
-    client.patch(f"/matters/{matter_id}/status", json={"status": "in_review"}, headers=auth_headers(staff))
-    client.patch(f"/matters/{matter_id}/status", json={"status": "awaiting_signature"}, headers=auth_headers(staff))
+def _advance_to_awaiting_signature(client, contract_id, staff):
+    client.patch(f"/contracts/{contract_id}/status", json={"status": "in_review"}, headers=auth_headers(staff))
+    client.patch(f"/contracts/{contract_id}/status", json={"status": "awaiting_signature"}, headers=auth_headers(staff))
 
 
-def test_staff_cannot_view_or_act_on_another_orgs_matter_approvals(client, db_session, two_orgs):
-    _advance_to_awaiting_signature(client, two_orgs.matter_a.id, two_orgs.staff_a)
+def test_staff_cannot_view_or_act_on_another_orgs_contract_approvals(client, db_session, two_orgs):
+    _advance_to_awaiting_signature(client, two_orgs.contract_a.id, two_orgs.staff_a)
     approval = client.post(
-        f"/matters/{two_orgs.matter_a.id}/approvals",
+        f"/contracts/{two_orgs.contract_a.id}/approvals",
         json={"to_status": "signed"},
         headers=auth_headers(two_orgs.staff_a),
     ).json()
 
-    list_res = client.get(f"/matters/{two_orgs.matter_a.id}/approvals", headers=auth_headers(two_orgs.staff_b))
+    list_res = client.get(f"/contracts/{two_orgs.contract_a.id}/approvals", headers=auth_headers(two_orgs.staff_b))
     assert list_res.status_code == 404
 
     request_res = client.post(
-        f"/matters/{two_orgs.matter_a.id}/approvals",
+        f"/contracts/{two_orgs.contract_a.id}/approvals",
         json={"to_status": "closed"},
         headers=auth_headers(two_orgs.staff_b),
     )
     assert request_res.status_code == 404
 
     decide_res = client.patch(
-        f"/matters/{two_orgs.matter_a.id}/approvals/{approval['id']}",
+        f"/contracts/{two_orgs.contract_a.id}/approvals/{approval['id']}",
         json={"decision": "approved"},
         headers=auth_headers(two_orgs.staff_b),
     )
@@ -121,7 +121,7 @@ def test_staff_cannot_mark_another_orgs_staff_notification_read(client, db_sessi
     notification = Notification(
         recipient_type=RecipientType.STAFF,
         recipient_id=two_orgs.staff_a.id,
-        type="matter.staff_assigned",
+        type="contract.staff_assigned",
         title="Org A only",
         body="Should not be reachable by org B.",
     )
@@ -156,18 +156,18 @@ def test_staff_cannot_view_or_modify_another_orgs_knowledge_article(client, db_s
 
 
 def test_search_never_returns_another_orgs_results(client, db_session, two_orgs):
-    make_matter(db_session, two_orgs.org_a, title="Unique Zylophone Merger")
+    make_contract(db_session, two_orgs.org_a, title="Unique Zylophone Merger")
 
     res = client.get("/search?q=Zylophone", headers=auth_headers(two_orgs.staff_b))
     assert res.status_code == 200
-    assert res.json()["matters"] == []
+    assert res.json()["contracts"] == []
 
 
 def test_audit_log_never_leaks_another_orgs_entries(client, db_session, two_orgs):
     # Perform an auditable action as org A, then confirm org B's audit log never
     # shows it — list_audit_log is org-scoped by the repository, not by RLS alone.
     client.patch(
-        f"/matters/{two_orgs.matter_a.id}",
+        f"/contracts/{two_orgs.contract_a.id}",
         json={"title": "Renamed by org A", "description": None},
         headers=auth_headers(two_orgs.staff_a),
     )

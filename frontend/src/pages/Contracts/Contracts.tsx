@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import './Matters.css'
+import './Contracts.css'
 import { IconPlus } from '../../components/icons'
-import { listMatters } from '../../api/matters'
-import type { Matter } from '../../api/matters'
+import { listContracts } from '../../api/contracts'
+import type { Contract } from '../../api/contracts'
 
 type LoadState = 'loading' | 'error' | 'ready'
 
-const statusLabel: Record<Matter['status'], string> = {
+const statusLabel: Record<Contract['status'], string> = {
   intake: 'Intake',
   in_review: 'In Review',
   awaiting_signature: 'Awaiting Signature',
@@ -16,7 +16,7 @@ const statusLabel: Record<Matter['status'], string> = {
   declined: 'Declined',
 }
 
-const statusColor: Record<Matter['status'], string> = {
+const statusColor: Record<Contract['status'], string> = {
   intake: '#eab308',
   in_review: '#3987e5',
   awaiting_signature: '#a855f7',
@@ -25,8 +25,8 @@ const statusColor: Record<Matter['status'], string> = {
   declined: '#ef4444',
 }
 
-function Matters() {
-  const [matters, setMatters] = useState<Matter[]>([])
+function Contracts() {
+  const [contracts, setContracts] = useState<Contract[]>([])
   const [status, setStatus] = useState<LoadState>('loading')
   const [attempt, setAttempt] = useState(0)
 
@@ -40,10 +40,10 @@ function Matters() {
       return
     }
 
-    listMatters(token)
-      .then((matterList) => {
+    listContracts(token)
+      .then((contractList) => {
         if (cancelled) return
-        setMatters(matterList)
+        setContracts(contractList)
         setStatus('ready')
       })
       .catch(() => {
@@ -59,13 +59,13 @@ function Matters() {
   return (
     <main className="dash-main">
       <header className="dash-topbar">
-        <h1>Matters</h1>
+        <h1>Contracts</h1>
         <div className="topbar-actions">
           <span className="chip">
-            Total <span className="chip-badge">{matters.length}</span>
+            Total <span className="chip-badge">{contracts.length}</span>
           </span>
-          <Link to="/staff/new-matter" className="btn-solid">
-            <IconPlus /> New Matter
+          <Link to="/staff/new-contract" className="btn-solid">
+            <IconPlus /> New Contract
           </Link>
         </div>
       </header>
@@ -73,13 +73,13 @@ function Matters() {
       {status === 'loading' && (
         <div className="dash-state" role="status" aria-live="polite">
           <span className="dash-spinner" aria-hidden="true" />
-          <p>Loading matters…</p>
+          <p>Loading contracts…</p>
         </div>
       )}
 
       {status === 'error' && (
         <div className="dash-state">
-          <p>Couldn&rsquo;t reach the backend for your matters.</p>
+          <p>Couldn&rsquo;t reach the backend for your contracts.</p>
           <button type="button" className="btn-ghost" onClick={() => setAttempt((n) => n + 1)}>
             Retry
           </button>
@@ -87,21 +87,21 @@ function Matters() {
       )}
 
       {status === 'ready' && (
-        <section className="card matters-table-card">
+        <section className="card contracts-table-card">
           <div className="table-scroll">
           <table className="data-table">
             <thead>
               <tr>
-                <th>Matter</th>
+                <th>Contract</th>
                 <th>Status</th>
                 <th>Opened</th>
               </tr>
             </thead>
             <tbody>
-              {matters.map((m) => (
-                <tr key={m.id} className="matters-row">
+              {contracts.map((m) => (
+                <tr key={m.id} className="contracts-row">
                   <td>
-                    <Link to={`/staff/matters/${m.id}`} className="matters-row-link">
+                    <Link to={`/staff/contracts/${m.id}`} className="contracts-row-link">
                       {m.title}
                     </Link>
                   </td>
@@ -116,10 +116,10 @@ function Matters() {
                   <td className="muted">{new Date(m.created_at).toLocaleDateString()}</td>
                 </tr>
               ))}
-              {matters.length === 0 && (
+              {contracts.length === 0 && (
                 <tr>
                   <td colSpan={3} className="muted">
-                    No matters yet. Create one from New Matter.
+                    No contracts yet. Create one from New Contract.
                   </td>
                 </tr>
               )}
@@ -132,4 +132,4 @@ function Matters() {
   )
 }
 
-export default Matters
+export default Contracts

@@ -11,7 +11,7 @@ from app.modules.signatures.models import (
     SignatureRecipientStatus,
 )
 from app.modules.signatures.schemas import CreateSignatureRequestRequest, SignatureRequestResponse
-from app.modules.matters.repository import MatterRepository
+from app.modules.contracts.repository import ContractRepository
 from app.modules.auth.repository import AuthRepository
 from app.modules.notifications.service import NotificationService
 from app.modules.notifications.models import RecipientType
@@ -20,7 +20,7 @@ from app.modules.signed_contracts.models import SignedContract, ContractType
 from app.modules.audit.service import AuditService
 from app.modules.audit.models import ActorType
 from app.modules.audit import actions as audit_actions
-from app.exceptions.matters import MatterNotFound, MatterDocumentNotFound
+from app.exceptions.contracts import ContractNotFound, ContractDocumentNotFound
 from app.exceptions.signatures import SignatureRequestNotFound, InvalidSignatureRecipient
 from app.core import documenso_client
 from app.core.storage import download_file, upload_file
@@ -31,7 +31,7 @@ class SignatureService:
     def __init__(self, db: Session):
         self.db = db
         self.repository = SignatureRepository(db)
-        self.matter_repository = MatterRepository(db)
+        self.contract_repository = ContractRepository(db)
         self.auth_repository = AuthRepository(db)
         self.signed_contract_repository = SignedContractRepository(db)
         self.audit = AuditService(db)
@@ -70,15 +70,15 @@ class SignatureService:
         return resolved
 
     def create_and_send(
-        self, matter_id, org_id, actor_id, request: CreateSignatureRequestRequest
+        self, contract_id, org_id, actor_id, request: CreateSignatureRequestRequest
     ) -> SignatureRequestResponse:
-        matter = self.matter_repository.get_by_id(matter_id)
-        if not matter or str(matter.org_id) != str(org_id):
-            raise MatterNotFound()
+        contract = self.contract_repository.get_by_id(contract_id)
+        if not contract or str(contract.org_id) != str(org_id):
+            raise ContractNotFound()
 
-        document = self.matter_repository.get_document_by_id(request.source_document_id)
-        if not document or str(document.matter_id) != str(matter_id):
-            raise MatterDocumentNotFound()
+        document = self.contract_repository.get_document_by_id(request.source_document_id)
+        if not document or str(document.contract_id) != str(contract_id):
+            raise ContractDocumentNotFound()
 
         recipients_input = self._resolve_recipients(request.recipients, org_id)
 
@@ -91,7 +91,7 @@ class SignatureService:
 
         signature_request = SignatureRequest(
             org_id=org_id,
-            matter_id=matter_id,
+            contract_id=contract_id,
             source_document_id=document.id,
             requested_by=actor_id,
             title=request.title,
@@ -124,7 +124,7 @@ class SignatureService:
             action=audit_actions.SIGNATURE_REQUEST_SENT,
             target_type="signature_request",
             target_id=signature_request.id,
-            details={"title": request.title, "matter_id": str(matter_id), "recipient_count": len(recipients)},
+            details={"title": request.title, "contract_id": str(contract_id), "recipient_count": len(recipients)},
         )
         self.notifications.notify_many(
             [
@@ -133,7 +133,7 @@ class SignatureService:
                     "recipient_id": r.recipient_id,
                     "type": "signature.requested",
                     "title": f'Signature requested: "{request.title}"',
-                    "body": f"{matter.title}: you have a document waiting for your signature.",
+                    "body": f"{contract.title}: you have a document waiting for your signature.",
                     "target_type": "signature_request",
                     "target_id": signature_request.id,
                 }
@@ -148,11 +148,11 @@ class SignatureService:
     def _to_response(self, signature_request: SignatureRequest) -> SignatureRequestResponse:
         return SignatureRequestResponse.model_validate(signature_request)
 
-    def list_for_matter(self, matter_id, org_id) -> list[SignatureRequestResponse]:
-        matter = self.matter_repository.get_by_id(matter_id)
-        if not matter or str(matter.org_id) != str(org_id):
-            raise MatterNotFound()
-        return [self._to_response(sr) for sr in self.repository.list_by_matter(matter_id)]
+    def list_for_contract(self, contract_id, org_id) -> list[SignatureRequestResponse]:
+        contract = self.contract_repository.get_by_id(contract_id)
+        if not contract or str(contract.org_id) != str(org_id):
+            raise ContractNotFound()
+        return [self._to_response(sr) for sr in self.repository.list_by_contract(contract_id)]
 
     def get(self, signature_request_id, org_id) -> SignatureRequestResponse:
         signature_request = self.repository.get_by_id(signature_request_id)
@@ -237,14 +237,14 @@ class SignatureService:
 
         signed_pdf = documenso_client.download_completed_document(documenso_document_id)
 
-        source_document = self.matter_repository.get_document_by_id(signature_request.source_document_id)
+        source_document = self.contract_repository.get_document_by_id(signature_request.source_document_id)
 
         file_key = f"signed_contracts/{signature_request.org_id}/{uuid.uuid4()}-{signature_request.title}.pdf"
         upload_file(signed_pdf, file_key, "application/pdf")
 
         signed_contract = SignedContract(
             org_id=signature_request.org_id,
-            matter_id=signature_request.matter_id,
+            contract_id=signature_request.contract_id,
             uploaded_by=signature_request.requested_by,
             title=signature_request.title,
             description="Signed electronically via the built-in e-signature flow.",

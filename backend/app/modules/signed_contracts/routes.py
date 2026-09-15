@@ -30,7 +30,7 @@ async def upload_signed_contract(
     description: str | None = Form(None, max_length=1000),
     expiry_date: date | None = Form(None),
     integration_source: str = Form("manual", max_length=50),
-    matter_id: str | None = Form(None),
+    contract_id: str | None = Form(None),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.LAWYER, UserRole.PARALEGAL])),
@@ -52,7 +52,7 @@ async def upload_signed_contract(
         description=description,
         expiry_date=expiry_date,
         integration_source=integration_source,
-        matter_id=matter_id or None,
+        contract_id=contract_id or None,
     )
 
 

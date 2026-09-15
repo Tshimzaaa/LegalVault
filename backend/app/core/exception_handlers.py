@@ -16,18 +16,18 @@ from app.exceptions.auth import (
     InvalidRefreshToken as StaffInvalidRefreshToken,
 )
 
-from app.exceptions.matters import (
-    MatterNotFound,
+from app.exceptions.contracts import (
+    ContractNotFound,
     StaffAlreadyAssigned,
-    MatterDocumentNotFound,
+    ContractDocumentNotFound,
     UserNotFoundForAssignment,
-    MatterTaskNotFound,
-    MatterMessageNotFound,
+    ContractTaskNotFound,
+    ContractMessageNotFound,
     CannotDeleteOthersMessage,
     InvalidStatusTransition,
     ApprovalRequiredForTransition,
     ApprovalAlreadyPending,
-    MatterApprovalNotFound,
+    ContractApprovalNotFound,
     ApprovalAlreadyDecided,
 )
 from app.exceptions.announcements import AnnouncementNotFound
@@ -84,13 +84,13 @@ def register_exception_handlers(app: FastAPI):
             detail="You do not have permission to perform this action.",
         )
 
-    @app.exception_handler(MatterNotFound)
-    async def matter_not_found(_, __):
-        raise HTTPException(status_code=404, detail="Matter not found.")
+    @app.exception_handler(ContractNotFound)
+    async def contract_not_found(_, __):
+        raise HTTPException(status_code=404, detail="Contract not found.")
 
     @app.exception_handler(StaffAlreadyAssigned)
     async def staff_already_assigned(_, __):
-        raise HTTPException(status_code=409, detail="This staff member is already assigned to this matter with that role.")
+        raise HTTPException(status_code=409, detail="This staff member is already assigned to this contract with that role.")
 
     @app.exception_handler(UserNotFoundForAssignment)
     async def user_not_found_for_assignment(_, __):
@@ -98,7 +98,7 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(InvalidStatusTransition)
     async def invalid_status_transition(_, __):
-        raise HTTPException(status_code=409, detail="This status change isn't allowed from the matter's current status.")
+        raise HTTPException(status_code=409, detail="This status change isn't allowed from the contract's current status.")
 
     @app.exception_handler(ApprovalRequiredForTransition)
     async def approval_required_for_transition(_, __):
@@ -109,10 +109,10 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(ApprovalAlreadyPending)
     async def approval_already_pending(_, __):
-        raise HTTPException(status_code=409, detail="An approval is already pending for this matter.")
+        raise HTTPException(status_code=409, detail="An approval is already pending for this contract.")
 
-    @app.exception_handler(MatterApprovalNotFound)
-    async def matter_approval_not_found(_, __):
+    @app.exception_handler(ContractApprovalNotFound)
+    async def contract_approval_not_found(_, __):
         raise HTTPException(status_code=404, detail="Approval request not found.")
 
     @app.exception_handler(ApprovalAlreadyDecided)
@@ -134,8 +134,8 @@ def register_exception_handlers(app: FastAPI):
     async def staff_invalid_reset_token(_, __):
         raise HTTPException(status_code=400, detail="This password reset link is invalid or has expired.")
 
-    @app.exception_handler(MatterDocumentNotFound)
-    async def matter_document_not_found(_, __):
+    @app.exception_handler(ContractDocumentNotFound)
+    async def contract_document_not_found(_, __):
         raise HTTPException(status_code=404, detail="Document not found.")  
 
     @app.exception_handler(StaffInvalidOrExpiredInvite)
@@ -153,12 +153,12 @@ def register_exception_handlers(app: FastAPI):
     async def cannot_deactivate_self(_, __):
         raise HTTPException(status_code=400, detail="You cannot deactivate your own account.")
 
-    @app.exception_handler(MatterTaskNotFound)
-    async def matter_task_not_found(_, __):
+    @app.exception_handler(ContractTaskNotFound)
+    async def contract_task_not_found(_, __):
         raise HTTPException(status_code=404, detail="Task not found.")
 
-    @app.exception_handler(MatterMessageNotFound)
-    async def matter_message_not_found(_, __):
+    @app.exception_handler(ContractMessageNotFound)
+    async def contract_message_not_found(_, __):
         raise HTTPException(status_code=404, detail="Message not found.")
 
     @app.exception_handler(CannotDeleteOthersMessage)
@@ -231,7 +231,7 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(InvalidSignatureRecipient)
     async def invalid_signature_recipient(_, __):
-        raise HTTPException(status_code=400, detail="One or more recipients are invalid for this matter.")
+        raise HTTPException(status_code=400, detail="One or more recipients are invalid for this contract.")
 
     @app.exception_handler(SigningProviderUnavailable)
     async def signing_provider_unavailable(_, __):

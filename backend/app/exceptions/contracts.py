@@ -1,4 +1,4 @@
-class MatterNotFound(Exception):
+class ContractNotFound(Exception):
     pass
 
 class StaffAlreadyAssigned(Exception):
@@ -7,13 +7,13 @@ class StaffAlreadyAssigned(Exception):
 class UserNotFoundForAssignment(Exception):
     pass
 
-class MatterDocumentNotFound(Exception):
+class ContractDocumentNotFound(Exception):
     pass
 
-class MatterTaskNotFound(Exception):
+class ContractTaskNotFound(Exception):
     pass
 
-class MatterMessageNotFound(Exception):
+class ContractMessageNotFound(Exception):
     pass
 
 class CannotDeleteOthersMessage(Exception):
@@ -28,7 +28,7 @@ class ApprovalRequiredForTransition(Exception):
 class ApprovalAlreadyPending(Exception):
     pass
 
-class MatterApprovalNotFound(Exception):
+class ContractApprovalNotFound(Exception):
     pass
 
 class ApprovalAlreadyDecided(Exception):

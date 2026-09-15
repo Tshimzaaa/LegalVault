@@ -9,6 +9,6 @@ class SearchResultItem(BaseModel):
 
 
 class SearchResponse(BaseModel):
-    matters: list[SearchResultItem]
+    contracts: list[SearchResultItem]
     staff: list[SearchResultItem]
     documents: list[SearchResultItem]

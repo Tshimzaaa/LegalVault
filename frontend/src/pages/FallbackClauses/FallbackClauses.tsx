@@ -177,7 +177,7 @@ function FallbackClauses() {
             />
             <span>Pre-approved (clients can rely on this without further sign-off)</span>
           </label>
-          <div className="matter-actions">
+          <div className="contract-actions">
             <button type="button" className="btn-ghost" onClick={() => setShowCreate(false)}>
               Cancel
             </button>
@@ -185,7 +185,7 @@ function FallbackClauses() {
               {creating ? 'Adding…' : 'Add Clause'}
             </button>
           </div>
-          {createError && <p className="matter-error" aria-live="polite">{createError}</p>}
+          {createError && <p className="contract-error" aria-live="polite">{createError}</p>}
         </form>
       )}
 
@@ -205,7 +205,7 @@ function FallbackClauses() {
         </div>
       )}
 
-      {deleteError && <p className="matter-error" aria-live="polite">{deleteError}</p>}
+      {deleteError && <p className="contract-error" aria-live="polite">{deleteError}</p>}
 
       {status === 'ready' && (
         <section className="templates-grid">
@@ -246,8 +246,8 @@ function FallbackClauses() {
                   />
                   <span>Pre-approved</span>
                 </label>
-                {editError && <p className="matter-error" aria-live="polite">{editError}</p>}
-                <div className="matter-actions">
+                {editError && <p className="contract-error" aria-live="polite">{editError}</p>}
+                <div className="contract-actions">
                   <button type="button" className="btn-ghost" onClick={() => setEditingId(null)}>
                     Cancel
                   </button>

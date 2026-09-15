@@ -17,7 +17,7 @@ from app.modules.auth.services.register import RegisterService
 from app.modules.owner.dependencies import get_current_owner
 from pydantic import BaseModel
 from app.modules.auth.repository import AuthRepository
-from app.modules.matters.repository import MatterRepository
+from app.modules.contracts.repository import ContractRepository
 from app.modules.owner.schemas import (
     OrganizationSummary,
     OrganizationDetail,
@@ -28,7 +28,7 @@ from app.modules.owner.schemas import (
     OrganizationExportAssignment,
     OrganizationExportTask,
     OrganizationExportDocument,
-    OrganizationExportMatter,
+    OrganizationExportContract,
     UsageMetrics,
     PlatformMetricsResponse,
     SystemHealthResponse,
@@ -141,7 +141,7 @@ def get_platform_metrics(
     _owner=Depends(get_current_owner),
 ):
     auth_repo = AuthRepository(db)
-    matter_repo = MatterRepository(db)
+    contract_repo = ContractRepository(db)
 
     total_orgs = auth_repo.count_all_orgs()
     active_orgs = auth_repo.count_active_orgs()
@@ -151,8 +151,8 @@ def get_platform_metrics(
         active_orgs=active_orgs,
         inactive_orgs=total_orgs - active_orgs,
         total_staff=auth_repo.count_all_users(),
-        total_matters=matter_repo.count_all_matters(),
-        matters_by_status=matter_repo.count_all_matters_by_status(),
+        total_contracts=contract_repo.count_all_contracts(),
+        contracts_by_status=contract_repo.count_all_contracts_by_status(),
         new_orgs_last_7_days=auth_repo.count_orgs_created_since(datetime.now(UTC) - timedelta(days=7)),
         new_orgs_last_30_days=auth_repo.count_orgs_created_since(datetime.now(UTC) - timedelta(days=30)),
     )
@@ -211,7 +211,7 @@ def get_org(org_id: str, db: Session = Depends(get_db), _owner=Depends(get_curre
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found.")
 
-    matter_repo = MatterRepository(db)
+    contract_repo = ContractRepository(db)
 
     return OrganizationDetail(
         id=org.id,
@@ -222,7 +222,7 @@ def get_org(org_id: str, db: Session = Depends(get_db), _owner=Depends(get_curre
         address=org.address,
         is_active=org.is_active,
         staff_count=auth_repo.count_users_for_org(org.id),
-        matter_count=matter_repo.count_matters_for_org(org.id),
+        contract_count=contract_repo.count_contracts_for_org(org.id),
     )
 
 
@@ -233,18 +233,18 @@ def export_org_data(org_id: str, db: Session = Depends(get_db), _owner=Depends(g
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found.")
 
-    matter_repo = MatterRepository(db)
+    contract_repo = ContractRepository(db)
     audit_repo = AuditLogRepository(db)
 
     staff = [OrganizationExportStaff.model_validate(u) for u in auth_repo.list_by_org(org.id)]
 
-    matters = []
-    for m in matter_repo.list_by_org(org.id):
+    contracts = []
+    for m in contract_repo.list_by_org(org.id):
         assignments = [
-            OrganizationExportAssignment(user_id=a.user_id, role_on_matter=a.role_on_matter)
-            for a in matter_repo.list_assignments_for_matter(m.id)
+            OrganizationExportAssignment(user_id=a.user_id, role_on_contract=a.role_on_contract)
+            for a in contract_repo.list_assignments_for_contract(m.id)
         ]
-        tasks = [OrganizationExportTask.model_validate(t) for t in matter_repo.list_tasks_for_matter(m.id)]
+        tasks = [OrganizationExportTask.model_validate(t) for t in contract_repo.list_tasks_for_contract(m.id)]
         documents = [
             OrganizationExportDocument(
                 id=d.id,
@@ -256,10 +256,10 @@ def export_org_data(org_id: str, db: Session = Depends(get_db), _owner=Depends(g
                 created_at=d.created_at,
                 download_url=get_download_url(d.file_key),
             )
-            for d in matter_repo.list_documents_for_matter(m.id)
+            for d in contract_repo.list_documents_for_contract(m.id)
         ]
-        matters.append(
-            OrganizationExportMatter(
+        contracts.append(
+            OrganizationExportContract(
                 id=m.id,
                 title=m.title,
                 description=m.description,
@@ -291,7 +291,7 @@ def export_org_data(org_id: str, db: Session = Depends(get_db), _owner=Depends(g
         exported_at=datetime.now(UTC),
         org=OrganizationExportProfile.model_validate(org),
         staff=staff,
-        matters=matters,
+        contracts=contracts,
         audit_log=audit_log,
     )
 
@@ -347,7 +347,7 @@ def delete_org(
         details={"name": org.name, "email": org.email},
     )
 
-    matter_repo = MatterRepository(db)
+    contract_repo = ContractRepository(db)
     notification_repo = NotificationRepository(db)
     signed_contract_repo = SignedContractRepository(db)
     template_repo = TemplateRepository(db)
@@ -367,16 +367,16 @@ def delete_org(
     for integration in integration_repo.list_by_org(org.id):
         integration_repo.delete(integration)
 
-    for matter in matter_repo.list_by_org(org.id):
-        for document in matter_repo.list_documents_for_matter(matter.id):
-            matter_repo.delete_document(document)
-        for assignment in matter_repo.list_assignments_for_matter(matter.id):
-            matter_repo.delete_assignment(assignment)
-        for task in matter_repo.list_tasks_for_matter(matter.id):
-            matter_repo.delete_task(task)
-        for message in matter_repo.list_messages_for_matter(matter.id):
-            matter_repo.delete_message(message)
-        matter_repo.delete_matter(matter)
+    for contract in contract_repo.list_by_org(org.id):
+        for document in contract_repo.list_documents_for_contract(contract.id):
+            contract_repo.delete_document(document)
+        for assignment in contract_repo.list_assignments_for_contract(contract.id):
+            contract_repo.delete_assignment(assignment)
+        for task in contract_repo.list_tasks_for_contract(contract.id):
+            contract_repo.delete_task(task)
+        for message in contract_repo.list_messages_for_contract(contract.id):
+            contract_repo.delete_message(message)
+        contract_repo.delete_contract(contract)
 
     for user in auth_repo.list_by_org(org.id):
         notification_repo.delete_for_recipient(RecipientType.STAFF, user.id)

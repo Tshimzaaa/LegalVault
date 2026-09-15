@@ -20,7 +20,7 @@ export interface SignatureRecipient {
 
 export interface SignatureRequest {
   id: string
-  matter_id: string
+  contract_id: string
   source_document_id: string
   title: string
   status: SignatureRequestStatus
@@ -43,24 +43,24 @@ export interface CreateSignatureRequestBody {
   recipients: SignatureRecipientInput[]
 }
 
-export async function listSignatureRequests(token: string, matterId: string): Promise<SignatureRequest[]> {
-  return apiRequest<SignatureRequest[]>(`/matters/${matterId}/signatures`, { token })
+export async function listSignatureRequests(token: string, contractId: string): Promise<SignatureRequest[]> {
+  return apiRequest<SignatureRequest[]>(`/contracts/${contractId}/signatures`, { token })
 }
 
 export async function sendForSignature(
   token: string,
-  matterId: string,
+  contractId: string,
   body: CreateSignatureRequestBody,
 ): Promise<SignatureRequest> {
-  return apiRequest<SignatureRequest>(`/matters/${matterId}/signatures`, { method: 'POST', body, token })
+  return apiRequest<SignatureRequest>(`/contracts/${contractId}/signatures`, { method: 'POST', body, token })
 }
 
 export async function voidSignatureRequest(
   token: string,
-  matterId: string,
+  contractId: string,
   signatureRequestId: string,
 ): Promise<SignatureRequest> {
-  return apiRequest<SignatureRequest>(`/matters/${matterId}/signatures/${signatureRequestId}/void`, {
+  return apiRequest<SignatureRequest>(`/contracts/${contractId}/signatures/${signatureRequestId}/void`, {
     method: 'POST',
     token,
   })

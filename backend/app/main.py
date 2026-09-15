@@ -23,7 +23,7 @@ if settings.SENTRY_DSN:
 
 from fastapi.middleware.cors import CORSMiddleware
 from app.modules.templates.routes import router as templates_router
-from app.modules.matters.routes import router as matters_router
+from app.modules.contracts.routes import router as contracts_router
 from app.modules.owner.routes import router as owner_router
 from app.modules.dashboard.routes import router as dashboard_router
 from app.modules.search.routes import router as search_router
@@ -54,7 +54,7 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-app.include_router(matters_router)
+app.include_router(contracts_router)
 app.include_router(templates_router)
 app.include_router(auth_router)
 app.include_router(owner_router)

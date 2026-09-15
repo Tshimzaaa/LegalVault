@@ -86,7 +86,7 @@ async def log_requests(request: Request, call_next):
         raise
     finally:
         duration_ms = int((time.perf_counter() - start) * 1000)
-        # Path template (e.g. "/matters/{matter_id}") rather than the raw URL, so
+        # Path template (e.g. "/contracts/{contract_id}") rather than the raw URL, so
         # aggregates group by endpoint instead of fragmenting per resource id.
         # request.scope["route"] is only populated once routing has resolved,
         # which happens inside call_next — so it's read here, after the await.

@@ -10,14 +10,14 @@ def test_admin_sees_audit_log_entries_for_own_org(client, db_session):
     admin, _ = make_staff(db_session, org)
 
     client.post(
-        "/matters",
-        json={"title": "Audited Matter"},
+        "/contracts",
+        json={"title": "Audited Contract"},
         headers=auth_headers(admin),
     )
 
     res = client.get("/audit-log", headers=auth_headers(admin))
     assert res.status_code == 200
-    assert any(e["action"] == "matter.created" for e in res.json())
+    assert any(e["action"] == "contract.created" for e in res.json())
 
 
 def test_non_admin_staff_cannot_see_audit_log(client, db_session):

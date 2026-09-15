@@ -3,7 +3,7 @@
   min-height: 0;
   overflow-y: auto;
   /* Extra horizontal room beyond the base .card padding — event rows were sitting right
-     up against the card's border, especially the right-aligned matter name. */
+     up against the card's border, especially the right-aligned contract name. */
   padding-left: 24px;
   padding-right: 24px;
 }
@@ -73,7 +73,7 @@
   text-overflow: ellipsis;
 }
 
-.calendar-event-matter {
+.calendar-event-contract {
   flex-shrink: 1;
   min-width: 0;
   max-width: 45%;

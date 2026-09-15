@@ -7,7 +7,7 @@ export type ContractLifecycleStatus = ContractPersistedStatus | 'expiring'
 export interface SignedContract {
   id: string
   org_id: string
-  matter_id: string | null
+  contract_id: string | null
   title: string
   description: string | null
   agreement_type: ContractType
@@ -33,7 +33,7 @@ export interface UploadSignedContractPayload {
   description?: string
   expiry_date?: string
   integration_source?: string
-  matter_id?: string
+  contract_id?: string
   file: File
 }
 
@@ -53,7 +53,7 @@ export async function uploadSignedContract(token: string, payload: UploadSignedC
   if (payload.description) formData.append('description', payload.description)
   if (payload.expiry_date) formData.append('expiry_date', payload.expiry_date)
   if (payload.integration_source) formData.append('integration_source', payload.integration_source)
-  if (payload.matter_id) formData.append('matter_id', payload.matter_id)
+  if (payload.contract_id) formData.append('contract_id', payload.contract_id)
   formData.append('file', payload.file)
   return apiUpload<SignedContract>('/signed-contracts', formData, token)
 }

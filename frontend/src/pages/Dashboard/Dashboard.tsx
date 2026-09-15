@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Dashboard.css'
-import '../MatterDetail/MatterDetail.css'
+import '../ContractDetail/ContractDetail.css'
 import {
   IconFlag,
   IconDownload,
@@ -88,8 +88,8 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
               <IconSearch />
               <input
                 type="search"
-                aria-label="Search clients, matters, staff"
-                placeholder="Search clients, matters, staff…"
+                aria-label="Search clients, contracts, staff"
+                placeholder="Search clients, contracts, staff…"
                 value={dashboardQuery}
                 onChange={(e) => setDashboardQuery(e.target.value)}
                 autoComplete="off"
@@ -132,8 +132,8 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
                     (r) => r.recipient_type === 'staff' && r.recipient_id === user.id,
                   )
                   return (
-                    <div key={sr.id} className="matter-doc-row">
-                      <span className="matter-doc-title">{sr.title}</span>
+                    <div key={sr.id} className="contract-doc-row">
+                      <span className="contract-doc-title">{sr.title}</span>
                       {myRecipient && (
                         <a
                           className="btn-ghost"

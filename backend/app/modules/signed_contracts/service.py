@@ -9,8 +9,8 @@ from app.modules.signed_contracts.schemas import (
     SignedContractsSummaryResponse,
 )
 from app.exceptions.signed_contracts import SignedContractNotFound
-from app.exceptions.matters import MatterNotFound
-from app.modules.matters.repository import MatterRepository
+from app.exceptions.contracts import ContractNotFound
+from app.modules.contracts.repository import ContractRepository
 from app.exceptions.malware import MalwareDetected
 from app.core.storage import upload_file, get_download_url
 from app.core.malware_scan import scan_file
@@ -41,7 +41,7 @@ class SignedContractService:
     def __init__(self, db: Session):
         self.db = db
         self.repository = SignedContractRepository(db)
-        self.matter_repository = MatterRepository(db)
+        self.contract_repository = ContractRepository(db)
         self.audit = AuditService(db)
 
     def upload_contract(
@@ -57,12 +57,12 @@ class SignedContractService:
         description: str | None = None,
         expiry_date: date | None = None,
         integration_source: str = "manual",
-        matter_id=None,
+        contract_id=None,
     ) -> SignedContractResponse:
-        if matter_id is not None:
-            matter = self.matter_repository.get_by_id(matter_id)
-            if not matter or str(matter.org_id) != str(org_id):
-                raise MatterNotFound()
+        if contract_id is not None:
+            contract = self.contract_repository.get_by_id(contract_id)
+            if not contract or str(contract.org_id) != str(org_id):
+                raise ContractNotFound()
 
         from app.exceptions.templates import UnsupportedFileType
         if content_type not in ALLOWED_CONTENT_TYPES:
@@ -88,7 +88,7 @@ class SignedContractService:
 
         contract = SignedContract(
             org_id=org_id,
-            matter_id=matter_id,
+            contract_id=contract_id,
             uploaded_by=actor_id,
             title=title,
             description=description,
@@ -118,7 +118,7 @@ class SignedContractService:
         return SignedContractResponse(
             id=contract.id,
             org_id=contract.org_id,
-            matter_id=contract.matter_id,
+            contract_id=contract.contract_id,
             title=contract.title,
             description=contract.description,
             agreement_type=contract.agreement_type,

@@ -5,4 +5,4 @@ export const SITE_URL = 'https://legalvault.example.com'
 export const SITE_NAME = 'LegalVault'
 export const SITE_TAGLINE = 'Modern Practice Management for Law Firms'
 export const SITE_DESCRIPTION =
-  'LegalVault is a practice management platform for growing law firms: matters, clients, and documents in one secure, compliant workspace.'
+  'LegalVault is a practice management platform for growing law firms: contracts, clients, and documents in one secure, compliant workspace.'

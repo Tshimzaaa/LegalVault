@@ -12,7 +12,7 @@ export interface OrganizationDetail extends OrganizationSummary {
   website: string | null
   address: string | null
   staff_count: number
-  matter_count: number
+  contract_count: number
 }
 
 export interface CreateOrganizationPayload {
@@ -74,7 +74,7 @@ export interface OrganizationExportResponse {
   exported_at: string
   org: Record<string, unknown>
   staff: Record<string, unknown>[]
-  matters: Record<string, unknown>[]
+  contracts: Record<string, unknown>[]
   audit_log: Record<string, unknown>[]
 }
 
@@ -87,8 +87,8 @@ export interface UsageMetrics {
   active_orgs: number
   inactive_orgs: number
   total_staff: number
-  total_matters: number
-  matters_by_status: Record<string, number>
+  total_contracts: number
+  contracts_by_status: Record<string, number>
   new_orgs_last_7_days: number
   new_orgs_last_30_days: number
 }

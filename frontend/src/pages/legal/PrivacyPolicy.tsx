@@ -54,7 +54,7 @@ function PrivacyPolicy() {
           </li>
           <li>
             <strong>Operator</strong>: for personal information that a law firm using our platform uploads about
-            its own clients (matters, documents, intake submissions, messages). The firm is the responsible party
+            its own clients (contracts, documents, intake submissions, messages). The firm is the responsible party
             for that data; we only process it on the firm’s instructions, under a data processing agreement with
             that firm.
           </li>
@@ -74,7 +74,7 @@ function PrivacyPolicy() {
         <h3>Firm clients (client portal)</h3>
         <ul>
           <li>
-            Information the law firm invites you to submit: contact details, matter/case information, documents,
+            Information the law firm invites you to submit: contact details, contract/case information, documents,
             and intake-form answers. This is collected on the firm’s instructions; the firm controls what is asked
             for and why. Contact your firm directly with questions about what they collect.
           </li>
@@ -84,7 +84,7 @@ function PrivacyPolicy() {
         <h2>4. How we use it</h2>
         <ul>
           <li>To create and secure your account, and authenticate you when you log in.</li>
-          <li>To operate core features: matters, documents, templates, e-signatures, intake forms, and reporting.</li>
+          <li>To operate core features: contracts, documents, templates, e-signatures, intake forms, and reporting.</li>
           <li>To respond to enquiries submitted through our contact form.</li>
           <li>To send operational emails (e.g. invitations, password resets, deadline reminders).</li>
           <li>To detect, investigate, and prevent security incidents, fraud, and misuse.</li>
@@ -103,7 +103,7 @@ function PrivacyPolicy() {
         <h2>6. Who we share it with</h2>
         <p>We share personal information only with service providers who help us run the platform, under contract, and only to the extent needed:</p>
         <ul>
-          <li>Cloud database and file storage providers (for hosting matters, documents, and account data).</li>
+          <li>Cloud database and file storage providers (for hosting contracts, documents, and account data).</li>
           <li>Our e-signature provider, to process signature requests you initiate.</li>
           <li>Malware-scanning services, to check uploaded files for threats.</li>
           <li>An error-monitoring service, to help us fix bugs (technical error data only, disabled by default).</li>
@@ -127,7 +127,7 @@ function PrivacyPolicy() {
 
         <h2>8. How long we keep it</h2>
         <p>
-          We keep account and matter data for as long as your firm’s account is active, plus a reasonable period
+          We keep account and contract data for as long as your firm’s account is active, plus a reasonable period
           afterward to meet legal, accounting, or dispute-resolution needs. Contact form submissions are kept only
           as long as needed to respond to and resolve the enquiry.
         </p>

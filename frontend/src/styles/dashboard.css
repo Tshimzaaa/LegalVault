@@ -299,7 +299,7 @@ button.chip {
 }
 
 /* Shared form-field pattern: a <label class="field"> wrapping a <span> (the field's label
-   text) and an <input>/<select>/<textarea>. Used across most dashboard forms (New Matter,
+   text) and an <input>/<select>/<textarea>. Used across most dashboard forms (New Contract,
    Owner Portal, Signed Contracts, Search, Settings, etc.) — centralized here so every page
    gets the same spacing instead of each page needing its own copy. */
 .field {
@@ -478,7 +478,7 @@ button.chip {
   }
 }
 
-/* Buttons used throughout both portals — previously only defined in NewMatter.css, so any
+/* Buttons used throughout both portals — previously only defined in NewContract.css, so any
    page outside the staff Workspace bundle (the whole client portal, in particular) rendered
    them with no styling at all. */
 .btn-ghost,
@@ -767,7 +767,7 @@ button.chip {
 /* Generic form-actions row + inline error message — used across 20+ pages/forms in both
    portals. grid-column: 1 / -1 is a no-op outside a grid parent (most callers are flex),
    harmless where unused. */
-.matter-actions {
+.contract-actions {
   grid-column: 1 / -1;
   display: flex;
   justify-content: flex-end;
@@ -775,7 +775,7 @@ button.chip {
   margin-top: 4px;
 }
 
-.matter-error {
+.contract-error {
   grid-column: 1 / -1;
   margin: 4px 0 0;
   text-align: right;

@@ -1,5 +1,5 @@
 // Nav metadata only — deliberately has no dependency on the actual page components
-// (Dashboard, Matters, etc.). Home.tsx's marketing-page carousel needs this list for its
+// (Dashboard, Contracts, etc.). Home.tsx's marketing-page carousel needs this list for its
 // sidebar mockup; importing it from Workspace.tsx directly would drag every staff page
 // into Home's eagerly-loaded bundle and defeat Workspace's route-level code-splitting.
 import type { NavItem } from '../../components/Sidebar'
@@ -22,8 +22,8 @@ import {
 
 export type StaffPage =
   | 'dashboard'
-  | 'new-matter'
-  | 'matters'
+  | 'new-contract'
+  | 'contracts'
   | 'workflow'
   | 'signed-contracts'
   | 'reporting'
@@ -43,8 +43,8 @@ export const ADMIN_ONLY_PAGES: StaffPage[] = ['staff', 'audit-log', 'integration
 
 export const staffNavItems: NavItem[] = [
   { label: 'Dashboard', icon: <IconGauge />, page: 'dashboard' },
-  { label: 'New Matter', icon: <IconGavel />, page: 'new-matter' },
-  { label: 'Matters', icon: <IconLayers />, page: 'matters' },
+  { label: 'New Contract', icon: <IconGavel />, page: 'new-contract' },
+  { label: 'Contracts', icon: <IconLayers />, page: 'contracts' },
   { label: 'Calendar', icon: <IconCalendar />, page: 'calendar' },
   { label: 'Workflow', icon: <IconWorkflow />, page: 'workflow' },
   { label: 'Signed Contracts', icon: <IconSignedContract />, page: 'signed-contracts' },

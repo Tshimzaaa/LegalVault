@@ -3,7 +3,7 @@ from uuid import UUID
 from datetime import date, datetime
 
 from app.modules.auth.models.role import UserRole
-from app.modules.matters.models import MatterStatus, MatterRole, TaskStatus
+from app.modules.contracts.models import ContractStage, ContractRole, TaskStatus
 from app.modules.audit.schemas import AuditLogResponse
 from app.modules.monitoring.schemas import (
     RequestMetrics,
@@ -32,7 +32,7 @@ class OrganizationDetail(BaseModel):
     address: str | None
     is_active: bool
     staff_count: int
-    matter_count: int
+    contract_count: int
 
 class UpdateOrganizationStatusRequest(BaseModel):
     is_active: bool
@@ -75,7 +75,7 @@ class OrganizationExportStaff(BaseModel):
 
 class OrganizationExportAssignment(BaseModel):
     user_id: UUID
-    role_on_matter: MatterRole
+    role_on_contract: ContractRole
 
 
 class OrganizationExportTask(BaseModel):
@@ -103,11 +103,11 @@ class OrganizationExportDocument(BaseModel):
     download_url: str | None
 
 
-class OrganizationExportMatter(BaseModel):
+class OrganizationExportContract(BaseModel):
     id: UUID
     title: str
     description: str | None
-    status: MatterStatus
+    status: ContractStage
     created_at: datetime
     updated_at: datetime
     assignments: list[OrganizationExportAssignment]
@@ -119,7 +119,7 @@ class OrganizationExportResponse(BaseModel):
     exported_at: datetime
     org: OrganizationExportProfile
     staff: list[OrganizationExportStaff]
-    matters: list[OrganizationExportMatter]
+    contracts: list[OrganizationExportContract]
     audit_log: list[AuditLogResponse]
 
 
@@ -128,8 +128,8 @@ class UsageMetrics(BaseModel):
     active_orgs: int
     inactive_orgs: int
     total_staff: int
-    total_matters: int
-    matters_by_status: dict[str, int]
+    total_contracts: int
+    contracts_by_status: dict[str, int]
     new_orgs_last_7_days: int
     new_orgs_last_30_days: int
 

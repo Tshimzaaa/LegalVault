@@ -1,23 +1,23 @@
 """
 Notifications: list, unread count, mark-read, mark-all-read — for the staff
-scope. Uses matter staff-assignment as the notification-generating event,
+scope. Uses contract staff-assignment as the notification-generating event,
 since notifications are only ever a side effect of some other action, never
 created directly via their own API.
 """
-from tests.conftest import auth_headers, make_org, make_matter, make_staff
+from tests.conftest import auth_headers, make_org, make_contract, make_staff
 
 
 def test_staff_notification_lifecycle(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
     lawyer, _ = make_staff(db_session, org, email="lawyer@example.com")
-    matter = make_matter(db_session, org)
+    contract = make_contract(db_session, org)
 
     assert client.get("/notifications/unread-count", headers=auth_headers(lawyer)).json()["unread_count"] == 0
 
     client.post(
-        f"/matters/{matter.id}/assignments",
-        json={"user_id": str(lawyer.id), "role_on_matter": "lead_lawyer"},
+        f"/contracts/{contract.id}/assignments",
+        json={"user_id": str(lawyer.id), "role_on_contract": "lead_lawyer"},
         headers=auth_headers(admin),
     )
 
@@ -41,16 +41,16 @@ def test_staff_mark_all_notifications_read(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
     lawyer, _ = make_staff(db_session, org, email="lawyer2@example.com")
-    matter = make_matter(db_session, org)
+    contract = make_contract(db_session, org)
 
     client.post(
-        f"/matters/{matter.id}/assignments",
-        json={"user_id": str(lawyer.id), "role_on_matter": "lead_lawyer"},
+        f"/contracts/{contract.id}/assignments",
+        json={"user_id": str(lawyer.id), "role_on_contract": "lead_lawyer"},
         headers=auth_headers(admin),
     )
     client.post(
-        f"/matters/{matter.id}/assignments",
-        json={"user_id": str(lawyer.id), "role_on_matter": "reviewer"},
+        f"/contracts/{contract.id}/assignments",
+        json={"user_id": str(lawyer.id), "role_on_contract": "reviewer"},
         headers=auth_headers(admin),
     )
     assert client.get("/notifications/unread-count", headers=auth_headers(lawyer)).json()["unread_count"] == 2

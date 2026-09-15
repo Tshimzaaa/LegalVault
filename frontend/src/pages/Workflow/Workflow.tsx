@@ -3,13 +3,13 @@ import type { DragEvent } from 'react'
 import { Link } from 'react-router-dom'
 import './Workflow.css'
 import { IconPlus } from '../../components/icons'
-import { listMatters, updateMatterStatus, requestMatterApproval, listPendingApprovals, isGatedTransition, MATTER_STATUS_TRANSITIONS } from '../../api/matters'
-import type { Matter, MatterStatus, MatterApproval } from '../../api/matters'
+import { listContracts, updateContractStage, requestContractApproval, listPendingApprovals, isGatedTransition, CONTRACT_STATUS_TRANSITIONS } from '../../api/contracts'
+import type { Contract, ContractStage, ContractApproval } from '../../api/contracts'
 import { formatDate } from '../../utils/date'
 
 type LoadState = 'loading' | 'error' | 'ready'
 
-const columnOrder: { status: MatterStatus; label: string; color: string }[] = [
+const columnOrder: { status: ContractStage; label: string; color: string }[] = [
   { status: 'intake', label: 'Intake', color: '#eab308' },
   { status: 'in_review', label: 'In Review', color: '#3987e5' },
   { status: 'awaiting_signature', label: 'Awaiting Signature', color: '#a855f7' },
@@ -19,12 +19,12 @@ const columnOrder: { status: MatterStatus; label: string; color: string }[] = [
 ]
 
 function Workflow() {
-  const [matters, setMatters] = useState<Matter[]>([])
-  const [pendingApprovals, setPendingApprovals] = useState<MatterApproval[]>([])
+  const [contracts, setContracts] = useState<Contract[]>([])
+  const [pendingApprovals, setPendingApprovals] = useState<ContractApproval[]>([])
   const [status, setStatus] = useState<LoadState>('loading')
   const [attempt, setAttempt] = useState(0)
   const [draggingId, setDraggingId] = useState<string | null>(null)
-  const [dragOverStatus, setDragOverStatus] = useState<MatterStatus | null>(null)
+  const [dragOverStatus, setDragOverStatus] = useState<ContractStage | null>(null)
   const [moveError, setMoveError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -37,10 +37,10 @@ function Workflow() {
       return
     }
 
-    Promise.all([listMatters(token), listPendingApprovals(token)])
-      .then(([matterList, approvalList]) => {
+    Promise.all([listContracts(token), listPendingApprovals(token)])
+      .then(([contractList, approvalList]) => {
         if (cancelled) return
-        setMatters(matterList)
+        setContracts(contractList)
         setPendingApprovals(approvalList)
         setStatus('ready')
       })
@@ -54,10 +54,10 @@ function Workflow() {
     }
   }, [attempt])
 
-  function handleDragStart(e: DragEvent<HTMLDivElement>, matterId: string) {
-    e.dataTransfer.setData('text/plain', matterId)
+  function handleDragStart(e: DragEvent<HTMLDivElement>, contractId: string) {
+    e.dataTransfer.setData('text/plain', contractId)
     e.dataTransfer.effectAllowed = 'move'
-    setDraggingId(matterId)
+    setDraggingId(contractId)
   }
 
   function handleDragEnd() {
@@ -65,60 +65,60 @@ function Workflow() {
     setDragOverStatus(null)
   }
 
-  function isValidTarget(matter: Matter, targetStatus: MatterStatus) {
-    return MATTER_STATUS_TRANSITIONS[matter.status].includes(targetStatus)
+  function isValidTarget(contract: Contract, targetStatus: ContractStage) {
+    return CONTRACT_STATUS_TRANSITIONS[contract.status].includes(targetStatus)
   }
 
-  function handleDragOver(e: DragEvent<HTMLDivElement>, targetStatus: MatterStatus) {
-    const matter = matters.find((m) => m.id === draggingId)
-    if (!matter || !isValidTarget(matter, targetStatus)) return // no preventDefault -> browser shows "not allowed"
+  function handleDragOver(e: DragEvent<HTMLDivElement>, targetStatus: ContractStage) {
+    const contract = contracts.find((m) => m.id === draggingId)
+    if (!contract || !isValidTarget(contract, targetStatus)) return // no preventDefault -> browser shows "not allowed"
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
     setDragOverStatus(targetStatus)
   }
 
-  async function moveMatter(matter: Matter, targetStatus: MatterStatus) {
-    if (matter.status === targetStatus || !isValidTarget(matter, targetStatus)) return
+  async function moveContract(contract: Contract, targetStatus: ContractStage) {
+    if (contract.status === targetStatus || !isValidTarget(contract, targetStatus)) return
 
     const token = localStorage.getItem('access_token')
     if (!token) return
 
     setMoveError(null)
 
-    if (isGatedTransition(matter.status, targetStatus)) {
+    if (isGatedTransition(contract.status, targetStatus)) {
       // Status doesn't move yet — the card stays in its current column until an eligible
-      // approver decides on the request from the matter's detail page.
+      // approver decides on the request from the contract's detail page.
       try {
-        const approval = await requestMatterApproval(token, matter.id, targetStatus)
+        const approval = await requestContractApproval(token, contract.id, targetStatus)
         setPendingApprovals((prev) => [...prev, approval])
       } catch {
-        // Most likely: an approval is already pending for this matter. Nothing to roll
+        // Most likely: an approval is already pending for this contract. Nothing to roll
         // back since nothing moved.
-        setMoveError(`Could not request approval for "${matter.title}". It may already have one pending.`)
+        setMoveError(`Could not request approval for "${contract.title}". It may already have one pending.`)
       }
       return
     }
 
-    const previousStatus = matter.status
-    setMatters((prev) => prev.map((m) => (m.id === matter.id ? { ...m, status: targetStatus } : m)))
+    const previousStatus = contract.status
+    setContracts((prev) => prev.map((m) => (m.id === contract.id ? { ...m, status: targetStatus } : m)))
 
     try {
-      await updateMatterStatus(token, matter.id, targetStatus)
+      await updateContractStage(token, contract.id, targetStatus)
     } catch {
-      setMatters((prev) => prev.map((m) => (m.id === matter.id ? { ...m, status: previousStatus } : m)))
-      setMoveError(`Could not move "${matter.title}". Please try again.`)
+      setContracts((prev) => prev.map((m) => (m.id === contract.id ? { ...m, status: previousStatus } : m)))
+      setMoveError(`Could not move "${contract.title}". Please try again.`)
     }
   }
 
-  async function handleDrop(e: DragEvent<HTMLDivElement>, targetStatus: MatterStatus) {
+  async function handleDrop(e: DragEvent<HTMLDivElement>, targetStatus: ContractStage) {
     e.preventDefault()
-    const matterId = e.dataTransfer.getData('text/plain')
+    const contractId = e.dataTransfer.getData('text/plain')
     setDragOverStatus(null)
     setDraggingId(null)
 
-    const matter = matters.find((m) => m.id === matterId)
-    if (!matter) return
-    await moveMatter(matter, targetStatus)
+    const contract = contracts.find((m) => m.id === contractId)
+    if (!contract) return
+    await moveContract(contract, targetStatus)
   }
 
   return (
@@ -127,16 +127,16 @@ function Workflow() {
         <h1>Workflow</h1>
         <div className="topbar-actions">
           <span className="chip">
-            Total Matters <span className="chip-badge">{matters.length}</span>
+            Total Contracts <span className="chip-badge">{contracts.length}</span>
           </span>
-          <Link to="/staff/new-matter" className="btn-solid">
-            <IconPlus /> New Matter
+          <Link to="/staff/new-contract" className="btn-solid">
+            <IconPlus /> New Contract
           </Link>
         </div>
       </header>
 
       {moveError && (
-        <p className="matter-error" role="alert" aria-live="polite">
+        <p className="contract-error" role="alert" aria-live="polite">
           {moveError}
         </p>
       )}
@@ -144,13 +144,13 @@ function Workflow() {
       {status === 'loading' && (
         <div className="dash-state" role="status" aria-live="polite">
           <span className="dash-spinner" aria-hidden="true" />
-          <p>Loading matters…</p>
+          <p>Loading contracts…</p>
         </div>
       )}
 
       {status === 'error' && (
         <div className="dash-state" role="status" aria-live="polite">
-          <p>Couldn&rsquo;t reach the backend for your matters.</p>
+          <p>Couldn&rsquo;t reach the backend for your contracts.</p>
           <button type="button" className="btn-ghost" onClick={() => setAttempt((n) => n + 1)}>
             Retry
           </button>
@@ -160,7 +160,7 @@ function Workflow() {
       {status === 'ready' && (
         <section className="workflow-board">
           {columnOrder.map((col) => {
-            const cards = matters.filter((m) => m.status === col.status)
+            const cards = contracts.filter((m) => m.status === col.status)
             return (
               <div
                 key={col.status}
@@ -184,15 +184,15 @@ function Workflow() {
                       onDragStart={(e) => handleDragStart(e, m.id)}
                       onDragEnd={handleDragEnd}
                     >
-                      <Link to={`/staff/matters/${m.id}`} className="row-stretched-link" aria-label={`Open matter ${m.title}`} />
+                      <Link to={`/staff/contracts/${m.id}`} className="row-stretched-link" aria-label={`Open contract ${m.title}`} />
                       <span className="workflow-card-title">{m.title}</span>
                       <div className="workflow-card-footer">
                         <span className="deadline-sub">Opened {formatDate(m.created_at)}</span>
-                        {pendingApprovals.some((a) => a.matter_id === m.id) && (
+                        {pendingApprovals.some((a) => a.contract_id === m.id) && (
                           <span className="chip small">Approval pending</span>
                         )}
                       </div>
-                      {MATTER_STATUS_TRANSITIONS[m.status].length > 0 && (
+                      {CONTRACT_STATUS_TRANSITIONS[m.status].length > 0 && (
                         <select
                           className="workflow-card-move select-input"
                           aria-label={`Move ${m.title} to a different status`}
@@ -200,12 +200,12 @@ function Workflow() {
                           onClick={(e) => e.stopPropagation()}
                           onKeyDown={(e) => e.stopPropagation()}
                           onChange={(e) => {
-                            const target = e.target.value as MatterStatus
-                            if (target) moveMatter(m, target)
+                            const target = e.target.value as ContractStage
+                            if (target) moveContract(m, target)
                           }}
                         >
                           <option value="">Move to…</option>
-                          {MATTER_STATUS_TRANSITIONS[m.status].map((s) => (
+                          {CONTRACT_STATUS_TRANSITIONS[m.status].map((s) => (
                             <option key={s} value={s}>
                               {columnOrder.find((c) => c.status === s)?.label ?? s}
                             </option>

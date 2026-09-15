@@ -18,7 +18,7 @@ function Footer() {
             <span>LegalVault</span>
           </Link>
           <p className="site-footer-tagline">
-            The modern practice management platform for growing law firms: matters, clients, and documents in one
+            The modern practice management platform for growing law firms: contracts, clients, and documents in one
             secure workspace.
           </p>
         </div>

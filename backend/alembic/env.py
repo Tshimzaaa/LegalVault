@@ -19,7 +19,7 @@ sys.path.insert(
 from app.core.config import settings
 from app.database.base import Base
 from app.modules.auth.models import Organization, User  # noqa: F401
-from app.modules.matters.models import Matter, MatterAssignment, MatterDocument, MatterTask, MatterMessage  # noqa: F401
+from app.modules.contracts.models import Contract, ContractAssignment, ContractDocument, ContractTask, ContractMessage  # noqa: F401
 from app.modules.templates.models import Template  # noqa: F401
 from app.modules.audit.models import AuditLog  # noqa: F401
 from app.modules.announcements.models import Announcement  # noqa: F401

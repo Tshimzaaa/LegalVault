@@ -25,7 +25,7 @@ const plans: Plan[] = [
     period: '/ month',
     description: 'For solo practitioners getting organized.',
     features: [
-      'Up to 25 active matters',
+      'Up to 25 active contracts',
       'Client portal access',
       'Document storage (10GB)',
       'Document templates & e-signatures',
@@ -40,7 +40,7 @@ const plans: Plan[] = [
     period: '/ month',
     description: 'For growing firms that need more workflow.',
     features: [
-      'Unlimited active matters',
+      'Unlimited active contracts',
       'Client portal + e-signatures',
       'Document storage (100GB)',
       'Workflow automation',

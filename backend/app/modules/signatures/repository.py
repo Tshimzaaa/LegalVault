@@ -35,11 +35,11 @@ class SignatureRepository:
         )
         return self.db.scalar(statement)
 
-    def list_by_matter(self, matter_id) -> list[SignatureRequest]:
+    def list_by_contract(self, contract_id) -> list[SignatureRequest]:
         statement = (
             select(SignatureRequest)
             .options(selectinload(SignatureRequest.recipients))
-            .where(SignatureRequest.matter_id == matter_id)
+            .where(SignatureRequest.contract_id == contract_id)
             .order_by(SignatureRequest.created_at.desc())
         )
         return list(self.db.scalars(statement))

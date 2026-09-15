@@ -62,7 +62,7 @@ class Settings(BaseSettings):
     # handler. Configured on the Documenso side as the webhook's "secret".
     DOCUMENSO_WEBHOOK_SECRET: str = "change-me"
 
-    # Celery broker for background jobs (matter due-date / contract expiry reminders —
+    # Celery broker for background jobs (contract due-date reminders —
     # see app/tasks/). See docker-compose.yml's `redis` service for local dev.
     REDIS_URL: str = "redis://localhost:6379/0"
 
@@ -103,7 +103,7 @@ if settings.ENVIRONMENT == "production":
                   "'document completed' event.")
     if settings.REDIS_URL == "redis://localhost:6379/0":
         sys.exit("REDIS_URL must be set to a real Redis instance before running in production — "
-                  "background jobs (matter/contract reminders) have no broker to run against "
+                  "background jobs (contract reminders) have no broker to run against "
                   "otherwise.")
     try:
         Fernet(settings.ENCRYPTION_KEY.encode())

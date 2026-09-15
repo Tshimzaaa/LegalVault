@@ -158,11 +158,11 @@ function Settings({ user }: SettingsProps) {
               />
             </label>
 
-            {saveError && <p className="matter-error" aria-live="polite">{saveError}</p>}
+            {saveError && <p className="contract-error" aria-live="polite">{saveError}</p>}
             {saved && <p className="settings-saved" aria-live="polite">Organization settings saved.</p>}
 
             {isAdmin && (
-              <div className="matter-actions">
+              <div className="contract-actions">
                 <button type="submit" className="btn-solid" disabled={saving}>
                   {saving ? 'Saving…' : 'Save changes'}
                 </button>

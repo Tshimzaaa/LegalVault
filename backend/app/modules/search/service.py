@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import ColumnElement
 
 from app.modules.auth.models import User
-from app.modules.matters.models import Matter, MatterDocument
+from app.modules.contracts.models import Contract, ContractDocument
 from app.modules.search.schemas import SearchResponse, SearchResultItem
 
 RESULTS_PER_CATEGORY = 10
@@ -34,11 +34,11 @@ class SearchService:
     def search(self, org_id, query: str) -> SearchResponse:
         tsquery = func.websearch_to_tsquery("english", query)
 
-        matter_vector = _tsvector(Matter.title, Matter.description)
-        matters = self.db.scalars(
-            select(Matter)
-            .where(Matter.org_id == org_id, matter_vector.op("@@")(tsquery))
-            .order_by(func.ts_rank(matter_vector, tsquery).desc())
+        contract_vector = _tsvector(Contract.title, Contract.description)
+        contracts = self.db.scalars(
+            select(Contract)
+            .where(Contract.org_id == org_id, contract_vector.op("@@")(tsquery))
+            .order_by(func.ts_rank(contract_vector, tsquery).desc())
             .limit(RESULTS_PER_CATEGORY)
         ).all()
 
@@ -50,19 +50,19 @@ class SearchService:
             .limit(RESULTS_PER_CATEGORY)
         ).all()
 
-        document_vector = _tsvector(MatterDocument.title, MatterDocument.original_filename)
+        document_vector = _tsvector(ContractDocument.title, ContractDocument.original_filename)
         documents = self.db.scalars(
-            select(MatterDocument)
-            .join(Matter, MatterDocument.matter_id == Matter.id)
-            .where(Matter.org_id == org_id, document_vector.op("@@")(tsquery))
+            select(ContractDocument)
+            .join(Contract, ContractDocument.contract_id == Contract.id)
+            .where(Contract.org_id == org_id, document_vector.op("@@")(tsquery))
             .order_by(func.ts_rank(document_vector, tsquery).desc())
             .limit(RESULTS_PER_CATEGORY)
         ).all()
 
         return SearchResponse(
-            matters=[
+            contracts=[
                 SearchResultItem(id=m.id, title=m.title, subtitle=m.status.value)
-                for m in matters
+                for m in contracts
             ],
             staff=[
                 SearchResultItem(id=u.id, title=f"{u.first_name} {u.last_name}", subtitle=u.role.value)

@@ -35,9 +35,9 @@ function TermsAndConditions() {
 
         <h2>2. What the Platform is, and isn’t</h2>
         <p>
-          The Platform is practice-management software: matter tracking, client communication, document storage,
+          The Platform is practice-management software: contract tracking, client communication, document storage,
           templates, e-signature requests, and reporting for law firms. We are a software provider, not a law firm.
-          We don’t provide legal advice, don’t represent any user in any legal matter, and aren’t responsible for
+          We don’t provide legal advice, don’t represent any user in any legal contract, and aren’t responsible for
           the legal accuracy or adequacy of any document, template, or advice a firm produces using the Platform.
         </p>
 
@@ -83,7 +83,7 @@ function TermsAndConditions() {
         <h2>8. Intellectual property</h2>
         <p>
           We own the Platform, its software, design, and branding. You (or your firm) retain ownership of the
-          matter data, documents, and content you upload; we don’t claim ownership of it, and use it only to
+          contract data, documents, and content you upload; we don’t claim ownership of it, and use it only to
           provide the service to you.
         </p>
 

@@ -48,7 +48,7 @@ class SignatureRecipientResponse(BaseModel):
 
 class SignatureRequestResponse(BaseModel):
     id: UUID
-    matter_id: UUID
+    contract_id: UUID
     source_document_id: UUID
     title: str
     status: SignatureRequestStatus

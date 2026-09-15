@@ -12,7 +12,7 @@ from app.modules.notifications.models import RecipientType
 
 if TYPE_CHECKING:
     from app.modules.auth.models.organization import Organization
-    from app.modules.matters.models import Matter, MatterDocument
+    from app.modules.contracts.models import Contract, ContractDocument
     from app.modules.signed_contracts.models import SignedContract
 
 
@@ -34,9 +34,9 @@ class SignatureRequest(BaseModel):
 
     org_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id"), nullable=False, index=True)
 
-    matter_id: Mapped[UUID] = mapped_column(ForeignKey("matters.id"), nullable=False, index=True)
+    contract_id: Mapped[UUID] = mapped_column(ForeignKey("contracts.id"), nullable=False, index=True)
 
-    source_document_id: Mapped[UUID] = mapped_column(ForeignKey("matter_documents.id"), nullable=False)
+    source_document_id: Mapped[UUID] = mapped_column(ForeignKey("contract_documents.id"), nullable=False)
 
     requested_by: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
 

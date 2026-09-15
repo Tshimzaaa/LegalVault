@@ -10,22 +10,22 @@ import uuid
 
 from app.core.config import settings
 from app.core.documenso_client import WEBHOOK_SECRET_HEADER
-from app.modules.matters.models import MatterDocument
+from app.modules.contracts.models import ContractDocument
 from app.modules.signatures.models import (
     SignatureRecipient,
     SignatureRecipientStatus,
     SignatureRequest,
     SignatureRequestStatus,
 )
-from tests.conftest import make_org, make_matter, make_staff
+from tests.conftest import make_org, make_contract, make_staff
 
 
-def _make_signature_request(db_session, org, matter, admin, *, documenso_document_id):
-    document = MatterDocument(
-        matter_id=matter.id,
+def _make_signature_request(db_session, org, contract, admin, *, documenso_document_id):
+    document = ContractDocument(
+        contract_id=contract.id,
         uploaded_by=admin.id,
         title="Engagement Letter",
-        file_key=f"matter_documents/{matter.id}/{uuid.uuid4()}-engagement-letter.pdf",
+        file_key=f"contract_documents/{contract.id}/{uuid.uuid4()}-engagement-letter.pdf",
         original_filename="engagement-letter.pdf",
         content_type="application/pdf",
     )
@@ -34,7 +34,7 @@ def _make_signature_request(db_session, org, matter, admin, *, documenso_documen
 
     signature_request = SignatureRequest(
         org_id=org.id,
-        matter_id=matter.id,
+        contract_id=contract.id,
         source_document_id=document.id,
         requested_by=admin.id,
         title="Please sign: Engagement Letter",
@@ -94,9 +94,9 @@ def test_webhook_rejects_missing_or_wrong_secret(client, db_session):
 def test_document_signed_marks_matching_recipient_signed(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
-    matter = make_matter(db_session, org)
+    contract = make_contract(db_session, org)
     signature_request, recipient = _make_signature_request(
-        db_session, org, matter, admin, documenso_document_id="101"
+        db_session, org, contract, admin, documenso_document_id="101"
     )
 
     body = _document_payload(
@@ -127,9 +127,9 @@ def test_document_recipient_completed_also_marks_recipient_signed(client, db_ses
     # DOCUMENT_SIGNED — both should be handled the same way.
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
-    matter = make_matter(db_session, org)
+    contract = make_contract(db_session, org)
     signature_request, recipient = _make_signature_request(
-        db_session, org, matter, admin, documenso_document_id="102"
+        db_session, org, contract, admin, documenso_document_id="102"
     )
 
     body = _document_payload(
@@ -148,9 +148,9 @@ def test_document_recipient_completed_also_marks_recipient_signed(client, db_ses
 def test_document_rejected_marks_rejecting_recipient_declined(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
-    matter = make_matter(db_session, org)
+    contract = make_contract(db_session, org)
     signature_request, recipient = _make_signature_request(
-        db_session, org, matter, admin, documenso_document_id="103"
+        db_session, org, contract, admin, documenso_document_id="103"
     )
 
     body = _document_payload(

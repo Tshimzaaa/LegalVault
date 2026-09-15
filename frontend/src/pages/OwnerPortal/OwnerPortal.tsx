@@ -348,7 +348,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
 
   async function handleDeleteOrganization(org: OrganizationDetail) {
     if (!token) return
-    if (!window.confirm(`Permanently delete ${org.name} and all its staff, clients, and matters?`)) return
+    if (!window.confirm(`Permanently delete ${org.name} and all its staff, clients, and contracts?`)) return
     setOrganizationActionError(null)
     setDeletingId(org.id)
     try {
@@ -433,8 +433,8 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
       icon: <IconUser />,
     },
     {
-      label: 'Matters open',
-      value: platformNumberFormat.format(orgs.reduce((s, f) => s + f.matter_count, 0)),
+      label: 'Contracts open',
+      value: platformNumberFormat.format(orgs.reduce((s, f) => s + f.contract_count, 0)),
       icon: <IconDollar />,
     },
   ]
@@ -559,9 +559,9 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
               </label>
             </div>
 
-            {createError && <p className="matter-error" aria-live="polite">{createError}</p>}
+            {createError && <p className="contract-error" aria-live="polite">{createError}</p>}
 
-            <div className="matter-actions">
+            <div className="contract-actions">
               <button type="button" className="btn-ghost" onClick={() => setShowCreateForm(false)}>
                 Cancel
               </button>
@@ -609,7 +609,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
             <div className="card-header">
               <h2>Organizations on the Platform</h2>
             </div>
-            {orgActionError && <p className="matter-error" aria-live="polite">{orgActionError}</p>}
+            {orgActionError && <p className="contract-error" aria-live="polite">{orgActionError}</p>}
             <div className="table-scroll">
             <table className="data-table">
               <thead>
@@ -617,7 +617,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                   <th>Organization</th>
                   <th>Email</th>
                   <th>Staff</th>
-                  <th>Matters</th>
+                  <th>Contracts</th>
                   <th>Status</th>
                   <th />
                 </tr>
@@ -628,7 +628,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                     <td>{f.name}</td>
                     <td className="muted">{f.email}</td>
                     <td className="muted tabular">{f.staff_count}</td>
-                    <td className="muted tabular">{f.matter_count}</td>
+                    <td className="muted tabular">{f.contract_count}</td>
                     <td>
                       <span
                         className="status-badge"
@@ -1056,8 +1056,8 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                   <span>Body</span>
                   <textarea rows={2} value={announcementBody} onChange={(e) => setAnnouncementBody(e.target.value)} required />
                 </label>
-                {announcementError && <p className="matter-error" aria-live="polite">{announcementError}</p>}
-                <div className="matter-actions">
+                {announcementError && <p className="contract-error" aria-live="polite">{announcementError}</p>}
+                <div className="contract-actions">
                   <button type="button" className="btn-ghost" onClick={() => setShowAnnouncementForm(false)}>
                     Cancel
                   </button>
@@ -1084,7 +1084,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
               </div>
             )}
 
-            {announcementActionError && <p className="matter-error" aria-live="polite">{announcementActionError}</p>}
+            {announcementActionError && <p className="contract-error" aria-live="polite">{announcementActionError}</p>}
 
             {announcementsStatus === 'ready' && (
               <div className="list-rows">

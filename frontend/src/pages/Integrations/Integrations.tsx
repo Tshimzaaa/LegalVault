@@ -32,7 +32,7 @@ const providerMeta: Record<IntegrationProvider, { name: string; category: string
   cloud_storage: {
     name: 'Cloud Storage',
     category: 'Storage',
-    description: 'Sync signed contracts and matter documents to your corporate cloud drive.',
+    description: 'Sync signed contracts and contract documents to your corporate cloud drive.',
     icon: <IconFolder />,
   },
 }
@@ -187,7 +187,7 @@ function Integrations({ user }: IntegrationsProps) {
         </div>
       )}
 
-      {actionError && <p className="matter-error" aria-live="polite">{actionError}</p>}
+      {actionError && <p className="contract-error" aria-live="polite">{actionError}</p>}
 
       {status === 'ready' && (
         <section className="integrations-grid">
@@ -249,7 +249,7 @@ function Integrations({ user }: IntegrationsProps) {
                       <input type="checkbox" checked={enableOnSave} onChange={(e) => setEnableOnSave(e.target.checked)} />
                       <span>Enable after saving</span>
                     </label>
-                    <div className="matter-actions">
+                    <div className="contract-actions">
                       <button type="button" className="btn-ghost" onClick={() => setConfiguringProvider(null)}>
                         Cancel
                       </button>

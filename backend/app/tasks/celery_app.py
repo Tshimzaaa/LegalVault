@@ -13,8 +13,8 @@ celery_app.conf.update(
     timezone="UTC",
     enable_utc=True,
     beat_schedule={
-        "matter-due-date-reminders": {
-            "task": "app.tasks.reminders.send_matter_due_date_reminders",
+        "contract-due-date-reminders": {
+            "task": "app.tasks.reminders.send_contract_due_date_reminders",
             "schedule": crontab(hour=7, minute=0),
         },
         "contract-expiry-reminders": {

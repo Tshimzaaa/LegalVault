@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import './Reporting.css'
-import { listMatters } from '../../api/matters'
+import { listContracts } from '../../api/contracts'
 import { getDashboardSummary } from '../../api/dashboard'
-import { getReportingOverview, downloadMattersCsv } from '../../api/reporting'
+import { getReportingOverview, downloadContractsCsv } from '../../api/reporting'
 import type { ReportingOverview } from '../../api/reporting'
 
 interface OutcomeSlice {
@@ -67,7 +67,7 @@ function CaseOutcomesDonut({ data }: { data: OutcomeSlice[] }) {
             <span className="donut-legend-value">{Math.round((d.value / total) * 100)}%</span>
           </div>
         ))}
-        {data.length === 0 && <p className="muted">No matters yet.</p>}
+        {data.length === 0 && <p className="muted">No contracts yet.</p>}
       </div>
     </div>
   )
@@ -91,7 +91,7 @@ function StaffWorkloadTable({ overview }: { overview: ReportingOverview | null }
         {rows.map((r) => (
           <tr key={r.user_id}>
             <td>{r.name}</td>
-            <td className="muted tabular">{r.active_matters}</td>
+            <td className="muted tabular">{r.active_contracts}</td>
             <td className="muted tabular">{r.open_tasks}</td>
             <td className="muted tabular" style={{ color: r.overdue_tasks > 0 ? '#ef4444' : undefined }}>
               {r.overdue_tasks}
@@ -101,7 +101,7 @@ function StaffWorkloadTable({ overview }: { overview: ReportingOverview | null }
         {rows.length === 0 && (
           <tr>
             <td colSpan={4} className="muted">
-              No staff assigned to matters yet.
+              No staff assigned to contracts yet.
             </td>
           </tr>
         )}
@@ -112,7 +112,7 @@ function StaffWorkloadTable({ overview }: { overview: ReportingOverview | null }
 }
 
 function Reporting() {
-  const [activeMatters, setActiveMatters] = useState<number | null>(null)
+  const [activeContracts, setActiveContracts] = useState<number | null>(null)
   const [caseOutcomes, setCaseOutcomes] = useState<OutcomeSlice[]>([])
   const [overview, setOverview] = useState<ReportingOverview | null>(null)
   const [exporting, setExporting] = useState(false)
@@ -122,9 +122,9 @@ function Reporting() {
     const token = localStorage.getItem('access_token')
     if (!token) return
 
-    listMatters(token)
-      .then((matters) => setActiveMatters(matters.filter((m) => m.status !== 'closed' && m.status !== 'declined').length))
-      .catch(() => setActiveMatters(null))
+    listContracts(token)
+      .then((contracts) => setActiveContracts(contracts.filter((m) => m.status !== 'closed' && m.status !== 'declined').length))
+      .catch(() => setActiveContracts(null))
 
     getDashboardSummary(token)
       .then((summary) => {
@@ -144,9 +144,9 @@ function Reporting() {
     setExportError(null)
     setExporting(true)
     try {
-      await downloadMattersCsv(token)
+      await downloadContractsCsv(token)
     } catch {
-      setExportError('Could not export matters.')
+      setExportError('Could not export contracts.')
     } finally {
       setExporting(false)
     }
@@ -157,9 +157,9 @@ function Reporting() {
       <header className="dash-topbar">
         <h1>Reporting</h1>
         <div className="topbar-actions">
-          {exportError && <span className="matter-error" aria-live="polite">{exportError}</span>}
+          {exportError && <span className="contract-error" aria-live="polite">{exportError}</span>}
           <button type="button" className="btn-ghost" onClick={handleExport} disabled={exporting}>
-            {exporting ? 'Exporting…' : 'Export matters (CSV)'}
+            {exporting ? 'Exporting…' : 'Export contracts (CSV)'}
           </button>
         </div>
       </header>
@@ -167,19 +167,19 @@ function Reporting() {
       <section className="dash-row reporting-stats">
         <div className="card">
           <div className="card-header">
-            <span>Active matters</span>
+            <span>Active contracts</span>
           </div>
           <div className="stat-line">
-            <span className="stat-big">{activeMatters !== null ? numberFormat.format(activeMatters) : 'N/A'}</span>
+            <span className="stat-big">{activeContracts !== null ? numberFormat.format(activeContracts) : 'N/A'}</span>
           </div>
         </div>
         <div className="card">
           <div className="card-header">
-            <span>Unassigned active matters</span>
+            <span>Unassigned active contracts</span>
           </div>
           <div className="stat-line">
             <span className="stat-big">
-              {overview ? numberFormat.format(overview.unassigned_active_matters) : 'N/A'}
+              {overview ? numberFormat.format(overview.unassigned_active_contracts) : 'N/A'}
             </span>
           </div>
         </div>
@@ -218,7 +218,7 @@ function Reporting() {
           <div className="card-header">
             <span>Case Outcomes</span>
           </div>
-          <span className="card-subtitle">by matter status</span>
+          <span className="card-subtitle">by contract status</span>
           <CaseOutcomesDonut data={caseOutcomes} />
         </div>
 
@@ -226,7 +226,7 @@ function Reporting() {
           <div className="card-header">
             <span>Staff Workload</span>
           </div>
-          <span className="card-subtitle">active matters &amp; tasks, by assignee</span>
+          <span className="card-subtitle">active contracts &amp; tasks, by assignee</span>
           <StaffWorkloadTable overview={overview} />
         </div>
       </section>

@@ -203,7 +203,7 @@ function Templates() {
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
           </label>
-          <div className="matter-actions">
+          <div className="contract-actions">
             <button type="button" className="btn-ghost" onClick={() => setShowUpload(false)}>
               Cancel
             </button>
@@ -211,7 +211,7 @@ function Templates() {
               {uploading ? 'Uploading…' : 'Upload'}
             </button>
           </div>
-          {uploadError && <p className="matter-error" aria-live="polite">{uploadError}</p>}
+          {uploadError && <p className="contract-error" aria-live="polite">{uploadError}</p>}
         </form>
       )}
 
@@ -231,8 +231,8 @@ function Templates() {
         </div>
       )}
 
-      {downloadError && <p className="matter-error" aria-live="polite">{downloadError}</p>}
-      {deleteError && <p className="matter-error" aria-live="polite">{deleteError}</p>}
+      {downloadError && <p className="contract-error" aria-live="polite">{downloadError}</p>}
+      {deleteError && <p className="contract-error" aria-live="polite">{deleteError}</p>}
 
       {status === 'ready' && (
         <section className="templates-grid">
@@ -270,8 +270,8 @@ function Templates() {
                     placeholder="Paste the template's text here for quick reference…"
                   />
                 </label>
-                {editError && <p className="matter-error" aria-live="polite">{editError}</p>}
-                <div className="matter-actions">
+                {editError && <p className="contract-error" aria-live="polite">{editError}</p>}
+                <div className="contract-actions">
                   <button type="button" className="btn-ghost" onClick={() => setEditingId(null)}>
                     Cancel
                   </button>

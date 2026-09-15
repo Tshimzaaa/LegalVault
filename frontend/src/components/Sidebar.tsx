@@ -35,7 +35,7 @@ function Sidebar({
   user,
   onLogout,
   brandName = 'LegalVault',
-  brandSub = 'matter management platform',
+  brandSub = 'contract management platform',
   notificationBell,
 }: SidebarProps) {
   const [open, setOpen] = useState(false)

@@ -3,40 +3,40 @@ from datetime import date, datetime
 from typing import Literal
 from pydantic import BaseModel, Field
 
-from app.modules.matters.models import (
-    MatterStatus,
-    MatterRole,
+from app.modules.contracts.models import (
+    ContractStage,
+    ContractRole,
     TaskStatus,
     MessageAuthorType,
     ApprovalStatus,
 )
 
 
-class CreateMatterRequest(BaseModel):
+class CreateContractRequest(BaseModel):
     title: str = Field(min_length=2, max_length=200)
     description: str | None = None
     due_date: date | None = None
 
 
-class UpdateMatterDetailsRequest(BaseModel):
+class UpdateContractDetailsRequest(BaseModel):
     title: str = Field(min_length=2, max_length=200)
     description: str | None = None
 
 
-class UpdateMatterStatusRequest(BaseModel):
-    status: MatterStatus
+class UpdateContractStageRequest(BaseModel):
+    status: ContractStage
 
 
-class UpdateMatterDeadlineRequest(BaseModel):
+class UpdateContractDeadlineRequest(BaseModel):
     due_date: date | None = None
 
 
-class MatterResponse(BaseModel):
+class ContractResponse(BaseModel):
     id: UUID
     org_id: UUID
     title: str
     description: str | None
-    status: MatterStatus
+    status: ContractStage
     due_date: date | None
     created_at: datetime
     updated_at: datetime
@@ -47,21 +47,21 @@ class MatterResponse(BaseModel):
 
 class AssignStaffRequest(BaseModel):
     user_id: UUID
-    role_on_matter: MatterRole
+    role_on_contract: ContractRole
 
 
-class MatterAssignmentResponse(BaseModel):
+class ContractAssignmentResponse(BaseModel):
     id: UUID
-    matter_id: UUID
+    contract_id: UUID
     user_id: UUID
-    role_on_matter: MatterRole
+    role_on_contract: ContractRole
 
     class Config:
         from_attributes = True
 
-class MatterDocumentResponse(BaseModel):
+class ContractDocumentResponse(BaseModel):
     id: UUID
-    matter_id: UUID
+    contract_id: UUID
     uploaded_by: UUID | None
     title: str
     version: int
@@ -73,19 +73,19 @@ class MatterDocumentResponse(BaseModel):
         from_attributes = True
 
 
-class MatterDocumentDownloadResponse(BaseModel):
+class ContractDocumentDownloadResponse(BaseModel):
     download_url: str
     expires_in_seconds: int
 
 
-class CreateMatterTaskRequest(BaseModel):
+class CreateContractTaskRequest(BaseModel):
     title: str = Field(min_length=2, max_length=200)
     description: str | None = None
     assigned_to: UUID | None = None
     due_date: date | None = None
 
 
-class UpdateMatterTaskRequest(BaseModel):
+class UpdateContractTaskRequest(BaseModel):
     title: str | None = None
     description: str | None = None
     assigned_to: UUID | None = None
@@ -93,9 +93,9 @@ class UpdateMatterTaskRequest(BaseModel):
     status: TaskStatus | None = None
 
 
-class MatterTaskResponse(BaseModel):
+class ContractTaskResponse(BaseModel):
     id: UUID
-    matter_id: UUID
+    contract_id: UUID
     title: str
     description: str | None
     assigned_to: UUID | None
@@ -110,20 +110,20 @@ class MatterTaskResponse(BaseModel):
 
 class CalendarEvent(BaseModel):
     date: date
-    type: str  # "matter_deadline" | "task_due"
+    type: str  # "contract_deadline" | "task_due"
     title: str
-    matter_id: UUID
-    matter_title: str
+    contract_id: UUID
+    contract_title: str
     task_id: UUID | None = None
 
 
-class CreateMatterMessageRequest(BaseModel):
+class CreateContractMessageRequest(BaseModel):
     body: str = Field(min_length=1, max_length=5000)
 
 
-class MatterMessageResponse(BaseModel):
+class ContractMessageResponse(BaseModel):
     id: UUID
-    matter_id: UUID
+    contract_id: UUID
     author_type: MessageAuthorType
     author_id: UUID
     author_name: str
@@ -134,21 +134,21 @@ class MatterMessageResponse(BaseModel):
         from_attributes = True
 
 
-class RequestMatterApprovalRequest(BaseModel):
-    to_status: MatterStatus
+class RequestContractApprovalRequest(BaseModel):
+    to_status: ContractStage
 
 
-class DecideMatterApprovalRequest(BaseModel):
+class DecideContractApprovalRequest(BaseModel):
     decision: Literal["approved", "rejected"]
     note: str | None = Field(default=None, max_length=500)
 
 
-class MatterApprovalResponse(BaseModel):
+class ContractApprovalResponse(BaseModel):
     id: UUID
-    matter_id: UUID
+    contract_id: UUID
     requested_by: UUID
-    from_status: MatterStatus
-    to_status: MatterStatus
+    from_status: ContractStage
+    to_status: ContractStage
     status: ApprovalStatus
     decided_by: UUID | None
     decided_at: datetime | None

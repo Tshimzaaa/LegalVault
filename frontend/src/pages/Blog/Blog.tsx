@@ -14,7 +14,7 @@ const posts: Post[] = [
     slug: 'billable-hours-manual-admin',
     title: '5 ways firms lose billable hours to manual admin',
     excerpt:
-      'Matter intake, document chasing, and status updates quietly eat into your week. Here is where the time actually goes, and how to claw it back.',
+      'Contract intake, document chasing, and status updates quietly eat into your week. Here is where the time actually goes, and how to claw it back.',
     date: '02 Jul 2026',
     tag: 'Operations',
     readTime: '6 min read',
@@ -38,8 +38,8 @@ const posts: Post[] = [
     readTime: '5 min read',
   },
   {
-    slug: 'matter-intake-workflow-that-scales',
-    title: 'Building a matter intake workflow that scales',
+    slug: 'contract-intake-workflow-that-scales',
+    title: 'Building a contract intake workflow that scales',
     excerpt:
       'From first inquiry to signed engagement letter, a repeatable intake process is the difference between a chaotic queue and a calm one.',
     date: '03 Jun 2026',

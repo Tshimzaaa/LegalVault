@@ -7,7 +7,7 @@ interface PermissionErrorProps {
  * action, so we show this instead of redirecting to login. */
 function PermissionError({ message }: PermissionErrorProps) {
   return (
-    <p className="matter-error" aria-live="polite">
+    <p className="contract-error" aria-live="polite">
       {message ?? 'You do not have permission to perform this action. Contact your organization admin if you believe this is a mistake.'}
     </p>
   )

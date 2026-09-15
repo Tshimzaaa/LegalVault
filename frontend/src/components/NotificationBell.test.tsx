@@ -10,10 +10,10 @@ vi.mock('../api/notifications')
 function makeNotification(overrides: Partial<Notification> = {}): Notification {
   return {
     id: 'n1',
-    type: 'matter.new_message',
+    type: 'contract.new_message',
     title: 'New message',
     body: 'Something happened',
-    target_type: 'matter',
+    target_type: 'contract',
     target_id: 'm1',
     is_read: false,
     created_at: new Date().toISOString(),

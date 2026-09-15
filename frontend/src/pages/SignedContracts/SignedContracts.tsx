@@ -288,7 +288,7 @@ function SignedContracts() {
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
           </label>
-          <div className="matter-actions">
+          <div className="contract-actions">
             <button type="button" className="btn-ghost" onClick={() => setShowUpload(false)}>
               Cancel
             </button>
@@ -296,7 +296,7 @@ function SignedContracts() {
               {uploading ? 'Uploading…' : 'Upload'}
             </button>
           </div>
-          {uploadError && <p className="matter-error" aria-live="polite">{uploadError}</p>}
+          {uploadError && <p className="contract-error" aria-live="polite">{uploadError}</p>}
         </form>
       )}
 
@@ -387,7 +387,7 @@ function SignedContracts() {
               </div>
             </div>
 
-            {actionError && <p className="matter-error" aria-live="polite">{actionError}</p>}
+            {actionError && <p className="contract-error" aria-live="polite">{actionError}</p>}
 
             <div className="table-scroll">
             <table className="data-table">

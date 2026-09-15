@@ -5,8 +5,8 @@ from datetime import date, timedelta
 
 from sqlalchemy.orm import Session
 
-from app.modules.matters.repository import MatterRepository
-from app.modules.matters.models import MatterStatus, TaskStatus
+from app.modules.contracts.repository import ContractRepository
+from app.modules.contracts.models import ContractStage, TaskStatus
 from app.modules.auth.repository import AuthRepository
 from app.modules.reporting.schemas import (
     ReportingOverviewResponse,
@@ -15,48 +15,48 @@ from app.modules.reporting.schemas import (
 )
 
 STATUS_LABELS = {
-    MatterStatus.INTAKE: "Intake",
-    MatterStatus.IN_REVIEW: "In Review",
-    MatterStatus.AWAITING_SIGNATURE: "Awaiting Signature",
-    MatterStatus.SIGNED: "Signed",
-    MatterStatus.CLOSED: "Closed",
-    MatterStatus.DECLINED: "Declined",
+    ContractStage.INTAKE: "Intake",
+    ContractStage.IN_REVIEW: "In Review",
+    ContractStage.AWAITING_SIGNATURE: "Awaiting Signature",
+    ContractStage.SIGNED: "Signed",
+    ContractStage.CLOSED: "Closed",
+    ContractStage.DECLINED: "Declined",
 }
 
-INACTIVE_STATUSES = {MatterStatus.CLOSED, MatterStatus.DECLINED}
+INACTIVE_STATUSES = {ContractStage.CLOSED, ContractStage.DECLINED}
 
 
 class ReportingService:
 
     def __init__(self, db: Session):
         self.db = db
-        self.matter_repository = MatterRepository(db)
+        self.contract_repository = ContractRepository(db)
         self.auth_repository = AuthRepository(db)
 
     def get_overview(self, org_id) -> ReportingOverviewResponse:
-        matters = self.matter_repository.list_by_org(org_id)
+        contracts = self.contract_repository.list_by_org(org_id)
 
-        status_counts = {status: 0 for status in MatterStatus}
-        for matter in matters:
-            status_counts[matter.status] += 1
+        status_counts = {status: 0 for status in ContractStage}
+        for contract in contracts:
+            status_counts[contract.status] += 1
 
         staff = self.auth_repository.list_by_org(org_id)
-        assignments = self.matter_repository.list_assignments_for_org(org_id)
-        tasks = self.matter_repository.list_tasks_for_org(org_id)
+        assignments = self.contract_repository.list_assignments_for_org(org_id)
+        tasks = self.contract_repository.list_tasks_for_org(org_id)
 
-        total_matter_ids_by_user = defaultdict(set)
-        active_matter_ids_by_user = defaultdict(set)
-        for assignment, matter in assignments:
-            total_matter_ids_by_user[assignment.user_id].add(matter.id)
-            if matter.status not in INACTIVE_STATUSES:
-                active_matter_ids_by_user[assignment.user_id].add(matter.id)
+        total_contract_ids_by_user = defaultdict(set)
+        active_contract_ids_by_user = defaultdict(set)
+        for assignment, contract in assignments:
+            total_contract_ids_by_user[assignment.user_id].add(contract.id)
+            if contract.status not in INACTIVE_STATUSES:
+                active_contract_ids_by_user[assignment.user_id].add(contract.id)
 
         today = date.today()
         open_tasks_by_user = defaultdict(int)
         overdue_tasks_by_user = defaultdict(int)
         open_tasks_total = 0
         overdue_tasks_total = 0
-        for task, _matter in tasks:
+        for task, _contract in tasks:
             if task.status == TaskStatus.DONE:
                 continue
             open_tasks_total += 1
@@ -72,67 +72,67 @@ class ReportingService:
             StaffWorkloadItem(
                 user_id=user.id,
                 name=f"{user.first_name} {user.last_name}",
-                active_matters=len(active_matter_ids_by_user.get(user.id, ())),
-                total_matters=len(total_matter_ids_by_user.get(user.id, ())),
+                active_contracts=len(active_contract_ids_by_user.get(user.id, ())),
+                total_contracts=len(total_contract_ids_by_user.get(user.id, ())),
                 open_tasks=open_tasks_by_user.get(user.id, 0),
                 overdue_tasks=overdue_tasks_by_user.get(user.id, 0),
             )
             for user in staff
         ]
-        staff_workload.sort(key=lambda item: item.active_matters, reverse=True)
+        staff_workload.sort(key=lambda item: item.active_contracts, reverse=True)
 
-        assigned_matter_ids = {matter_id for ids in total_matter_ids_by_user.values() for matter_id in ids}
-        unassigned_active_matters = sum(
+        assigned_contract_ids = {contract_id for ids in total_contract_ids_by_user.values() for contract_id in ids}
+        unassigned_active_contracts = sum(
             1
-            for matter in matters
-            if matter.status not in INACTIVE_STATUSES and matter.id not in assigned_matter_ids
+            for contract in contracts
+            if contract.status not in INACTIVE_STATUSES and contract.id not in assigned_contract_ids
         )
 
         upcoming_cutoff = today + timedelta(days=7)
         upcoming_deadlines = sum(
             1
-            for matter in matters
-            if matter.status not in INACTIVE_STATUSES
-            and matter.due_date is not None
-            and today <= matter.due_date <= upcoming_cutoff
+            for contract in contracts
+            if contract.status not in INACTIVE_STATUSES
+            and contract.due_date is not None
+            and today <= contract.due_date <= upcoming_cutoff
         )
 
         return ReportingOverviewResponse(
-            total_matters=len(matters),
+            total_contracts=len(contracts),
             status_breakdown=[
                 StatusBreakdownItem(status=status.value, label=STATUS_LABELS[status], count=status_counts[status])
-                for status in MatterStatus
+                for status in ContractStage
             ],
             staff_workload=staff_workload,
-            unassigned_active_matters=unassigned_active_matters,
+            unassigned_active_contracts=unassigned_active_contracts,
             open_tasks=open_tasks_total,
             overdue_tasks=overdue_tasks_total,
             upcoming_deadlines_7_days=upcoming_deadlines,
         )
 
-    def export_matters_csv(self, org_id) -> str:
-        matters = self.matter_repository.list_by_org(org_id)
-        assignments = self.matter_repository.list_assignments_for_org(org_id)
-        tasks = self.matter_repository.list_tasks_for_org(org_id)
+    def export_contracts_csv(self, org_id) -> str:
+        contracts = self.contract_repository.list_by_org(org_id)
+        assignments = self.contract_repository.list_assignments_for_org(org_id)
+        tasks = self.contract_repository.list_tasks_for_org(org_id)
 
         users_by_id = {
             user.id: user
             for user in self.auth_repository.list_users_by_ids(
-                {assignment.user_id for assignment, _matter in assignments}
+                {assignment.user_id for assignment, _contract in assignments}
             )
         }
-        assignee_names_by_matter = defaultdict(list)
-        for assignment, matter in assignments:
+        assignee_names_by_contract = defaultdict(list)
+        for assignment, contract in assignments:
             user = users_by_id.get(assignment.user_id)
             if user:
-                assignee_names_by_matter[matter.id].append(f"{user.first_name} {user.last_name}")
+                assignee_names_by_contract[contract.id].append(f"{user.first_name} {user.last_name}")
 
-        open_task_counts_by_matter = defaultdict(int)
-        total_task_counts_by_matter = defaultdict(int)
-        for task, matter in tasks:
-            total_task_counts_by_matter[matter.id] += 1
+        open_task_counts_by_contract = defaultdict(int)
+        total_task_counts_by_contract = defaultdict(int)
+        for task, contract in tasks:
+            total_task_counts_by_contract[contract.id] += 1
             if task.status != TaskStatus.DONE:
-                open_task_counts_by_matter[matter.id] += 1
+                open_task_counts_by_contract[contract.id] += 1
 
         buffer = io.StringIO()
         writer = csv.writer(buffer)
@@ -140,15 +140,15 @@ class ReportingService:
             "Title", "Status", "Due Date", "Assigned Staff",
             "Open Tasks", "Total Tasks", "Created At",
         ])
-        for matter in matters:
+        for contract in contracts:
             writer.writerow([
-                matter.title,
-                STATUS_LABELS[matter.status],
-                matter.due_date.isoformat() if matter.due_date else "",
-                "; ".join(assignee_names_by_matter.get(matter.id, [])),
-                open_task_counts_by_matter.get(matter.id, 0),
-                total_task_counts_by_matter.get(matter.id, 0),
-                matter.created_at.isoformat(),
+                contract.title,
+                STATUS_LABELS[contract.status],
+                contract.due_date.isoformat() if contract.due_date else "",
+                "; ".join(assignee_names_by_contract.get(contract.id, [])),
+                open_task_counts_by_contract.get(contract.id, 0),
+                total_task_counts_by_contract.get(contract.id, 0),
+                contract.created_at.isoformat(),
             ])
 
         return buffer.getvalue()

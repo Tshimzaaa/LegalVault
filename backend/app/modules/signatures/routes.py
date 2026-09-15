@@ -13,35 +13,35 @@ from app.database.rls import set_tenant_context
 
 _CASE_WORK = [UserRole.ADMIN, UserRole.LAWYER, UserRole.PARALEGAL]
 
-router = APIRouter(prefix="/matters", tags=["signatures"])
+router = APIRouter(prefix="/contracts", tags=["signatures"])
 my_signatures_router = APIRouter(prefix="/signatures", tags=["signatures"])
 webhook_router = APIRouter(tags=["webhooks"])
 
 
-@router.post("/{matter_id}/signatures", response_model=SignatureRequestResponse, status_code=201)
+@router.post("/{contract_id}/signatures", response_model=SignatureRequestResponse, status_code=201)
 def send_for_signature(
-    matter_id: str,
+    contract_id: str,
     request: CreateSignatureRequestRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role(_CASE_WORK)),
 ):
     service = SignatureService(db)
-    return service.create_and_send(matter_id, current_user.org_id, current_user.id, request)
+    return service.create_and_send(contract_id, current_user.org_id, current_user.id, request)
 
 
-@router.get("/{matter_id}/signatures", response_model=list[SignatureRequestResponse])
+@router.get("/{contract_id}/signatures", response_model=list[SignatureRequestResponse])
 def list_signature_requests(
-    matter_id: str,
+    contract_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     service = SignatureService(db)
-    return service.list_for_matter(matter_id, current_user.org_id)
+    return service.list_for_contract(contract_id, current_user.org_id)
 
 
-@router.post("/{matter_id}/signatures/{signature_request_id}/void", response_model=SignatureRequestResponse)
+@router.post("/{contract_id}/signatures/{signature_request_id}/void", response_model=SignatureRequestResponse)
 def void_signature_request(
-    matter_id: str,
+    contract_id: str,
     signature_request_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role(_CASE_WORK)),

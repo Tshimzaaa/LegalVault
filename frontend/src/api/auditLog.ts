@@ -38,14 +38,14 @@ export const auditActionLabel: Record<string, string> = {
   'org.created': 'Organization created',
   'org.status_updated': 'Organization status updated',
   'org.deleted': 'Organization deleted',
-  'matter.created': 'Matter created',
-  'matter.status_updated': 'Matter status updated',
-  'matter.visibility_updated': 'Matter visibility updated',
-  'matter.staff_assigned': 'Staff assigned to matter',
-  'matter.document_uploaded': 'Document uploaded',
-  'matter.task_created': 'Task created',
-  'matter.task_updated': 'Task updated',
-  'matter.task_deleted': 'Task deleted',
+  'contract.created': 'Contract created',
+  'contract.status_updated': 'Contract status updated',
+  'contract.visibility_updated': 'Contract visibility updated',
+  'contract.staff_assigned': 'Staff assigned to contract',
+  'contract.document_uploaded': 'Document uploaded',
+  'contract.task_created': 'Task created',
+  'contract.task_updated': 'Task updated',
+  'contract.task_deleted': 'Task deleted',
 }
 
 export function formatAuditDetails(details: Record<string, unknown> | null): string {

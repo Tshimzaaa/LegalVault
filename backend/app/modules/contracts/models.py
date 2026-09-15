@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from app.modules.auth.models.user import User
 
 
-class MatterStatus(str, enum.Enum):
+class ContractStage(str, enum.Enum):
     INTAKE = "intake"
     IN_REVIEW = "in_review"
     AWAITING_SIGNATURE = "awaiting_signature"
@@ -23,7 +23,7 @@ class MatterStatus(str, enum.Enum):
     DECLINED = "declined"
 
 
-class MatterRole(str, enum.Enum):
+class ContractRole(str, enum.Enum):
     LEAD_LAWYER = "lead_lawyer"
     PARALEGAL = "paralegal"
     SECRETARY = "secretary"
@@ -46,8 +46,8 @@ class ApprovalStatus(str, enum.Enum):
     REJECTED = "rejected"
 
 
-class Matter(BaseModel):
-    __tablename__ = "matters"
+class Contract(BaseModel):
+    __tablename__ = "contracts"
 
     org_id: Mapped[UUID] = mapped_column(
         ForeignKey("organizations.id"),
@@ -59,35 +59,35 @@ class Matter(BaseModel):
 
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    status: Mapped[MatterStatus] = mapped_column(
-        Enum(MatterStatus),
-        default=MatterStatus.INTAKE,
+    status: Mapped[ContractStage] = mapped_column(
+        Enum(ContractStage),
+        default=ContractStage.INTAKE,
         nullable=False,
     )
 
     due_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 
-    assignments: Mapped[list["MatterAssignment"]] = relationship(
-        "MatterAssignment",
-        back_populates="matter",
+    assignments: Mapped[list["ContractAssignment"]] = relationship(
+        "ContractAssignment",
+        back_populates="contract",
     )
 
-    tasks: Mapped[list["MatterTask"]] = relationship(
-        "MatterTask",
-        back_populates="matter",
+    tasks: Mapped[list["ContractTask"]] = relationship(
+        "ContractTask",
+        back_populates="contract",
     )
 
-    messages: Mapped[list["MatterMessage"]] = relationship(
-        "MatterMessage",
-        back_populates="matter",
+    messages: Mapped[list["ContractMessage"]] = relationship(
+        "ContractMessage",
+        back_populates="contract",
     )
 
 
-class MatterAssignment(BaseModel):
-    __tablename__ = "matter_assignments"
+class ContractAssignment(BaseModel):
+    __tablename__ = "contract_assignments"
 
-    matter_id: Mapped[UUID] = mapped_column(
-        ForeignKey("matters.id"),
+    contract_id: Mapped[UUID] = mapped_column(
+        ForeignKey("contracts.id"),
         nullable=False,
         index=True,
     )
@@ -98,22 +98,22 @@ class MatterAssignment(BaseModel):
         index=True,
     )
 
-    role_on_matter: Mapped[MatterRole] = mapped_column(
-        Enum(MatterRole),
+    role_on_contract: Mapped[ContractRole] = mapped_column(
+        Enum(ContractRole),
         nullable=False,
     )
 
-    matter: Mapped["Matter"] = relationship(
-        "Matter",
+    contract: Mapped["Contract"] = relationship(
+        "Contract",
         back_populates="assignments",
     )
 
 
-class MatterDocument(BaseModel):
-    __tablename__ = "matter_documents"
+class ContractDocument(BaseModel):
+    __tablename__ = "contract_documents"
 
-    matter_id: Mapped[UUID] = mapped_column(
-        ForeignKey("matters.id"),
+    contract_id: Mapped[UUID] = mapped_column(
+        ForeignKey("contracts.id"),
         nullable=False,
         index=True,
     )
@@ -135,11 +135,11 @@ class MatterDocument(BaseModel):
     content_type: Mapped[str] = mapped_column(String(100), nullable=False)
 
 
-class MatterTask(BaseModel):
-    __tablename__ = "matter_tasks"
+class ContractTask(BaseModel):
+    __tablename__ = "contract_tasks"
 
-    matter_id: Mapped[UUID] = mapped_column(
-        ForeignKey("matters.id"),
+    contract_id: Mapped[UUID] = mapped_column(
+        ForeignKey("contracts.id"),
         nullable=False,
         index=True,
     )
@@ -162,17 +162,17 @@ class MatterTask(BaseModel):
         nullable=False,
     )
 
-    matter: Mapped["Matter"] = relationship(
-        "Matter",
+    contract: Mapped["Contract"] = relationship(
+        "Contract",
         back_populates="tasks",
     )
 
 
-class MatterMessage(BaseModel):
-    __tablename__ = "matter_messages"
+class ContractMessage(BaseModel):
+    __tablename__ = "contract_messages"
 
-    matter_id: Mapped[UUID] = mapped_column(
-        ForeignKey("matters.id"),
+    contract_id: Mapped[UUID] = mapped_column(
+        ForeignKey("contracts.id"),
         nullable=False,
         index=True,
     )
@@ -190,17 +190,17 @@ class MatterMessage(BaseModel):
 
     body: Mapped[str] = mapped_column(Text, nullable=False)
 
-    matter: Mapped["Matter"] = relationship(
-        "Matter",
+    contract: Mapped["Contract"] = relationship(
+        "Contract",
         back_populates="messages",
     )
 
 
-class MatterApproval(BaseModel):
-    __tablename__ = "matter_approvals"
+class ContractApproval(BaseModel):
+    __tablename__ = "contract_approvals"
 
-    matter_id: Mapped[UUID] = mapped_column(
-        ForeignKey("matters.id"),
+    contract_id: Mapped[UUID] = mapped_column(
+        ForeignKey("contracts.id"),
         nullable=False,
         index=True,
     )
@@ -211,9 +211,9 @@ class MatterApproval(BaseModel):
         index=True,
     )
 
-    from_status: Mapped[MatterStatus] = mapped_column(Enum(MatterStatus), nullable=False)
+    from_status: Mapped[ContractStage] = mapped_column(Enum(ContractStage), nullable=False)
 
-    to_status: Mapped[MatterStatus] = mapped_column(Enum(MatterStatus), nullable=False)
+    to_status: Mapped[ContractStage] = mapped_column(Enum(ContractStage), nullable=False)
 
     status: Mapped[ApprovalStatus] = mapped_column(
         Enum(ApprovalStatus),

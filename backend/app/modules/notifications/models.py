@@ -27,7 +27,7 @@ class Notification(BaseModel):
 
     body: Mapped[str] = mapped_column(Text, nullable=False)
 
-    # Not a ForeignKey — the target (a matter, etc.) may belong to any entity type;
+    # Not a ForeignKey — the target (a contract, etc.) may belong to any entity type;
     # kept loose so a notification never blocks deletion of the thing it refers to.
     target_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
 

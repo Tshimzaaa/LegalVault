@@ -243,9 +243,9 @@ function Staff({ user }: StaffProps) {
                 </label>
               </div>
 
-              {inviteError && <p className="matter-error" aria-live="polite">{inviteError}</p>}
+              {inviteError && <p className="contract-error" aria-live="polite">{inviteError}</p>}
 
-              <div className="matter-actions">
+              <div className="contract-actions">
                 <button type="button" className="btn-ghost" onClick={() => setShowInviteForm(false)}>
                   Cancel
                 </button>
@@ -276,7 +276,7 @@ function Staff({ user }: StaffProps) {
 
       {status === 'ready' && (
         <section className="card staff-table-card">
-          {forceLogoutError && <p className="matter-error" aria-live="polite">{forceLogoutError}</p>}
+          {forceLogoutError && <p className="contract-error" aria-live="polite">{forceLogoutError}</p>}
           <div className="table-scroll">
           <table className="data-table">
             <thead>

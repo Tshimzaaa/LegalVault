@@ -8,7 +8,7 @@ import type { StaffPage } from '../Workspace/staffNav'
 import type { User } from '../../api/auth'
 import Dashboard from '../Dashboard/Dashboard'
 import type { DashboardSummary } from '../../api/dashboard'
-import NewMatter from '../NewMatter/NewMatter'
+import NewContract from '../NewContract/NewContract'
 import Workflow from '../Workflow/Workflow'
 import SignedContracts from '../SignedContracts/SignedContracts'
 import Reporting from '../Reporting/Reporting'
@@ -75,7 +75,7 @@ const captureTargets: CaptureTarget[] = [
     page: 'dashboard',
     node: <Dashboard user={demoUser} onLogout={noop} previewSummary={demoSummary} />,
   },
-  { key: 'new-matter', alt: 'Open New Matter form', page: 'new-matter', node: <NewMatter /> },
+  { key: 'new-contract', alt: 'Open New Contract form', page: 'new-contract', node: <NewContract /> },
   { key: 'workflow', alt: 'Workflow board', page: 'workflow', node: <Workflow /> },
   { key: 'signed-contracts', alt: 'Signed Contracts', page: 'signed-contracts', node: <SignedContracts /> },
   { key: 'reporting', alt: 'Reporting', page: 'reporting', node: <Reporting /> },
@@ -159,7 +159,7 @@ function Home() {
       <section id="home" className="hero">
 
         <h1>Kelusi Legal Consultancy (KLC)</h1>
-        <h2>Manage matters, clients, and documents in one secure workspace.</h2>
+        <h2>Manage contracts, clients, and documents in one secure workspace.</h2>
 
         <div className="hero-actions">
           <a href="#contact" className="btn btn-primary">

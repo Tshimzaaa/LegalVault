@@ -1,6 +1,6 @@
 """
 Covers the signature-request HTTP endpoints (app/modules/signatures/routes.py):
-sending a document for signature, listing requests for a matter, voiding one, and
+sending a document for signature, listing requests for a contract, voiding one, and
 the "pending signatures assigned to me" inbox. The Documenso webhook handlers
 themselves are covered separately in test_signatures_webhook.py.
 """
@@ -9,8 +9,8 @@ import uuid
 import pytest
 
 from app.modules.auth.models.role import UserRole
-from app.modules.matters.models import MatterDocument
-from tests.conftest import auth_headers, make_org, make_matter, make_staff
+from app.modules.contracts.models import ContractDocument
+from tests.conftest import auth_headers, make_org, make_contract, make_staff
 
 
 @pytest.fixture(autouse=True)
@@ -34,12 +34,12 @@ def _stub_documenso_and_storage(monkeypatch):
     monkeypatch.setattr("app.core.documenso_client.void_document", lambda *a, **k: None)
 
 
-def _make_document(db_session, matter, admin):
-    document = MatterDocument(
-        matter_id=matter.id,
+def _make_document(db_session, contract, admin):
+    document = ContractDocument(
+        contract_id=contract.id,
         uploaded_by=admin.id,
         title="Engagement Letter",
-        file_key=f"matter_documents/{matter.id}/{uuid.uuid4()}-engagement-letter.pdf",
+        file_key=f"contract_documents/{contract.id}/{uuid.uuid4()}-engagement-letter.pdf",
         original_filename="engagement-letter.pdf",
         content_type="application/pdf",
     )
@@ -53,11 +53,11 @@ def test_staff_sends_document_for_signature_to_external_and_staff_recipients(cli
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
     lawyer, _ = make_staff(db_session, org, role=UserRole.LAWYER)
-    matter = make_matter(db_session, org)
-    document = _make_document(db_session, matter, admin)
+    contract = make_contract(db_session, org)
+    document = _make_document(db_session, contract, admin)
 
     res = client.post(
-        f"/matters/{matter.id}/signatures",
+        f"/contracts/{contract.id}/signatures",
         json={
             "source_document_id": str(document.id),
             "title": "Please sign: Engagement Letter",
@@ -74,7 +74,7 @@ def test_staff_sends_document_for_signature_to_external_and_staff_recipients(cli
     assert len(body["recipients"]) == 2
     assert all(r["signing_url"] for r in body["recipients"])
 
-    list_res = client.get(f"/matters/{matter.id}/signatures", headers=auth_headers(admin))
+    list_res = client.get(f"/contracts/{contract.id}/signatures", headers=auth_headers(admin))
     assert list_res.status_code == 200
     assert len(list_res.json()) == 1
 
@@ -83,11 +83,11 @@ def test_non_case_work_role_cannot_send_for_signature(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
     secretary, _ = make_staff(db_session, org, role=UserRole.SECRETARY)
-    matter = make_matter(db_session, org)
-    document = _make_document(db_session, matter, admin)
+    contract = make_contract(db_session, org)
+    document = _make_document(db_session, contract, admin)
 
     res = client.post(
-        f"/matters/{matter.id}/signatures",
+        f"/contracts/{contract.id}/signatures",
         json={
             "source_document_id": str(document.id),
             "title": "Please sign",
@@ -101,11 +101,11 @@ def test_non_case_work_role_cannot_send_for_signature(client, db_session):
 def test_staff_voids_a_pending_signature_request(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
-    matter = make_matter(db_session, org)
-    document = _make_document(db_session, matter, admin)
+    contract = make_contract(db_session, org)
+    document = _make_document(db_session, contract, admin)
 
     request_id = client.post(
-        f"/matters/{matter.id}/signatures",
+        f"/contracts/{contract.id}/signatures",
         json={
             "source_document_id": str(document.id),
             "title": "Please sign",
@@ -114,7 +114,7 @@ def test_staff_voids_a_pending_signature_request(client, db_session):
         headers=auth_headers(admin),
     ).json()["id"]
 
-    void_res = client.post(f"/matters/{matter.id}/signatures/{request_id}/void", headers=auth_headers(admin))
+    void_res = client.post(f"/contracts/{contract.id}/signatures/{request_id}/void", headers=auth_headers(admin))
     assert void_res.status_code == 200
     assert void_res.json()["status"] == "voided"
 
@@ -123,11 +123,11 @@ def test_staff_recipient_sees_their_own_pending_signatures(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
     lawyer, _ = make_staff(db_session, org, role=UserRole.LAWYER)
-    matter = make_matter(db_session, org)
-    document = _make_document(db_session, matter, admin)
+    contract = make_contract(db_session, org)
+    document = _make_document(db_session, contract, admin)
 
     client.post(
-        f"/matters/{matter.id}/signatures",
+        f"/contracts/{contract.id}/signatures",
         json={
             "source_document_id": str(document.id),
             "title": "Please sign: Engagement Letter",
