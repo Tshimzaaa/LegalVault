@@ -1,6 +1,6 @@
 from time import perf_counter
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from sqlalchemy import text
 from app.modules.owner.schemas import OwnerLoginRequest, OwnerTokenResponse
 from app.core.security import create_access_token
@@ -45,6 +45,8 @@ from app.modules.notifications.repository import NotificationRepository
 from app.modules.notifications.models import RecipientType
 from app.modules.signed_contracts.repository import SignedContractRepository
 from app.modules.templates.repository import TemplateRepository
+from app.modules.templates.service import TemplateService
+from app.modules.templates.schemas import TemplateResponse
 from app.modules.auth.refresh_token_repository import RefreshTokenRepository
 from app.modules.auth.models.refresh_token import RefreshTokenActorType
 from app.modules.knowledge.repository import KnowledgeRepository
@@ -356,7 +358,7 @@ def delete_org(
     for contract in signed_contract_repo.list_plain_by_org(org.id):
         signed_contract_repo.delete(contract)
 
-    for template in template_repo.list_by_org(org.id):
+    for template in template_repo.list_owned_by_org(org.id):
         template_repo.delete(template)
 
     for article in knowledge_repo.list_by_org(org.id):
@@ -383,3 +385,52 @@ def delete_org(
 
     auth_repo.delete_org(org)
     db.commit()
+
+
+# ---- Shared template library (org_id IS NULL) — every org sees these alongside
+# their own uploads (see TemplateRepository.list_for_org); only the Owner console
+# can create/manage them, since regular org staff can never write org_id = NULL
+# past the tenant_isolation RLS policy's WITH CHECK. ----
+
+SHARED_TEMPLATE_MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+
+
+@router.get("/shared-templates", response_model=list[TemplateResponse])
+def list_shared_templates(db: Session = Depends(get_db), _owner=Depends(get_current_owner)):
+    return TemplateRepository(db).list_shared()
+
+
+@router.post("/shared-templates", response_model=TemplateResponse, status_code=201)
+async def upload_shared_template(
+    title: str = Form(...),
+    description: str | None = Form(None),
+    category: str = Form(...),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    _owner=Depends(get_current_owner),
+):
+    file_bytes = await file.read()
+    if len(file_bytes) > SHARED_TEMPLATE_MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail="File too large. Maximum size is 10MB.")
+
+    service = TemplateService(db)
+    return service.upload_template(
+        org_id=None,
+        actor_id=None,
+        title=title,
+        description=description,
+        category=category,
+        file_bytes=file_bytes,
+        original_filename=file.filename,
+        content_type=file.content_type,
+        actor_type=ActorType.OWNER,
+    )
+
+
+@router.delete("/shared-templates/{template_id}", status_code=204)
+def delete_shared_template(
+    template_id: str,
+    db: Session = Depends(get_db),
+    _owner=Depends(get_current_owner),
+):
+    TemplateService(db).delete_template(template_id, None, None, actor_type=ActorType.OWNER)

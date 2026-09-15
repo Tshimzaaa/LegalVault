@@ -12,9 +12,14 @@ if TYPE_CHECKING:
 class Template(BaseModel):
     __tablename__ = "templates"
 
-    org_id: Mapped[UUID] = mapped_column(
+    # NULL = a shared, platform-curated template visible to every org (created via
+    # the Owner console, not by any org's own staff) — see the RLS policy in
+    # add_shared_template_library, which allows org_id IS NULL through on read but
+    # still requires org_id = current_org_id on write, so only Owner-mode (which
+    # bypasses this check entirely) can create or edit a shared template.
+    org_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("organizations.id"),
-        nullable=False,
+        nullable=True,
         index=True,
     )
 
@@ -33,7 +38,8 @@ class Template(BaseModel):
 
     version: Mapped[int] = mapped_column(nullable=False, default=1)
 
-    # HTML/text with {{placeholder}} markers, substituted with intake-submission answers at
-    # document-generation time (see app/modules/templates/render.py). Edited in place via
-    # PATCH — unrelated to the binary file's own versioning above.
+    # Free-text reference copy of the template's contents (e.g. for in-app preview
+    # or future document-generation features) — not currently substituted or
+    # rendered by anything. Edited in place via PATCH, unrelated to the binary
+    # file's own versioning above.
     body: Mapped[str | None] = mapped_column(Text, nullable=True)

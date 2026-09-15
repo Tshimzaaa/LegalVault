@@ -7,7 +7,7 @@ test_malware_scanning.py.
 """
 import pytest
 
-from tests.conftest import auth_headers, make_org, make_staff
+from tests.conftest import auth_headers, make_org, make_staff, owner_headers
 
 
 @pytest.fixture(autouse=True)
@@ -90,3 +90,71 @@ def test_update_and_delete_template(client, db_session):
 
     list_res = client.get("/templates", headers=auth_headers(admin))
     assert list_res.json() == []
+
+
+def _upload_shared(client, **overrides):
+    return client.post(
+        "/owner/shared-templates",
+        data={
+            "title": overrides.get("title", "Starter NDA"),
+            "description": overrides.get("description", "Platform-provided starter NDA"),
+            "category": overrides.get("category", "Confidentiality"),
+        },
+        files={"file": ("nda.pdf", b"%PDF-1.4 fake content", "application/pdf")},
+        headers=owner_headers(),
+    )
+
+
+def test_shared_template_visible_to_every_org_but_not_editable_by_them(client, db_session):
+    org_a = make_org(db_session)
+    admin_a, _ = make_staff(db_session, org_a)
+    org_b = make_org(db_session)
+    admin_b, _ = make_staff(db_session, org_b)
+
+    upload_res = _upload_shared(client)
+    assert upload_res.status_code == 201
+    shared = upload_res.json()
+    assert shared["org_id"] is None
+
+    # Every org's own list includes the shared template alongside nothing else.
+    for admin in (admin_a, admin_b):
+        list_res = client.get("/templates", headers=auth_headers(admin))
+        assert [t["id"] for t in list_res.json()] == [shared["id"]]
+
+    # Any org can download it...
+    download_res = client.get(f"/templates/{shared['id']}/download", headers=auth_headers(admin_a))
+    assert download_res.status_code == 200
+
+    # ...but not edit or delete it through the staff-facing endpoints.
+    update_res = client.patch(
+        f"/templates/{shared['id']}", json={"title": "Hijacked"}, headers=auth_headers(admin_a)
+    )
+    assert update_res.status_code == 404
+
+    delete_res = client.delete(f"/templates/{shared['id']}", headers=auth_headers(admin_a))
+    assert delete_res.status_code == 404
+
+
+def test_owner_list_and_delete_shared_template(client, db_session):
+    shared_id = _upload_shared(client).json()["id"]
+
+    list_res = client.get("/owner/shared-templates", headers=owner_headers())
+    assert [t["id"] for t in list_res.json()] == [shared_id]
+
+    delete_res = client.delete(f"/owner/shared-templates/{shared_id}", headers=owner_headers())
+    assert delete_res.status_code == 204
+
+    assert client.get("/owner/shared-templates", headers=owner_headers()).json() == []
+
+
+def test_deleting_org_does_not_delete_shared_templates(client, db_session):
+    org = make_org(db_session)
+    client.patch(f"/owner/orgs/{org.id}/status", json={"is_active": False}, headers=owner_headers())
+
+    shared_id = _upload_shared(client).json()["id"]
+
+    delete_res = client.delete(f"/owner/orgs/{org.id}", headers=owner_headers())
+    assert delete_res.status_code == 204
+
+    list_res = client.get("/owner/shared-templates", headers=owner_headers())
+    assert [t["id"] for t in list_res.json()] == [shared_id]

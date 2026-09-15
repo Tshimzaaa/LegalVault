@@ -262,17 +262,12 @@ function Templates() {
                   <textarea rows={2} value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
                 </label>
                 <label className="field">
-                  <span>
-                    Generation body: use <code>{'{{field_name}}'}</code> to insert an intake answer (matched by
-                    field label, e.g. “Counterparty” &rarr; <code>{'{{counterparty}}'}</code>), plus the built-ins{' '}
-                    <code>{'{{client_name}}'}</code>, <code>{'{{matter_title}}'}</code>, <code>{'{{today}}'}</code>.
-                    Leave blank if this template is just a reference file, not something to generate from.
-                  </span>
+                  <span>Reference text (optional — a plain-text copy of the template's contents, for in-app preview)</span>
                   <textarea
                     rows={6}
                     value={editBody}
                     onChange={(e) => setEditBody(e.target.value)}
-                    placeholder="Agreement between {{client_name}} and {{counterparty}}, effective {{today}}…"
+                    placeholder="Paste the template's text here for quick reference…"
                   />
                 </label>
                 {editError && <p className="matter-error" aria-live="polite">{editError}</p>}
@@ -289,30 +284,32 @@ function Templates() {
               <div key={t.id} className="card template-card">
                 <div className="template-card-top">
                   <span className="template-icon">{getTemplateIcon(t.category)}</span>
-                  <div className="template-card-actions">
-                    <button
-                      type="button"
-                      className="icon-btn"
-                      onClick={() => startEdit(t)}
-                      aria-label={`Edit ${t.title}`}
-                    >
-                      <IconEdit />
-                    </button>
-                    <button
-                      type="button"
-                      className="icon-btn"
-                      onClick={() => handleDelete(t)}
-                      disabled={deletingId === t.id}
-                      aria-label={`Delete ${t.title}`}
-                    >
-                      <IconTrash />
-                    </button>
-                  </div>
+                  {t.org_id !== null && (
+                    <div className="template-card-actions">
+                      <button
+                        type="button"
+                        className="icon-btn"
+                        onClick={() => startEdit(t)}
+                        aria-label={`Edit ${t.title}`}
+                      >
+                        <IconEdit />
+                      </button>
+                      <button
+                        type="button"
+                        className="icon-btn"
+                        onClick={() => handleDelete(t)}
+                        disabled={deletingId === t.id}
+                        aria-label={`Delete ${t.title}`}
+                      >
+                        <IconTrash />
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <span className="template-name">{t.title}</span>
                 <span className="template-category">
                   {t.category} <span className="chip small">v{t.version}</span>
-                  {t.body && <span className="chip small">Generatable</span>}
+                  {t.org_id === null && <span className="chip small">Shared</span>}
                 </span>
                 <p className="template-description">{t.description}</p>
                 <button

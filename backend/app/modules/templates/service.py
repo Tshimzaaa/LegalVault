@@ -37,6 +37,7 @@ class TemplateService:
         file_bytes: bytes,
         original_filename: str,
         content_type: str,
+        actor_type: ActorType = ActorType.STAFF,
     ) -> Template:
         if content_type not in ALLOWED_CONTENT_TYPES:
             raise UnsupportedFileType()
@@ -45,7 +46,7 @@ class TemplateService:
             scan_file(file_bytes)
         except MalwareDetected:
             self.audit.log(
-                actor_type=ActorType.STAFF,
+                actor_type=actor_type,
                 actor_id=actor_id,
                 org_id=org_id,
                 action=audit_actions.FILE_UPLOAD_BLOCKED_MALWARE,
@@ -59,7 +60,7 @@ class TemplateService:
         latest = self.repository.get_latest_version(org_id, title)
         next_version = (latest.version + 1) if latest else 1
 
-        file_key = f"templates/{org_id}/{uuid.uuid4()}-{original_filename}"
+        file_key = f"templates/{org_id or 'shared'}/{uuid.uuid4()}-{original_filename}"
         upload_file(file_bytes, file_key, content_type)
 
         template = Template(
@@ -75,7 +76,7 @@ class TemplateService:
         self.repository.create(template)
 
         self.audit.log(
-            actor_type=ActorType.STAFF,
+            actor_type=actor_type,
             actor_id=actor_id,
             org_id=org_id,
             action=audit_actions.TEMPLATE_UPLOADED,
@@ -87,11 +88,13 @@ class TemplateService:
         return template
 
     def list_templates(self, org_id) -> list[Template]:
-        return self.repository.list_by_org(org_id)
+        return self.repository.list_for_org(org_id)
 
     def get_download_link(self, template_id, org_id) -> str:
         template = self.repository.get_by_id(template_id)
-        if not template or str(template.org_id) != str(org_id):
+        # A shared template (org_id is None) is downloadable by any org; an
+        # org-owned one only by its own org.
+        if not template or (template.org_id is not None and str(template.org_id) != str(org_id)):
             raise TemplateNotFound()
         return get_download_url(template.file_key)
 
@@ -116,7 +119,7 @@ class TemplateService:
         self.db.commit()
         return template
 
-    def delete_template(self, template_id, org_id, actor_id) -> None:
+    def delete_template(self, template_id, org_id, actor_id, actor_type: ActorType = ActorType.STAFF) -> None:
         template = self.repository.get_by_id(template_id)
         if not template or str(template.org_id) != str(org_id):
             raise TemplateNotFound()
@@ -125,7 +128,7 @@ class TemplateService:
         self.repository.delete(template)
 
         self.audit.log(
-            actor_type=ActorType.STAFF,
+            actor_type=actor_type,
             actor_id=actor_id,
             org_id=org_id,
             action=audit_actions.TEMPLATE_DELETED,

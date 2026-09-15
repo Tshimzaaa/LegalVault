@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 class TemplateResponse(BaseModel):
     id: UUID
-    org_id: UUID
+    org_id: UUID | None
     title: str
     description: str | None
     category: str
