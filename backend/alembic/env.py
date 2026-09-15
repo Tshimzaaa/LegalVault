@@ -19,7 +19,6 @@ sys.path.insert(
 from app.core.config import settings
 from app.database.base import Base
 from app.modules.auth.models import Organization, User  # noqa: F401
-from app.modules.clients.models import Client, ClientContact  # noqa: F401
 from app.modules.matters.models import Matter, MatterAssignment, MatterDocument, MatterTask, MatterMessage  # noqa: F401
 from app.modules.templates.models import Template  # noqa: F401
 from app.modules.audit.models import AuditLog  # noqa: F401
@@ -27,7 +26,6 @@ from app.modules.announcements.models import Announcement  # noqa: F401
 from app.modules.monitoring.models import RequestLog  # noqa: F401
 from app.modules.notifications.models import Notification  # noqa: F401
 from app.modules.signed_contracts.models import SignedContract  # noqa: F401
-from app.modules.intake.models import IntakeForm, IntakeFormField, IntakeSubmission, IntakeSubmissionAnswer  # noqa: F401
 from app.modules.knowledge.models import KnowledgeArticle  # noqa: F401
 from app.modules.integrations.models import OrganizationIntegration  # noqa: F401
 from app.modules.signatures.models import SignatureRequest, SignatureRecipient  # noqa: F401

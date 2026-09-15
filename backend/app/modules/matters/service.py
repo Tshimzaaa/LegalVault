@@ -1,5 +1,5 @@
 import uuid
-from datetime import date, datetime, UTC
+from datetime import datetime, UTC
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import ObjectDeletedError
 
@@ -12,7 +12,6 @@ from app.modules.matters.models import (
     MatterTask,
     MatterMessage,
     MessageAuthorType,
-    MatterContactPermission,
     MatterStatus,
     MatterRole,
     ApprovalStatus,
@@ -21,39 +20,30 @@ from app.modules.matters.schemas import (
     CreateMatterRequest,
     UpdateMatterDetailsRequest,
     UpdateMatterStatusRequest,
-    UpdateMatterVisibilityRequest,
     UpdateMatterDeadlineRequest,
     AssignStaffRequest,
     CreateMatterTaskRequest,
     UpdateMatterTaskRequest,
     CalendarEvent,
     CreateMatterMessageRequest,
-    SetContactPermissionRequest,
-    MatterContactPermissionResponse,
     RequestMatterApprovalRequest,
     DecideMatterApprovalRequest,
-    GenerateDocumentRequest,
 )
 from app.exceptions.matters import (
     MatterNotFound,
-    ClientNotFoundForMatter,
     StaffAlreadyAssigned,
     MatterDocumentNotFound,
     UserNotFoundForAssignment,
     MatterTaskNotFound,
     MatterMessageNotFound,
     CannotDeleteOthersMessage,
-    MatterContactPermissionNotFound,
-    ContactNotFoundForMatterPermission,
     InvalidStatusTransition,
     ApprovalRequiredForTransition,
     ApprovalAlreadyPending,
     MatterApprovalNotFound,
     ApprovalAlreadyDecided,
-    IntakeSubmissionClientMismatch,
 )
 from app.exceptions.auth import InsufficientPermissions
-from app.modules.clients.repository import ClientRepository
 from app.modules.auth.repository import AuthRepository
 from app.modules.auth.models.role import UserRole
 from app.exceptions.malware import MalwareDetected
@@ -97,19 +87,13 @@ class MatterService:
     def __init__(self, db: Session):
         self.db = db
         self.repository = MatterRepository(db)
-        self.client_repository = ClientRepository(db)
         self.auth_repository = AuthRepository(db)
         self.audit = AuditService(db)
         self.notifications = NotificationService(db)
 
     def create_matter(self, org_id, actor_id, request: CreateMatterRequest) -> Matter:
-        client = self.client_repository.get_client_by_id(request.client_id)
-        if not client or str(client.org_id) != str(org_id):
-            raise ClientNotFoundForMatter()
-
         matter = Matter(
             org_id=org_id,
-            client_id=request.client_id,
             title=request.title,
             description=request.description,
             due_date=request.due_date,
@@ -190,21 +174,6 @@ class MatterService:
         )
         return self._commit_and_refresh(matter)
 
-    def update_visibility(self, matter_id, org_id, actor_id, request: UpdateMatterVisibilityRequest) -> Matter:
-        matter = self.get_matter(matter_id, org_id)
-        matter.is_visible_to_client = request.is_visible_to_client
-
-        self.audit.log(
-            actor_type=ActorType.STAFF,
-            actor_id=actor_id,
-            org_id=org_id,
-            action=audit_actions.MATTER_VISIBILITY_UPDATED,
-            target_type="matter",
-            target_id=matter.id,
-            details={"is_visible_to_client": request.is_visible_to_client},
-        )
-        return self._commit_and_refresh(matter)
-
     def update_deadline(self, matter_id, org_id, actor_id, request: UpdateMatterDeadlineRequest) -> Matter:
         matter = self.get_matter(matter_id, org_id)
         previous_due_date = matter.due_date
@@ -263,10 +232,6 @@ class MatterService:
         self.db.commit()
         return assignment
 
-    def list_visible_matters_for_client(self, client_id) -> list[Matter]:
-        matters = self.repository.list_by_client(client_id)
-        return [m for m in matters if m.is_visible_to_client]
-
     def list_assignments(self, matter_id, org_id):
         self.get_matter(matter_id, org_id)  # validates ownership, raises 404 if not found/wrong org
         return self.repository.list_assignments_for_matter(matter_id)
@@ -274,23 +239,14 @@ class MatterService:
     def upload_matter_document(
         self,
         matter_id,
+        org_id,
         title: str,
         file_bytes: bytes,
         original_filename: str,
         content_type: str,
-        org_id=None,
         uploaded_by=None,
-        client_id=None,
-        uploaded_by_contact_id=None,
     ) -> MatterDocument:
-        if org_id is not None:
-            matter = self.get_matter(matter_id, org_id)
-        elif client_id is not None:
-            matter = self.repository.get_by_id(matter_id)
-            if not matter or str(matter.client_id) != str(client_id) or not matter.is_visible_to_client:
-                raise MatterNotFound()
-        else:
-            raise ValueError("Either org_id or client_id must be provided")
+        matter = self.get_matter(matter_id, org_id)
 
         if content_type not in ALLOWED_DOCUMENT_TYPES:
             from app.exceptions.templates import UnsupportedFileType
@@ -299,17 +255,16 @@ class MatterService:
         try:
             scan_file(file_bytes)
         except MalwareDetected:
-            if org_id is not None:
-                self.audit.log(
-                    actor_type=ActorType.STAFF,
-                    actor_id=uploaded_by,
-                    org_id=org_id,
-                    action=audit_actions.FILE_UPLOAD_BLOCKED_MALWARE,
-                    target_type="matter_document",
-                    target_id=None,
-                    details={"matter_id": str(matter.id), "title": title, "original_filename": original_filename},
-                )
-                self.db.commit()
+            self.audit.log(
+                actor_type=ActorType.STAFF,
+                actor_id=uploaded_by,
+                org_id=org_id,
+                action=audit_actions.FILE_UPLOAD_BLOCKED_MALWARE,
+                target_type="matter_document",
+                target_id=None,
+                details={"matter_id": str(matter.id), "title": title, "original_filename": original_filename},
+            )
+            self.db.commit()
             raise
 
         latest = self.repository.get_latest_version(matter.id, title)
@@ -321,7 +276,6 @@ class MatterService:
         document = MatterDocument(
             matter_id=matter.id,
             uploaded_by=uploaded_by,
-            uploaded_by_contact_id=uploaded_by_contact_id,
             title=title,
             version=next_version,
             file_key=file_key,
@@ -330,42 +284,28 @@ class MatterService:
         )
         self.repository.create_document(document)
 
-        if org_id is not None:
-            self.audit.log(
-                actor_type=ActorType.STAFF,
-                actor_id=uploaded_by,
-                org_id=org_id,
-                action=audit_actions.MATTER_DOCUMENT_UPLOADED,
-                target_type="matter_document",
-                target_id=document.id,
-                details={"title": document.title, "version": document.version},
-            )
-            self.notifications.notify_many([
-                {
-                    "recipient_type": RecipientType.STAFF,
-                    "recipient_id": assignment.user_id,
-                    "type": "matter.document_uploaded",
-                    "title": f'New document on "{matter.title}"',
-                    "body": f"{document.title} (v{document.version}) was uploaded.",
-                    "target_type": "matter",
-                    "target_id": matter.id,
-                }
-                for assignment in self.repository.list_assignments_for_matter(matter.id)
-                if str(assignment.user_id) != str(uploaded_by)
-            ])
-        else:
-            self.notifications.notify_many([
-                {
-                    "recipient_type": RecipientType.STAFF,
-                    "recipient_id": assignment.user_id,
-                    "type": "matter.document_uploaded",
-                    "title": f'New document on "{matter.title}"',
-                    "body": f"{document.title} (v{document.version}) was uploaded by the client.",
-                    "target_type": "matter",
-                    "target_id": matter.id,
-                }
-                for assignment in self.repository.list_assignments_for_matter(matter.id)
-            ])
+        self.audit.log(
+            actor_type=ActorType.STAFF,
+            actor_id=uploaded_by,
+            org_id=org_id,
+            action=audit_actions.MATTER_DOCUMENT_UPLOADED,
+            target_type="matter_document",
+            target_id=document.id,
+            details={"title": document.title, "version": document.version},
+        )
+        self.notifications.notify_many([
+            {
+                "recipient_type": RecipientType.STAFF,
+                "recipient_id": assignment.user_id,
+                "type": "matter.document_uploaded",
+                "title": f'New document on "{matter.title}"',
+                "body": f"{document.title} (v{document.version}) was uploaded.",
+                "target_type": "matter",
+                "target_id": matter.id,
+            }
+            for assignment in self.repository.list_assignments_for_matter(matter.id)
+            if str(assignment.user_id) != str(uploaded_by)
+        ])
         self.db.commit()
         return document
 
@@ -399,22 +339,6 @@ class MatterService:
             details={"title": document.title, "version": document.version},
         )
         self.db.commit()
-
-    def list_client_matter_documents(self, matter_id, client_id) -> list[MatterDocument]:
-        matter = self.repository.get_by_id(matter_id)
-        if not matter or str(matter.client_id) != str(client_id) or not matter.is_visible_to_client:
-            raise MatterNotFound()
-        return self.repository.list_documents_for_matter(matter_id)
-
-    def get_client_matter_document_download(self, matter_id, document_id, client_id) -> str:
-        matter = self.repository.get_by_id(matter_id)
-        if not matter or str(matter.client_id) != str(client_id) or not matter.is_visible_to_client:
-            raise MatterNotFound()
-
-        document = self.repository.get_document_by_id(document_id)
-        if not document or str(document.matter_id) != str(matter_id):
-            raise MatterDocumentNotFound()
-        return get_download_url(document.file_key)
 
     def _validate_assignee(self, assigned_to, org_id):
         if assigned_to is None:
@@ -520,20 +444,6 @@ class MatterService:
             if not (author_type == MessageAuthorType.STAFF and str(assignment.user_id) == str(author_id))
         ]
 
-        if author_type == MessageAuthorType.STAFF and matter.is_visible_to_client:
-            entries += [
-                {
-                    "recipient_type": RecipientType.CLIENT_CONTACT,
-                    "recipient_id": contact.id,
-                    "type": "matter.new_message",
-                    "title": title,
-                    "body": notif_body,
-                    "target_type": "matter",
-                    "target_id": matter.id,
-                }
-                for contact in self.client_repository.list_contacts_for_client(matter.client_id)
-            ]
-
         self.notifications.notify_many(entries)
 
     def post_message_as_staff(
@@ -565,46 +475,6 @@ class MatterService:
             raise MatterMessageNotFound()
 
         if not is_admin and str(message.author_id) != str(actor_id):
-            raise CannotDeleteOthersMessage()
-
-        self.repository.delete_message(message)
-        self.db.commit()
-
-    def _get_visible_matter_for_client(self, matter_id, client_id) -> Matter:
-        matter = self.repository.get_by_id(matter_id)
-        if not matter or str(matter.client_id) != str(client_id) or not matter.is_visible_to_client:
-            raise MatterNotFound()
-        return matter
-
-    def post_message_as_client(
-        self, matter_id, client_id, actor_id, actor_name: str, request: CreateMatterMessageRequest
-    ) -> MatterMessage:
-        matter = self._get_visible_matter_for_client(matter_id, client_id)
-
-        message = MatterMessage(
-            matter_id=matter.id,
-            author_type=MessageAuthorType.CLIENT_CONTACT,
-            author_id=actor_id,
-            author_name=actor_name,
-            body=request.body,
-        )
-        self.repository.create_message(message)
-        self._notify_new_message(matter, MessageAuthorType.CLIENT_CONTACT, actor_id, actor_name, request.body)
-        self.db.commit()
-        return message
-
-    def list_client_messages(self, matter_id, client_id) -> list[MatterMessage]:
-        self._get_visible_matter_for_client(matter_id, client_id)
-        return self.repository.list_messages_for_matter(matter_id)
-
-    def delete_client_message(self, matter_id, message_id, client_id, actor_id):
-        self._get_visible_matter_for_client(matter_id, client_id)
-
-        message = self.repository.get_message_by_id(message_id)
-        if not message or str(message.matter_id) != str(matter_id):
-            raise MatterMessageNotFound()
-
-        if str(message.author_id) != str(actor_id):
             raise CannotDeleteOthersMessage()
 
         self.repository.delete_message(message)
@@ -654,115 +524,6 @@ class MatterService:
         ]
         events.sort(key=lambda e: e.date)
         return events
-
-    def get_client_calendar(self, client_id, start, end) -> list[CalendarEvent]:
-        events = [
-            CalendarEvent(
-                date=matter.due_date,
-                type="matter_deadline",
-                title="Matter due date",
-                matter_id=matter.id,
-                matter_title=matter.title,
-            )
-            for matter in self.repository.list_visible_matters_with_deadline_in_range(client_id, start, end)
-        ]
-        events.sort(key=lambda e: e.date)
-        return events
-
-    def _to_permission_response(self, permission: MatterContactPermission, matter: Matter, contact) -> MatterContactPermissionResponse:
-        return MatterContactPermissionResponse(
-            id=permission.id,
-            matter_id=matter.id,
-            matter_title=matter.title,
-            client_contact_id=contact.id,
-            contact_name=f"{contact.first_name} {contact.last_name}",
-            contact_email=contact.email,
-            permission_level=permission.permission_level,
-            created_at=permission.created_at,
-            updated_at=permission.updated_at,
-        )
-
-    def set_contact_permission(
-        self, matter_id, org_id, actor_id, request: SetContactPermissionRequest
-    ) -> MatterContactPermissionResponse:
-        matter = self.get_matter(matter_id, org_id)  # ownership check
-
-        contact = self.client_repository.get_contact_by_id(request.client_contact_id)
-        if not contact or str(contact.client_id) != str(matter.client_id):
-            raise ContactNotFoundForMatterPermission()
-
-        permission = self.repository.get_contact_permission(matter_id, request.client_contact_id)
-        if permission:
-            permission.permission_level = request.permission_level
-        else:
-            permission = MatterContactPermission(
-                matter_id=matter.id,
-                client_contact_id=request.client_contact_id,
-                permission_level=request.permission_level,
-            )
-            self.repository.create_contact_permission(permission)
-
-        self.audit.log(
-            actor_type=ActorType.STAFF,
-            actor_id=actor_id,
-            org_id=org_id,
-            action=audit_actions.MATTER_CONTACT_PERMISSION_SET,
-            target_type="matter_contact_permission",
-            target_id=permission.id,
-            details={"client_contact_id": str(contact.id), "permission_level": request.permission_level.value},
-        )
-        self.notifications.notify(
-            recipient_type=RecipientType.CLIENT_CONTACT,
-            recipient_id=contact.id,
-            type="matter.permission_updated",
-            title=f'Your access on "{matter.title}" was updated',
-            body=f"You now have {request.permission_level.value} access.",
-            target_type="matter",
-            target_id=matter.id,
-        )
-        self.db.commit()
-        self.db.refresh(permission)
-        return self._to_permission_response(permission, matter, contact)
-
-    def list_contact_permissions(self, matter_id, org_id) -> list[MatterContactPermissionResponse]:
-        matter = self.get_matter(matter_id, org_id)  # ownership check
-        permissions = self.repository.list_contact_permissions_for_matter(matter_id)
-        contacts_by_id = {c.id: c for c in self.client_repository.list_contacts_for_client(matter.client_id)}
-        return [
-            self._to_permission_response(p, matter, contacts_by_id[p.client_contact_id])
-            for p in permissions
-            if p.client_contact_id in contacts_by_id
-        ]
-
-    def remove_contact_permission(self, matter_id, org_id, actor_id, client_contact_id) -> None:
-        matter = self.get_matter(matter_id, org_id)  # ownership check
-        permission = self.repository.get_contact_permission(matter_id, client_contact_id)
-        if not permission:
-            raise MatterContactPermissionNotFound()
-
-        self.repository.delete_contact_permission(permission)
-
-        self.audit.log(
-            actor_type=ActorType.STAFF,
-            actor_id=actor_id,
-            org_id=org_id,
-            action=audit_actions.MATTER_CONTACT_PERMISSION_REMOVED,
-            target_type="matter_contact_permission",
-            target_id=permission.id,
-            details={"client_contact_id": str(client_contact_id), "matter_id": str(matter.id)},
-        )
-        self.db.commit()
-
-    def list_my_contact_permissions(self, client_id) -> list[MatterContactPermissionResponse]:
-        rows = self.repository.list_contact_permissions_for_client(client_id)
-        if not rows:
-            return []
-        contacts_by_id = {c.id: c for c in self.client_repository.list_contacts_for_client(client_id)}
-        return [
-            self._to_permission_response(p, matter, contacts_by_id[p.client_contact_id])
-            for p, matter in rows
-            if p.client_contact_id in contacts_by_id
-        ]
 
     def _eligible_approver_ids(self, org_id, matter_id, exclude_id=None) -> list[uuid.UUID]:
         """Organization admins, plus this matter's lead-lawyer assignees — active users only."""
@@ -881,75 +642,3 @@ class MatterService:
         self.db.commit()
         self.db.refresh(approval)
         return approval
-
-    def generate_document_from_template(
-        self, matter_id, org_id, actor_id, request: GenerateDocumentRequest
-    ) -> MatterDocument:
-        # Local imports: intake/service.py imports MatterService at module level, so
-        # importing intake (or templates, for symmetry) at module level here would be
-        # circular. Same pattern already used above for app.exceptions.templates.
-        from app.modules.templates.repository import TemplateRepository
-        from app.modules.templates.render import normalize_key, render_body
-        from app.exceptions.templates import TemplateNotFound, TemplateHasNoBody
-        from app.modules.intake.repository import IntakeRepository
-        from app.modules.intake.models import IntakeFieldType
-        from app.exceptions.intake import IntakeSubmissionNotFound
-        from xhtml2pdf import pisa
-        from io import BytesIO
-
-        matter = self.get_matter(matter_id, org_id)
-
-        template_repository = TemplateRepository(self.db)
-        template = template_repository.get_by_id(request.template_id)
-        if not template or str(template.org_id) != str(org_id):
-            raise TemplateNotFound()
-        if not template.body:
-            raise TemplateHasNoBody()
-
-        intake_repository = IntakeRepository(self.db)
-        submission = intake_repository.get_submission_by_id(request.intake_submission_id)
-        if not submission or str(submission.org_id) != str(org_id):
-            raise IntakeSubmissionNotFound()
-        if str(submission.client_id) != str(matter.client_id):
-            raise IntakeSubmissionClientMismatch()
-
-        values: dict[str, str] = {}
-        for answer, field in intake_repository.list_answers_with_fields(submission.id):
-            if field.field_type == IntakeFieldType.FILE:
-                values[normalize_key(field.label)] = "(file attached)"
-            else:
-                values[normalize_key(field.label)] = answer.value or ""
-
-        client = self.client_repository.get_client_by_id(matter.client_id)
-        values.setdefault("client_name", client.company_name if client else "")
-        values.setdefault("matter_title", matter.title)
-        values.setdefault("today", date.today().isoformat())
-
-        rendered_html = render_body(template.body, values)
-
-        pdf_buffer = BytesIO()
-        pisa.CreatePDF(rendered_html, dest=pdf_buffer)
-        pdf_bytes = pdf_buffer.getvalue()
-
-        title = request.title or f"{template.title}: {matter.title}"
-        document = self.upload_matter_document(
-            matter_id=matter.id,
-            title=title,
-            file_bytes=pdf_bytes,
-            original_filename=f"{title}.pdf",
-            content_type="application/pdf",
-            org_id=org_id,
-            uploaded_by=actor_id,
-        )
-
-        self.audit.log(
-            actor_type=ActorType.STAFF,
-            actor_id=actor_id,
-            org_id=org_id,
-            action=audit_actions.MATTER_DOCUMENT_GENERATED,
-            target_type="matter_document",
-            target_id=document.id,
-            details={"template_id": str(template.id), "intake_submission_id": str(submission.id)},
-        )
-        self.db.commit()
-        return document

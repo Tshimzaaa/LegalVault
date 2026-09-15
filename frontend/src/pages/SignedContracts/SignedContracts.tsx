@@ -11,8 +11,6 @@ import {
   updateSignedContractStatus,
 } from '../../api/signedContracts'
 import type { SignedContract, SignedContractsSummary, ContractType, ContractLifecycleStatus } from '../../api/signedContracts'
-import { listClients } from '../../api/clients'
-import type { Client } from '../../api/clients'
 
 type LoadState = 'loading' | 'error' | 'ready'
 
@@ -39,7 +37,6 @@ const validStatusFilters = ['all', 'active', 'expiring', 'archived'] as const
 const validTypeFilters = ['all', 'nda', 'consultancy', 'supplier', 'general'] as const
 
 const emptyUploadForm = {
-  clientId: '',
   title: '',
   agreementType: 'nda' as ContractType,
   signedDate: '',
@@ -54,8 +51,6 @@ function SignedContracts() {
   const [attempt, setAttempt] = useState(0)
 
   const [summary, setSummary] = useState<SignedContractsSummary | null>(null)
-
-  const [clients, setClients] = useState<Client[]>([])
 
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -126,10 +121,9 @@ function SignedContracts() {
       return
     }
     setStatus('loading')
-    Promise.all([listSignedContracts(token), listClients(token), getSignedContractsSummary(token)])
-      .then(([contractData, clientData, summaryData]) => {
+    Promise.all([listSignedContracts(token), getSignedContractsSummary(token)])
+      .then(([contractData, summaryData]) => {
         setContracts(contractData)
-        setClients(clientData)
         setSummary(summaryData)
         setStatus('ready')
       })
@@ -144,15 +138,14 @@ function SignedContracts() {
     e.preventDefault()
     setUploadError(null)
 
-    if (!token || !form.clientId || !form.title || !form.signedDate || !file) {
-      setUploadError('Client, title, signed date, and a file are required.')
+    if (!token || !form.title || !form.signedDate || !file) {
+      setUploadError('Title, signed date, and a file are required.')
       return
     }
 
     setUploading(true)
     try {
       await uploadSignedContract(token, {
-        client_id: form.clientId,
         title: form.title,
         agreement_type: form.agreementType,
         signed_date: form.signedDate,
@@ -208,7 +201,7 @@ function SignedContracts() {
     if (typeFilter !== 'all' && c.agreement_type !== typeFilter) return false
     if (search.trim()) {
       const q = search.trim().toLowerCase()
-      const haystack = `${c.title} ${c.description ?? ''} ${c.client_name}`.toLowerCase()
+      const haystack = `${c.title} ${c.description ?? ''}`.toLowerCase()
       if (!haystack.includes(q)) return false
     }
     return true
@@ -232,17 +225,6 @@ function SignedContracts() {
         <form className="card signed-upload-form" onSubmit={handleUpload}>
           <div className="field-row">
             <label className="field">
-              <span>Client</span>
-              <select value={form.clientId} onChange={(e) => setForm((f) => ({ ...f, clientId: e.target.value }))}>
-                <option value="">Select a client…</option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.company_name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="field">
               <span>Contract name</span>
               <input
                 type="text"
@@ -252,8 +234,6 @@ function SignedContracts() {
                 autoComplete="off"
               />
             </label>
-          </div>
-          <div className="field-row">
             <label className="field">
               <span>Agreement type</span>
               <select
@@ -376,7 +356,7 @@ function SignedContracts() {
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by name, client…"
+                  placeholder="Search by name…"
                   autoComplete="off"
                 />
               </label>
@@ -414,7 +394,6 @@ function SignedContracts() {
               <thead>
                 <tr>
                   <th>Contract</th>
-                  <th>Client</th>
                   <th>Type</th>
                   <th>Signed Date</th>
                   <th>Source</th>
@@ -429,7 +408,6 @@ function SignedContracts() {
                       <div className="signed-contract-title">{c.title}</div>
                       {c.description && <div className="muted signed-contract-description">{c.description}</div>}
                     </td>
-                    <td className="muted">{c.client_name}</td>
                     <td className="muted">{typeLabel[c.agreement_type]}</td>
                     <td className="muted">{c.signed_date}</td>
                     <td className="muted">{c.integration_source}</td>
@@ -462,7 +440,7 @@ function SignedContracts() {
                 ))}
                 {filteredContracts.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="muted">
+                    <td colSpan={6} className="muted">
                       {contracts.length === 0
                         ? 'No signed contracts yet. Add one with Add Contract.'
                         : 'No contracts match these filters.'}

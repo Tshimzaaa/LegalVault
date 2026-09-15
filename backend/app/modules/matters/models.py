@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from uuid import UUID
 
-from sqlalchemy import Boolean, Date, DateTime, Enum, ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy import Date, DateTime, Enum, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import TYPE_CHECKING
@@ -11,7 +11,6 @@ from app.database.base import BaseModel
 
 if TYPE_CHECKING:
     from app.modules.auth.models.organization import Organization
-    from app.modules.clients.models import Client, ClientContact
     from app.modules.auth.models.user import User
 
 
@@ -39,13 +38,6 @@ class TaskStatus(str, enum.Enum):
 
 class MessageAuthorType(str, enum.Enum):
     STAFF = "staff"
-    CLIENT_CONTACT = "client_contact"
-
-
-class ContactPermissionLevel(str, enum.Enum):
-    OWNER = "owner"
-    EDITOR = "editor"
-    VIEWER = "viewer"
 
 
 class ApprovalStatus(str, enum.Enum):
@@ -63,12 +55,6 @@ class Matter(BaseModel):
         index=True,
     )
 
-    client_id: Mapped[UUID] = mapped_column(
-        ForeignKey("clients.id"),
-        nullable=False,
-        index=True,
-    )
-
     title: Mapped[str] = mapped_column(String(200), nullable=False)
 
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -76,12 +62,6 @@ class Matter(BaseModel):
     status: Mapped[MatterStatus] = mapped_column(
         Enum(MatterStatus),
         default=MatterStatus.INTAKE,
-        nullable=False,
-    )
-
-    is_visible_to_client: Mapped[bool] = mapped_column(
-        Boolean,
-        default=False,
         nullable=False,
     )
 
@@ -144,12 +124,6 @@ class MatterDocument(BaseModel):
         index=True,
     )
 
-    uploaded_by_contact_id: Mapped[UUID | None] = mapped_column(
-        ForeignKey("client_contacts.id"),
-        nullable=True,
-        index=True,
-    )
-
     title: Mapped[str] = mapped_column(String(200), nullable=False)
 
     version: Mapped[int] = mapped_column(nullable=False, default=1)
@@ -208,9 +182,8 @@ class MatterMessage(BaseModel):
         nullable=False,
     )
 
-    # Not a ForeignKey — the author is a User or a ClientContact depending on
-    # author_type, and a message should outlive either account (author_name below
-    # keeps it displayable even after the author's account is gone).
+    # Not a ForeignKey — a message should outlive the author's account
+    # (author_name below keeps it displayable even after the account is gone).
     author_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False)
 
     author_name: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -220,29 +193,6 @@ class MatterMessage(BaseModel):
     matter: Mapped["Matter"] = relationship(
         "Matter",
         back_populates="messages",
-    )
-
-
-class MatterContactPermission(BaseModel):
-    __tablename__ = "matter_contact_permissions"
-    __table_args__ = (UniqueConstraint("matter_id", "client_contact_id"),)
-
-    matter_id: Mapped[UUID] = mapped_column(
-        ForeignKey("matters.id"),
-        nullable=False,
-        index=True,
-    )
-
-    client_contact_id: Mapped[UUID] = mapped_column(
-        ForeignKey("client_contacts.id"),
-        nullable=False,
-        index=True,
-    )
-
-    permission_level: Mapped[ContactPermissionLevel] = mapped_column(
-        Enum(ContactPermissionLevel),
-        default=ContactPermissionLevel.VIEWER,
-        nullable=False,
     )
 
 

@@ -12,7 +12,6 @@ from app.modules.signatures.models import (
 )
 from app.modules.signatures.schemas import CreateSignatureRequestRequest, SignatureRequestResponse
 from app.modules.matters.repository import MatterRepository
-from app.modules.clients.repository import ClientRepository
 from app.modules.auth.repository import AuthRepository
 from app.modules.notifications.service import NotificationService
 from app.modules.notifications.models import RecipientType
@@ -33,16 +32,15 @@ class SignatureService:
         self.db = db
         self.repository = SignatureRepository(db)
         self.matter_repository = MatterRepository(db)
-        self.client_repository = ClientRepository(db)
         self.auth_repository = AuthRepository(db)
         self.signed_contract_repository = SignedContractRepository(db)
         self.audit = AuditService(db)
         self.notifications = NotificationService(db)
 
-    def _resolve_recipients(self, recipients_input, org_id, client_id) -> list[dict]:
+    def _resolve_recipients(self, recipients_input, org_id) -> list[dict]:
         resolved = []
         for entry in recipients_input:
-            if entry.recipient_type == RecipientType.STAFF:
+            if entry.recipient_id is not None:
                 user = self.auth_repository.get_user_by_id(entry.recipient_id)
                 if not user or str(user.org_id) != str(org_id):
                     raise InvalidSignatureRecipient()
@@ -50,20 +48,23 @@ class SignatureService:
                     {
                         "recipient_type": RecipientType.STAFF,
                         "recipient_id": user.id,
+                        "external_name": None,
+                        "external_email": None,
                         "name": f"{user.first_name} {user.last_name}",
                         "email": user.email,
                     }
                 )
             else:
-                contact = self.client_repository.get_contact_by_id(entry.recipient_id)
-                if not contact or str(contact.client_id) != str(client_id):
+                if not entry.external_name or not entry.external_email:
                     raise InvalidSignatureRecipient()
                 resolved.append(
                     {
-                        "recipient_type": RecipientType.CLIENT_CONTACT,
-                        "recipient_id": contact.id,
-                        "name": f"{contact.first_name} {contact.last_name}",
-                        "email": contact.email,
+                        "recipient_type": None,
+                        "recipient_id": None,
+                        "external_name": entry.external_name,
+                        "external_email": entry.external_email,
+                        "name": entry.external_name,
+                        "email": entry.external_email,
                     }
                 )
         return resolved
@@ -79,7 +80,7 @@ class SignatureService:
         if not document or str(document.matter_id) != str(matter_id):
             raise MatterDocumentNotFound()
 
-        recipients_input = self._resolve_recipients(request.recipients, org_id, matter.client_id)
+        recipients_input = self._resolve_recipients(request.recipients, org_id)
 
         file_bytes = download_file(document.file_key)
         sent = documenso_client.create_and_send_document(
@@ -91,7 +92,6 @@ class SignatureService:
         signature_request = SignatureRequest(
             org_id=org_id,
             matter_id=matter_id,
-            client_id=matter.client_id,
             source_document_id=document.id,
             requested_by=actor_id,
             title=request.title,
@@ -105,6 +105,8 @@ class SignatureService:
                 signature_request_id=signature_request.id,
                 recipient_type=r["recipient_type"],
                 recipient_id=r["recipient_id"],
+                external_name=r["external_name"],
+                external_email=r["external_email"],
                 name=r["name"],
                 email=r["email"],
                 signing_order=index + 1,
@@ -136,6 +138,7 @@ class SignatureService:
                     "target_id": signature_request.id,
                 }
                 for r in recipients
+                if r.recipient_type == RecipientType.STAFF
             ]
         )
         self.db.commit()
@@ -176,10 +179,6 @@ class SignatureService:
         )
         self.db.commit()
         return self._to_response(self.repository.get_by_id(signature_request_id))
-
-    def list_pending_for_contact(self, contact_id) -> list[SignatureRequestResponse]:
-        requests = self.repository.list_pending_for_recipient(RecipientType.CLIENT_CONTACT, contact_id)
-        return [self._to_response(sr) for sr in requests]
 
     def list_pending_for_user(self, user_id) -> list[SignatureRequestResponse]:
         requests = self.repository.list_pending_for_recipient(RecipientType.STAFF, user_id)
@@ -239,14 +238,12 @@ class SignatureService:
         signed_pdf = documenso_client.download_completed_document(documenso_document_id)
 
         source_document = self.matter_repository.get_document_by_id(signature_request.source_document_id)
-        client = self.client_repository.get_client_by_id(signature_request.client_id)
 
         file_key = f"signed_contracts/{signature_request.org_id}/{uuid.uuid4()}-{signature_request.title}.pdf"
         upload_file(signed_pdf, file_key, "application/pdf")
 
         signed_contract = SignedContract(
             org_id=signature_request.org_id,
-            client_id=signature_request.client_id,
             matter_id=signature_request.matter_id,
             uploaded_by=signature_request.requested_by,
             title=signature_request.title,

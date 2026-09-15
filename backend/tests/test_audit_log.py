@@ -2,17 +2,16 @@
 Org-scoped audit log (admin-only) — the staff-facing counterpart to the
 owner's cross-org /owner/orgs/audit-log covered in test_owner.py.
 """
-from tests.conftest import auth_headers, make_client_company, make_org, make_staff
+from tests.conftest import auth_headers, make_org, make_staff
 
 
 def test_admin_sees_audit_log_entries_for_own_org(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
-    client_company = make_client_company(db_session, org)
 
     client.post(
         "/matters",
-        json={"client_id": str(client_company.id), "title": "Audited Matter"},
+        json={"title": "Audited Matter"},
         headers=auth_headers(admin),
     )
 

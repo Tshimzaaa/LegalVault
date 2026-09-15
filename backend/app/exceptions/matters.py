@@ -1,9 +1,6 @@
 class MatterNotFound(Exception):
     pass
 
-class ClientNotFoundForMatter(Exception):
-    pass
-
 class StaffAlreadyAssigned(Exception):
     pass
 
@@ -22,12 +19,6 @@ class MatterMessageNotFound(Exception):
 class CannotDeleteOthersMessage(Exception):
     pass
 
-class MatterContactPermissionNotFound(Exception):
-    pass
-
-class ContactNotFoundForMatterPermission(Exception):
-    pass
-
 class InvalidStatusTransition(Exception):
     pass
 
@@ -41,7 +32,4 @@ class MatterApprovalNotFound(Exception):
     pass
 
 class ApprovalAlreadyDecided(Exception):
-    pass
-
-class IntakeSubmissionClientMismatch(Exception):
     pass

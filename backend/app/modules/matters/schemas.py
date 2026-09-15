@@ -8,13 +8,11 @@ from app.modules.matters.models import (
     MatterRole,
     TaskStatus,
     MessageAuthorType,
-    ContactPermissionLevel,
     ApprovalStatus,
 )
 
 
 class CreateMatterRequest(BaseModel):
-    client_id: UUID
     title: str = Field(min_length=2, max_length=200)
     description: str | None = None
     due_date: date | None = None
@@ -29,10 +27,6 @@ class UpdateMatterStatusRequest(BaseModel):
     status: MatterStatus
 
 
-class UpdateMatterVisibilityRequest(BaseModel):
-    is_visible_to_client: bool
-
-
 class UpdateMatterDeadlineRequest(BaseModel):
     due_date: date | None = None
 
@@ -40,11 +34,9 @@ class UpdateMatterDeadlineRequest(BaseModel):
 class MatterResponse(BaseModel):
     id: UUID
     org_id: UUID
-    client_id: UUID
     title: str
     description: str | None
     status: MatterStatus
-    is_visible_to_client: bool
     due_date: date | None
     created_at: datetime
     updated_at: datetime
@@ -71,7 +63,6 @@ class MatterDocumentResponse(BaseModel):
     id: UUID
     matter_id: UUID
     uploaded_by: UUID | None
-    uploaded_by_contact_id: UUID | None
     title: str
     version: int
     original_filename: str
@@ -143,23 +134,6 @@ class MatterMessageResponse(BaseModel):
         from_attributes = True
 
 
-class SetContactPermissionRequest(BaseModel):
-    client_contact_id: UUID
-    permission_level: ContactPermissionLevel
-
-
-class MatterContactPermissionResponse(BaseModel):
-    id: UUID
-    matter_id: UUID
-    matter_title: str
-    client_contact_id: UUID
-    contact_name: str
-    contact_email: str
-    permission_level: ContactPermissionLevel
-    created_at: datetime
-    updated_at: datetime
-
-
 class RequestMatterApprovalRequest(BaseModel):
     to_status: MatterStatus
 
@@ -167,12 +141,6 @@ class RequestMatterApprovalRequest(BaseModel):
 class DecideMatterApprovalRequest(BaseModel):
     decision: Literal["approved", "rejected"]
     note: str | None = Field(default=None, max_length=500)
-
-
-class GenerateDocumentRequest(BaseModel):
-    template_id: UUID
-    intake_submission_id: UUID
-    title: str | None = Field(default=None, min_length=2, max_length=200)
 
 
 class MatterApprovalResponse(BaseModel):

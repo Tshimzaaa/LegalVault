@@ -1,6 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from app.modules.matters.models import MatterDocument, MatterTask, MatterMessage, MatterContactPermission, MatterApproval, ApprovalStatus
+from app.modules.matters.models import MatterDocument, MatterTask, MatterMessage, MatterApproval, ApprovalStatus
 
 from app.modules.matters.models import Matter, MatterAssignment
 
@@ -15,9 +15,6 @@ class MatterRepository:
 
     def list_by_org(self, org_id) -> list[Matter]:
         return list(self.db.scalars(select(Matter).where(Matter.org_id == org_id)))
-
-    def list_by_client(self, client_id) -> list[Matter]:
-        return list(self.db.scalars(select(Matter).where(Matter.client_id == client_id)))
 
     def create(self, matter: Matter) -> Matter:
         self.db.add(matter)
@@ -158,36 +155,6 @@ class MatterRepository:
         )
         return list(self.db.execute(statement).all())
 
-    def list_recent_documents_for_client(self, client_id, limit: int) -> list[tuple[MatterDocument, Matter]]:
-        statement = (
-            select(MatterDocument, Matter)
-            .join(Matter, MatterDocument.matter_id == Matter.id)
-            .where(Matter.client_id == client_id, Matter.is_visible_to_client.is_(True))
-            .order_by(MatterDocument.created_at.desc())
-            .limit(limit)
-        )
-        return list(self.db.execute(statement).all())
-
-    def list_recent_messages_for_client(self, client_id, limit: int) -> list[tuple[MatterMessage, Matter]]:
-        statement = (
-            select(MatterMessage, Matter)
-            .join(Matter, MatterMessage.matter_id == Matter.id)
-            .where(Matter.client_id == client_id, Matter.is_visible_to_client.is_(True))
-            .order_by(MatterMessage.created_at.desc())
-            .limit(limit)
-        )
-        return list(self.db.execute(statement).all())
-
-    def list_visible_matters_with_deadline_in_range(self, client_id, start, end) -> list[Matter]:
-        statement = select(Matter).where(
-            Matter.client_id == client_id,
-            Matter.is_visible_to_client.is_(True),
-            Matter.due_date.is_not(None),
-            Matter.due_date >= start,
-            Matter.due_date <= end,
-        )
-        return list(self.db.scalars(statement))
-
     def create_message(self, message: MatterMessage) -> MatterMessage:
         self.db.add(message)
         self.db.flush()
@@ -205,36 +172,6 @@ class MatterRepository:
     def delete_message(self, message: MatterMessage):
         self.db.delete(message)
         self.db.flush()
-
-    def get_contact_permission(self, matter_id, client_contact_id) -> MatterContactPermission | None:
-        return self.db.scalar(
-            select(MatterContactPermission).where(
-                MatterContactPermission.matter_id == matter_id,
-                MatterContactPermission.client_contact_id == client_contact_id,
-            )
-        )
-
-    def create_contact_permission(self, permission: MatterContactPermission) -> MatterContactPermission:
-        self.db.add(permission)
-        self.db.flush()
-        return permission
-
-    def list_contact_permissions_for_matter(self, matter_id) -> list[MatterContactPermission]:
-        return list(
-            self.db.scalars(select(MatterContactPermission).where(MatterContactPermission.matter_id == matter_id))
-        )
-
-    def delete_contact_permission(self, permission: MatterContactPermission):
-        self.db.delete(permission)
-        self.db.flush()
-
-    def list_contact_permissions_for_client(self, client_id) -> list[tuple[MatterContactPermission, Matter]]:
-        statement = (
-            select(MatterContactPermission, Matter)
-            .join(Matter, MatterContactPermission.matter_id == Matter.id)
-            .where(Matter.client_id == client_id, Matter.is_visible_to_client.is_(True))
-        )
-        return list(self.db.execute(statement).all())
 
     def create_approval(self, approval: MatterApproval) -> MatterApproval:
         self.db.add(approval)

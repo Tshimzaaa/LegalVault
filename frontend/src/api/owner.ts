@@ -12,7 +12,6 @@ export interface OrganizationDetail extends OrganizationSummary {
   website: string | null
   address: string | null
   staff_count: number
-  client_count: number
   matter_count: number
 }
 
@@ -75,7 +74,6 @@ export interface OrganizationExportResponse {
   exported_at: string
   org: Record<string, unknown>
   staff: Record<string, unknown>[]
-  clients: Record<string, unknown>[]
   matters: Record<string, unknown>[]
   audit_log: Record<string, unknown>[]
 }
@@ -89,7 +87,6 @@ export interface UsageMetrics {
   active_orgs: number
   inactive_orgs: number
   total_staff: number
-  total_clients: number
   total_matters: number
   matters_by_status: Record<string, number>
   new_orgs_last_7_days: number

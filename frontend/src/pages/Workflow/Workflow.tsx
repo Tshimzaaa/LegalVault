@@ -5,8 +5,6 @@ import './Workflow.css'
 import { IconPlus } from '../../components/icons'
 import { listMatters, updateMatterStatus, requestMatterApproval, listPendingApprovals, isGatedTransition, MATTER_STATUS_TRANSITIONS } from '../../api/matters'
 import type { Matter, MatterStatus, MatterApproval } from '../../api/matters'
-import { listClients } from '../../api/clients'
-import type { Client } from '../../api/clients'
 import { formatDate } from '../../utils/date'
 
 type LoadState = 'loading' | 'error' | 'ready'
@@ -22,7 +20,6 @@ const columnOrder: { status: MatterStatus; label: string; color: string }[] = [
 
 function Workflow() {
   const [matters, setMatters] = useState<Matter[]>([])
-  const [clients, setClients] = useState<Client[]>([])
   const [pendingApprovals, setPendingApprovals] = useState<MatterApproval[]>([])
   const [status, setStatus] = useState<LoadState>('loading')
   const [attempt, setAttempt] = useState(0)
@@ -40,11 +37,10 @@ function Workflow() {
       return
     }
 
-    Promise.all([listMatters(token), listClients(token), listPendingApprovals(token)])
-      .then(([matterList, clientList, approvalList]) => {
+    Promise.all([listMatters(token), listPendingApprovals(token)])
+      .then(([matterList, approvalList]) => {
         if (cancelled) return
         setMatters(matterList)
-        setClients(clientList)
         setPendingApprovals(approvalList)
         setStatus('ready')
       })
@@ -57,10 +53,6 @@ function Workflow() {
       cancelled = true
     }
   }, [attempt])
-
-  function clientName(clientId: string) {
-    return clients.find((c) => c.id === clientId)?.company_name ?? 'Unknown client'
-  }
 
   function handleDragStart(e: DragEvent<HTMLDivElement>, matterId: string) {
     e.dataTransfer.setData('text/plain', matterId)
@@ -194,7 +186,6 @@ function Workflow() {
                     >
                       <Link to={`/staff/matters/${m.id}`} className="row-stretched-link" aria-label={`Open matter ${m.title}`} />
                       <span className="workflow-card-title">{m.title}</span>
-                      <span className="workflow-card-client">{clientName(m.client_id)}</span>
                       <div className="workflow-card-footer">
                         <span className="deadline-sub">Opened {formatDate(m.created_at)}</span>
                         {pendingApprovals.some((a) => a.matter_id === m.id) && (

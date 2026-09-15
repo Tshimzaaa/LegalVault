@@ -42,7 +42,7 @@ function Register() {
         organization: { name: orgName, email: orgEmail },
         admin: { first_name: firstName, last_name: lastName, email: adminEmail, password },
       })
-      navigate('/login', { state: { staffOnly: true } })
+      navigate('/login')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not register the organization.')
     } finally {

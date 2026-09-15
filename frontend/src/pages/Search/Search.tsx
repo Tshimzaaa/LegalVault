@@ -11,8 +11,6 @@ type SearchState = 'idle' | 'loading' | 'error' | 'ready'
 
 const categories: { key: keyof SearchResponse; label: string }[] = [
   { key: 'matters', label: 'Matters' },
-  { key: 'clients', label: 'Clients' },
-  { key: 'contacts', label: 'Client Contacts' },
   { key: 'staff', label: 'Staff' },
   { key: 'documents', label: 'Documents' },
 ]
@@ -63,7 +61,7 @@ function Search() {
             <IconSearch />
             <input
               type="search"
-              placeholder="Search clients, contacts, matters, staff, documents…"
+              placeholder="Search matters, staff, documents…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               autoFocus={isDesktopPointer}

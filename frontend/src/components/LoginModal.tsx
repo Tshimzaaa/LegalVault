@@ -3,16 +3,14 @@ import type { FormEvent, KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { Link } from 'react-router-dom'
 import './LoginModal.css'
 import { forgotPassword } from '../api/auth'
-import { clientForgotPassword } from '../api/clientAuth'
 import { isDesktopPointer } from '../utils/device'
 
 interface LoginModalProps {
   onClose: () => void
   onSubmit: (email: string, password: string) => Promise<void>
-  staffOnly?: boolean
 }
 
-function LoginModal({ onClose, onSubmit, staffOnly }: LoginModalProps) {
+function LoginModal({ onClose, onSubmit }: LoginModalProps) {
   const [mode, setMode] = useState<'login' | 'forgot' | 'sent'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -84,7 +82,7 @@ function LoginModal({ onClose, onSubmit, staffOnly }: LoginModalProps) {
     setError('')
     setSubmitting(true)
     try {
-      await (staffOnly ? forgotPassword(email) : clientForgotPassword(email))
+      await forgotPassword(email)
       setMode('sent')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
@@ -240,11 +238,9 @@ function LoginModal({ onClose, onSubmit, staffOnly }: LoginModalProps) {
             Forgot Password?
           </button>
 
-          {staffOnly && (
-            <Link to="/register" className="modal-link-back" onClick={onClose}>
-              Don&rsquo;t have an organization yet? Create one
-            </Link>
-          )}
+          <Link to="/register" className="modal-link-back" onClick={onClose}>
+            Don&rsquo;t have an organization yet? Create one
+          </Link>
         </form>
       </div>
     </div>

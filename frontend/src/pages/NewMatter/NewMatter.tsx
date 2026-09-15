@@ -2,27 +2,20 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './NewMatter.css'
-import { IconPlus, IconCalendar, IconSearch } from '../../components/icons'
-import { listClients, createClient, inviteContact } from '../../api/clients'
-import type { Client } from '../../api/clients'
+import { IconCalendar, IconSearch } from '../../components/icons'
 import { createMatter, assignStaff } from '../../api/matters'
 import { listUsers } from '../../api/auth'
 import type { User } from '../../api/auth'
 
 function NewMatter() {
   const navigate = useNavigate()
-  const [clients, setClients] = useState<Client[]>([])
   const [staff, setStaff] = useState<User[]>([])
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [clientId, setClientId] = useState('')
   const [openedDate, setOpenedDate] = useState('')
   const [dueDate, setDueDate] = useState('')
   const [attorneyId, setAttorneyId] = useState('')
   const [caseManagerId, setCaseManagerId] = useState('')
-  const [contactFirstName, setContactFirstName] = useState('')
-  const [contactLastName, setContactLastName] = useState('')
-  const [contactEmail, setContactEmail] = useState('')
   const [matterType, setMatterType] = useState('')
   const [practiceArea, setPracticeArea] = useState('')
   const [feeType, setFeeType] = useState('hourly')
@@ -32,25 +25,15 @@ function NewMatter() {
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [titleError, setTitleError] = useState<string | null>(null)
-  const [clientError, setClientError] = useState<string | null>(null)
   const [assignWarning, setAssignWarning] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   const titleRef = useRef<HTMLInputElement>(null)
-  const clientSelectRef = useRef<HTMLSelectElement>(null)
-
-  const [showAddClient, setShowAddClient] = useState(false)
-  const [newClientName, setNewClientName] = useState('')
-  const [addingClient, setAddingClient] = useState(false)
-  const [addClientError, setAddClientError] = useState<string | null>(null)
 
   useEffect(() => {
     const token = localStorage.getItem('access_token')
     if (!token) return
 
-    listClients(token)
-      .then(setClients)
-      .catch(() => setClients([]))
     listUsers(token)
       .then(setStaff)
       .catch(() => setStaff([]))
@@ -59,12 +42,8 @@ function NewMatter() {
   const isDirty = Boolean(
     title ||
       description ||
-      clientId ||
       attorneyId ||
       caseManagerId ||
-      contactFirstName ||
-      contactLastName ||
-      contactEmail ||
       matterType ||
       practiceArea ||
       conflictCheck ||
@@ -84,42 +63,16 @@ function NewMatter() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [isDirty, submitted])
 
-  async function handleAddClient() {
-    setAddClientError(null)
-    const token = localStorage.getItem('access_token')
-    if (!token || !newClientName) {
-      setAddClientError('Enter a company name.')
-      return
-    }
-
-    setAddingClient(true)
-    try {
-      const created = await createClient(token, newClientName)
-      setClients((prev) => [...prev, created])
-      setClientId(created.id)
-      setNewClientName('')
-      setShowAddClient(false)
-    } catch {
-      setAddClientError('Could not create the client.')
-    } finally {
-      setAddingClient(false)
-    }
-  }
-
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
     setAssignWarning(null)
     setTitleError(null)
-    setClientError(null)
 
     const titleMissing = !title.trim()
-    const clientMissing = !clientId
-    if (titleMissing) setTitleError('Enter a matter name.')
-    if (clientMissing) setClientError('Select a client.')
-    if (titleMissing || clientMissing) {
-      if (titleMissing) titleRef.current?.focus()
-      else clientSelectRef.current?.focus()
+    if (titleMissing) {
+      setTitleError('Enter a matter name.')
+      titleRef.current?.focus()
       return
     }
 
@@ -145,7 +98,6 @@ function NewMatter() {
       const fullDescription = [description, ...extraDetails].filter(Boolean).join('\n')
 
       const matter = await createMatter(token, {
-        client_id: clientId,
         title,
         description: fullDescription || null,
         due_date: dueDate || null,
@@ -164,17 +116,6 @@ function NewMatter() {
           await assignStaff(token, matter.id, { user_id: caseManagerId, role_on_matter: 'paralegal' })
         } catch {
           assignmentFailures.push('case manager')
-        }
-      }
-      if (contactFirstName && contactLastName && contactEmail) {
-        try {
-          await inviteContact(token, clientId, {
-            first_name: contactFirstName,
-            last_name: contactLastName,
-            email: contactEmail,
-          })
-        } catch {
-          assignmentFailures.push('client contact invite')
         }
       }
       if (assignmentFailures.length > 0) {
@@ -300,105 +241,7 @@ function NewMatter() {
 
         <div className="matter-col">
           <section className="card form-section">
-            <div className="form-section-header">
-              <h3>2. Client Information</h3>
-              <button type="button" className="add-client-btn" onClick={() => setShowAddClient((v) => !v)}>
-                <IconPlus /> Add New Client
-              </button>
-            </div>
-
-            {showAddClient && (
-              <div className="field-row">
-                <label className="field">
-                  <span>New client company name</span>
-                  <input
-                    type="text"
-                    value={newClientName}
-                    onChange={(e) => setNewClientName(e.target.value)}
-                    placeholder="Acme Corporation…"
-                    autoComplete="organization"
-                  />
-                </label>
-                <button
-                  type="button"
-                  className="btn-ghost"
-                  style={{ alignSelf: 'flex-end', marginBottom: 14 }}
-                  disabled={addingClient}
-                  onClick={handleAddClient}
-                >
-                  {addingClient ? 'Adding…' : 'Add'}
-                </button>
-              </div>
-            )}
-            {addClientError && <p className="matter-error" aria-live="polite">{addClientError}</p>}
-
-            <label className="field">
-              <span>Client</span>
-              <select
-                ref={clientSelectRef}
-                value={clientId}
-                onChange={(e) => setClientId(e.target.value)}
-                aria-invalid={Boolean(clientError)}
-                aria-describedby={clientError ? 'matter-client-error' : undefined}
-              >
-                <option value="" disabled>
-                  Select existing client
-                </option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.company_name}
-                  </option>
-                ))}
-              </select>
-              {clientError && (
-                <span className="matter-error" id="matter-client-error" aria-live="polite">
-                  {clientError}
-                </span>
-              )}
-            </label>
-
-            <p className="muted" style={{ fontSize: 12, marginTop: -4 }}>
-              Optionally invite a client contact for this matter; leave blank to skip.
-            </p>
-
-            <div className="field-row">
-              <label className="field">
-                <span>Contact First Name</span>
-                <input
-                  type="text"
-                  placeholder="Jane…"
-                  autoComplete="given-name"
-                  value={contactFirstName}
-                  onChange={(e) => setContactFirstName(e.target.value)}
-                />
-              </label>
-              <label className="field">
-                <span>Contact Last Name</span>
-                <input
-                  type="text"
-                  placeholder="Doe…"
-                  autoComplete="family-name"
-                  value={contactLastName}
-                  onChange={(e) => setContactLastName(e.target.value)}
-                />
-              </label>
-            </div>
-
-            <label className="field">
-              <span>Contact Email</span>
-              <input
-                type="email"
-                placeholder="jane@acmecorp.com…"
-                autoComplete="email"
-                spellCheck={false}
-                value={contactEmail}
-                onChange={(e) => setContactEmail(e.target.value)}
-              />
-            </label>
-          </section>
-
-          <section className="card form-section">
-            <h3>4. Fee Arrangement</h3>
+            <h3>2. Fee Arrangement</h3>
 
             <label className="field">
               <span>Fee Type</span>

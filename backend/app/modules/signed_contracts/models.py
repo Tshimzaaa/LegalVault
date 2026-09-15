@@ -10,7 +10,6 @@ from app.database.base import BaseModel
 
 if TYPE_CHECKING:
     from app.modules.auth.models.organization import Organization
-    from app.modules.clients.models import Client
     from app.modules.matters.models import Matter
 
 
@@ -31,12 +30,6 @@ class SignedContract(BaseModel):
 
     org_id: Mapped[UUID] = mapped_column(
         ForeignKey("organizations.id"),
-        nullable=False,
-        index=True,
-    )
-
-    client_id: Mapped[UUID] = mapped_column(
-        ForeignKey("clients.id"),
         nullable=False,
         index=True,
     )

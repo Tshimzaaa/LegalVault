@@ -11,7 +11,6 @@ from app.database.base import BaseModel
 
 class RefreshTokenActorType(str, enum.Enum):
     STAFF = "staff"
-    CLIENT = "client"
 
 
 class RefreshToken(BaseModel):
@@ -29,8 +28,8 @@ class RefreshToken(BaseModel):
         nullable=False,
     )
 
-    # Intentionally not a ForeignKey — actor_type determines which table
-    # (users vs client_contacts) actor_id points into, so one FK can't cover both.
+    # Not a ForeignKey: actor_type only ever points into users today, but kept
+    # loose in case another actor table is introduced later.
     actor_id: Mapped[UUID] = mapped_column(
         PG_UUID(as_uuid=True),
         nullable=False,

@@ -1,13 +1,15 @@
 import { apiRequest } from './client'
 
-export type SignatureRecipientType = 'staff' | 'client_contact'
+export type SignatureRecipientType = 'staff'
 export type SignatureRequestStatus = 'pending' | 'completed' | 'declined' | 'voided'
 export type SignatureRecipientStatus = 'pending' | 'signed' | 'declined'
 
 export interface SignatureRecipient {
   id: string
-  recipient_type: SignatureRecipientType
-  recipient_id: string
+  recipient_type: SignatureRecipientType | null
+  recipient_id: string | null
+  external_name: string | null
+  external_email: string | null
   name: string
   email: string
   signing_order: number
@@ -19,7 +21,6 @@ export interface SignatureRecipient {
 export interface SignatureRequest {
   id: string
   matter_id: string
-  client_id: string
   source_document_id: string
   title: string
   status: SignatureRequestStatus
@@ -30,10 +31,16 @@ export interface SignatureRequest {
   created_at: string
 }
 
+export interface SignatureRecipientInput {
+  recipient_id?: string
+  external_name?: string
+  external_email?: string
+}
+
 export interface CreateSignatureRequestBody {
   source_document_id: string
   title: string
-  recipients: { recipient_type: SignatureRecipientType; recipient_id: string }[]
+  recipients: SignatureRecipientInput[]
 }
 
 export async function listSignatureRequests(token: string, matterId: string): Promise<SignatureRequest[]> {
@@ -61,8 +68,4 @@ export async function voidSignatureRequest(
 
 export async function listMyPendingStaffSignatures(token: string): Promise<SignatureRequest[]> {
   return apiRequest<SignatureRequest[]>('/signatures/mine', { token })
-}
-
-export async function listMyPendingClientSignatures(token: string): Promise<SignatureRequest[]> {
-  return apiRequest<SignatureRequest[]>('/client-signatures', { token })
 }

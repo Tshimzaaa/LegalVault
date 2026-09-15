@@ -1,8 +1,8 @@
 """
 Covers the signature-request HTTP endpoints (app/modules/signatures/routes.py):
 sending a document for signature, listing requests for a matter, voiding one, and
-each portal's "pending signatures assigned to me" inbox. The Documenso webhook
-handlers themselves are covered separately in test_signatures_webhook.py.
+the "pending signatures assigned to me" inbox. The Documenso webhook handlers
+themselves are covered separately in test_signatures_webhook.py.
 """
 import uuid
 
@@ -10,7 +10,7 @@ import pytest
 
 from app.modules.auth.models.role import UserRole
 from app.modules.matters.models import MatterDocument
-from tests.conftest import auth_headers, make_client_company, make_contact, make_org, make_matter, make_staff
+from tests.conftest import auth_headers, make_org, make_matter, make_staff
 
 
 @pytest.fixture(autouse=True)
@@ -49,13 +49,11 @@ def _make_document(db_session, matter, admin):
     return document
 
 
-def test_staff_sends_document_for_signature_to_client_and_staff_recipients(client, db_session):
+def test_staff_sends_document_for_signature_to_external_and_staff_recipients(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
     lawyer, _ = make_staff(db_session, org, role=UserRole.LAWYER)
-    client_company = make_client_company(db_session, org)
-    contact, _ = make_contact(db_session, client_company)
-    matter = make_matter(db_session, org, client_company)
+    matter = make_matter(db_session, org)
     document = _make_document(db_session, matter, admin)
 
     res = client.post(
@@ -64,8 +62,8 @@ def test_staff_sends_document_for_signature_to_client_and_staff_recipients(clien
             "source_document_id": str(document.id),
             "title": "Please sign: Engagement Letter",
             "recipients": [
-                {"recipient_type": "client_contact", "recipient_id": str(contact.id)},
-                {"recipient_type": "staff", "recipient_id": str(lawyer.id)},
+                {"external_name": "Jane Counterparty", "external_email": "jane@example.com"},
+                {"recipient_id": str(lawyer.id)},
             ],
         },
         headers=auth_headers(admin),
@@ -85,9 +83,7 @@ def test_non_case_work_role_cannot_send_for_signature(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
     secretary, _ = make_staff(db_session, org, role=UserRole.SECRETARY)
-    client_company = make_client_company(db_session, org)
-    contact, _ = make_contact(db_session, client_company)
-    matter = make_matter(db_session, org, client_company)
+    matter = make_matter(db_session, org)
     document = _make_document(db_session, matter, admin)
 
     res = client.post(
@@ -95,7 +91,7 @@ def test_non_case_work_role_cannot_send_for_signature(client, db_session):
         json={
             "source_document_id": str(document.id),
             "title": "Please sign",
-            "recipients": [{"recipient_type": "client_contact", "recipient_id": str(contact.id)}],
+            "recipients": [{"external_name": "Jane Counterparty", "external_email": "jane@example.com"}],
         },
         headers=auth_headers(secretary),
     )
@@ -105,9 +101,7 @@ def test_non_case_work_role_cannot_send_for_signature(client, db_session):
 def test_staff_voids_a_pending_signature_request(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
-    client_company = make_client_company(db_session, org)
-    contact, _ = make_contact(db_session, client_company)
-    matter = make_matter(db_session, org, client_company)
+    matter = make_matter(db_session, org)
     document = _make_document(db_session, matter, admin)
 
     request_id = client.post(
@@ -115,7 +109,7 @@ def test_staff_voids_a_pending_signature_request(client, db_session):
         json={
             "source_document_id": str(document.id),
             "title": "Please sign",
-            "recipients": [{"recipient_type": "client_contact", "recipient_id": str(contact.id)}],
+            "recipients": [{"external_name": "Jane Counterparty", "external_email": "jane@example.com"}],
         },
         headers=auth_headers(admin),
     ).json()["id"]
@@ -125,13 +119,11 @@ def test_staff_voids_a_pending_signature_request(client, db_session):
     assert void_res.json()["status"] == "voided"
 
 
-def test_client_and_staff_recipients_see_their_own_pending_signatures(client, db_session):
+def test_staff_recipient_sees_their_own_pending_signatures(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
     lawyer, _ = make_staff(db_session, org, role=UserRole.LAWYER)
-    client_company = make_client_company(db_session, org)
-    contact, _ = make_contact(db_session, client_company)
-    matter = make_matter(db_session, org, client_company)
+    matter = make_matter(db_session, org)
     document = _make_document(db_session, matter, admin)
 
     client.post(
@@ -140,16 +132,12 @@ def test_client_and_staff_recipients_see_their_own_pending_signatures(client, db
             "source_document_id": str(document.id),
             "title": "Please sign: Engagement Letter",
             "recipients": [
-                {"recipient_type": "client_contact", "recipient_id": str(contact.id)},
-                {"recipient_type": "staff", "recipient_id": str(lawyer.id)},
+                {"external_name": "Jane Counterparty", "external_email": "jane@example.com"},
+                {"recipient_id": str(lawyer.id)},
             ],
         },
         headers=auth_headers(admin),
     )
-
-    client_pending = client.get("/client-signatures", headers=auth_headers(contact))
-    assert client_pending.status_code == 200
-    assert len(client_pending.json()) == 1
 
     staff_pending = client.get("/signatures/mine", headers=auth_headers(lawyer))
     assert staff_pending.status_code == 200

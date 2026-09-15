@@ -1,7 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from app.exceptions.templates import TemplateNotFound, UnsupportedFileType, TemplateHasNoBody
 from app.exceptions.auth import InvalidOrExpiredResetToken as StaffInvalidResetToken
-from app.exceptions.clients import InvalidOrExpiredResetToken as ClientInvalidResetToken
 
 
 from app.exceptions.auth import (
@@ -16,36 +15,20 @@ from app.exceptions.auth import (
     CannotDeactivateSelf,
     InvalidRefreshToken as StaffInvalidRefreshToken,
 )
-from app.exceptions.clients import (
-    ClientNotFound,
-    ContactAlreadyExists,
-    InvalidOrExpiredInvite as ClientInvalidOrExpiredInvite,
-    InviteAlreadyAccepted as ClientInviteAlreadyAccepted,
-    InvalidClientCredentials,
-    InactiveContact,
-    ContactNotFound,
-    ClientHasMatters,
-    InvalidRefreshToken as ClientInvalidRefreshToken,
-    IncorrectPassword as ClientIncorrectPassword,
-)
 
 from app.exceptions.matters import (
     MatterNotFound,
-    ClientNotFoundForMatter,
     StaffAlreadyAssigned,
     MatterDocumentNotFound,
     UserNotFoundForAssignment,
     MatterTaskNotFound,
     MatterMessageNotFound,
     CannotDeleteOthersMessage,
-    MatterContactPermissionNotFound,
-    ContactNotFoundForMatterPermission,
     InvalidStatusTransition,
     ApprovalRequiredForTransition,
     ApprovalAlreadyPending,
     MatterApprovalNotFound,
     ApprovalAlreadyDecided,
-    IntakeSubmissionClientMismatch,
 )
 from app.exceptions.announcements import AnnouncementNotFound
 from app.exceptions.notifications import NotificationNotFound
@@ -101,54 +84,9 @@ def register_exception_handlers(app: FastAPI):
             detail="You do not have permission to perform this action.",
         )
 
-    @app.exception_handler(ClientNotFound)
-    async def client_not_found(_, __):
-        raise HTTPException(
-            status_code=404,
-            detail="Client not found.",
-        )
-
-    @app.exception_handler(ContactAlreadyExists)
-    async def contact_exists(_, __):
-        raise HTTPException(
-            status_code=409,
-            detail="A contact with this email already exists.",
-        )
-
-    @app.exception_handler(ClientInvalidOrExpiredInvite)
-    async def invalid_invite(_, __):
-        raise HTTPException(
-            status_code=400,
-            detail="This invitation link is invalid or has expired.",
-        )
-
-    @app.exception_handler(ClientInviteAlreadyAccepted)
-    async def invite_already_accepted(_, __):
-        raise HTTPException(
-            status_code=409,
-            detail="This invitation has already been used.",
-        )
-
-    @app.exception_handler(InvalidClientCredentials)
-    async def invalid_client_credentials(_, __):
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid email or password.",
-        )
-
-    @app.exception_handler(InactiveContact)
-    async def inactive_contact(_, __):
-        raise HTTPException(
-            status_code=403,
-            detail="This account has been deactivated.",
-        )
     @app.exception_handler(MatterNotFound)
     async def matter_not_found(_, __):
         raise HTTPException(status_code=404, detail="Matter not found.")
-
-    @app.exception_handler(ClientNotFoundForMatter)
-    async def client_not_found_for_matter(_, __):
-        raise HTTPException(status_code=404, detail="Client not found.")
 
     @app.exception_handler(StaffAlreadyAssigned)
     async def staff_already_assigned(_, __):
@@ -157,14 +95,6 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(UserNotFoundForAssignment)
     async def user_not_found_for_assignment(_, __):
         raise HTTPException(status_code=404, detail="Staff member not found.")
-
-    @app.exception_handler(MatterContactPermissionNotFound)
-    async def matter_contact_permission_not_found(_, __):
-        raise HTTPException(status_code=404, detail="This contact has no access level set on this matter.")
-
-    @app.exception_handler(ContactNotFoundForMatterPermission)
-    async def contact_not_found_for_matter_permission(_, __):
-        raise HTTPException(status_code=404, detail="Contact not found for this matter's client.")
 
     @app.exception_handler(InvalidStatusTransition)
     async def invalid_status_transition(_, __):
@@ -189,9 +119,6 @@ def register_exception_handlers(app: FastAPI):
     async def approval_already_decided(_, __):
         raise HTTPException(status_code=409, detail="This approval has already been decided.")
 
-    @app.exception_handler(IntakeSubmissionClientMismatch)
-    async def intake_submission_client_mismatch(_, __):
-        raise HTTPException(status_code=400, detail="This intake submission doesn't belong to the matter's client.")
     @app.exception_handler(TemplateNotFound)
     async def template_not_found(_, __):
         raise HTTPException(status_code=404, detail="Template not found.")
@@ -203,15 +130,8 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(TemplateHasNoBody)
     async def template_has_no_body(_, __):
         raise HTTPException(status_code=409, detail="This template has no body to generate from, add one first.")
-    @app.exception_handler(ContactNotFound)
-    async def contact_not_found(_, __):
-        raise HTTPException(status_code=404, detail="Contact not found.")
     @app.exception_handler(StaffInvalidResetToken)
     async def staff_invalid_reset_token(_, __):
-        raise HTTPException(status_code=400, detail="This password reset link is invalid or has expired.")
-
-    @app.exception_handler(ClientInvalidResetToken)
-    async def client_invalid_reset_token(_, __):
         raise HTTPException(status_code=400, detail="This password reset link is invalid or has expired.")
 
     @app.exception_handler(MatterDocumentNotFound)
@@ -232,10 +152,6 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(CannotDeactivateSelf)
     async def cannot_deactivate_self(_, __):
         raise HTTPException(status_code=400, detail="You cannot deactivate your own account.")
-
-    @app.exception_handler(ClientHasMatters)
-    async def client_has_matters(_, __):
-        raise HTTPException(status_code=409, detail="Cannot delete a client that has existing matters.")
 
     @app.exception_handler(MatterTaskNotFound)
     async def matter_task_not_found(_, __):
@@ -268,14 +184,6 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(StaffInvalidRefreshToken)
     async def staff_invalid_refresh_token(_, __):
         raise HTTPException(status_code=401, detail="Invalid or expired refresh token.")
-
-    @app.exception_handler(ClientInvalidRefreshToken)
-    async def client_invalid_refresh_token(_, __):
-        raise HTTPException(status_code=401, detail="Invalid or expired refresh token.")
-
-    @app.exception_handler(ClientIncorrectPassword)
-    async def client_incorrect_password(_, __):
-        raise HTTPException(status_code=400, detail="Current password is incorrect.")
 
     @app.exception_handler(StorageUnavailable)
     async def storage_unavailable(_, __):

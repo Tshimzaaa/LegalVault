@@ -12,7 +12,6 @@ from app.modules.notifications.models import RecipientType
 
 if TYPE_CHECKING:
     from app.modules.auth.models.organization import Organization
-    from app.modules.clients.models import Client
     from app.modules.matters.models import Matter, MatterDocument
     from app.modules.signed_contracts.models import SignedContract
 
@@ -36,8 +35,6 @@ class SignatureRequest(BaseModel):
     org_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id"), nullable=False, index=True)
 
     matter_id: Mapped[UUID] = mapped_column(ForeignKey("matters.id"), nullable=False, index=True)
-
-    client_id: Mapped[UUID] = mapped_column(ForeignKey("clients.id"), nullable=False, index=True)
 
     source_document_id: Mapped[UUID] = mapped_column(ForeignKey("matter_documents.id"), nullable=False)
 
@@ -77,11 +74,18 @@ class SignatureRecipient(BaseModel):
         ForeignKey("signature_requests.id"), nullable=False, index=True
     )
 
-    # Not a ForeignKey — a recipient can be a staff user or a client contact (two
-    # different tables), same pattern as Notification.recipient_type/recipient_id.
-    recipient_type: Mapped[RecipientType] = mapped_column(Enum(RecipientType), nullable=False)
+    # Not a ForeignKey to a single table — a recipient is either an internal staff
+    # user (recipient_type=STAFF, recipient_id points at users.id) or an external
+    # signer identified by the free-form external_name/external_email fields below
+    # (no account to look up — they're just contact info handed to Documenso). Null
+    # for external signers, since RecipientType now only has STAFF.
+    recipient_type: Mapped[RecipientType | None] = mapped_column(Enum(RecipientType), nullable=True)
 
-    recipient_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False, index=True)
+    recipient_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), nullable=True, index=True)
+
+    external_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+
+    external_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     name: Mapped[str] = mapped_column(String(200), nullable=False)
 

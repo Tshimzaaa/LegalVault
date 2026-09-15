@@ -5,8 +5,6 @@ from app.database.session import get_db
 from app.modules.auth.dependencies import get_current_user, require_role
 from app.modules.auth.models import User
 from app.modules.auth.models.role import UserRole
-from app.modules.clients.dependencies import get_current_contact
-from app.modules.clients.models import ClientContact
 from app.modules.knowledge.schemas import (
     CreateKnowledgeArticleRequest,
     UpdateKnowledgeArticleRequest,
@@ -15,7 +13,6 @@ from app.modules.knowledge.schemas import (
 from app.modules.knowledge.service import KnowledgeService
 
 router = APIRouter(prefix="/knowledge-articles", tags=["knowledge-articles"])
-client_knowledge_router = APIRouter(prefix="/client-knowledge-articles", tags=["client-knowledge-articles"])
 
 _AUTHORS = [UserRole.ADMIN, UserRole.LAWYER]
 
@@ -68,22 +65,3 @@ def delete_knowledge_article(
 ):
     service = KnowledgeService(db)
     service.delete_article(article_id, current_user.org_id, current_user.id)
-
-
-@client_knowledge_router.get("", response_model=list[KnowledgeArticleResponse])
-def list_client_knowledge_articles(
-    db: Session = Depends(get_db),
-    current_contact: ClientContact = Depends(get_current_contact),
-):
-    service = KnowledgeService(db)
-    return service.list_published_articles(current_contact.client.org_id)
-
-
-@client_knowledge_router.get("/{article_id}", response_model=KnowledgeArticleResponse)
-def get_client_knowledge_article(
-    article_id: str,
-    db: Session = Depends(get_db),
-    current_contact: ClientContact = Depends(get_current_contact),
-):
-    service = KnowledgeService(db)
-    return service.get_published_article(article_id, current_contact.client.org_id)

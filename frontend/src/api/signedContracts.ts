@@ -7,8 +7,6 @@ export type ContractLifecycleStatus = ContractPersistedStatus | 'expiring'
 export interface SignedContract {
   id: string
   org_id: string
-  client_id: string
-  client_name: string
   matter_id: string | null
   title: string
   description: string | null
@@ -29,7 +27,6 @@ export interface SignedContractsSummary {
 }
 
 export interface UploadSignedContractPayload {
-  client_id: string
   title: string
   agreement_type: ContractType
   signed_date: string
@@ -50,7 +47,6 @@ export async function getSignedContractsSummary(token: string): Promise<SignedCo
 
 export async function uploadSignedContract(token: string, payload: UploadSignedContractPayload): Promise<SignedContract> {
   const formData = new FormData()
-  formData.append('client_id', payload.client_id)
   formData.append('title', payload.title)
   formData.append('agreement_type', payload.agreement_type)
   formData.append('signed_date', payload.signed_date)

@@ -36,8 +36,8 @@ function Footer() {
           </div>
           <div className="site-footer-col">
             <span className="site-footer-heading">Portals</span>
-            <Link to="/login" state={{ staffOnly: true }}>
-              Staff Login
+            <Link to="/login">
+              Login
             </Link>
             <Link to="/owner/login">Owner Portal</Link>
           </div>

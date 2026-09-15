@@ -8,8 +8,6 @@ from app.modules.signatures.service import SignatureService
 from app.modules.auth.dependencies import get_current_user, require_role
 from app.modules.auth.models import User
 from app.modules.auth.models.role import UserRole
-from app.modules.clients.dependencies import get_current_contact
-from app.modules.clients.models import ClientContact
 from app.core.documenso_client import verify_webhook_secret, WEBHOOK_SECRET_HEADER
 from app.database.rls import set_tenant_context
 
@@ -17,7 +15,6 @@ _CASE_WORK = [UserRole.ADMIN, UserRole.LAWYER, UserRole.PARALEGAL]
 
 router = APIRouter(prefix="/matters", tags=["signatures"])
 my_signatures_router = APIRouter(prefix="/signatures", tags=["signatures"])
-client_signatures_router = APIRouter(prefix="/client-signatures", tags=["client-signatures"])
 webhook_router = APIRouter(tags=["webhooks"])
 
 
@@ -60,15 +57,6 @@ def list_my_pending_staff_signatures(
 ):
     service = SignatureService(db)
     return service.list_pending_for_user(current_user.id)
-
-
-@client_signatures_router.get("", response_model=list[SignatureRequestResponse])
-def list_my_pending_signatures(
-    db: Session = Depends(get_db),
-    current_contact: ClientContact = Depends(get_current_contact),
-):
-    service = SignatureService(db)
-    return service.list_pending_for_contact(current_contact.id)
 
 
 # --- Documenso webhook --------------------------------------------------

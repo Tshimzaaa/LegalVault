@@ -9,8 +9,6 @@ class SearchResultItem(BaseModel):
 
 
 class SearchResponse(BaseModel):
-    clients: list[SearchResultItem]
-    contacts: list[SearchResultItem]
     matters: list[SearchResultItem]
     staff: list[SearchResultItem]
     documents: list[SearchResultItem]

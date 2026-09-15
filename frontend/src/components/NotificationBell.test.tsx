@@ -26,7 +26,7 @@ describe('NotificationBell', () => {
     localStorage.setItem('access_token', 'token-a')
     vi.mocked(notificationsApi.getUnreadCount).mockResolvedValue(0)
     vi.mocked(notificationsApi.listNotifications).mockResolvedValue([])
-    vi.mocked(notificationsApi.markNotificationRead).mockImplementation(async (_t, _s, id) =>
+    vi.mocked(notificationsApi.markNotificationRead).mockImplementation(async (_t, id) =>
       makeNotification({ id, is_read: true }),
     )
     vi.mocked(notificationsApi.markAllNotificationsRead).mockResolvedValue(undefined)
@@ -41,14 +41,14 @@ describe('NotificationBell', () => {
   it('shows the unread badge from the initial poll', async () => {
     vi.mocked(notificationsApi.getUnreadCount).mockResolvedValue(3)
 
-    render(<NotificationBell scope="staff" />)
+    render(<NotificationBell />)
 
     expect(await screen.findByText('3')).toBeInTheDocument()
-    expect(notificationsApi.getUnreadCount).toHaveBeenCalledWith('token-a', 'staff')
+    expect(notificationsApi.getUnreadCount).toHaveBeenCalledWith('token-a')
   })
 
   it('hides the badge when there are no unread notifications', async () => {
-    render(<NotificationBell scope="staff" />)
+    render(<NotificationBell />)
 
     await waitFor(() => expect(notificationsApi.getUnreadCount).toHaveBeenCalled())
     expect(screen.queryByText('0')).not.toBeInTheDocument()
@@ -60,19 +60,19 @@ describe('NotificationBell', () => {
     // token expired every subsequent poll needed a wasted refresh round trip.
     vi.useFakeTimers()
 
-    render(<NotificationBell scope="staff" />)
+    render(<NotificationBell />)
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0)
     })
-    expect(notificationsApi.getUnreadCount).toHaveBeenLastCalledWith('token-a', 'staff')
+    expect(notificationsApi.getUnreadCount).toHaveBeenLastCalledWith('token-a')
 
     localStorage.setItem('access_token', 'token-b')
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(30000)
     })
-    expect(notificationsApi.getUnreadCount).toHaveBeenLastCalledWith('token-b', 'staff')
+    expect(notificationsApi.getUnreadCount).toHaveBeenLastCalledWith('token-b')
   })
 
   it('opens the panel, lists notifications, and marks one read on click', async () => {
@@ -80,7 +80,7 @@ describe('NotificationBell', () => {
     vi.mocked(notificationsApi.getUnreadCount).mockResolvedValue(1)
     vi.mocked(notificationsApi.listNotifications).mockResolvedValue([makeNotification()])
 
-    render(<NotificationBell scope="staff" />)
+    render(<NotificationBell />)
     await screen.findByText('1')
 
     await user.click(screen.getByRole('button', { name: /notifications/i }))
@@ -90,7 +90,7 @@ describe('NotificationBell', () => {
     await user.click(screen.getByText('New message'))
 
     await waitFor(() =>
-      expect(notificationsApi.markNotificationRead).toHaveBeenCalledWith('token-a', 'staff', 'n1'),
+      expect(notificationsApi.markNotificationRead).toHaveBeenCalledWith('token-a', 'n1'),
     )
   })
 
@@ -102,7 +102,7 @@ describe('NotificationBell', () => {
       makeNotification({ id: 'n2' }),
     ])
 
-    render(<NotificationBell scope="staff" />)
+    render(<NotificationBell />)
     await screen.findByText('2')
 
     await user.click(screen.getByRole('button', { name: /notifications/i }))
@@ -110,7 +110,7 @@ describe('NotificationBell', () => {
 
     await user.click(screen.getByText('Mark All Read'))
 
-    await waitFor(() => expect(notificationsApi.markAllNotificationsRead).toHaveBeenCalledWith('token-a', 'staff'))
+    await waitFor(() => expect(notificationsApi.markAllNotificationsRead).toHaveBeenCalledWith('token-a'))
     expect(screen.queryByText('2')).not.toBeInTheDocument()
   })
 })

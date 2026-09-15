@@ -7,11 +7,7 @@ import { formatDateTime } from '../utils/date'
 
 const POLL_INTERVAL_MS = 30000
 
-interface NotificationBellProps {
-  scope: 'staff' | 'client'
-}
-
-function NotificationBell({ scope }: NotificationBellProps) {
+function NotificationBell() {
   const [open, setOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [notifications, setNotifications] = useState<Notification[]>([])
@@ -28,14 +24,14 @@ function NotificationBell({ scope }: NotificationBellProps) {
     function poll() {
       const token = localStorage.getItem('access_token')
       if (!token) return
-      getUnreadCount(token, scope)
+      getUnreadCount(token)
         .then(setUnreadCount)
         .catch(() => {})
     }
     poll()
     const interval = setInterval(poll, POLL_INTERVAL_MS)
     return () => clearInterval(interval)
-  }, [scope])
+  }, [])
 
   useEffect(() => {
     if (!open) return
@@ -66,7 +62,7 @@ function NotificationBell({ scope }: NotificationBellProps) {
       setPanelPos({ top: rect.bottom + 8, left: rect.left })
     }
     if (next && token) {
-      listNotifications(token, scope, { limit: 20 })
+      listNotifications(token, { limit: 20 })
         .then((data) => {
           setNotifications(data)
           setLoaded(true)
@@ -86,7 +82,7 @@ function NotificationBell({ scope }: NotificationBellProps) {
     setMarkError(null)
 
     try {
-      const updated = await markNotificationRead(token, scope, n.id)
+      const updated = await markNotificationRead(token, n.id)
       setNotifications((prev) => prev.map((x) => (x.id === n.id ? updated : x)))
     } catch {
       // Roll back — the read receipt didn't actually save server-side.
@@ -107,7 +103,7 @@ function NotificationBell({ scope }: NotificationBellProps) {
     setMarkError(null)
 
     try {
-      await markAllNotificationsRead(token, scope)
+      await markAllNotificationsRead(token)
     } catch {
       setNotifications(previousNotifications)
       setUnreadCount(previousCount)

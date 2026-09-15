@@ -5,11 +5,9 @@ export type MatterStatus = 'intake' | 'in_review' | 'awaiting_signature' | 'sign
 export interface Matter {
   id: string
   org_id: string
-  client_id: string
   title: string
   description: string | null
   status: MatterStatus
-  is_visible_to_client: boolean
   due_date: string | null
   created_at: string
   updated_at: string
@@ -61,7 +59,6 @@ export interface MatterDocument {
   id: string
   matter_id: string
   uploaded_by: string | null
-  uploaded_by_contact_id: string | null
   title: string
   version: number
   original_filename: string
@@ -70,7 +67,6 @@ export interface MatterDocument {
 }
 
 export interface CreateMatterRequest {
-  client_id: string
   title: string
   description?: string | null
   due_date?: string | null
@@ -180,26 +176,6 @@ export async function listPendingApprovals(token: string): Promise<MatterApprova
   return apiRequest<MatterApproval[]>('/matters/approvals/pending', { token })
 }
 
-export async function generateMatterDocument(
-  token: string,
-  matterId: string,
-  body: { template_id: string; intake_submission_id: string; title?: string },
-): Promise<MatterDocument> {
-  return apiRequest<MatterDocument>(`/matters/${matterId}/documents/generate`, { method: 'POST', body, token })
-}
-
-export async function updateMatterVisibility(
-  token: string,
-  matterId: string,
-  isVisibleToClient: boolean,
-): Promise<Matter> {
-  return apiRequest<Matter>(`/matters/${matterId}/visibility`, {
-    method: 'PATCH',
-    body: { is_visible_to_client: isVisibleToClient },
-    token,
-  })
-}
-
 export async function updateMatterDeadline(token: string, matterId: string, dueDate: string | null): Promise<Matter> {
   return apiRequest<Matter>(`/matters/${matterId}/deadline`, {
     method: 'PATCH',
@@ -285,7 +261,7 @@ export async function deleteTask(token: string, matterId: string, taskId: string
   await apiRequest(`/matters/${matterId}/tasks/${taskId}`, { method: 'DELETE', token })
 }
 
-export type MessageAuthorType = 'staff' | 'client_contact'
+export type MessageAuthorType = 'staff'
 
 export interface MatterMessage {
   id: string

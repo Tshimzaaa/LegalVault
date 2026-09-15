@@ -1,15 +1,26 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from app.modules.notifications.models import RecipientType
 from app.modules.signatures.models import SignatureRequestStatus, SignatureRecipientStatus
 
 
 class SignatureRecipientInput(BaseModel):
-    recipient_type: RecipientType
-    recipient_id: UUID
+    # Either recipient_id (an internal org user) or external_name + external_email
+    # (an external signer with no account, e.g. a counterparty) must be provided.
+    recipient_id: UUID | None = None
+    external_name: str | None = None
+    external_email: str | None = None
+
+    @model_validator(mode="after")
+    def _require_internal_or_external(self):
+        if self.recipient_id is None and not (self.external_name and self.external_email):
+            raise ValueError(
+                "Provide either recipient_id, or both external_name and external_email."
+            )
+        return self
 
 
 class CreateSignatureRequestRequest(BaseModel):
@@ -20,8 +31,10 @@ class CreateSignatureRequestRequest(BaseModel):
 
 class SignatureRecipientResponse(BaseModel):
     id: UUID
-    recipient_type: RecipientType
-    recipient_id: UUID
+    recipient_type: RecipientType | None
+    recipient_id: UUID | None
+    external_name: str | None
+    external_email: str | None
     name: str
     email: str
     signing_order: int
@@ -36,7 +49,6 @@ class SignatureRecipientResponse(BaseModel):
 class SignatureRequestResponse(BaseModel):
     id: UUID
     matter_id: UUID
-    client_id: UUID
     source_document_id: UUID
     title: str
     status: SignatureRequestStatus

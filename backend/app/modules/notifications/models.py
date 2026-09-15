@@ -10,14 +10,13 @@ from app.database.base import BaseModel
 
 class RecipientType(str, enum.Enum):
     STAFF = "staff"
-    CLIENT_CONTACT = "client_contact"
 
 
 class Notification(BaseModel):
     __tablename__ = "notifications"
 
-    # Not a ForeignKey — a recipient can be a staff user or a client contact (two
-    # different tables), and notifications should never block deleting either.
+    # Not a ForeignKey — kept loose so a notification never blocks deleting the
+    # recipient it points at.
     recipient_type: Mapped[RecipientType] = mapped_column(Enum(RecipientType), nullable=False)
 
     recipient_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False, index=True)

@@ -1,9 +1,9 @@
 """
-Fallback clauses: org staff CRUD on the pre-approved clause library, and the
-client-portal read-only view backing "My Learned Friend".
+Fallback clauses: org staff CRUD on the pre-approved clause library backing
+"My Learned Friend".
 """
 from app.modules.auth.models.role import UserRole
-from tests.conftest import auth_headers, make_client_company, make_contact, make_org, make_staff
+from tests.conftest import auth_headers, make_org, make_staff
 
 
 def _create(client, admin, **overrides):
@@ -49,18 +49,6 @@ def test_update_and_delete_fallback_clause(client, db_session):
 
     list_res = client.get("/fallback-clauses", headers=auth_headers(admin))
     assert list_res.json() == []
-
-
-def test_client_can_list_org_fallback_clauses(client, db_session):
-    org = make_org(db_session)
-    admin, _ = make_staff(db_session, org)
-    client_company = make_client_company(db_session, org)
-    contact, _ = make_contact(db_session, client_company)
-    _create(client, admin)
-
-    list_res = client.get("/client-fallback-clauses", headers=auth_headers(contact))
-    assert list_res.status_code == 200
-    assert len(list_res.json()) == 1
 
 
 def test_non_admin_lawyer_cannot_delete_fallback_clause(client, db_session):

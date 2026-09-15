@@ -9,7 +9,6 @@ from sqlalchemy import select
 from sqlalchemy.exc import DBAPIError
 
 from app.database.rls import set_tenant_context
-from app.modules.clients.models import Client
 from app.modules.matters.models import ApprovalStatus, Matter, MatterApproval, MatterStatus
 
 
@@ -19,14 +18,6 @@ def test_rls_blocks_cross_org_select_on_matters(db_session, two_orgs):
     visible_ids = {m.id for m in db_session.scalars(select(Matter)).all()}
     assert two_orgs.matter_a.id in visible_ids
     assert two_orgs.matter_b.id not in visible_ids
-
-
-def test_rls_blocks_cross_org_select_on_clients(db_session, two_orgs):
-    set_tenant_context(db_session, org_id=two_orgs.org_b.id)
-
-    visible_ids = {c.id for c in db_session.scalars(select(Client)).all()}
-    assert two_orgs.client_b.id in visible_ids
-    assert two_orgs.client_a.id not in visible_ids
 
 
 def test_rls_owner_bypass_sees_every_org(db_session, two_orgs):
@@ -50,7 +41,6 @@ def test_rls_blocks_insert_into_another_orgs_scope(db_session, two_orgs):
 
     rogue_matter = Matter(
         org_id=two_orgs.org_b.id,  # writing into org B's scope while scoped as org A
-        client_id=two_orgs.client_b.id,
         title="Should be rejected by the WITH CHECK clause",
     )
     db_session.add(rogue_matter)

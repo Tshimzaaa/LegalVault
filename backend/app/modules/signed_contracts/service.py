@@ -9,9 +9,7 @@ from app.modules.signed_contracts.schemas import (
     SignedContractsSummaryResponse,
 )
 from app.exceptions.signed_contracts import SignedContractNotFound
-from app.exceptions.clients import ClientNotFound
 from app.exceptions.matters import MatterNotFound
-from app.modules.clients.repository import ClientRepository
 from app.modules.matters.repository import MatterRepository
 from app.exceptions.malware import MalwareDetected
 from app.core.storage import upload_file, get_download_url
@@ -43,7 +41,6 @@ class SignedContractService:
     def __init__(self, db: Session):
         self.db = db
         self.repository = SignedContractRepository(db)
-        self.client_repository = ClientRepository(db)
         self.matter_repository = MatterRepository(db)
         self.audit = AuditService(db)
 
@@ -51,7 +48,6 @@ class SignedContractService:
         self,
         org_id,
         actor_id,
-        client_id,
         title: str,
         agreement_type: ContractType,
         signed_date: date,
@@ -63,13 +59,9 @@ class SignedContractService:
         integration_source: str = "manual",
         matter_id=None,
     ) -> SignedContractResponse:
-        client = self.client_repository.get_client_by_id(client_id)
-        if not client or str(client.org_id) != str(org_id):
-            raise ClientNotFound()
-
         if matter_id is not None:
             matter = self.matter_repository.get_by_id(matter_id)
-            if not matter or str(matter.org_id) != str(org_id) or str(matter.client_id) != str(client_id):
+            if not matter or str(matter.org_id) != str(org_id):
                 raise MatterNotFound()
 
         from app.exceptions.templates import UnsupportedFileType
@@ -96,7 +88,6 @@ class SignedContractService:
 
         contract = SignedContract(
             org_id=org_id,
-            client_id=client_id,
             matter_id=matter_id,
             uploaded_by=actor_id,
             title=title,
@@ -121,14 +112,12 @@ class SignedContractService:
             details={"title": contract.title, "agreement_type": contract.agreement_type.value},
         )
         self.db.commit()
-        return self._to_response(contract, client.company_name)
+        return self._to_response(contract)
 
-    def _to_response(self, contract: SignedContract, client_name: str) -> SignedContractResponse:
+    def _to_response(self, contract: SignedContract) -> SignedContractResponse:
         return SignedContractResponse(
             id=contract.id,
             org_id=contract.org_id,
-            client_id=contract.client_id,
-            client_name=client_name,
             matter_id=contract.matter_id,
             title=contract.title,
             description=contract.description,
@@ -143,10 +132,7 @@ class SignedContractService:
         )
 
     def list_for_org(self, org_id) -> list[SignedContractResponse]:
-        return [self._to_response(c, client.company_name) for c, client in self.repository.list_by_org(org_id)]
-
-    def list_for_client(self, client_id) -> list[SignedContractResponse]:
-        return [self._to_response(c, client.company_name) for c, client in self.repository.list_by_client(client_id)]
+        return [self._to_response(c) for c in self.repository.list_by_org(org_id)]
 
     def _summary(self, contracts: list[SignedContract]) -> SignedContractsSummaryResponse:
         today = date.today()
@@ -158,20 +144,11 @@ class SignedContractService:
         )
 
     def get_summary_for_org(self, org_id) -> SignedContractsSummaryResponse:
-        return self._summary([c for c, _ in self.repository.list_by_org(org_id)])
-
-    def get_summary_for_client(self, client_id) -> SignedContractsSummaryResponse:
-        return self._summary([c for c, _ in self.repository.list_by_client(client_id)])
+        return self._summary(self.repository.list_by_org(org_id))
 
     def get_download_link(self, contract_id, org_id) -> str:
         contract = self.repository.get_by_id(contract_id)
         if not contract or str(contract.org_id) != str(org_id):
-            raise SignedContractNotFound()
-        return get_download_url(contract.file_key)
-
-    def get_client_download_link(self, contract_id, client_id) -> str:
-        contract = self.repository.get_by_id(contract_id)
-        if not contract or str(contract.client_id) != str(client_id):
             raise SignedContractNotFound()
         return get_download_url(contract.file_key)
 
@@ -193,5 +170,4 @@ class SignedContractService:
         )
         self.db.commit()
 
-        client = self.client_repository.get_client_by_id(contract.client_id)
-        return self._to_response(contract, client.company_name if client else "")
+        return self._to_response(contract)

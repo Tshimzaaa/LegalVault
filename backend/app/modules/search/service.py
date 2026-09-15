@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import ColumnElement
 
 from app.modules.auth.models import User
-from app.modules.clients.models import Client, ClientContact
 from app.modules.matters.models import Matter, MatterDocument
 from app.modules.search.schemas import SearchResponse, SearchResultItem
 
@@ -35,23 +34,6 @@ class SearchService:
     def search(self, org_id, query: str) -> SearchResponse:
         tsquery = func.websearch_to_tsquery("english", query)
 
-        client_vector = _tsvector(Client.company_name)
-        clients = self.db.scalars(
-            select(Client)
-            .where(Client.org_id == org_id, client_vector.op("@@")(tsquery))
-            .order_by(func.ts_rank(client_vector, tsquery).desc())
-            .limit(RESULTS_PER_CATEGORY)
-        ).all()
-
-        contact_vector = _tsvector(ClientContact.first_name, ClientContact.last_name, ClientContact.email)
-        contacts = self.db.scalars(
-            select(ClientContact)
-            .join(Client, ClientContact.client_id == Client.id)
-            .where(Client.org_id == org_id, contact_vector.op("@@")(tsquery))
-            .order_by(func.ts_rank(contact_vector, tsquery).desc())
-            .limit(RESULTS_PER_CATEGORY)
-        ).all()
-
         matter_vector = _tsvector(Matter.title, Matter.description)
         matters = self.db.scalars(
             select(Matter)
@@ -78,14 +60,6 @@ class SearchService:
         ).all()
 
         return SearchResponse(
-            clients=[
-                SearchResultItem(id=c.id, title=c.company_name)
-                for c in clients
-            ],
-            contacts=[
-                SearchResultItem(id=c.id, title=f"{c.first_name} {c.last_name}", subtitle=c.email)
-                for c in contacts
-            ],
             matters=[
                 SearchResultItem(id=m.id, title=m.title, subtitle=m.status.value)
                 for m in matters

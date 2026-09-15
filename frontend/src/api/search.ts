@@ -7,8 +7,6 @@ export interface SearchResultItem {
 }
 
 export interface SearchResponse {
-  clients: SearchResultItem[]
-  contacts: SearchResultItem[]
   matters: SearchResultItem[]
   staff: SearchResultItem[]
   documents: SearchResultItem[]

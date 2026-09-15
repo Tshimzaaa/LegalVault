@@ -16,7 +16,6 @@ const Dashboard = lazy(() => import('../Dashboard/Dashboard'))
 const NewMatter = lazy(() => import('../NewMatter/NewMatter'))
 const Matters = lazy(() => import('../Matters/Matters'))
 const MatterDetail = lazy(() => import('../MatterDetail/MatterDetail'))
-const Clients = lazy(() => import('../Clients/Clients'))
 const Workflow = lazy(() => import('../Workflow/Workflow'))
 const SignedContracts = lazy(() => import('../SignedContracts/SignedContracts'))
 const Reporting = lazy(() => import('../Reporting/Reporting'))
@@ -27,8 +26,6 @@ const Search = lazy(() => import('../Search/Search'))
 const AuditLog = lazy(() => import('../AuditLog/AuditLog'))
 const Calendar = lazy(() => import('../Calendar/Calendar'))
 const Settings = lazy(() => import('../Settings/Settings'))
-const IntakeSubmissions = lazy(() => import('../IntakeSubmissions/IntakeSubmissions'))
-const IntakeSubmissionDetail = lazy(() => import('../IntakeSubmissions/IntakeSubmissionDetail'))
 const KnowledgeArticles = lazy(() => import('../KnowledgeArticles/KnowledgeArticles'))
 const Integrations = lazy(() => import('../Integrations/Integrations'))
 
@@ -52,7 +49,7 @@ function Workspace({ user, onLogout }: WorkspaceProps) {
         navItems={navItems}
         user={user}
         onLogout={onLogout}
-        notificationBell={<NotificationBell scope="staff" />}
+        notificationBell={<NotificationBell />}
       />
       <div className="dash-content" id="main-content">
         <AnnouncementBanner scope="staff" />
@@ -63,7 +60,6 @@ function Workspace({ user, onLogout }: WorkspaceProps) {
             <Route path="new-matter" element={<NewMatter />} />
             <Route path="matters" element={<Matters />} />
             <Route path="matters/:matterId" element={<MatterDetail />} />
-            <Route path="clients" element={<Clients user={user} />} />
             <Route path="workflow" element={<Workflow />} />
             <Route path="signed-contracts" element={<SignedContracts />} />
             <Route path="reporting" element={<Reporting />} />
@@ -71,8 +67,6 @@ function Workspace({ user, onLogout }: WorkspaceProps) {
             <Route path="fallback-clauses" element={<FallbackClauses />} />
             <Route path="search" element={<Search />} />
             <Route path="calendar" element={<Calendar />} />
-            <Route path="intake-submissions" element={<IntakeSubmissions />} />
-            <Route path="intake-submissions/:submissionId" element={<IntakeSubmissionDetail user={user} />} />
             <Route path="knowledge-articles" element={<KnowledgeArticles user={user} />} />
             <Route path="integrations" element={<Integrations user={user} />} />
             <Route path="settings" element={<Settings user={user} />} />

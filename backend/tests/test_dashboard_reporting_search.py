@@ -1,37 +1,24 @@
 """
-Read-only aggregation endpoints: staff dashboard summary, client dashboard
-summary, reporting overview + CSV export, and org-scoped search.
+Read-only aggregation endpoints: staff dashboard summary, reporting overview
++ CSV export, and org-scoped search.
 """
-from tests.conftest import auth_headers, make_client_company, make_contact, make_org, make_matter, make_staff
+from tests.conftest import auth_headers, make_org, make_matter, make_staff
 
 
 def test_staff_dashboard_summary(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
-    client_company = make_client_company(db_session, org)
-    make_matter(db_session, org, client_company, title="Dashboard Matter")
+    make_matter(db_session, org, title="Dashboard Matter")
 
     res = client.get("/dashboard/summary", headers=auth_headers(admin))
     assert res.status_code == 200
     assert res.json()["contractStatus"]["total"] == 1
 
 
-def test_client_dashboard_summary(client, db_session):
-    org = make_org(db_session)
-    client_company = make_client_company(db_session, org)
-    contact, _ = make_contact(db_session, client_company)
-    make_matter(db_session, org, client_company, is_visible_to_client=True)
-
-    res = client.get("/client-dashboard/summary", headers=auth_headers(contact))
-    assert res.status_code == 200
-    assert res.json()["openMatters"] == 1
-
-
 def test_reporting_overview_and_csv_export(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
-    client_company = make_client_company(db_session, org)
-    make_matter(db_session, org, client_company, title="Reported Matter")
+    make_matter(db_session, org, title="Reported Matter")
 
     overview_res = client.get("/reporting/overview", headers=auth_headers(admin))
     assert overview_res.status_code == 200
@@ -46,8 +33,7 @@ def test_reporting_overview_and_csv_export(client, db_session):
 def test_search_finds_matter_by_title(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
-    client_company = make_client_company(db_session, org)
-    make_matter(db_session, org, client_company, title="Findable Merger Agreement")
+    make_matter(db_session, org, title="Findable Merger Agreement")
 
     res = client.get("/search?q=Findable", headers=auth_headers(admin))
     assert res.status_code == 200
@@ -59,8 +45,7 @@ def test_search_matches_whole_words_not_mid_word_substrings(client, db_session):
     accepted change from the old ILIKE '%...%' behavior, not a regression."""
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
-    client_company = make_client_company(db_session, org)
-    make_matter(db_session, org, client_company, title="Findable Merger Agreement")
+    make_matter(db_session, org, title="Findable Merger Agreement")
 
     res = client.get("/search?q=indable", headers=auth_headers(admin))
     assert res.status_code == 200
@@ -70,9 +55,8 @@ def test_search_matches_whole_words_not_mid_word_substrings(client, db_session):
 def test_search_multi_word_query_is_implicit_and(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
-    client_company = make_client_company(db_session, org)
-    make_matter(db_session, org, client_company, title="Merger Agreement")
-    make_matter(db_session, org, client_company, title="Merger Only")
+    make_matter(db_session, org, title="Merger Agreement")
+    make_matter(db_session, org, title="Merger Only")
 
     res = client.get("/search?q=Merger Agreement", headers=auth_headers(admin))
     assert res.status_code == 200
@@ -83,11 +67,10 @@ def test_search_multi_word_query_is_implicit_and(client, db_session):
 def test_search_ranks_stronger_match_first(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
-    client_company = make_client_company(db_session, org)
     # "Contract" appears twice in the title, so it should rank above a matter where
     # the term only appears once.
-    make_matter(db_session, org, client_company, title="Contract Contract Review")
-    make_matter(db_session, org, client_company, title="Contract Review", description="Something else")
+    make_matter(db_session, org, title="Contract Contract Review")
+    make_matter(db_session, org, title="Contract Review", description="Something else")
 
     res = client.get("/search?q=Contract", headers=auth_headers(admin))
     assert res.status_code == 200
@@ -95,16 +78,14 @@ def test_search_ranks_stronger_match_first(client, db_session):
     assert titles[0] == "Contract Contract Review"
 
 
-def test_search_finds_contact_and_staff_and_document(client, db_session, monkeypatch):
+def test_search_finds_staff_and_document(client, db_session, monkeypatch):
     monkeypatch.setattr("app.modules.matters.service.upload_file", lambda *a, **k: "matter_documents/fake-key")
     monkeypatch.setattr("app.modules.matters.service.scan_file", lambda *a, **k: None)
 
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
     lawyer, _ = make_staff(db_session, org, first_name="Zephyr", last_name="Okoye", email="zephyr@example.com")
-    client_company = make_client_company(db_session, org)
-    contact, _ = make_contact(db_session, client_company, first_name="Zephyr", last_name="Contactperson")
-    matter = make_matter(db_session, org, client_company)
+    matter = make_matter(db_session, org)
 
     upload_res = client.post(
         f"/matters/{matter.id}/documents",
@@ -117,6 +98,5 @@ def test_search_finds_contact_and_staff_and_document(client, db_session, monkeyp
     res = client.get("/search?q=Zephyr", headers=auth_headers(admin))
     assert res.status_code == 200
     body = res.json()
-    assert any(c["id"] == str(contact.id) for c in body["contacts"])
     assert any(s["id"] == str(lawyer.id) for s in body["staff"])
     assert any(d["title"] == "Zephyr Filing" for d in body["documents"])

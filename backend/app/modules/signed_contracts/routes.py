@@ -16,18 +16,14 @@ from app.modules.signed_contracts.service import SignedContractService
 from app.modules.auth.dependencies import get_current_user, require_role
 from app.modules.auth.models import User
 from app.modules.auth.models.role import UserRole
-from app.modules.clients.dependencies import get_current_contact
-from app.modules.clients.models import ClientContact
 
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
 router = APIRouter(prefix="/signed-contracts", tags=["signed-contracts"])
-client_signed_contracts_router = APIRouter(prefix="/client-signed-contracts", tags=["client-signed-contracts"])
 
 
 @router.post("", response_model=SignedContractResponse, status_code=201)
 async def upload_signed_contract(
-    client_id: str = Form(...),
     title: str = Form(..., min_length=2, max_length=200),
     agreement_type: ContractType = Form(...),
     signed_date: date = Form(...),
@@ -47,7 +43,6 @@ async def upload_signed_contract(
     return service.upload_contract(
         org_id=current_user.org_id,
         actor_id=current_user.id,
-        client_id=client_id,
         title=title,
         agreement_type=agreement_type,
         signed_date=signed_date,
@@ -101,32 +96,3 @@ def update_signed_contract_status(
 ):
     service = SignedContractService(db)
     return service.update_status(contract_id, current_user.org_id, current_user.id, request.status)
-
-
-@client_signed_contracts_router.get("", response_model=list[SignedContractResponse])
-def list_client_signed_contracts(
-    db: Session = Depends(get_db),
-    current_contact: ClientContact = Depends(get_current_contact),
-):
-    service = SignedContractService(db)
-    return service.list_for_client(current_contact.client_id)
-
-
-@client_signed_contracts_router.get("/summary", response_model=SignedContractsSummaryResponse)
-def get_client_signed_contracts_summary(
-    db: Session = Depends(get_db),
-    current_contact: ClientContact = Depends(get_current_contact),
-):
-    service = SignedContractService(db)
-    return service.get_summary_for_client(current_contact.client_id)
-
-
-@client_signed_contracts_router.get("/{contract_id}/download", response_model=SignedContractDownloadResponse)
-def download_client_signed_contract(
-    contract_id: str,
-    db: Session = Depends(get_db),
-    current_contact: ClientContact = Depends(get_current_contact),
-):
-    service = SignedContractService(db)
-    url = service.get_client_download_link(contract_id, current_contact.client_id)
-    return SignedContractDownloadResponse(download_url=url, expires_in_seconds=3600)

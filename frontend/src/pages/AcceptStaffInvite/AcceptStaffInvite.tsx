@@ -37,7 +37,7 @@ function AcceptStaffInvite() {
     try {
       await acceptStaffInvite(token, password)
       setDone(true)
-      setTimeout(() => navigate('/login', { state: { staffOnly: true } }), 1500)
+      setTimeout(() => navigate('/login'), 1500)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not accept the invite. The link may have expired.')
       errorRef.current?.focus()
@@ -119,7 +119,7 @@ function AcceptStaffInvite() {
           </form>
         )}
 
-        <Link to="/login" state={{ staffOnly: true }} className="auth-page-link">
+        <Link to="/login" className="auth-page-link">
           Back to login
         </Link>
       </div>

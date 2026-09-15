@@ -7,7 +7,6 @@ import {
   IconGauge,
   IconGavel,
   IconLayers,
-  IconUser,
   IconWorkflow,
   IconSignedContract,
   IconReport,
@@ -18,7 +17,6 @@ import {
   IconClock,
   IconCalendar,
   IconGear,
-  IconMail,
   IconHelp,
 } from '../../components/icons'
 
@@ -26,7 +24,6 @@ export type StaffPage =
   | 'dashboard'
   | 'new-matter'
   | 'matters'
-  | 'clients'
   | 'workflow'
   | 'signed-contracts'
   | 'reporting'
@@ -37,7 +34,6 @@ export type StaffPage =
   | 'audit-log'
   | 'calendar'
   | 'settings'
-  | 'intake-submissions'
   | 'knowledge-articles'
   | 'integrations'
 
@@ -49,10 +45,8 @@ export const staffNavItems: NavItem[] = [
   { label: 'Dashboard', icon: <IconGauge />, page: 'dashboard' },
   { label: 'New Matter', icon: <IconGavel />, page: 'new-matter' },
   { label: 'Matters', icon: <IconLayers />, page: 'matters' },
-  { label: 'Clients', icon: <IconUser />, page: 'clients' },
   { label: 'Calendar', icon: <IconCalendar />, page: 'calendar' },
   { label: 'Workflow', icon: <IconWorkflow />, page: 'workflow' },
-  { label: 'Requests', icon: <IconMail />, page: 'intake-submissions' },
   { label: 'Signed Contracts', icon: <IconSignedContract />, page: 'signed-contracts' },
   { label: 'Reporting', icon: <IconReport />, page: 'reporting' },
   { label: 'Templates', icon: <IconTemplates />, page: 'templates' },

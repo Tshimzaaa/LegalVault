@@ -1,8 +1,8 @@
 """
-Force-logout: kills a staff member's or client contact's active sessions
-immediately, without deactivating the account.
+Force-logout: kills a staff member's active sessions immediately, without
+deactivating the account.
 """
-from tests.conftest import auth_headers, make_client_company, make_contact, make_org, make_staff
+from tests.conftest import auth_headers, make_org, make_staff
 
 
 def test_force_logout_staff_kills_live_access_token_immediately(client, db_session):
@@ -36,24 +36,3 @@ def test_force_logout_staff_revokes_refresh_token(client, db_session):
 
     reuse_res = client.post("/auth/refresh", json={"refresh_token": refresh_token})
     assert reuse_res.status_code == 401
-
-
-def test_force_logout_contact_kills_live_access_token_immediately(client, db_session):
-    org = make_org(db_session)
-    admin, _ = make_staff(db_session, org)
-    client_company = make_client_company(db_session, org)
-    contact, _ = make_contact(db_session, client_company)
-    contact_headers = auth_headers(contact)
-
-    assert client.get("/client-auth/me", headers=contact_headers).status_code == 200
-
-    res = client.post(
-        f"/clients/{client_company.id}/contacts/{contact.id}/force-logout",
-        headers=auth_headers(admin),
-    )
-    assert res.status_code == 200
-
-    db_session.refresh(contact)
-    assert contact.is_active is True
-
-    assert client.get("/client-auth/me", headers=contact_headers).status_code == 401

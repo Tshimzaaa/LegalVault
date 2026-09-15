@@ -433,11 +433,6 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
       icon: <IconUser />,
     },
     {
-      label: 'Clients onboarded',
-      value: platformNumberFormat.format(orgs.reduce((s, f) => s + f.client_count, 0)),
-      icon: <IconUser />,
-    },
-    {
       label: 'Matters open',
       value: platformNumberFormat.format(orgs.reduce((s, f) => s + f.matter_count, 0)),
       icon: <IconDollar />,
@@ -622,7 +617,6 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                   <th>Organization</th>
                   <th>Email</th>
                   <th>Staff</th>
-                  <th>Clients</th>
                   <th>Matters</th>
                   <th>Status</th>
                   <th />
@@ -634,7 +628,6 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                     <td>{f.name}</td>
                     <td className="muted">{f.email}</td>
                     <td className="muted tabular">{f.staff_count}</td>
-                    <td className="muted tabular">{f.client_count}</td>
                     <td className="muted tabular">{f.matter_count}</td>
                     <td>
                       <span

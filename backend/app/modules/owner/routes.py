@@ -17,7 +17,6 @@ from app.modules.auth.services.register import RegisterService
 from app.modules.owner.dependencies import get_current_owner
 from pydantic import BaseModel
 from app.modules.auth.repository import AuthRepository
-from app.modules.clients.repository import ClientRepository
 from app.modules.matters.repository import MatterRepository
 from app.modules.owner.schemas import (
     OrganizationSummary,
@@ -26,8 +25,6 @@ from app.modules.owner.schemas import (
     OrganizationExportResponse,
     OrganizationExportProfile,
     OrganizationExportStaff,
-    OrganizationExportContact,
-    OrganizationExportClient,
     OrganizationExportAssignment,
     OrganizationExportTask,
     OrganizationExportDocument,
@@ -50,7 +47,6 @@ from app.modules.signed_contracts.repository import SignedContractRepository
 from app.modules.templates.repository import TemplateRepository
 from app.modules.auth.refresh_token_repository import RefreshTokenRepository
 from app.modules.auth.models.refresh_token import RefreshTokenActorType
-from app.modules.intake.repository import IntakeRepository
 from app.modules.knowledge.repository import KnowledgeRepository
 from app.modules.integrations.repository import IntegrationRepository
 from datetime import timedelta
@@ -143,7 +139,6 @@ def get_platform_metrics(
     _owner=Depends(get_current_owner),
 ):
     auth_repo = AuthRepository(db)
-    client_repo = ClientRepository(db)
     matter_repo = MatterRepository(db)
 
     total_orgs = auth_repo.count_all_orgs()
@@ -154,7 +149,6 @@ def get_platform_metrics(
         active_orgs=active_orgs,
         inactive_orgs=total_orgs - active_orgs,
         total_staff=auth_repo.count_all_users(),
-        total_clients=client_repo.count_all_clients(),
         total_matters=matter_repo.count_all_matters(),
         matters_by_status=matter_repo.count_all_matters_by_status(),
         new_orgs_last_7_days=auth_repo.count_orgs_created_since(datetime.now(UTC) - timedelta(days=7)),
@@ -215,7 +209,6 @@ def get_org(org_id: str, db: Session = Depends(get_db), _owner=Depends(get_curre
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found.")
 
-    client_repo = ClientRepository(db)
     matter_repo = MatterRepository(db)
 
     return OrganizationDetail(
@@ -227,7 +220,6 @@ def get_org(org_id: str, db: Session = Depends(get_db), _owner=Depends(get_curre
         address=org.address,
         is_active=org.is_active,
         staff_count=auth_repo.count_users_for_org(org.id),
-        client_count=client_repo.count_clients_for_org(org.id),
         matter_count=matter_repo.count_matters_for_org(org.id),
     )
 
@@ -239,24 +231,10 @@ def export_org_data(org_id: str, db: Session = Depends(get_db), _owner=Depends(g
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found.")
 
-    client_repo = ClientRepository(db)
     matter_repo = MatterRepository(db)
     audit_repo = AuditLogRepository(db)
 
     staff = [OrganizationExportStaff.model_validate(u) for u in auth_repo.list_by_org(org.id)]
-
-    clients = []
-    for c in client_repo.list_by_org(org.id):
-        contacts = [OrganizationExportContact.model_validate(ct) for ct in client_repo.list_contacts_for_client(c.id)]
-        clients.append(
-            OrganizationExportClient(
-                id=c.id,
-                company_name=c.company_name,
-                is_active=c.is_active,
-                created_at=c.created_at,
-                contacts=contacts,
-            )
-        )
 
     matters = []
     for m in matter_repo.list_by_org(org.id):
@@ -273,7 +251,6 @@ def export_org_data(org_id: str, db: Session = Depends(get_db), _owner=Depends(g
                 original_filename=d.original_filename,
                 content_type=d.content_type,
                 uploaded_by=d.uploaded_by,
-                uploaded_by_contact_id=d.uploaded_by_contact_id,
                 created_at=d.created_at,
                 download_url=get_download_url(d.file_key),
             )
@@ -282,11 +259,9 @@ def export_org_data(org_id: str, db: Session = Depends(get_db), _owner=Depends(g
         matters.append(
             OrganizationExportMatter(
                 id=m.id,
-                client_id=m.client_id,
                 title=m.title,
                 description=m.description,
                 status=m.status,
-                is_visible_to_client=m.is_visible_to_client,
                 created_at=m.created_at,
                 updated_at=m.updated_at,
                 assignments=assignments,
@@ -314,7 +289,6 @@ def export_org_data(org_id: str, db: Session = Depends(get_db), _owner=Depends(g
         exported_at=datetime.now(UTC),
         org=OrganizationExportProfile.model_validate(org),
         staff=staff,
-        clients=clients,
         matters=matters,
         audit_log=audit_log,
     )
@@ -371,37 +345,19 @@ def delete_org(
         details={"name": org.name, "email": org.email},
     )
 
-    client_repo = ClientRepository(db)
     matter_repo = MatterRepository(db)
     notification_repo = NotificationRepository(db)
     signed_contract_repo = SignedContractRepository(db)
     template_repo = TemplateRepository(db)
     refresh_token_repo = RefreshTokenRepository(db)
-    intake_repo = IntakeRepository(db)
     knowledge_repo = KnowledgeRepository(db)
     integration_repo = IntegrationRepository(db)
 
-    # Signed contracts hold their own FKs into matters/clients/contacts, so they must go
-    # before those rows are deleted below or the delete fails with an IntegrityError (this
-    # was the bug — org delete 500'd for any org with real usage data).
     for contract in signed_contract_repo.list_plain_by_org(org.id):
         signed_contract_repo.delete(contract)
 
     for template in template_repo.list_by_org(org.id):
         template_repo.delete(template)
-
-    # Intake submissions carry their own FKs into matters/clients/contacts (same class of bug
-    # as above), so their answers and the submissions themselves must go before those rows —
-    # and before the fields/forms they reference.
-    for submission in intake_repo.list_submissions_by_org(org.id):
-        for answer in submission.answers:
-            intake_repo.delete_answer(answer)
-        intake_repo.delete_submission(submission)
-
-    for form in intake_repo.list_forms_by_org(org.id):
-        for field in form.fields:
-            intake_repo.delete_field(field)
-        intake_repo.delete_form(form)
 
     for article in knowledge_repo.list_by_org(org.id):
         knowledge_repo.delete(article)
@@ -419,13 +375,6 @@ def delete_org(
         for message in matter_repo.list_messages_for_matter(matter.id):
             matter_repo.delete_message(message)
         matter_repo.delete_matter(matter)
-
-    for client in client_repo.list_by_org(org.id):
-        for contact in client_repo.list_contacts_for_client(client.id):
-            notification_repo.delete_for_recipient(RecipientType.CLIENT_CONTACT, contact.id)
-            refresh_token_repo.delete_all_for_actor(RefreshTokenActorType.CLIENT, contact.id)
-            client_repo.delete_contact(contact)
-        client_repo.delete_client(client)
 
     for user in auth_repo.list_by_org(org.id):
         notification_repo.delete_for_recipient(RecipientType.STAFF, user.id)

@@ -4,7 +4,7 @@ status. Upload goes through R2 + the malware scanner, so both are stubbed.
 """
 import pytest
 
-from tests.conftest import auth_headers, make_client_company, make_org, make_staff
+from tests.conftest import auth_headers, make_org, make_staff
 
 
 @pytest.fixture(autouse=True)
@@ -14,11 +14,10 @@ def _stub_r2_and_scanner(monkeypatch):
     monkeypatch.setattr("app.modules.signed_contracts.service.scan_file", lambda *a, **k: None)
 
 
-def _upload(client, admin, client_company, **overrides):
+def _upload(client, admin, **overrides):
     return client.post(
         "/signed-contracts",
         data={
-            "client_id": str(client_company.id),
             "title": overrides.get("title", "Master Services Agreement"),
             "agreement_type": overrides.get("agreement_type", "nda"),
             "signed_date": overrides.get("signed_date", "2026-01-01"),
@@ -31,9 +30,8 @@ def _upload(client, admin, client_company, **overrides):
 def test_upload_and_list_signed_contract(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
-    client_company = make_client_company(db_session, org)
 
-    upload_res = _upload(client, admin, client_company)
+    upload_res = _upload(client, admin)
     assert upload_res.status_code == 201
     assert upload_res.json()["status"] == "active"
 
@@ -50,8 +48,7 @@ def test_upload_and_list_signed_contract(client, db_session):
 def test_download_and_archive_signed_contract(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
-    client_company = make_client_company(db_session, org)
-    contract_id = _upload(client, admin, client_company).json()["id"]
+    contract_id = _upload(client, admin).json()["id"]
 
     download_res = client.get(f"/signed-contracts/{contract_id}/download", headers=auth_headers(admin))
     assert download_res.status_code == 200

@@ -2,7 +2,6 @@ from datetime import datetime, timedelta, UTC
 from sqlalchemy.orm import Session
 
 from app.modules.auth.repository import AuthRepository
-from app.modules.clients.repository import ClientRepository
 from app.modules.monitoring.repository import RequestLogRepository
 from app.modules.monitoring.schemas import (
     RequestErrorEntry,
@@ -14,31 +13,21 @@ from app.modules.monitoring.schemas import (
 )
 
 # Maps a route's first path segment to a human-friendly service name for the System Health
-# panel. Segments not listed here (and the "client-" prefix) fall back to a title-cased guess.
+# panel. Segments not listed here fall back to a title-cased guess.
 SERVICE_LABELS = {
     "auth": "Authentication",
-    "client-auth": "Authentication",
     "owner": "Owner / Admin",
     "matters": "Matters",
-    "client-matters": "Matters",
-    "clients": "Clients",
     "templates": "Templates",
-    "client-templates": "Templates",
     "support-requests": "Support Requests",
-    "client-support-requests": "Support Requests",
     "search": "Search",
     "audit": "Audit Log",
     "announcements": "Announcements",
     "owner-announcements": "Announcements",
-    "client-announcements": "Announcements",
     "notifications": "Notifications",
-    "client-notifications": "Notifications",
     "reporting": "Reporting",
-    "client-reporting": "Reporting",
     "signed-contracts": "Signed Contracts",
-    "client-signed-contracts": "Signed Contracts",
     "dashboard": "Dashboard",
-    "client-dashboard": "Dashboard",
 }
 
 # A service is flagged "degraded" once its error rate or average latency crosses these —
@@ -149,16 +138,10 @@ class MonitoringService:
         actors = self.repository.distinct_actors(since)
 
         staff_ids = [actor_id for actor_type, actor_id in actors if actor_type == "staff"]
-        client_contact_ids = [actor_id for actor_type, actor_id in actors if actor_type == "client"]
 
         auth_repo = AuthRepository(self.db)
-        client_repo = ClientRepository(self.db)
 
         org_ids = {u.org_id for u in auth_repo.list_users_by_ids(staff_ids)}
-
-        contacts = client_repo.list_contacts_by_ids(client_contact_ids)
-        clients = client_repo.list_clients_by_ids({c.client_id for c in contacts})
-        org_ids |= {c.org_id for c in clients}
 
         return len(actors), len(org_ids)
 
@@ -167,23 +150,18 @@ class MonitoringService:
         rows = self.repository.list_errors(since, limit, offset)
 
         auth_repo = AuthRepository(self.db)
-        client_repo = ClientRepository(self.db)
 
-        # Two batched lookups for every distinct actor on this page, instead of one query per
-        # error row (a page of N errors from M distinct actors used to cost up to M extra
-        # round trips; now it's a flat 2 regardless of N or M).
+        # A batched lookup for every distinct staff actor on this page, instead of one query
+        # per error row (a page of N errors from M distinct actors used to cost up to M extra
+        # round trips; now it's a flat lookup regardless of N or M).
         staff_ids = {row.actor_id for row in rows if row.actor_type == "staff" and row.actor_id}
-        client_ids = {row.actor_id for row in rows if row.actor_type == "client" and row.actor_id}
         staff_labels = {u.id: u.email for u in auth_repo.list_users_by_ids(list(staff_ids))}
-        client_labels = {c.id: c.email for c in client_repo.list_contacts_by_ids(list(client_ids))}
 
         def resolve_label(actor_type: str | None, actor_id: str | None) -> str | None:
             if actor_type == "owner":
                 return "Owner"
             if actor_type == "staff" and actor_id:
                 return staff_labels.get(actor_id)
-            if actor_type == "client" and actor_id:
-                return client_labels.get(actor_id)
             return None
 
         return [

@@ -8,16 +8,8 @@ from app.modules.knowledge.models import KnowledgeArticle
 from app.modules.notifications.models import Notification, RecipientType
 from tests.conftest import (
     auth_headers,
-    make_contact,
     make_matter,
     make_signed_contract,
-)
-from tests.test_document_generation import (
-    make_answer,
-    make_intake_field,
-    make_intake_form,
-    make_intake_submission,
-    make_template,
 )
 
 
@@ -38,23 +30,6 @@ def test_staff_cannot_update_another_orgs_matter_status(client, two_orgs):
     res = client.patch(
         f"/matters/{two_orgs.matter_a.id}/status",
         json={"status": "closed"},
-        headers=auth_headers(two_orgs.staff_b),
-    )
-    assert res.status_code == 404
-
-
-def test_staff_list_clients_only_returns_own_org(client, two_orgs):
-    res = client.get("/clients", headers=auth_headers(two_orgs.staff_b))
-    assert res.status_code == 200
-    client_ids = {c["id"] for c in res.json()}
-    assert str(two_orgs.client_a.id) not in client_ids
-    assert str(two_orgs.client_b.id) in client_ids
-
-
-def test_staff_cannot_deactivate_another_orgs_client(client, two_orgs):
-    res = client.patch(
-        f"/clients/{two_orgs.client_a.id}/status",
-        json={"is_active": False},
         headers=auth_headers(two_orgs.staff_b),
     )
     assert res.status_code == 404
@@ -88,19 +63,6 @@ def test_staff_cannot_download_another_orgs_template(client, db_session, two_org
     db_session.flush()
 
     res = client.get(f"/templates/{template.id}/download", headers=auth_headers(two_orgs.staff_b))
-    assert res.status_code == 404
-
-
-def test_client_contact_cannot_see_another_orgs_matter(client, db_session, two_orgs):
-    from tests.conftest import make_contact
-
-    contact_b, password_b = make_contact(db_session, two_orgs.client_b)
-    # Make matter_a visible to its own client so the only thing standing between
-    # contact_b and it is org isolation, not the visibility flag.
-    two_orgs.matter_a.is_visible_to_client = True
-    db_session.flush()
-
-    res = client.get(f"/client-matters/{two_orgs.matter_a.id}/documents", headers=auth_headers(contact_b))
     assert res.status_code == 404
 
 
@@ -139,42 +101,8 @@ def test_staff_cannot_view_or_act_on_another_orgs_matter_approvals(client, db_se
     assert decide_res.status_code == 404
 
 
-def test_generate_document_rejects_template_from_another_org(client, db_session, two_orgs, monkeypatch):
-    monkeypatch.setattr("app.modules.matters.service.upload_file", lambda *a, **k: "matter_documents/fake-key")
-    monkeypatch.setattr("app.modules.matters.service.scan_file", lambda *a, **k: None)
-
-    foreign_template = make_template(db_session, two_orgs.org_b, body="Hello {{client_name}}.")
-    contact_a, _ = make_contact(db_session, two_orgs.client_a)
-    form_a = make_intake_form(db_session, two_orgs.org_a)
-    submission_a = make_intake_submission(db_session, two_orgs.org_a, form_a, two_orgs.client_a, contact_a)
-
-    res = client.post(
-        f"/matters/{two_orgs.matter_a.id}/documents/generate",
-        json={"template_id": str(foreign_template.id), "intake_submission_id": str(submission_a.id)},
-        headers=auth_headers(two_orgs.staff_a),
-    )
-    assert res.status_code == 404
-
-
-def test_generate_document_rejects_intake_submission_from_another_org(client, db_session, two_orgs, monkeypatch):
-    monkeypatch.setattr("app.modules.matters.service.upload_file", lambda *a, **k: "matter_documents/fake-key")
-    monkeypatch.setattr("app.modules.matters.service.scan_file", lambda *a, **k: None)
-
-    template_a = make_template(db_session, two_orgs.org_a, body="Hello {{client_name}}.")
-    contact_b, _ = make_contact(db_session, two_orgs.client_b)
-    form_b = make_intake_form(db_session, two_orgs.org_b)
-    foreign_submission = make_intake_submission(db_session, two_orgs.org_b, form_b, two_orgs.client_b, contact_b)
-
-    res = client.post(
-        f"/matters/{two_orgs.matter_a.id}/documents/generate",
-        json={"template_id": str(template_a.id), "intake_submission_id": str(foreign_submission.id)},
-        headers=auth_headers(two_orgs.staff_a),
-    )
-    assert res.status_code == 404
-
-
 def test_staff_cannot_download_or_update_another_orgs_signed_contract(client, db_session, two_orgs):
-    contract = make_signed_contract(db_session, two_orgs.org_a, two_orgs.client_a)
+    contract = make_signed_contract(db_session, two_orgs.org_a)
 
     download_res = client.get(
         f"/signed-contracts/{contract.id}/download", headers=auth_headers(two_orgs.staff_b)
@@ -204,20 +132,6 @@ def test_staff_cannot_mark_another_orgs_staff_notification_read(client, db_sessi
     assert res.status_code == 404
 
 
-def test_staff_cannot_view_or_convert_another_orgs_intake_submission(client, db_session, two_orgs):
-    contact_a, _ = make_contact(db_session, two_orgs.client_a)
-    form_a = make_intake_form(db_session, two_orgs.org_a)
-    submission_a = make_intake_submission(db_session, two_orgs.org_a, form_a, two_orgs.client_a, contact_a)
-
-    get_res = client.get(f"/intake-submissions/{submission_a.id}", headers=auth_headers(two_orgs.staff_b))
-    assert get_res.status_code == 404
-
-    convert_res = client.post(
-        f"/intake-submissions/{submission_a.id}/convert", json={}, headers=auth_headers(two_orgs.staff_b)
-    )
-    assert convert_res.status_code == 404
-
-
 def test_staff_cannot_view_or_modify_another_orgs_knowledge_article(client, db_session, two_orgs):
     article = KnowledgeArticle(
         org_id=two_orgs.org_a.id,
@@ -241,24 +155,8 @@ def test_staff_cannot_view_or_modify_another_orgs_knowledge_article(client, db_s
     assert delete_res.status_code == 404
 
 
-def test_staff_cannot_manage_another_orgs_matter_contact_permissions(client, db_session, two_orgs):
-    contact_a, _ = make_contact(db_session, two_orgs.client_a)
-
-    list_res = client.get(
-        f"/matters/{two_orgs.matter_a.id}/contact-permissions", headers=auth_headers(two_orgs.staff_b)
-    )
-    assert list_res.status_code == 404
-
-    set_res = client.post(
-        f"/matters/{two_orgs.matter_a.id}/contact-permissions",
-        json={"client_contact_id": str(contact_a.id), "permission_level": "viewer"},
-        headers=auth_headers(two_orgs.staff_b),
-    )
-    assert set_res.status_code == 404
-
-
 def test_search_never_returns_another_orgs_results(client, db_session, two_orgs):
-    make_matter(db_session, two_orgs.org_a, two_orgs.client_a, title="Unique Zylophone Merger")
+    make_matter(db_session, two_orgs.org_a, title="Unique Zylophone Merger")
 
     res = client.get("/search?q=Zylophone", headers=auth_headers(two_orgs.staff_b))
     assert res.status_code == 200

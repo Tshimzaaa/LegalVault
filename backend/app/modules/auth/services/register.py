@@ -22,7 +22,6 @@ from app.modules.audit.service import AuditService
 from app.modules.audit.models import ActorType
 from app.modules.audit import actions as audit_actions
 from app.database.rls import set_tenant_context
-from app.modules.intake.system_forms import seed_system_support_form
 
 class RegisterService:
 
@@ -57,16 +56,15 @@ class RegisterService:
             address=request.organization.address,
         )
 
-        # No auth dependency has run before this endpoint (it's the public, secret-gated
-        # bootstrap flow, and the org being created doesn't exist yet to scope to) — so
+        # No auth dependency has run before this endpoint (it's the public self-serve
+        # signup flow, and the org being created doesn't exist yet to scope to) — so
         # unlike every other write path, tenant context was never set. Without this, the
         # audit-log insert below is rejected outright by RLS the moment the runtime role
-        # lacks BYPASSRLS, same rationale as get_current_contact's owner-mode bootstrap.
+        # lacks BYPASSRLS.
         set_tenant_context(self.db, org_id=None, is_owner=True)
 
         try:
             self.repository.create_organization(organization)
-            seed_system_support_form(self.db, organization.id)
 
             user = User(
                 org_id=organization.id,
@@ -123,7 +121,6 @@ class RegisterService:
 
         try:
             self.repository.create_organization(organization)
-            seed_system_support_form(self.db, organization.id)
 
             user = User(
                 org_id=organization.id,

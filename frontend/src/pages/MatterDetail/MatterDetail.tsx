@@ -8,7 +8,6 @@ import {
   assignStaff,
   updateMatterDetails,
   updateMatterStatus,
-  updateMatterVisibility,
   updateMatterDeadline,
   listMatterDocuments,
   uploadMatterDocument,
@@ -24,7 +23,6 @@ import {
   listMatterApprovals,
   requestMatterApproval,
   decideMatterApproval,
-  generateMatterDocument,
   isGatedTransition,
   MATTER_STATUS_TRANSITIONS,
 } from '../../api/matters'
@@ -38,16 +36,10 @@ import type {
   MatterMessage,
   MatterApproval,
 } from '../../api/matters'
-import { listClients, listContacts } from '../../api/clients'
-import type { Client, Contact } from '../../api/clients'
 import { listUsers, getCurrentUser } from '../../api/auth'
 import type { User } from '../../api/auth'
 import { listSignatureRequests, sendForSignature, voidSignatureRequest } from '../../api/signatures'
-import type { SignatureRequest, SignatureRecipientType } from '../../api/signatures'
-import { listTemplates } from '../../api/templates'
-import type { Template } from '../../api/templates'
-import { listIntakeSubmissions } from '../../api/intakeSubmissions'
-import type { IntakeSubmission } from '../../api/intakeSubmissions'
+import type { SignatureRequest, SignatureRecipientInput } from '../../api/signatures'
 import { IconDownload, IconTrash, IconSend, IconEdit } from '../../components/icons'
 
 type LoadState = 'loading' | 'error' | 'ready'
@@ -100,9 +92,7 @@ function MatterDetail() {
   const { matterId } = useParams<{ matterId: string }>()
 
   const [matter, setMatter] = useState<Matter | null>(null)
-  const [clients, setClients] = useState<Client[]>([])
   const [users, setUsers] = useState<User[]>([])
-  const [contacts, setContacts] = useState<Contact[]>([])
   const [assignments, setAssignments] = useState<MatterAssignment[]>([])
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [approvals, setApprovals] = useState<MatterApproval[]>([])
@@ -118,7 +108,6 @@ function MatterDetail() {
 
   const [statusValue, setStatusValue] = useState<Matter['status']>('intake')
   const [statusSaving, setStatusSaving] = useState(false)
-  const [visibilitySaving, setVisibilitySaving] = useState(false)
 
   const [deadlineValue, setDeadlineValue] = useState('')
   const [deadlineSaving, setDeadlineSaving] = useState(false)
@@ -135,14 +124,6 @@ function MatterDetail() {
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [docBusyId, setDocBusyId] = useState<string | null>(null)
-
-  const [templates, setTemplates] = useState<Template[]>([])
-  const [intakeSubmissions, setIntakeSubmissions] = useState<IntakeSubmission[]>([])
-  const [genTemplateId, setGenTemplateId] = useState('')
-  const [genSubmissionId, setGenSubmissionId] = useState('')
-  const [genTitle, setGenTitle] = useState('')
-  const [generating, setGenerating] = useState(false)
-  const [generateError, setGenerateError] = useState<string | null>(null)
 
   const [tasks, setTasks] = useState<MatterTask[]>([])
   const [taskTitle, setTaskTitle] = useState('')
@@ -161,7 +142,10 @@ function MatterDetail() {
   const [signatureRequests, setSignatureRequests] = useState<SignatureRequest[]>([])
   const [sigDocId, setSigDocId] = useState('')
   const [sigTitle, setSigTitle] = useState('')
-  const [sigRecipientKeys, setSigRecipientKeys] = useState<string[]>([])
+  const [sigStaffIds, setSigStaffIds] = useState<string[]>([])
+  const [externalName, setExternalName] = useState('')
+  const [externalEmail, setExternalEmail] = useState('')
+  const [externalRecipients, setExternalRecipients] = useState<{ name: string; email: string }[]>([])
   const [sending, setSending] = useState(false)
   const [sigError, setSigError] = useState<string | null>(null)
   const [sigBusyId, setSigBusyId] = useState<string | null>(null)
@@ -177,7 +161,6 @@ function MatterDetail() {
     Promise.all([
       getMatter(token, matterId),
       listAssignments(token, matterId),
-      listClients(token),
       listUsers(token),
       listMatterDocuments(token, matterId),
       listTasks(token, matterId),
@@ -185,15 +168,12 @@ function MatterDetail() {
       listSignatureRequests(token, matterId),
       getCurrentUser(token),
       listMatterApprovals(token, matterId),
-      listTemplates(token),
-      listIntakeSubmissions(token),
     ])
-      .then(([m, a, c, u, docs, t, msgs, sigs, me, appr, tmpls, submissions]) => {
+      .then(([m, a, u, docs, t, msgs, sigs, me, appr]) => {
         setMatter(m)
         setStatusValue(m.status)
         setDeadlineValue(m.due_date ?? '')
         setAssignments(a)
-        setClients(c)
         setUsers(u)
         setDocuments(docs)
         setTasks(t)
@@ -201,12 +181,7 @@ function MatterDetail() {
         setSignatureRequests(sigs)
         setCurrentUser(me)
         setApprovals(appr)
-        setTemplates(tmpls)
-        setIntakeSubmissions(submissions.filter((s) => s.client_id === m.client_id))
         setStatus('ready')
-        listContacts(token, m.client_id)
-          .then((contactList) => setContacts(contactList))
-          .catch(() => setContacts([]))
       })
       .catch(() => setStatus('error'))
   }
@@ -287,17 +262,6 @@ function MatterDetail() {
     }
   }
 
-  async function handleVisibilityToggle(next: boolean) {
-    if (!token || !matterId) return
-    setVisibilitySaving(true)
-    try {
-      const updated = await updateMatterVisibility(token, matterId, next)
-      setMatter(updated)
-    } finally {
-      setVisibilitySaving(false)
-    }
-  }
-
   async function handleDeadlineSave() {
     if (!token || !matterId) return
     setDeadlineSaving(true)
@@ -350,29 +314,6 @@ function MatterDetail() {
       setUploadError(err instanceof Error ? err.message : 'Could not upload the document.')
     } finally {
       setUploading(false)
-    }
-  }
-
-  async function handleGenerate(e: FormEvent) {
-    e.preventDefault()
-    if (!token || !matterId || !genTemplateId || !genSubmissionId) {
-      setGenerateError('Choose a template and an intake submission.')
-      return
-    }
-    setGenerateError(null)
-    setGenerating(true)
-    try {
-      const generated = await generateMatterDocument(token, matterId, {
-        template_id: genTemplateId,
-        intake_submission_id: genSubmissionId,
-        title: genTitle || undefined,
-      })
-      setDocuments((prev) => [...prev, generated])
-      setGenTitle('')
-    } catch (err) {
-      setGenerateError(err instanceof Error ? err.message : 'Could not generate the document.')
-    } finally {
-      setGenerating(false)
     }
   }
 
@@ -512,12 +453,19 @@ function MatterDetail() {
     }
   }
 
-  function recipientKey(type: SignatureRecipientType, id: string) {
-    return `${type}:${id}`
+  function toggleSigStaff(userId: string) {
+    setSigStaffIds((prev) => (prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]))
   }
 
-  function toggleSigRecipient(key: string) {
-    setSigRecipientKeys((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]))
+  function handleAddExternalRecipient() {
+    if (!externalName.trim() || !externalEmail.trim()) return
+    setExternalRecipients((prev) => [...prev, { name: externalName.trim(), email: externalEmail.trim() }])
+    setExternalName('')
+    setExternalEmail('')
+  }
+
+  function handleRemoveExternalRecipient(index: number) {
+    setExternalRecipients((prev) => prev.filter((_, i) => i !== index))
   }
 
   async function handleSendForSignature(e: FormEvent) {
@@ -527,25 +475,27 @@ function MatterDetail() {
       setSigError('Choose a document to send.')
       return
     }
-    if (sigRecipientKeys.length === 0) {
+    if (sigStaffIds.length === 0 && externalRecipients.length === 0) {
       setSigError('Select at least one recipient.')
       return
     }
     setSigError(null)
     setSending(true)
     try {
+      const recipients: SignatureRecipientInput[] = [
+        ...sigStaffIds.map((recipient_id) => ({ recipient_id })),
+        ...externalRecipients.map((r) => ({ external_name: r.name, external_email: r.email })),
+      ]
       const created = await sendForSignature(token, matterId, {
         source_document_id: sigDocId,
         title: sigTitle || documentGroups.find((v) => v[0].id === sigDocId)?.[0].title || 'Untitled document',
-        recipients: sigRecipientKeys.map((key) => {
-          const [recipient_type, recipient_id] = key.split(':') as [SignatureRecipientType, string]
-          return { recipient_type, recipient_id }
-        }),
+        recipients,
       })
       setSignatureRequests((prev) => [created, ...prev])
       setSigDocId('')
       setSigTitle('')
-      setSigRecipientKeys([])
+      setSigStaffIds([])
+      setExternalRecipients([])
     } catch (err) {
       setSigError(err instanceof Error ? err.message : 'Could not send the document for signature.')
     } finally {
@@ -572,10 +522,6 @@ function MatterDetail() {
     return u ? `${u.first_name} ${u.last_name}` : 'Unknown staff'
   }
 
-  function clientName(clientId: string) {
-    return clients.find((c) => c.id === clientId)?.company_name ?? 'Unknown client'
-  }
-
   // A person can hold more than one role on a matter — only hide them from the picker
   // once they already have the specific role currently selected.
   const userIdsWithSelectedRole = new Set(
@@ -594,14 +540,8 @@ function MatterDetail() {
     : statusOptions
   const statusChangeIsGated = matter ? isGatedTransition(matter.status, statusValue) : false
 
-  const generatableTemplates = templates.filter((t) => t.body)
-
   function uploaderName(doc: MatterDocument): string {
     if (doc.uploaded_by) return userName(doc.uploaded_by)
-    if (doc.uploaded_by_contact_id) {
-      const contact = contacts.find((c) => c.id === doc.uploaded_by_contact_id)
-      return contact ? `${contact.first_name} ${contact.last_name} (client)` : 'Client'
-    }
     return 'N/A'
   }
 
@@ -757,42 +697,6 @@ function MatterDetail() {
                 </button>
               </form>
               {uploadError && <p className="matter-error" aria-live="polite">{uploadError}</p>}
-
-              {generatableTemplates.length > 0 && (
-                <form onSubmit={handleGenerate} className="matter-doc-upload-row" style={{ marginTop: 10 }}>
-                  <select value={genTemplateId} onChange={(e) => setGenTemplateId(e.target.value)} aria-label="Template">
-                    <option value="">Generate from template…</option>
-                    {generatableTemplates.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.title}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    value={genSubmissionId}
-                    onChange={(e) => setGenSubmissionId(e.target.value)}
-                    aria-label="Intake submission"
-                  >
-                    <option value="">Using submission…</option>
-                    {intakeSubmissions.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {new Date(s.created_at).toLocaleDateString()} ({s.status})
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    aria-label="Generated document title"
-                    placeholder="Document title (optional)…"
-                    value={genTitle}
-                    onChange={(e) => setGenTitle(e.target.value)}
-                  />
-                  <button type="submit" className="btn-ghost" disabled={generating}>
-                    {generating ? 'Generating…' : 'Generate'}
-                  </button>
-                </form>
-              )}
-              {generateError && <p className="matter-error" aria-live="polite">{generateError}</p>}
             </section>
 
             <section className="card" style={{ marginTop: 16 }}>
@@ -825,12 +729,11 @@ function MatterDetail() {
                     </div>
                     <div className="matter-doc-history">
                       {sr.recipients.map((r) => {
-                        const isMe =
-                          r.recipient_type === 'staff' && currentUser && r.recipient_id === currentUser.id
+                        const isMe = currentUser && r.recipient_id === currentUser.id
                         return (
                           <div key={r.id} className="matter-doc-row muted">
                             <span className="matter-doc-title">
-                              {r.name} {r.recipient_type === 'client_contact' ? '(client)' : ''}
+                              {r.name} {r.recipient_id ? '' : '(external)'}
                             </span>
                             {isMe && r.status === 'pending' ? (
                               <a className="btn-ghost" href={r.signing_url} target="_blank" rel="noopener noreferrer">
@@ -870,35 +773,48 @@ function MatterDetail() {
               </form>
 
               <div className="matter-doc-history" style={{ marginTop: 8 }}>
-                <span className="muted matter-doc-meta">Recipients:</span>
-                {assignments.map((a) => {
-                  const key = recipientKey('staff', a.user_id)
-                  return (
-                    <label key={key} className="field" style={{ display: 'inline-flex', gap: 4, marginRight: 12 }}>
-                      <input
-                        type="checkbox"
-                        checked={sigRecipientKeys.includes(key)}
-                        onChange={() => toggleSigRecipient(key)}
-                      />
-                      <span>{userName(a.user_id)}</span>
-                    </label>
-                  )
-                })}
-                {contacts.map((c) => {
-                  const key = recipientKey('client_contact', c.id)
-                  return (
-                    <label key={key} className="field" style={{ display: 'inline-flex', gap: 4, marginRight: 12 }}>
-                      <input
-                        type="checkbox"
-                        checked={sigRecipientKeys.includes(key)}
-                        onChange={() => toggleSigRecipient(key)}
-                      />
-                      <span>
-                        {c.first_name} {c.last_name} (client)
-                      </span>
-                    </label>
-                  )
-                })}
+                <span className="muted matter-doc-meta">Staff recipients:</span>
+                {assignments.map((a) => (
+                  <label key={a.user_id} className="field" style={{ display: 'inline-flex', gap: 4, marginRight: 12 }}>
+                    <input
+                      type="checkbox"
+                      checked={sigStaffIds.includes(a.user_id)}
+                      onChange={() => toggleSigStaff(a.user_id)}
+                    />
+                    <span>{userName(a.user_id)}</span>
+                  </label>
+                ))}
+              </div>
+
+              <div className="matter-doc-history" style={{ marginTop: 8 }}>
+                <span className="muted matter-doc-meta">External signers:</span>
+                {externalRecipients.map((r, i) => (
+                  <span key={`${r.email}-${i}`} className="chip small" style={{ marginRight: 8 }}>
+                    {r.name} ({r.email}){' '}
+                    <button type="button" className="icon-btn" onClick={() => handleRemoveExternalRecipient(i)} aria-label={`Remove ${r.name}`}>
+                      <IconTrash />
+                    </button>
+                  </span>
+                ))}
+                <div className="matter-doc-upload-row" style={{ marginTop: 6 }}>
+                  <input
+                    type="text"
+                    aria-label="External signer name"
+                    placeholder="External signer name…"
+                    value={externalName}
+                    onChange={(e) => setExternalName(e.target.value)}
+                  />
+                  <input
+                    type="email"
+                    aria-label="External signer email"
+                    placeholder="External signer email…"
+                    value={externalEmail}
+                    onChange={(e) => setExternalEmail(e.target.value)}
+                  />
+                  <button type="button" className="btn-ghost" onClick={handleAddExternalRecipient}>
+                    Add signer
+                  </button>
+                </div>
               </div>
               {sigError && <p className="matter-error" aria-live="polite">{sigError}</p>}
             </section>
@@ -984,10 +900,7 @@ function MatterDetail() {
                 {messages.map((m) => (
                   <div key={m.id} className="matter-message-row">
                     <div className="matter-message-meta">
-                      <span className="matter-message-author">
-                        {m.author_name}
-                        {m.author_type === 'client_contact' ? ' (client)' : ''}
-                      </span>
+                      <span className="matter-message-author">{m.author_name}</span>
                       <span className="muted">{new Date(m.created_at).toLocaleString()}</span>
                       <button
                         type="button"
@@ -1009,7 +922,7 @@ function MatterDetail() {
                 <input
                   type="text"
                   aria-label="Message"
-                  placeholder="Write a message to the client…"
+                  placeholder="Write an internal note…"
                   value={messageBody}
                   onChange={(e) => setMessageBody(e.target.value)}
                 />
@@ -1048,7 +961,6 @@ function MatterDetail() {
                 </form>
               ) : (
                 <>
-                  <p className="muted">Client: {clientName(matter.client_id)}</p>
                   <p className="muted">Opened: {new Date(matter.created_at).toLocaleDateString()}</p>
                   <p className="matter-detail-description">{matter.description || 'No description provided.'}</p>
                 </>
@@ -1144,18 +1056,6 @@ function MatterDetail() {
                 >
                   {deadlineSaving ? 'Saving…' : 'Save deadline'}
                 </button>
-              </div>
-
-              <div className="matter-detail-toggle-row">
-                <label className="field" style={{ margin: 0, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <input
-                    type="checkbox"
-                    checked={matter.is_visible_to_client}
-                    disabled={visibilitySaving}
-                    onChange={(e) => handleVisibilityToggle(e.target.checked)}
-                  />
-                  <span>Visible to client</span>
-                </label>
               </div>
             </section>
 

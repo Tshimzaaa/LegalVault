@@ -1,9 +1,9 @@
 """
-Platform announcements: owner-authored, broadcast to every org's staff and
-client portal — not org-scoped at all (see the RLS migration's docstring for
-why this table has no org_id).
+Platform announcements: owner-authored, broadcast to every org's staff — not
+org-scoped at all (see the RLS migration's docstring for why this table has
+no org_id).
 """
-from tests.conftest import auth_headers, make_client_company, make_contact, make_org, make_staff, owner_headers
+from tests.conftest import auth_headers, make_org, make_staff, owner_headers
 
 
 def test_owner_create_update_delete_announcement(client, db_session):
@@ -28,11 +28,9 @@ def test_owner_create_update_delete_announcement(client, db_session):
     assert delete_res.status_code == 204
 
 
-def test_active_announcement_visible_to_staff_and_client(client, db_session):
+def test_active_announcement_visible_to_staff(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
-    client_company = make_client_company(db_session, org)
-    contact, _ = make_contact(db_session, client_company)
 
     # Announcements are global (no org_id — see the RLS migration's docstring), so
     # the shared dev DB may already have real ones in it; check presence, not count.
@@ -46,7 +44,3 @@ def test_active_announcement_visible_to_staff_and_client(client, db_session):
     staff_res = client.get("/announcements", headers=auth_headers(admin))
     assert staff_res.status_code == 200
     assert any(a["id"] == announcement_id for a in staff_res.json())
-
-    client_res = client.get("/client-announcements", headers=auth_headers(contact))
-    assert client_res.status_code == 200
-    assert any(a["id"] == announcement_id for a in client_res.json())

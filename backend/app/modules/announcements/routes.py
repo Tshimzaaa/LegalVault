@@ -4,8 +4,6 @@ from sqlalchemy.orm import Session
 from app.database.session import get_db
 from app.modules.auth.dependencies import get_current_user
 from app.modules.auth.models import User
-from app.modules.clients.dependencies import get_current_contact
-from app.modules.clients.models import ClientContact
 from app.modules.owner.dependencies import get_current_owner
 from app.modules.announcements.schemas import (
     CreateAnnouncementRequest,
@@ -16,7 +14,6 @@ from app.modules.announcements.service import AnnouncementService
 
 router = APIRouter(prefix="/announcements", tags=["announcements"])
 owner_announcements_router = APIRouter(prefix="/owner/announcements", tags=["owner-announcements"])
-client_announcements_router = APIRouter(prefix="/client-announcements", tags=["client-announcements"])
 
 
 @owner_announcements_router.post("", response_model=AnnouncementResponse, status_code=201)
@@ -60,15 +57,6 @@ def delete_announcement(
 def list_announcements_for_staff(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
-    service = AnnouncementService(db)
-    return service.list_active()
-
-
-@client_announcements_router.get("", response_model=list[AnnouncementResponse])
-def list_announcements_for_clients(
-    db: Session = Depends(get_db),
-    current_contact: ClientContact = Depends(get_current_contact),
 ):
     service = AnnouncementService(db)
     return service.list_active()

@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 from app.modules.matters.repository import MatterRepository
 from app.modules.matters.models import MatterStatus, TaskStatus
 from app.modules.auth.repository import AuthRepository
-from app.modules.clients.repository import ClientRepository
 from app.modules.reporting.schemas import (
     ReportingOverviewResponse,
     StatusBreakdownItem,
@@ -33,7 +32,6 @@ class ReportingService:
         self.db = db
         self.matter_repository = MatterRepository(db)
         self.auth_repository = AuthRepository(db)
-        self.client_repository = ClientRepository(db)
 
     def get_overview(self, org_id) -> ReportingOverviewResponse:
         matters = self.matter_repository.list_by_org(org_id)
@@ -136,29 +134,20 @@ class ReportingService:
             if task.status != TaskStatus.DONE:
                 open_task_counts_by_matter[matter.id] += 1
 
-        client_names = {
-            client.id: client.company_name
-            for client in self.client_repository.list_clients_by_ids(
-                {matter.client_id for matter in matters}
-            )
-        }
-
         buffer = io.StringIO()
         writer = csv.writer(buffer)
         writer.writerow([
-            "Title", "Client", "Status", "Due Date", "Assigned Staff",
-            "Open Tasks", "Total Tasks", "Visible to Client", "Created At",
+            "Title", "Status", "Due Date", "Assigned Staff",
+            "Open Tasks", "Total Tasks", "Created At",
         ])
         for matter in matters:
             writer.writerow([
                 matter.title,
-                client_names.get(matter.client_id, ""),
                 STATUS_LABELS[matter.status],
                 matter.due_date.isoformat() if matter.due_date else "",
                 "; ".join(assignee_names_by_matter.get(matter.id, [])),
                 open_task_counts_by_matter.get(matter.id, 0),
                 total_task_counts_by_matter.get(matter.id, 0),
-                "Yes" if matter.is_visible_to_client else "No",
                 matter.created_at.isoformat(),
             ])
 

@@ -4,7 +4,7 @@ signed -> closed. See MATTER_STATUS_TRANSITIONS / GATED_TRANSITIONS in
 app/modules/matters/service.py for the graph these tests exercise.
 """
 from app.modules.auth.models.role import UserRole
-from tests.conftest import TwoOrgs, auth_headers, make_client_company, make_org, make_matter, make_staff
+from tests.conftest import TwoOrgs, auth_headers, make_org, make_matter, make_staff
 
 
 def _advance_to_awaiting_signature(client, matter_id, admin):
@@ -17,8 +17,7 @@ def _advance_to_awaiting_signature(client, matter_id, admin):
 def test_invalid_transition_rejected(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
-    client_company = make_client_company(db_session, org)
-    matter = make_matter(db_session, org, client_company)  # status: intake
+    matter = make_matter(db_session, org)  # status: intake
 
     res = client.patch(f"/matters/{matter.id}/status", json={"status": "signed"}, headers=auth_headers(admin))
     assert res.status_code == 409
@@ -27,8 +26,7 @@ def test_invalid_transition_rejected(client, db_session):
 def test_same_status_is_a_noop(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
-    client_company = make_client_company(db_session, org)
-    matter = make_matter(db_session, org, client_company)
+    matter = make_matter(db_session, org)
 
     res = client.patch(f"/matters/{matter.id}/status", json={"status": "intake"}, headers=auth_headers(admin))
     assert res.status_code == 200
@@ -38,8 +36,7 @@ def test_same_status_is_a_noop(client, db_session):
 def test_gated_transition_rejected_via_direct_patch(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
-    client_company = make_client_company(db_session, org)
-    matter = make_matter(db_session, org, client_company)
+    matter = make_matter(db_session, org)
     _advance_to_awaiting_signature(client, matter.id, admin)
 
     res = client.patch(f"/matters/{matter.id}/status", json={"status": "signed"}, headers=auth_headers(admin))
@@ -51,8 +48,7 @@ def test_request_approval_creates_pending_and_notifies_eligible_approvers(client
     admin, _ = make_staff(db_session, org, email="admin@example.com")
     lawyer, _ = make_staff(db_session, org, email="lawyer@example.com")
     paralegal, _ = make_staff(db_session, org, email="paralegal@example.com", role=UserRole.PARALEGAL)
-    client_company = make_client_company(db_session, org)
-    matter = make_matter(db_session, org, client_company)
+    matter = make_matter(db_session, org)
     _advance_to_awaiting_signature(client, matter.id, admin)
 
     client.post(
@@ -88,8 +84,7 @@ def test_request_approval_creates_pending_and_notifies_eligible_approvers(client
 def test_duplicate_pending_request_rejected(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
-    client_company = make_client_company(db_session, org)
-    matter = make_matter(db_session, org, client_company)
+    matter = make_matter(db_session, org)
     _advance_to_awaiting_signature(client, matter.id, admin)
 
     first = client.post(
@@ -107,8 +102,7 @@ def test_decide_approve_applies_status_and_notifies_requester(client, db_session
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org, email="admin@example.com")
     paralegal, _ = make_staff(db_session, org, email="paralegal@example.com", role=UserRole.PARALEGAL)
-    client_company = make_client_company(db_session, org)
-    matter = make_matter(db_session, org, client_company)
+    matter = make_matter(db_session, org)
     _advance_to_awaiting_signature(client, matter.id, admin)
 
     approval = client.post(
@@ -133,8 +127,7 @@ def test_decide_approve_applies_status_and_notifies_requester(client, db_session
 def test_decide_reject_leaves_status_untouched(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
-    client_company = make_client_company(db_session, org)
-    matter = make_matter(db_session, org, client_company)
+    matter = make_matter(db_session, org)
     _advance_to_awaiting_signature(client, matter.id, admin)
 
     approval = client.post(
@@ -156,8 +149,7 @@ def test_decide_reject_leaves_status_untouched(client, db_session):
 def test_already_decided_approval_rejected(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org)
-    client_company = make_client_company(db_session, org)
-    matter = make_matter(db_session, org, client_company)
+    matter = make_matter(db_session, org)
     _advance_to_awaiting_signature(client, matter.id, admin)
 
     approval = client.post(
@@ -182,8 +174,7 @@ def test_non_eligible_actor_cannot_decide(client, db_session):
     admin, _ = make_staff(db_session, org, email="admin@example.com")
     requester, _ = make_staff(db_session, org, email="requester@example.com", role=UserRole.PARALEGAL)
     other_paralegal, _ = make_staff(db_session, org, email="other@example.com", role=UserRole.PARALEGAL)
-    client_company = make_client_company(db_session, org)
-    matter = make_matter(db_session, org, client_company)
+    matter = make_matter(db_session, org)
     _advance_to_awaiting_signature(client, matter.id, admin)
 
     approval = client.post(
@@ -207,8 +198,7 @@ def test_assigned_lead_lawyer_can_decide(client, db_session):
     org = make_org(db_session)
     admin, _ = make_staff(db_session, org, email="admin@example.com")
     lawyer, _ = make_staff(db_session, org, email="lawyer@example.com")
-    client_company = make_client_company(db_session, org)
-    matter = make_matter(db_session, org, client_company)
+    matter = make_matter(db_session, org)
     _advance_to_awaiting_signature(client, matter.id, admin)
     client.post(
         f"/matters/{matter.id}/assignments",

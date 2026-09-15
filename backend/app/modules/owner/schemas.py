@@ -32,7 +32,6 @@ class OrganizationDetail(BaseModel):
     address: str | None
     is_active: bool
     staff_count: int
-    client_count: int
     matter_count: int
 
 class UpdateOrganizationStatusRequest(BaseModel):
@@ -74,28 +73,6 @@ class OrganizationExportStaff(BaseModel):
         from_attributes = True
 
 
-class OrganizationExportContact(BaseModel):
-    id: UUID
-    first_name: str
-    last_name: str
-    email: str
-    is_active: bool
-    invitation_status: str
-    last_login: datetime | None
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class OrganizationExportClient(BaseModel):
-    id: UUID
-    company_name: str
-    is_active: bool
-    created_at: datetime
-    contacts: list[OrganizationExportContact]
-
-
 class OrganizationExportAssignment(BaseModel):
     user_id: UUID
     role_on_matter: MatterRole
@@ -122,18 +99,15 @@ class OrganizationExportDocument(BaseModel):
     original_filename: str
     content_type: str
     uploaded_by: UUID | None
-    uploaded_by_contact_id: UUID | None
     created_at: datetime
     download_url: str | None
 
 
 class OrganizationExportMatter(BaseModel):
     id: UUID
-    client_id: UUID
     title: str
     description: str | None
     status: MatterStatus
-    is_visible_to_client: bool
     created_at: datetime
     updated_at: datetime
     assignments: list[OrganizationExportAssignment]
@@ -145,7 +119,6 @@ class OrganizationExportResponse(BaseModel):
     exported_at: datetime
     org: OrganizationExportProfile
     staff: list[OrganizationExportStaff]
-    clients: list[OrganizationExportClient]
     matters: list[OrganizationExportMatter]
     audit_log: list[AuditLogResponse]
 
@@ -155,7 +128,6 @@ class UsageMetrics(BaseModel):
     active_orgs: int
     inactive_orgs: int
     total_staff: int
-    total_clients: int
     total_matters: int
     matters_by_status: dict[str, int]
     new_orgs_last_7_days: int

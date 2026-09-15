@@ -27,7 +27,6 @@ from app.core.security import hash_password, create_access_token
 from app.core.config import settings
 from app.modules.auth.models import Organization, User
 from app.modules.auth.models.role import UserRole
-from app.modules.clients.models import Client, ClientContact
 from app.modules.matters.models import Matter, MatterAssignment, MatterRole, MatterStatus
 from app.modules.signed_contracts.models import ContractStatus, ContractType, SignedContract
 
@@ -109,39 +108,11 @@ def make_staff(db_session, org: Organization, *, role: UserRole = UserRole.ADMIN
     return user, password
 
 
-def make_client_company(db_session, org: Organization, **overrides) -> Client:
-    client_company = Client(
-        org_id=org.id,
-        company_name=overrides.get("company_name", f"Test Client {uuid.uuid4().hex[:8]}"),
-        is_active=overrides.get("is_active", True),
-    )
-    db_session.add(client_company)
-    db_session.flush()
-    return client_company
-
-
-def make_contact(db_session, client_company: Client, *, password: str = DEFAULT_PASSWORD, **overrides) -> tuple[ClientContact, str]:
-    contact = ClientContact(
-        client_id=client_company.id,
-        first_name=overrides.get("first_name", "Test"),
-        last_name=overrides.get("last_name", "Contact"),
-        email=overrides.get("email", f"contact-{uuid.uuid4().hex[:8]}@example.com"),
-        password_hash=hash_password(password),
-        is_active=overrides.get("is_active", True),
-        invitation_status="accepted",
-    )
-    db_session.add(contact)
-    db_session.flush()
-    return contact, password
-
-
-def make_matter(db_session, org: Organization, client_company: Client, **overrides) -> Matter:
+def make_matter(db_session, org: Organization, **overrides) -> Matter:
     matter = Matter(
         org_id=org.id,
-        client_id=client_company.id,
         title=overrides.get("title", "Test Matter"),
         description=overrides.get("description"),
-        is_visible_to_client=overrides.get("is_visible_to_client", False),
         due_date=overrides.get("due_date"),
         status=overrides.get("status", MatterStatus.INTAKE),
     )
@@ -161,10 +132,9 @@ def make_matter_assignment(db_session, matter: Matter, user: User, *, role_on_ma
     return assignment
 
 
-def make_signed_contract(db_session, org: Organization, client_company: Client, **overrides) -> SignedContract:
+def make_signed_contract(db_session, org: Organization, **overrides) -> SignedContract:
     contract = SignedContract(
         org_id=org.id,
-        client_id=client_company.id,
         matter_id=overrides.get("matter_id"),
         uploaded_by=overrides.get("uploaded_by"),
         title=overrides.get("title", "Test Contract"),
@@ -191,33 +161,22 @@ def owner_headers() -> dict:
 
 
 def auth_headers(actor) -> dict:
-    """actor is a User (staff) or a ClientContact (client portal) — mirrors the
-    extra_claims each login flow actually puts on the token (see
-    clients/service.py's login/refresh_token), since get_current_contact
-    requires payload["type"] == "client" to accept a token at all."""
-    if isinstance(actor, ClientContact):
-        token = create_access_token(
-            subject=str(actor.id),
-            extra_claims={"type": "client", "client_id": str(actor.client_id)},
-        )
-    else:
-        token = create_access_token(subject=str(actor.id))
+    """actor is a User (staff)."""
+    token = create_access_token(subject=str(actor.id))
     return {"Authorization": f"Bearer {token}"}
 
 
 class TwoOrgs:
-    """Two fully-populated orgs (own admin, client, matter each) for isolation tests."""
+    """Two fully-populated orgs (own admin, matter each) for isolation tests."""
 
     def __init__(self, db_session):
         self.org_a = make_org(db_session)
         self.staff_a, self.staff_a_password = make_staff(db_session, self.org_a)
-        self.client_a = make_client_company(db_session, self.org_a)
-        self.matter_a = make_matter(db_session, self.org_a, self.client_a)
+        self.matter_a = make_matter(db_session, self.org_a)
 
         self.org_b = make_org(db_session)
         self.staff_b, self.staff_b_password = make_staff(db_session, self.org_b)
-        self.client_b = make_client_company(db_session, self.org_b)
-        self.matter_b = make_matter(db_session, self.org_b, self.client_b)
+        self.matter_b = make_matter(db_session, self.org_b)
 
 
 @pytest.fixture()

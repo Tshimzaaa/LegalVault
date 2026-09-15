@@ -8,13 +8,8 @@ from app.modules.templates.service import TemplateService
 from app.modules.auth.dependencies import get_current_user, require_role
 from app.modules.auth.models import User
 from app.modules.auth.models.role import UserRole
-from app.modules.clients.dependencies import get_current_contact
-from app.modules.clients.models import ClientContact
-from app.modules.clients.repository import ClientRepository
-from app.exceptions.clients import ClientNotFound
 
 router = APIRouter(prefix="/templates", tags=["templates"])
-client_templates_router = APIRouter(prefix="/client-templates", tags=["client-templates"])
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
 
@@ -83,34 +78,4 @@ def download_template(
 ):
     service = TemplateService(db)
     url = service.get_download_link(template_id, current_user.org_id)
-    return TemplateDownloadResponse(download_url=url, expires_in_seconds=3600)
-
-
-def _get_org_id_for_contact(contact: ClientContact, db: Session) -> str:
-    client_repo = ClientRepository(db)
-    client = client_repo.get_client_by_id(contact.client_id)
-    if not client:
-        raise ClientNotFound()
-    return client.org_id
-
-
-@client_templates_router.get("", response_model=list[TemplateResponse])
-def list_client_templates(
-    db: Session = Depends(get_db),
-    current_contact: ClientContact = Depends(get_current_contact),
-):
-    org_id = _get_org_id_for_contact(current_contact, db)
-    service = TemplateService(db)
-    return service.list_templates(org_id)
-
-
-@client_templates_router.get("/{template_id}/download", response_model=TemplateDownloadResponse)
-def download_client_template(
-    template_id: str,
-    db: Session = Depends(get_db),
-    current_contact: ClientContact = Depends(get_current_contact),
-):
-    org_id = _get_org_id_for_contact(current_contact, db)
-    service = TemplateService(db)
-    url = service.get_download_link(template_id, org_id)
     return TemplateDownloadResponse(download_url=url, expires_in_seconds=3600)
