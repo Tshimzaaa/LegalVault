@@ -53,8 +53,7 @@ function Footer() {
 
       <div className="site-footer-bottom">
         <span className="site-footer-copyright">
-          &copy; {new Date().getFullYear()} LegalVault (Pty) Ltd. Reg. no. [ADD COMPANY REGISTRATION NUMBER]. All
-          rights reserved.
+          &copy; {new Date().getFullYear()} LegalVault (Pty) Ltd. All rights reserved.
         </span>
         <span className="site-footer-address">12 Fredman Drive, Sandton, Johannesburg, 2196, South Africa</span>
       </div>

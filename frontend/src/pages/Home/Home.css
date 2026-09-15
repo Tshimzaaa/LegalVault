@@ -206,6 +206,7 @@
 }
 
 .slide-dot {
+  position: relative;
   width: 8px;
   height: 8px;
   padding: 0;
@@ -231,7 +232,15 @@
   width: 22px;
 }
 
+.slide-dot::before,
+.slide-pause-btn::before {
+  content: '';
+  position: absolute;
+  inset: -18px;
+}
+
 .slide-pause-btn {
+  position: relative;
   margin-left: 8px;
   padding: 0;
   border: none;

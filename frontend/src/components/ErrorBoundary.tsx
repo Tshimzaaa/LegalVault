@@ -1,4 +1,4 @@
-import { Component } from 'react'
+import { Component, createRef } from 'react'
 import type { ErrorInfo, ReactNode } from 'react'
 import * as Sentry from '@sentry/react'
 
@@ -17,6 +17,7 @@ interface ErrorBoundaryState {
  */
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   state: ErrorBoundaryState = { error: null }
+  private headingRef = createRef<HTMLHeadingElement>()
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { error }
@@ -26,6 +27,14 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     console.error('Unhandled render error:', error, info.componentStack)
     // Safe to call even when Sentry.init() never ran — becomes a no-op.
     Sentry.captureException(error, { extra: { componentStack: info.componentStack } })
+  }
+
+  componentDidUpdate() {
+    // Moves focus onto the error heading so screen readers announce it — this screen can
+    // replace the whole app with no other navigation cue that anything happened.
+    if (this.state.error) {
+      this.headingRef.current?.focus()
+    }
   }
 
   render() {
@@ -44,7 +53,9 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
             textAlign: 'center',
           }}
         >
-          <h1 style={{ fontSize: 20, margin: 0 }}>Something went wrong.</h1>
+          <h1 ref={this.headingRef} tabIndex={-1} style={{ fontSize: 20, margin: 0, outline: 'none' }}>
+            Something went wrong.
+          </h1>
           <p className="error-boundary-sub" style={{ margin: 0, maxWidth: 420 }}>
             This page hit an unexpected error. Reloading usually fixes it; if it keeps happening, let us know
             what you were doing.

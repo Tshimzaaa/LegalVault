@@ -39,6 +39,19 @@ function Sidebar({
   notificationBell,
 }: SidebarProps) {
   const [open, setOpen] = useState(false)
+  // The sidebar is only off-canvas below this breakpoint (see Sidebar.css) — above it, it's
+  // always visible regardless of `open`, so its links must stay focusable there even when
+  // `open` is false. Tracked via matchMedia so the tabIndex logic below matches the CSS exactly.
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 880px)').matches,
+  )
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 880px)')
+    const onChange = () => setIsMobile(media.matches)
+    media.addEventListener('change', onChange)
+    return () => media.removeEventListener('change', onChange)
+  }, [])
 
   useEffect(() => {
     if (!open) return
@@ -87,7 +100,7 @@ function Sidebar({
 
       <div className={`sidebar-backdrop${open ? ' open' : ''}`} onClick={close} />
 
-      <aside id="dash-sidebar" className={`dash-sidebar${open ? ' open' : ''}`}>
+      <aside id="dash-sidebar" className={`dash-sidebar${open ? ' open' : ''}`} aria-hidden={isMobile && !open}>
         <div className="sidebar-brand">
           <span className="brand-mark">
             <IconLeaf />
@@ -108,6 +121,7 @@ function Sidebar({
                 to={`${basePath}/${item.page}`}
                 className={`nav-item${active ? ' active' : ''}`}
                 aria-current={active ? 'page' : undefined}
+                tabIndex={isMobile && !open ? -1 : undefined}
                 onClick={close}
               >
                 <span className="nav-icon">{item.icon}</span>
@@ -126,7 +140,12 @@ function Sidebar({
           </div>
           <div className="account-actions">
             <ThemeToggle />
-            <button type="button" className="account-logout" onClick={onLogout}>
+            <button
+              type="button"
+              className="account-logout"
+              tabIndex={isMobile && !open ? -1 : undefined}
+              onClick={onLogout}
+            >
               Log Out
             </button>
           </div>

@@ -148,6 +148,7 @@ function FallbackClauses() {
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                 placeholder="Limitation of Liability (Fallback)…"
                 autoComplete="off"
+                required
               />
             </label>
             <label className="field">
@@ -158,16 +159,17 @@ function FallbackClauses() {
                 onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
                 placeholder="Risk…"
                 autoComplete="off"
+                required
               />
             </label>
           </div>
           <label className="field">
             <span>Description (shown as a quick summary)</span>
-            <textarea rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+            <textarea rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} required />
           </label>
           <label className="field">
-            <span>Clause text (shown when a staff member opens "View Fallback Position")</span>
-            <textarea rows={6} value={form.content} onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))} />
+            <span>Clause text (shown when a staff member opens “View Fallback Position”)</span>
+            <textarea rows={6} value={form.content} onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))} required />
           </label>
           <label className="field field-checkbox">
             <input

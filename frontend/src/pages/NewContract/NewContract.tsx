@@ -84,10 +84,12 @@ function NewContract() {
 
     setSubmitting(true)
     try {
-      // The backend's contract record has no dedicated columns for contract type, practice
-      // area, fee type, conflict check, desired outcome, or case strategy notes yet, so we
-      // fold them into the description to avoid silently discarding what the user typed.
+      // The backend's contract record has no dedicated columns for opened date, contract
+      // type, practice area, fee type, conflict check, desired outcome, or case strategy
+      // notes yet, so we fold them into the description to avoid silently discarding what
+      // the user typed. (created_at is stamped automatically at creation time regardless.)
       const extraDetails = [
+        openedDate && `Opened Date: ${openedDate}`,
         contractType && `Contract Type: ${contractType}`,
         practiceArea && `Practice Area: ${practiceArea}`,
         feeType && `Fee Type: ${feeType}`,

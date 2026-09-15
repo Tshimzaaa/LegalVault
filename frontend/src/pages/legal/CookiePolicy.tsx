@@ -61,7 +61,7 @@ function CookiePolicy() {
         </p>
 
         <h2>Contact us</h2>
-        <p>Email: hello@legalvault.example.com</p>
+        <p>Email: <a href="mailto:hello@legalvault.example.com">hello@legalvault.example.com</a></p>
       </div>
     </main>
   )

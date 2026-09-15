@@ -188,6 +188,12 @@
   font: inherit;
 }
 
+.capacity-edit-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .utilization-bar {
   width: 80px;
   display: inline-block;

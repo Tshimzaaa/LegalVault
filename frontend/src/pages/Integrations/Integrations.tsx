@@ -198,13 +198,16 @@ function Integrations({ user }: IntegrationsProps) {
               : integration.is_enabled
                 ? 'Configured'
                 : 'Disabled'
-            const badgeColor = integration.is_configured && integration.is_enabled ? '#22c55e' : '#9ca3af'
+            const badgeColor = integration.is_configured && integration.is_enabled ? 'var(--accent)' : 'var(--text-muted)'
+            // Matching rgb triple so a translucent badge background can be composed with rgba() —
+            // appending a hex alpha suffix directly to a `var(--token)` string produces invalid CSS.
+            const badgeColorRgb = integration.is_configured && integration.is_enabled ? 'var(--accent-rgb)' : 'var(--text-muted-rgb)'
 
             return (
               <div key={integration.provider} className="card integration-card">
                 <div className="integration-card-header">
                   <span className="template-icon">{meta.icon}</span>
-                  <span className="status-badge" style={{ color: badgeColor, background: `${badgeColor}22` }}>
+                  <span className="status-badge" style={{ color: badgeColor, background: `rgba(${badgeColorRgb}, 0.13)` }}>
                     {badgeLabel}
                   </span>
                 </div>

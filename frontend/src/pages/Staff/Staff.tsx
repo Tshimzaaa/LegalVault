@@ -63,6 +63,11 @@ function Staff({ user }: StaffProps) {
 
   async function handleToggleStatus(target: User) {
     if (!token) return
+    if (
+      target.is_active &&
+      !window.confirm(`Deactivate ${target.first_name} ${target.last_name}'s account access?`)
+    )
+      return
     setTogglingId(target.id)
     try {
       const updated = await updateStaffStatus(token, target.id, !target.is_active)

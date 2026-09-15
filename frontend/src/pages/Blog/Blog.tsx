@@ -76,7 +76,7 @@ function Blog() {
 
       <div className="blog-grid">
         {posts.map((post) => (
-          <a href={`#${post.slug}`} key={post.slug} className="blog-card">
+          <article key={post.slug} className="blog-card">
             <div className="blog-card-thumb" aria-hidden="true" />
             <div className="blog-card-body">
               <span className="blog-tag">{post.tag}</span>
@@ -88,7 +88,7 @@ function Blog() {
                 <span>{post.readTime}</span>
               </div>
             </div>
-          </a>
+          </article>
         ))}
       </div>
     </section>

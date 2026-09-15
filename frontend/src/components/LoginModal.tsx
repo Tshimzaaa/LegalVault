@@ -123,7 +123,7 @@ function LoginModal({ onClose, onSubmit }: LoginModalProps) {
                   name="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com…"
+                  placeholder="you@example.com"
                   required
                   autoFocus={isDesktopPointer}
                   autoComplete="email"
@@ -140,7 +140,7 @@ function LoginModal({ onClose, onSubmit }: LoginModalProps) {
           )}
 
           <button type="button" className="modal-link-back" onClick={() => setMode('login')}>
-            &larr; Back to Login
+            <span aria-hidden="true">&larr; </span>Back to Login
           </button>
         </div>
       </div>
@@ -173,7 +173,7 @@ function LoginModal({ onClose, onSubmit }: LoginModalProps) {
               name="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com…"
+              placeholder="you@example.com"
               required
               autoFocus={isDesktopPointer}
               autoComplete="email"

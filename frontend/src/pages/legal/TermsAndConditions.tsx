@@ -46,7 +46,7 @@ function TermsAndConditions() {
         <ul>
           <li>Organization accounts are created directly through our self-serve signup; the organization’s administrator is responsible for managing staff access within their account.</li>
           <li>You’re responsible for keeping your login credentials confidential and for all activity under your account.</li>
-          <li>Notify us immediately at hello@legalvault.example.com if you suspect unauthorized access to your account.</li>
+          <li>Notify us immediately at <a href="mailto:hello@legalvault.example.com">hello@legalvault.example.com</a> if you suspect unauthorized access to your account.</li>
         </ul>
 
         <h2>4. Acceptable use</h2>
@@ -123,7 +123,8 @@ function TermsAndConditions() {
 
         <h2>15. Contact us</h2>
         <p>
-          Email: hello@legalvault.example.com &nbsp;·&nbsp; Phone: +27 11 555 0134 &nbsp;·&nbsp; Address: 12 Fredman Drive,
+          Email: <a href="mailto:hello@legalvault.example.com">hello@legalvault.example.com</a> &nbsp;·&nbsp; Phone:{' '}
+          <a href="tel:+27115550134">+27 11 555 0134</a> &nbsp;·&nbsp; Address: 12 Fredman Drive,
           Sandton, Johannesburg, 2196, South Africa
         </p>
       </div>

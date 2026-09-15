@@ -160,7 +160,14 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
                 <span className="stat-big">{summary.activeCases.count}</span>
                 <span className="stat-sub">count</span>
               </div>
-              <div className="progress-track">
+              <div
+                className="progress-track"
+                role="progressbar"
+                aria-valuenow={summary.activeCases.progressPercent}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label="Active cases progress"
+              >
                 <span className="progress-fill" style={{ width: `${summary.activeCases.progressPercent}%` }} />
               </div>
             </div>

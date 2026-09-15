@@ -35,15 +35,31 @@ const dateTimeFormat = new Intl.DateTimeFormat(undefined, {
 
 const severityColor: Record<AnnouncementSeverity, string> = {
   info: '#3987e5',
-  warning: '#eab308',
-  critical: '#ef4444',
+  warning: 'var(--warning)',
+  critical: 'var(--danger)',
+}
+
+// Matching rgb triples so a translucent badge background can be composed with rgba() —
+// appending a hex alpha suffix directly to a `var(--token)` string produces invalid CSS
+// (e.g. "var(--accent)22"), which browsers silently drop.
+const severityColorRgb: Record<AnnouncementSeverity, string> = {
+  info: '57, 135, 229',
+  warning: 'var(--warning-rgb)',
+  critical: 'var(--danger-rgb)',
 }
 
 const healthStatusColor: Record<'operational' | 'degraded' | 'down' | 'healthy', string> = {
-  operational: '#22c55e',
-  healthy: '#22c55e',
-  degraded: '#eab308',
-  down: '#ef4444',
+  operational: 'var(--accent)',
+  healthy: 'var(--accent)',
+  degraded: 'var(--warning)',
+  down: 'var(--danger)',
+}
+
+const healthStatusColorRgb: Record<'operational' | 'degraded' | 'down' | 'healthy', string> = {
+  operational: 'var(--accent-rgb)',
+  healthy: 'var(--accent-rgb)',
+  degraded: 'var(--warning-rgb)',
+  down: 'var(--danger-rgb)',
 }
 
 const healthStatusLabel: Record<'operational' | 'degraded' | 'down' | 'healthy', string> = {
@@ -336,6 +352,11 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
 
   async function handleToggleStatus(org: OrganizationDetail) {
     if (!token) return
+    if (
+      org.is_active &&
+      !window.confirm(`Suspend ${org.name}? Every staff member at this organization will immediately lose access.`)
+    )
+      return
     setOrganizationActionError(null)
     setTogglingId(org.id)
     try {
@@ -633,8 +654,8 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                       <span
                         className="status-badge"
                         style={{
-                          color: f.is_active ? '#22c55e' : '#ef4444',
-                          background: f.is_active ? '#22c55e22' : '#ef444422',
+                          color: f.is_active ? 'var(--accent)' : 'var(--danger)',
+                          background: f.is_active ? 'rgba(var(--accent-rgb), 0.13)' : 'rgba(var(--danger-rgb), 0.13)',
                         }}
                       >
                         {f.is_active ? 'Active' : 'Suspended'}
@@ -732,7 +753,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                       <span
                         key={d.name}
                         className="status-badge"
-                        style={{ color: healthStatusColor[d.status], background: `${healthStatusColor[d.status]}22` }}
+                        style={{ color: healthStatusColor[d.status], background: `rgba(${healthStatusColorRgb[d.status]}, 0.13)` }}
                       >
                         {d.name}: {healthStatusLabel[d.status]}
                         {d.latency_ms != null ? ` · ${Math.round(d.latency_ms)}ms` : ''}
@@ -756,7 +777,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                     <span className="muted">Error rate</span>
                     <span
                       className="stat-big"
-                      style={{ color: systemHealth.requests.error_rate_percent > 1 ? '#ef4444' : '#22c55e' }}
+                      style={{ color: systemHealth.requests.error_rate_percent > 1 ? 'var(--danger)' : 'var(--accent)' }}
                     >
                       {systemHealth.requests.error_rate_percent.toFixed(2)}%
                     </span>
@@ -814,7 +835,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                         label: formatHour(t.bucket),
                         value: t.average_duration_ms ?? 0,
                       }))}
-                      color="#eab308"
+                      color="var(--warning)"
                       formatValue={(v) => `${Math.round(v)}ms`}
                     />
                   </div>
@@ -843,7 +864,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                                 className="status-badge"
                                 style={{
                                   color: healthStatusColor[s.status],
-                                  background: `${healthStatusColor[s.status]}22`,
+                                  background: `rgba(${healthStatusColorRgb[s.status]}, 0.13)`,
                                 }}
                               >
                                 {healthStatusLabel[s.status]}
@@ -888,7 +909,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                             </td>
                             <td className="tabular">{e.request_count}</td>
                             <td className="tabular">{e.error_count}</td>
-                            <td className="tabular" style={{ color: e.error_rate_percent > 5 ? '#ef4444' : '#22c55e' }}>
+                            <td className="tabular" style={{ color: e.error_rate_percent > 5 ? 'var(--danger)' : 'var(--accent)' }}>
                               {e.error_rate_percent.toFixed(2)}%
                             </td>
                           </tr>
@@ -971,8 +992,8 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                               <span
                                 className="status-badge"
                                 style={{
-                                  color: e.status_code >= 500 ? '#ef4444' : '#eab308',
-                                  background: e.status_code >= 500 ? '#ef444422' : '#eab30822',
+                                  color: e.status_code >= 500 ? 'var(--danger)' : 'var(--warning)',
+                                  background: e.status_code >= 500 ? 'rgba(var(--danger-rgb), 0.13)' : 'rgba(var(--warning-rgb), 0.13)',
                                 }}
                               >
                                 {e.status_code}
@@ -1095,7 +1116,7 @@ function OwnerPortal({ onLogout }: OwnerPortalProps) {
                         className="announcement-severity-badge"
                         style={{
                           color: severityColor[a.severity],
-                          background: `${severityColor[a.severity]}22`,
+                          background: `rgba(${severityColorRgb[a.severity]}, 0.13)`,
                         }}
                       >
                         {a.severity}

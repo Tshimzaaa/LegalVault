@@ -15,9 +15,18 @@ import type { SignedContract, SignedContractsSummary, ContractType, ContractLife
 type LoadState = 'loading' | 'error' | 'ready'
 
 const statusColor: Record<ContractLifecycleStatus, string> = {
-  active: '#22c55e',
+  active: 'var(--accent)',
   expiring: '#f97316',
-  archived: '#9ca3af',
+  archived: 'var(--text-muted)',
+}
+
+// Matching rgb triples so a translucent badge background can be composed with rgba() —
+// appending a hex alpha suffix directly to a `var(--token)` string produces invalid CSS
+// (e.g. "var(--accent)22"), which browsers silently drop.
+const statusColorRgb: Record<ContractLifecycleStatus, string> = {
+  active: 'var(--accent-rgb)',
+  expiring: '249, 115, 22',
+  archived: 'var(--text-muted-rgb)',
 }
 
 const statusLabel: Record<ContractLifecycleStatus, string> = {
@@ -412,7 +421,7 @@ function SignedContracts() {
                     <td className="muted">{c.signed_date}</td>
                     <td className="muted">{c.integration_source}</td>
                     <td>
-                      <span className="status-badge" style={{ color: statusColor[c.status], background: `${statusColor[c.status]}22` }}>
+                      <span className="status-badge" style={{ color: statusColor[c.status], background: `rgba(${statusColorRgb[c.status]}, 0.13)` }}>
                         {statusLabel[c.status]}
                       </span>
                     </td>

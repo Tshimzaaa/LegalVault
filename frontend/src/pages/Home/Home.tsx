@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import './Home.css'
 import Sidebar from '../../components/Sidebar'
 import Footer from '../../components/Footer'
@@ -16,7 +17,7 @@ import Templates from '../Templates/Templates'
 import About from '../About/About'
 import Blog from '../Blog/Blog'
 import Contact from '../Contact/Contact'
-import { SITE_DESCRIPTION } from '../../constants/site'
+import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE } from '../../constants/site'
 
 const demoUser: User = {
   id: 'demo',
@@ -158,13 +159,13 @@ function Home() {
       <Seo title="Home" description={SITE_DESCRIPTION} path="/" />
       <section id="home" className="hero">
 
-        <h1>Kelusi Legal Consultancy (KLC)</h1>
-        <h2>Ready-to-execute contract templates and step-by-step tools to conclude agreements.</h2>
+        <h1>{SITE_NAME}</h1>
+        <h2>{SITE_TAGLINE}: ready-to-execute contract templates and step-by-step tools to conclude agreements.</h2>
 
         <div className="hero-actions">
-          <a href="#contact" className="btn btn-primary">
-            Book a Consultation
-          </a>
+          <Link to="/register" className="btn btn-primary">
+            Get Started Free
+          </Link>
           <a href="#about" className="btn btn-secondary">
             See How It Works
           </a>

@@ -92,13 +92,20 @@ function Navbar({ onLoginClick }: NavbarProps) {
         aria-hidden={!menuOpen}
       >
         {navLinks.map((link) => (
-          <a key={link.href} href={link.href} className="navbar-mobile-link" onClick={closeMenu}>
+          <a
+            key={link.href}
+            href={link.href}
+            className="navbar-mobile-link"
+            onClick={closeMenu}
+            tabIndex={menuOpen ? undefined : -1}
+          >
             {link.label}
           </a>
         ))}
         <Link
           to="/login"
           className="navbar-cta navbar-mobile-cta"
+          tabIndex={menuOpen ? undefined : -1}
           onClick={() => {
             closeMenu()
             onLoginClick()

@@ -93,8 +93,9 @@ describe('Staff page', () => {
     expect(await screen.findByDisplayValue(/abc123/)).toBeInTheDocument()
   })
 
-  it('deactivates an active staff member', async () => {
+  it('deactivates an active staff member after confirmation', async () => {
     const user = userEvent.setup()
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
     vi.mocked(authApi.updateStaffStatus).mockResolvedValue({ ...lawyer, is_active: false })
 
     render(<Staff user={admin} />)
@@ -102,7 +103,20 @@ describe('Staff page', () => {
 
     await user.click(within(row).getByRole('button', { name: /deactivate/i }))
 
+    expect(confirmSpy).toHaveBeenCalled()
     await waitFor(() => expect(authApi.updateStaffStatus).toHaveBeenCalledWith('token-a', 'lawyer-1', false))
+  })
+
+  it('skips deactivation when the confirmation is declined', async () => {
+    const user = userEvent.setup()
+    vi.spyOn(window, 'confirm').mockReturnValue(false)
+
+    render(<Staff user={admin} />)
+    const row = (await screen.findByText('Lou Lawyer')).closest('tr')!
+
+    await user.click(within(row).getByRole('button', { name: /deactivate/i }))
+
+    expect(authApi.updateStaffStatus).not.toHaveBeenCalled()
   })
 
   it('force-logs-out a staff member after confirmation', async () => {

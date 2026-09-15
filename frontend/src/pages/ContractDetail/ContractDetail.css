@@ -293,12 +293,14 @@
 
 .contract-message-compose-row {
   display: flex;
+  align-items: flex-end;
   gap: 8px;
   margin-top: 14px;
 }
 
-.contract-message-compose-row input[type='text'] {
+.contract-message-compose-row textarea {
   flex: 1;
+  resize: vertical;
   background: var(--surface-2);
   border: 1px solid rgba(var(--overlay-rgb), 0.12);
   border-radius: 7px;

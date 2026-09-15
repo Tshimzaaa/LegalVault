@@ -69,7 +69,10 @@ function RefundPolicy() {
         </p>
 
         <h2>Contact us</h2>
-        <p>Email: hello@legalvault.example.com &nbsp;·&nbsp; Phone: +27 11 555 0134</p>
+        <p>
+          Email: <a href="mailto:hello@legalvault.example.com">hello@legalvault.example.com</a> &nbsp;·&nbsp; Phone:{' '}
+          <a href="tel:+27115550134">+27 11 555 0134</a>
+        </p>
       </div>
     </main>
   )

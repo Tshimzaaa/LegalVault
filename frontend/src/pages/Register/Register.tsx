@@ -124,13 +124,14 @@ function Register() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="At least 8 characters…"
+              placeholder="At least 8 characters"
               required
               autoComplete="new-password"
               aria-invalid={Boolean(passwordError)}
+              aria-describedby={passwordError ? 'register-password-error' : undefined}
             />
             {passwordError && (
-              <span className="modal-field-error" aria-live="polite">
+              <span id="register-password-error" className="modal-field-error" aria-live="polite">
                 {passwordError}
               </span>
             )}

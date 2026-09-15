@@ -42,7 +42,8 @@ function LearnedFriend() {
   }, [])
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    messagesEndRef.current?.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'end' })
   }, [messages, sending])
 
   function openConversation(id: string) {
@@ -137,7 +138,7 @@ function LearnedFriend() {
         </aside>
 
         <section className="lf-chat-main" aria-label="Conversation">
-          <div className="lf-messages" role="log" aria-live="polite">
+          <div className="lf-messages" role="log">
             {messagesStatus === 'loading' && (
               <div className="dash-state" role="status" aria-live="polite">
                 <span className="dash-spinner" aria-hidden="true" />
@@ -189,7 +190,7 @@ function LearnedFriend() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
+                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
                   e.preventDefault()
                   handleSubmit(e)
                 }

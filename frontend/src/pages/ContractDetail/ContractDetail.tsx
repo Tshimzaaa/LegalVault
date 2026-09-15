@@ -60,9 +60,16 @@ const taskStatusOptions: { value: TaskStatus; label: string }[] = [
 ]
 
 const taskStatusColor: Record<TaskStatus, string> = {
-  todo: '#9ca3af',
+  todo: 'var(--text-muted)',
   in_progress: '#3987e5',
-  done: '#22c55e',
+  done: 'var(--accent)',
+}
+
+// See statusColorRgb below for why this parallel rgb-triple map exists.
+const taskStatusColorRgb: Record<TaskStatus, string> = {
+  todo: 'var(--text-muted-rgb)',
+  in_progress: '57, 135, 229',
+  done: 'var(--accent-rgb)',
 }
 
 const roleOptions: { value: ContractRole; label: string }[] = [
@@ -73,19 +80,38 @@ const roleOptions: { value: ContractRole; label: string }[] = [
 ]
 
 const sigStatusColor: Record<SignatureRequest['status'], string> = {
-  pending: '#eab308',
-  completed: '#22c55e',
-  declined: '#ef4444',
-  voided: '#9ca3af',
+  pending: 'var(--warning)',
+  completed: 'var(--accent)',
+  declined: 'var(--danger)',
+  voided: 'var(--text-muted)',
+}
+
+const sigStatusColorRgb: Record<SignatureRequest['status'], string> = {
+  pending: 'var(--warning-rgb)',
+  completed: 'var(--accent-rgb)',
+  declined: 'var(--danger-rgb)',
+  voided: 'var(--text-muted-rgb)',
 }
 
 const statusColor: Record<Contract['status'], string> = {
-  intake: '#eab308',
+  intake: 'var(--warning)',
   in_review: '#3987e5',
   awaiting_signature: '#a855f7',
   signed: '#199e70',
-  closed: '#22c55e',
-  declined: '#ef4444',
+  closed: 'var(--accent)',
+  declined: 'var(--danger)',
+}
+
+// Matching rgb triples so a translucent badge background can be composed with rgba() —
+// appending a hex alpha suffix directly to a `var(--token)` string produces invalid CSS
+// (e.g. "var(--accent)22"), which browsers silently drop.
+const statusColorRgb: Record<Contract['status'], string> = {
+  intake: 'var(--warning-rgb)',
+  in_review: '57, 135, 229',
+  awaiting_signature: '168, 85, 247',
+  signed: '25, 158, 112',
+  closed: 'var(--accent-rgb)',
+  declined: 'var(--danger-rgb)',
 }
 
 function ContractDetail() {
@@ -457,7 +483,8 @@ function ContractDetail() {
     setSigStaffIds((prev) => (prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]))
   }
 
-  function handleAddExternalRecipient() {
+  function handleAddExternalRecipient(e: FormEvent) {
+    e.preventDefault()
     if (!externalName.trim() || !externalEmail.trim()) return
     setExternalRecipients((prev) => [...prev, { name: externalName.trim(), email: externalEmail.trim() }])
     setExternalName('')
@@ -505,6 +532,7 @@ function ContractDetail() {
 
   async function handleVoidSignature(request: SignatureRequest) {
     if (!token || !contractId) return
+    if (!window.confirm('Void this signature request? Signers will no longer be able to sign it.')) return
     setSigError(null)
     setSigBusyId(request.id)
     try {
@@ -570,7 +598,7 @@ function ContractDetail() {
             </button>
             <span
               className="status-badge"
-              style={{ color: statusColor[contract.status], background: `${statusColor[contract.status]}22` }}
+              style={{ color: statusColor[contract.status], background: `rgba(${statusColorRgb[contract.status]}, 0.13)` }}
             >
               {statusOptions.find((o) => o.value === contract.status)?.label}
             </span>
@@ -711,7 +739,7 @@ function ContractDetail() {
                       <span className="contract-doc-title">{sr.title}</span>
                       <span
                         className="status-badge"
-                        style={{ color: sigStatusColor[sr.status], background: `${sigStatusColor[sr.status]}22` }}
+                        style={{ color: sigStatusColor[sr.status], background: `rgba(${sigStatusColorRgb[sr.status]}, 0.13)` }}
                       >
                         {sr.status}
                       </span>
@@ -796,7 +824,7 @@ function ContractDetail() {
                     </button>
                   </span>
                 ))}
-                <div className="contract-doc-upload-row" style={{ marginTop: 6 }}>
+                <form className="contract-doc-upload-row" style={{ marginTop: 6 }} onSubmit={handleAddExternalRecipient}>
                   <input
                     type="text"
                     aria-label="External signer name"
@@ -811,10 +839,10 @@ function ContractDetail() {
                     value={externalEmail}
                     onChange={(e) => setExternalEmail(e.target.value)}
                   />
-                  <button type="button" className="btn-ghost" onClick={handleAddExternalRecipient}>
+                  <button type="submit" className="btn-ghost">
                     Add signer
                   </button>
-                </div>
+                </form>
               </div>
               {sigError && <p className="contract-error" aria-live="polite">{sigError}</p>}
             </section>
@@ -839,7 +867,7 @@ function ContractDetail() {
                       value={t.status}
                       disabled={taskBusyId === t.id}
                       onChange={(e) => handleTaskStatusChange(t, e.target.value as TaskStatus)}
-                      style={{ color: taskStatusColor[t.status], background: `${taskStatusColor[t.status]}22` }}
+                      style={{ color: taskStatusColor[t.status], background: `rgba(${taskStatusColorRgb[t.status]}, 0.13)` }}
                     >
                       {taskStatusOptions.map((o) => (
                         <option key={o.value} value={o.value}>
@@ -919,8 +947,8 @@ function ContractDetail() {
               </div>
 
               <form onSubmit={handleSendMessage} className="contract-message-compose-row">
-                <input
-                  type="text"
+                <textarea
+                  rows={2}
                   aria-label="Message"
                   placeholder="Write an internal note…"
                   value={messageBody}

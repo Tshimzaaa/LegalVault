@@ -53,6 +53,23 @@ function NotificationBell() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [open])
 
+  // Keeps the panel pinned under the bell button instead of detaching from it when the
+  // page scrolls or the viewport is resized while the panel is open.
+  useEffect(() => {
+    if (!open) return
+    function reposition() {
+      if (!btnRef.current) return
+      const rect = btnRef.current.getBoundingClientRect()
+      setPanelPos({ top: rect.bottom + 8, left: rect.left })
+    }
+    window.addEventListener('scroll', reposition, true)
+    window.addEventListener('resize', reposition)
+    return () => {
+      window.removeEventListener('scroll', reposition, true)
+      window.removeEventListener('resize', reposition)
+    }
+  }, [open])
+
   function handleToggle() {
     const token = localStorage.getItem('access_token')
     const next = !open
@@ -119,14 +136,22 @@ function NotificationBell() {
         className="notification-bell-btn"
         onClick={handleToggle}
         aria-label="Notifications"
+        aria-haspopup="dialog"
         aria-expanded={open}
+        aria-controls="notification-bell-panel"
       >
         <IconBell />
         {unreadCount > 0 && <span className="notification-bell-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
       </button>
 
       {open && panelPos && (
-        <div className="notification-bell-panel" style={{ top: panelPos.top, left: panelPos.left }}>
+        <div
+          className="notification-bell-panel"
+          id="notification-bell-panel"
+          role="dialog"
+          aria-label="Notifications"
+          style={{ top: panelPos.top, left: panelPos.left }}
+        >
           <div className="notification-bell-header">
             <span>Notifications</span>
             {unreadCount > 0 && (

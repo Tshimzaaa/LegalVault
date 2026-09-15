@@ -41,7 +41,7 @@ function Contact() {
                     name="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Jane Doe…"
+                    placeholder="Jane Doe"
                     required
                     autoComplete="name"
                   />
@@ -53,7 +53,7 @@ function Contact() {
                     name="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="jane@company.com…"
+                    placeholder="jane@company.com"
                     required
                     autoComplete="email"
                     spellCheck={false}
@@ -68,7 +68,7 @@ function Contact() {
                   name="organization"
                   value={organization}
                   onChange={(e) => setOrganization(e.target.value)}
-                  placeholder="Acme Inc…"
+                  placeholder="Acme Inc"
                   autoComplete="organization"
                 />
               </label>
@@ -108,11 +108,15 @@ function Contact() {
         <div className="contact-info">
           <div className="contact-card">
             <span className="contact-info-label">Email</span>
-            <span className="contact-info-value">hello@legalvault.example.com</span>
+            <span className="contact-info-value">
+              <a href="mailto:hello@legalvault.example.com">hello@legalvault.example.com</a>
+            </span>
           </div>
           <div className="contact-card">
             <span className="contact-info-label">Phone</span>
-            <span className="contact-info-value">+27 11 555 0134</span>
+            <span className="contact-info-value">
+              <a href="tel:+27115550134">+27 11 555 0134</a>
+            </span>
           </div>
           <div className="contact-card">
             <span className="contact-info-label">Office</span>
@@ -124,7 +128,7 @@ function Contact() {
           </div>
           <div className="contact-card">
             <span className="contact-info-label">Hours</span>
-            <span className="contact-info-value">Mon – Fri, 08:00 – 17:00 SAST</span>
+            <span className="contact-info-value">Mon&nbsp;–&nbsp;Fri, 08:00&nbsp;–&nbsp;17:00 SAST</span>
           </div>
         </div>
       </div>

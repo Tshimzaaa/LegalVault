@@ -39,13 +39,15 @@ function ProfileMenu({ user, onLogout }: ProfileMenuProps) {
         className="profile-avatar-btn"
         onClick={() => setOpen((v) => !v)}
         aria-label="Account menu"
+        aria-haspopup="true"
         aria-expanded={open}
+        aria-controls="profile-menu-panel"
       >
         {initials}
       </button>
 
       {open && (
-        <div className="profile-menu">
+        <div className="profile-menu" id="profile-menu-panel" role="menu">
           <div className="profile-menu-header">
             <span className="profile-menu-avatar">{initials}</span>
             <span className="profile-menu-name">
@@ -57,6 +59,7 @@ function ProfileMenu({ user, onLogout }: ProfileMenuProps) {
           <button
             type="button"
             className="profile-menu-logout"
+            role="menuitem"
             onClick={() => {
               setOpen(false)
               onLogout()

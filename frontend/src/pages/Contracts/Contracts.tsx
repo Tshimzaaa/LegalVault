@@ -17,12 +17,24 @@ const statusLabel: Record<Contract['status'], string> = {
 }
 
 const statusColor: Record<Contract['status'], string> = {
-  intake: '#eab308',
+  intake: 'var(--warning)',
   in_review: '#3987e5',
   awaiting_signature: '#a855f7',
   signed: '#199e70',
-  closed: '#22c55e',
-  declined: '#ef4444',
+  closed: 'var(--accent)',
+  declined: 'var(--danger)',
+}
+
+// Matching rgb triples so a translucent badge background can be composed with rgba() —
+// appending a hex alpha suffix directly to a `var(--token)` string produces invalid CSS
+// (e.g. "var(--accent)22"), which browsers silently drop.
+const statusColorRgb: Record<Contract['status'], string> = {
+  intake: 'var(--warning-rgb)',
+  in_review: '57, 135, 229',
+  awaiting_signature: '168, 85, 247',
+  signed: '25, 158, 112',
+  closed: 'var(--accent-rgb)',
+  declined: 'var(--danger-rgb)',
 }
 
 function Contracts() {
@@ -108,7 +120,7 @@ function Contracts() {
                   <td>
                     <span
                       className="status-badge"
-                      style={{ color: statusColor[m.status], background: `${statusColor[m.status]}22` }}
+                      style={{ color: statusColor[m.status], background: `rgba(${statusColorRgb[m.status]}, 0.13)` }}
                     >
                       {statusLabel[m.status]}
                     </span>

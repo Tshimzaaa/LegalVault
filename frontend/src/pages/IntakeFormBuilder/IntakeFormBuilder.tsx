@@ -302,17 +302,23 @@ function IntakeFormBuilder() {
             <div key={form.id} className="card intake-builder-card">
               {editingFormId === form.id ? (
                 <form onSubmit={handleSaveFormEdit} className="intake-builder-form-edit">
-                  <input
-                    value={editFormInput.title}
-                    onChange={(e) => setEditFormInput((f) => ({ ...f, title: e.target.value }))}
-                    required
-                    autoComplete="off"
-                  />
-                  <textarea
-                    rows={2}
-                    value={editFormInput.description}
-                    onChange={(e) => setEditFormInput((f) => ({ ...f, description: e.target.value }))}
-                  />
+                  <label className="field">
+                    <span>Title</span>
+                    <input
+                      value={editFormInput.title}
+                      onChange={(e) => setEditFormInput((f) => ({ ...f, title: e.target.value }))}
+                      required
+                      autoComplete="off"
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Description</span>
+                    <textarea
+                      rows={2}
+                      value={editFormInput.description}
+                      onChange={(e) => setEditFormInput((f) => ({ ...f, description: e.target.value }))}
+                    />
+                  </label>
                   <div className="contract-actions">
                     <button type="button" className="btn-ghost" onClick={() => setEditingFormId(null)}>
                       Cancel
@@ -328,6 +334,7 @@ function IntakeFormBuilder() {
                     type="button"
                     className="intake-builder-card-title"
                     onClick={() => setExpandedFormId((id) => (id === form.id ? null : form.id))}
+                    aria-expanded={expandedFormId === form.id}
                   >
                     {form.title}
                   </button>
@@ -369,22 +376,28 @@ function IntakeFormBuilder() {
                         className="intake-builder-field-row intake-builder-field-edit"
                         onSubmit={(e) => handleSaveFieldEdit(e, form.id, field.id)}
                       >
-                        <input
-                          value={fieldInput.label}
-                          onChange={(e) => setFieldInput((f) => ({ ...f, label: e.target.value }))}
-                          required
-                          autoComplete="off"
-                        />
-                        <select
-                          value={fieldInput.field_type}
-                          onChange={(e) => setFieldInput((f) => ({ ...f, field_type: e.target.value as FieldType }))}
-                        >
-                          {Object.entries(FIELD_TYPE_LABELS).map(([value, label]) => (
-                            <option key={value} value={value}>
-                              {label}
-                            </option>
-                          ))}
-                        </select>
+                        <label className="field">
+                          <span>Label</span>
+                          <input
+                            value={fieldInput.label}
+                            onChange={(e) => setFieldInput((f) => ({ ...f, label: e.target.value }))}
+                            required
+                            autoComplete="off"
+                          />
+                        </label>
+                        <label className="field">
+                          <span>Field type</span>
+                          <select
+                            value={fieldInput.field_type}
+                            onChange={(e) => setFieldInput((f) => ({ ...f, field_type: e.target.value as FieldType }))}
+                          >
+                            {Object.entries(FIELD_TYPE_LABELS).map(([value, label]) => (
+                              <option key={value} value={value}>
+                                {label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
                         <label className="field-checkbox">
                           <input
                             type="checkbox"
@@ -394,12 +407,15 @@ function IntakeFormBuilder() {
                           <span>Required</span>
                         </label>
                         {fieldInput.field_type === 'dropdown' && (
-                          <input
-                            value={fieldInput.optionsText}
-                            onChange={(e) => setFieldInput((f) => ({ ...f, optionsText: e.target.value }))}
-                            placeholder="Option A, Option B…"
-                            autoComplete="off"
-                          />
+                          <label className="field">
+                            <span>Dropdown options</span>
+                            <input
+                              value={fieldInput.optionsText}
+                              onChange={(e) => setFieldInput((f) => ({ ...f, optionsText: e.target.value }))}
+                              placeholder="Option A, Option B…"
+                              autoComplete="off"
+                            />
+                          </label>
                         )}
                         <div className="contract-actions">
                           <button type="button" className="btn-ghost" onClick={() => setEditingFieldId(null)}>
@@ -460,23 +476,29 @@ function IntakeFormBuilder() {
                   {!form.is_system &&
                     (addingFieldTo === form.id ? (
                       <form className="intake-builder-field-row intake-builder-field-edit" onSubmit={(e) => handleAddField(e, form.id)}>
-                        <input
-                          value={fieldInput.label}
-                          onChange={(e) => setFieldInput((f) => ({ ...f, label: e.target.value }))}
-                          placeholder="Field label…"
-                          autoComplete="off"
-                          required
-                        />
-                        <select
-                          value={fieldInput.field_type}
-                          onChange={(e) => setFieldInput((f) => ({ ...f, field_type: e.target.value as FieldType }))}
-                        >
-                          {Object.entries(FIELD_TYPE_LABELS).map(([value, label]) => (
-                            <option key={value} value={value}>
-                              {label}
-                            </option>
-                          ))}
-                        </select>
+                        <label className="field">
+                          <span>Label</span>
+                          <input
+                            value={fieldInput.label}
+                            onChange={(e) => setFieldInput((f) => ({ ...f, label: e.target.value }))}
+                            placeholder="Field label…"
+                            autoComplete="off"
+                            required
+                          />
+                        </label>
+                        <label className="field">
+                          <span>Field type</span>
+                          <select
+                            value={fieldInput.field_type}
+                            onChange={(e) => setFieldInput((f) => ({ ...f, field_type: e.target.value as FieldType }))}
+                          >
+                            {Object.entries(FIELD_TYPE_LABELS).map(([value, label]) => (
+                              <option key={value} value={value}>
+                                {label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
                         <label className="field-checkbox">
                           <input
                             type="checkbox"
@@ -486,12 +508,15 @@ function IntakeFormBuilder() {
                           <span>Required</span>
                         </label>
                         {fieldInput.field_type === 'dropdown' && (
-                          <input
-                            value={fieldInput.optionsText}
-                            onChange={(e) => setFieldInput((f) => ({ ...f, optionsText: e.target.value }))}
-                            placeholder="Option A, Option B…"
-                            autoComplete="off"
-                          />
+                          <label className="field">
+                            <span>Dropdown options</span>
+                            <input
+                              value={fieldInput.optionsText}
+                              onChange={(e) => setFieldInput((f) => ({ ...f, optionsText: e.target.value }))}
+                              placeholder="Option A, Option B…"
+                              autoComplete="off"
+                            />
+                          </label>
                         )}
                         <div className="contract-actions">
                           <button type="button" className="btn-ghost" onClick={() => setAddingFieldTo(null)}>

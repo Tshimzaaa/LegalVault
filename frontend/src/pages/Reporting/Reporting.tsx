@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './Reporting.css'
+import '../../styles/dashboard.css'
 import { listContracts } from '../../api/contracts'
 import { getDashboardSummary } from '../../api/dashboard'
 import { getReportingOverview, downloadContractsCsv } from '../../api/reporting'
 import type { ReportingOverview } from '../../api/reporting'
 import { updateStaffCapacity } from '../../api/auth'
 import type { User } from '../../api/auth'
+import { IconX } from '../../components/icons'
 
 interface OutcomeSlice {
   label: string
@@ -36,23 +38,31 @@ function CaseOutcomesDonut({ data }: { data: OutcomeSlice[] }) {
     <div className="donut-wrap">
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} />
-        {segments.map((s, i) => (
-          <circle
-            key={s.label}
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            fill="none"
-            stroke={s.color}
-            strokeWidth={hover === i ? stroke + 3 : stroke}
-            strokeDasharray={`${s.dash} ${circumference - s.dash}`}
-            strokeLinecap="butt"
-            transform={`rotate(${s.rotate} ${size / 2} ${size / 2})`}
-            className="donut-segment"
-            onMouseEnter={() => setHover(i)}
-            onMouseLeave={() => setHover(null)}
-          />
-        ))}
+        {segments.map((s, i) => {
+          const segmentPercent = Math.round((s.value / total) * 100)
+          return (
+            <circle
+              key={s.label}
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              fill="none"
+              stroke={s.color}
+              strokeWidth={hover === i ? stroke + 3 : stroke}
+              strokeDasharray={`${s.dash} ${circumference - s.dash}`}
+              strokeLinecap="butt"
+              transform={`rotate(${s.rotate} ${size / 2} ${size / 2})`}
+              className="donut-segment"
+              tabIndex={0}
+              role="img"
+              aria-label={`${s.label}: ${segmentPercent}%`}
+              onMouseEnter={() => setHover(i)}
+              onMouseLeave={() => setHover(null)}
+              onFocus={() => setHover(i)}
+              onBlur={() => setHover(null)}
+            />
+          )
+        })}
         <text x="50%" y="46%" textAnchor="middle" className="donut-center-value">
           {data.length > 0 ? total : 0}
         </text>
@@ -77,8 +87,16 @@ function CaseOutcomesDonut({ data }: { data: OutcomeSlice[] }) {
 
 function UtilizationBar({ percent }: { percent: number }) {
   const color = percent >= 100 ? '#ef4444' : percent >= 80 ? '#eab308' : '#22c55e'
+  const overloaded = percent > 100
   return (
-    <div className="progress-track utilization-bar">
+    <div
+      className="progress-track utilization-bar"
+      role="progressbar"
+      aria-valuenow={percent}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuetext={overloaded ? `${percent}%, overloaded` : undefined}
+    >
       <span className="progress-fill" style={{ width: `${Math.min(percent, 100)}%`, background: color }} />
     </div>
   )
@@ -96,16 +114,41 @@ function StaffWorkloadTable({
   const rows = overview?.staff_workload ?? []
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
+  const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({})
 
   function startEdit(r: ReportingOverview['staff_workload'][number]) {
     setEditingId(r.user_id)
     setDraft(r.weekly_capacity_hours != null ? String(r.weekly_capacity_hours) : '')
   }
 
-  function saveEdit(userId: string) {
-    const parsed = draft.trim() === '' ? null : Number(draft)
-    onUpdateCapacity(userId, parsed !== null && !Number.isNaN(parsed) ? parsed : null)
+  function focusTrigger(userId: string) {
+    triggerRefs.current[userId]?.focus()
+  }
+
+  function cancelEdit(userId: string) {
     setEditingId(null)
+    focusTrigger(userId)
+  }
+
+  function saveEdit(userId: string) {
+    const trimmed = draft.trim()
+    if (trimmed === '') {
+      onUpdateCapacity(userId, null)
+      setEditingId(null)
+      focusTrigger(userId)
+      return
+    }
+    const parsed = Number(trimmed)
+    if (Number.isNaN(parsed)) {
+      // Invalid input — leave the stored capacity untouched.
+      setEditingId(null)
+      focusTrigger(userId)
+      return
+    }
+    const clamped = Math.min(168, Math.max(0, parsed))
+    onUpdateCapacity(userId, clamped)
+    setEditingId(null)
+    focusTrigger(userId)
   }
 
   return (
@@ -132,23 +175,42 @@ function StaffWorkloadTable({
             </td>
             <td className="tabular">
               {editingId === r.user_id ? (
-                <input
-                  type="number"
-                  min={0}
-                  max={168}
-                  step={0.5}
-                  className="capacity-input"
-                  value={draft}
-                  autoFocus
-                  onChange={(e) => setDraft(e.target.value)}
-                  onBlur={() => saveEdit(r.user_id)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') saveEdit(r.user_id)
-                    if (e.key === 'Escape') setEditingId(null)
-                  }}
-                />
+                <span className="capacity-edit-wrap">
+                  <input
+                    type="number"
+                    min={0}
+                    max={168}
+                    step={0.5}
+                    className="capacity-input"
+                    aria-label={`Weekly capacity for ${r.name}`}
+                    value={draft}
+                    autoFocus
+                    onChange={(e) => setDraft(e.target.value)}
+                    onBlur={() => saveEdit(r.user_id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') saveEdit(r.user_id)
+                      if (e.key === 'Escape') cancelEdit(r.user_id)
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="icon-btn"
+                    aria-label={`Cancel editing capacity for ${r.name}`}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => cancelEdit(r.user_id)}
+                  >
+                    <IconX />
+                  </button>
+                </span>
               ) : canEditCapacity ? (
-                <button type="button" className="capacity-edit-btn" onClick={() => startEdit(r)}>
+                <button
+                  type="button"
+                  className="capacity-edit-btn"
+                  ref={(el) => {
+                    triggerRefs.current[r.user_id] = el
+                  }}
+                  onClick={() => startEdit(r)}
+                >
                   {r.weekly_capacity_hours != null ? `${r.weekly_capacity_hours}h/wk` : 'Set capacity'}
                 </button>
               ) : (

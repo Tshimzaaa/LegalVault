@@ -229,13 +229,27 @@ function IntakeSubmissions() {
                 <th>Submitted by</th>
                 <th>Status</th>
                 <th>Submitted</th>
-                <th></th>
+                <th>
+                  <span className="visually-hidden">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody>
               {submissions.map((s) => (
                 <Fragment key={s.id}>
-                  <tr onClick={() => setExpandedId((id) => (id === s.id ? null : s.id))} className="intake-submission-row">
+                  <tr
+                    onClick={() => setExpandedId((id) => (id === s.id ? null : s.id))}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        setExpandedId((id) => (id === s.id ? null : s.id))
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={expandedId === s.id}
+                    className="intake-submission-row"
+                  >
                     <td>{formTitle(s.form_id)}</td>
                     <td className="muted">{submitterName(s.submitted_by)}</td>
                     <td>

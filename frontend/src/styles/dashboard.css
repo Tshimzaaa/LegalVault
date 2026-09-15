@@ -145,6 +145,7 @@
 }
 
 .icon-btn {
+  position: relative;
   width: 22px;
   height: 22px;
   display: flex;
@@ -155,6 +156,14 @@
   border: none;
   color: var(--text-muted);
   cursor: pointer;
+}
+
+/* Expands the tappable/clickable area to ~44x44 (WCAG target size) without
+   growing the visible button or affecting layout of adjacent icon-btns. */
+.icon-btn::before {
+  content: '';
+  position: absolute;
+  inset: -11px;
 }
 
 .icon-btn:hover {

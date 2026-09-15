@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import '../AuthPage.css'
 import Seo from '../../components/Seo'
+import { isDesktopPointer } from '../../utils/device'
 
 interface OwnerLoginProps {
   onSubmit: (secret: string) => Promise<void>
@@ -42,7 +43,7 @@ function OwnerLogin({ onSubmit }: OwnerLoginProps) {
               onChange={(e) => setSecret(e.target.value)}
               placeholder="••••••••"
               required
-              autoFocus
+              autoFocus={isDesktopPointer}
               autoComplete="current-password"
             />
           </label>

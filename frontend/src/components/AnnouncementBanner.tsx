@@ -6,8 +6,8 @@ import type { Announcement, AnnouncementSeverity } from '../api/announcements'
 
 const severityColor: Record<AnnouncementSeverity, string> = {
   info: '#3987e5',
-  warning: '#eab308',
-  critical: '#ef4444',
+  warning: 'var(--warning)',
+  critical: 'var(--danger)',
 }
 
 const DISMISSED_KEY = 'dismissed_announcements'
