@@ -2,6 +2,9 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import './Contact.css'
+import { submitInquiry } from '../../api/inquiries'
+import { inquiryErrorMessage, validateInquiry } from '../Register/inquiryForm'
+import type { InquiryFieldErrors } from '../Register/inquiryForm'
 
 function Contact() {
   const [name, setName] = useState('')
@@ -9,11 +12,61 @@ function Contact() {
   const [organization, setOrganization] = useState('')
   const [message, setMessage] = useState('')
   const [consent, setConsent] = useState(false)
+  const [website, setWebsite] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<InquiryFieldErrors>({})
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    setSubmitted(true)
+    if (submitting) return
+    setError('')
+
+    const errs = validateInquiry(
+      { name, email, phone: '', organization, message },
+      { orgRequired: false, messageRequired: true, consent },
+    )
+    setFieldErrors(errs)
+    const first = Object.keys(errs)[0]
+    if (first) {
+      document.getElementById(`contact-${first}`)?.focus()
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      await submitInquiry({
+        kind: 'contact',
+        name: name.trim(),
+        email: email.trim(),
+        organization_name: organization.trim() || undefined,
+        message: message.trim(),
+        consent: true,
+        website,
+      })
+      setSubmitted(true)
+    } catch (err) {
+      setError(inquiryErrorMessage(err))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  function fp(key: keyof InquiryFieldErrors) {
+    return {
+      id: `contact-${key}`,
+      'aria-invalid': Boolean(fieldErrors[key]),
+      'aria-describedby': fieldErrors[key] ? `contact-${key}-error` : undefined,
+    }
+  }
+
+  function fe(key: keyof InquiryFieldErrors) {
+    return fieldErrors[key] ? (
+      <span id={`contact-${key}-error`} className="contact-field-error">
+        {fieldErrors[key]}
+      </span>
+    ) : null
   }
 
   return (
@@ -32,11 +85,12 @@ function Contact() {
               <p>Thanks for reaching out, someone from our team will get back to you shortly.</p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} noValidate>
               <div className="contact-field-row">
                 <label className="contact-field">
                   <span>Name</span>
                   <input
+                    {...fp('name')}
                     type="text"
                     name="name"
                     value={name}
@@ -45,10 +99,12 @@ function Contact() {
                     required
                     autoComplete="name"
                   />
+                  {fe('name')}
                 </label>
                 <label className="contact-field">
                   <span>Work email</span>
                   <input
+                    {...fp('email')}
                     type="email"
                     name="email"
                     value={email}
@@ -58,12 +114,14 @@ function Contact() {
                     autoComplete="email"
                     spellCheck={false}
                   />
+                  {fe('email')}
                 </label>
               </div>
 
               <label className="contact-field">
                 <span>Organization name</span>
                 <input
+                  {...fp('organization')}
                   type="text"
                   name="organization"
                   value={organization}
@@ -71,11 +129,13 @@ function Contact() {
                   placeholder="Acme Inc"
                   autoComplete="organization"
                 />
+                {fe('organization')}
               </label>
 
               <label className="contact-field">
                 <span>Message</span>
                 <textarea
+                  {...fp('message')}
                   name="message"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
@@ -83,10 +143,23 @@ function Contact() {
                   rows={5}
                   required
                 />
+                {fe('message')}
               </label>
+
+              <div className="hp-field" aria-hidden="true">
+                <input
+                  type="text"
+                  name="website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                />
+              </div>
 
               <label className="contact-field contact-field-checkbox">
                 <input
+                  {...fp('consent')}
                   type="checkbox"
                   checked={consent}
                   onChange={(e) => setConsent(e.target.checked)}
@@ -98,8 +171,14 @@ function Contact() {
                 </span>
               </label>
 
-              <button type="submit" className="btn btn-primary contact-submit">
-                Send Message
+              {fe('consent')}
+
+              <div aria-live="polite">
+                {error && <p className="contact-error">{error}</p>}
+              </div>
+
+              <button type="submit" className="btn btn-primary contact-submit" disabled={submitting}>
+                {submitting ? 'Sending…' : 'Send Message'}
               </button>
             </form>
           )}

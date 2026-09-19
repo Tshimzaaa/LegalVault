@@ -8,6 +8,8 @@ export interface NavItem {
   label: string
   icon: React.ReactNode
   page: string
+  /** Optional count shown as a small pill (e.g. unread inquiries). Hidden when 0 or unset. */
+  badge?: number
 }
 
 export interface SidebarUser {
@@ -166,6 +168,7 @@ function Sidebar({
               >
                 <span className="nav-icon">{item.icon}</span>
                 <span className="nav-label">{item.label}</span>
+                {!!item.badge && <span className="nav-badge">{item.badge > 99 ? '99+' : item.badge}<span className="sr-only"> new</span></span>}
               </Link>
             )
           })}
@@ -204,7 +207,12 @@ function Sidebar({
                 aria-current={active ? 'page' : undefined}
                 onClick={close}
               >
-                <span className="mobile-tab-icon">{isAction ? <IconPlus /> : item.icon}</span>
+                <span className="mobile-tab-icon">
+                  {isAction ? <IconPlus /> : item.icon}
+                  {!isAction && !!item.badge && (
+                    <span className="mobile-tab-badge">{item.badge > 99 ? '99+' : item.badge}<span className="sr-only"> new</span></span>
+                  )}
+                </span>
                 <span className="mobile-tab-label">{isAction ? 'New' : item.label}</span>
               </Link>
             )

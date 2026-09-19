@@ -108,7 +108,7 @@ function Navbar({ onLoginClick }: NavbarProps) {
           tabIndex={menuOpen ? undefined : -1}
           onClick={closeMenu}
         >
-          Get Started Free
+          Request Access
         </Link>
         <Link
           to="/login"

@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     OWNER_SECRET: str = "change-me"
 
+    # Firms are onboarded by the platform owner (POST /owner/orgs). Public self-serve
+    # signup stays off unless this is explicitly enabled.
+    ALLOW_PUBLIC_REGISTRATION: bool = False
+
     # Fernet key used to encrypt third-party integration credentials at rest
     # (see app/core/encryption.py). Required in every environment, including
     # dev, so a missing key fails loudly at startup rather than as a confusing

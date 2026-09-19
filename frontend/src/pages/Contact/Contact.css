@@ -269,3 +269,48 @@
     overflow-wrap: anywhere;
   }
 }
+
+.contact-page .contact-field input,
+.contact-page .contact-field textarea {
+  font-size: 16px;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.contact-page .contact-field-checkbox input[type='checkbox'] {
+  min-height: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.contact-page .contact-field-checkbox a {
+  display: inline-block;
+  padding: 10px 0;
+  margin: -10px 0;
+}
+
+.contact-error {
+  margin: 0 0 12px;
+  color: var(--danger-light);
+  font-size: 13px;
+}
+
+.contact-field-error {
+  color: var(--danger-light);
+  font-size: 12px;
+}
+
+.contact-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Honeypot: off-screen, not display:none, so bots still fill it. */
+.contact-page .hp-field {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}

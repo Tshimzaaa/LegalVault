@@ -13,6 +13,7 @@ before launch (see frontend/src/constants/site.ts).
 
 - [Home](https://legalvault.example.com/): product overview, about, blog, and contact
   sections all on one page.
+- [Request access](https://legalvault.example.com/register): firms request access here; organizations are set up by the LegalVault team, not self-registered.
 
 ## Legal
 

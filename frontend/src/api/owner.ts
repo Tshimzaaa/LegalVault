@@ -1,4 +1,5 @@
 import { apiRequest } from './client'
+import type { InquiryKind, InquiryStatus } from './inquiries'
 
 export interface OrganizationSummary {
   id: string
@@ -187,4 +188,61 @@ export interface SystemHealth {
 
 export async function getSystemHealth(token: string, hours = 24): Promise<SystemHealth> {
   return apiRequest<SystemHealth>(`/owner/system-health?hours=${hours}`, { token })
+}
+
+export interface Inquiry {
+  id: string
+  kind: InquiryKind
+  status: InquiryStatus
+  name: string
+  email: string
+  phone: string | null
+  organization_name: string | null
+  message: string | null
+  owner_note: string | null
+  handled_at: string | null
+  organization_id: string | null
+  created_at: string
+}
+
+export interface InquiryList {
+  items: Inquiry[]
+  total: number
+}
+
+export interface InquirySummary {
+  new: number
+  in_progress: number
+  onboarded: number
+  closed: number
+  new_access_requests: number
+  new_contact: number
+}
+
+export async function listInquiries(
+  token: string,
+  options: { status?: InquiryStatus; kind?: InquiryKind; limit?: number; offset?: number } = {},
+): Promise<InquiryList> {
+  const params = new URLSearchParams()
+  if (options.status) params.set('status', options.status)
+  if (options.kind) params.set('kind', options.kind)
+  params.set('limit', String(options.limit ?? 50))
+  params.set('offset', String(options.offset ?? 0))
+  return apiRequest<InquiryList>(`/owner/inquiries?${params.toString()}`, { token })
+}
+
+export async function getInquirySummary(token: string): Promise<InquirySummary> {
+  return apiRequest<InquirySummary>('/owner/inquiries/summary', { token })
+}
+
+export async function updateInquiry(
+  token: string,
+  inquiryId: string,
+  patch: { status?: InquiryStatus; owner_note?: string | null; organization_id?: string | null },
+): Promise<Inquiry> {
+  return apiRequest<Inquiry>(`/owner/inquiries/${inquiryId}`, { method: 'PATCH', body: patch, token })
+}
+
+export async function deleteInquiry(token: string, inquiryId: string): Promise<void> {
+  await apiRequest(`/owner/inquiries/${inquiryId}`, { method: 'DELETE', token })
 }

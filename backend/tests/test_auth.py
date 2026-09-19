@@ -4,6 +4,7 @@ revocation, and deactivation being enforced immediately (not just on next login)
 """
 from datetime import UTC, datetime
 
+from app.core.config import settings
 from tests.conftest import auth_headers, make_org, make_staff
 
 
@@ -22,7 +23,14 @@ def _register_payload(**overrides):
     }
 
 
-def test_register_creates_org_and_admin(client):
+def test_public_registration_is_refused_by_default(client):
+    res = client.post("/auth/register", json=_register_payload())
+    assert res.status_code == 403
+    assert "invitation" in res.json()["detail"].lower()
+
+
+def test_register_creates_org_and_admin(client, monkeypatch):
+    monkeypatch.setattr(settings, "ALLOW_PUBLIC_REGISTRATION", True)
     res = client.post("/auth/register", json=_register_payload())
     assert res.status_code == 201
     body = res.json()

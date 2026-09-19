@@ -164,7 +164,7 @@ function Home() {
 
         <div className="hero-actions">
           <Link to="/register" className="btn btn-primary">
-            Get Started Free
+            Request Access
           </Link>
           <a href="#about" className="btn btn-secondary">
             See How It Works

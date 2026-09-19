@@ -39,11 +39,6 @@
     min-height: 44px;
   }
 
-  .btn-ghost {
-    color: var(--text);
-    border-color: rgba(var(--overlay-rgb), 0.22);
-  }
-
   .card {
     padding: 16px;
     border-radius: 14px;

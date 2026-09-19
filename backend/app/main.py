@@ -32,6 +32,7 @@ from app.modules.announcements.routes import (
     router as announcements_router,
     owner_announcements_router,
 )
+from app.modules.inquiries.routes import router as inquiries_router, owner_inquiries_router
 from app.modules.monitoring.middleware import log_requests
 from app.modules.notifications.routes import router as notifications_router
 from app.modules.reporting.routes import router as reporting_router
@@ -65,6 +66,8 @@ app.include_router(search_router)
 app.include_router(audit_router)
 app.include_router(announcements_router)
 app.include_router(owner_announcements_router)
+app.include_router(inquiries_router)
+app.include_router(owner_inquiries_router)
 app.include_router(notifications_router)
 app.include_router(reporting_router)
 app.include_router(signed_contracts_router)

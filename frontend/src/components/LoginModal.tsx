@@ -239,7 +239,7 @@ function LoginModal({ onClose, onSubmit }: LoginModalProps) {
           </button>
 
           <Link to="/register" className="modal-link-back" onClick={onClose}>
-            Don&rsquo;t have an organization yet? Create one
+            Don&rsquo;t have an account? Request access
           </Link>
         </form>
       </div>

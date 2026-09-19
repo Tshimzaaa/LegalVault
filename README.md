@@ -4,7 +4,7 @@ A multi-tenant SaaS platform for law firm practice management, working name "Leg
 
 Two tiers of users, each with its own auth system and JWT token type:
 
-1. **SaaS Owner**: onboards law firms onto the platform, activates/suspends firms
+1. **SaaS Owner**: onboards law firms onto the platform, activates/suspends firms, and works the inbox of access requests and contact messages from the public site. Firms do not self-register: public signup (`POST /auth/register`) is off unless `ALLOW_PUBLIC_REGISTRATION=true`
 2. **Firm Staff**: admins, lawyers, paralegals, secretaries, receptionists who manage contracts and firm operations
 
 A third tier, **Firm Clients** (a restricted client-facing portal), existed earlier in the project but was deliberately removed as part of a "corporate pivot" (see git history: "Phase 3 of corporate pivot: drop the client tier, merge portals"). Anything below that still references clients/matters as a live concept is describing the pre-pivot design, not the current app.
@@ -69,6 +69,7 @@ backend/
       reporting/         staff workload, status breakdown, task/deadline aggregates, CSV export
       monitoring/        request logging middleware + system-health/error metrics
       owner/             SaaS-owner console: firm management, activation
+      inquiries/         public contact + access-request submissions and the owner-only inbox for them
       ai_assistant/      "Learned Friend" AI assistant conversations (Ollama-backed, see backend/.env)
   alembic/             migrations
   tests/               pytest suite (auth, contracts, RLS, multi-tenant isolation, malware

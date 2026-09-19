@@ -23,6 +23,7 @@ from app.modules.contracts.models import Contract, ContractAssignment, ContractD
 from app.modules.templates.models import Template  # noqa: F401
 from app.modules.audit.models import AuditLog  # noqa: F401
 from app.modules.announcements.models import Announcement  # noqa: F401
+from app.modules.inquiries.models import Inquiry  # noqa: F401
 from app.modules.monitoring.models import RequestLog  # noqa: F401
 from app.modules.notifications.models import Notification  # noqa: F401
 from app.modules.signed_contracts.models import SignedContract  # noqa: F401

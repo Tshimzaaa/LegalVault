@@ -29,7 +29,7 @@ function TermsAndConditions() {
         <p>
           These Terms and Conditions govern access to and use of the contract and practice management platform
           operated by <span className="legal-placeholder">[LegalVault (Pty) Ltd, registration no. PLACEHOLDER]</span>{' '}
-          ("we", "us", the "Platform"). By creating an account, or by your organization’s staff using the Platform,
+          ("we", "us", the "Platform"). By using an account we set up for you, or by your organization’s staff using the Platform,
           you agree to these Terms. If you don’t agree, don’t use the Platform.
         </p>
 
@@ -44,7 +44,7 @@ function TermsAndConditions() {
 
         <h2>3. Accounts and eligibility</h2>
         <ul>
-          <li>Organization accounts are created directly through our self-serve signup; the organization’s administrator is responsible for managing staff access within their account.</li>
+          <li>Organization accounts are set up by us after an access request is approved; the organization’s administrator is responsible for managing staff access within their account.</li>
           <li>You’re responsible for keeping your login credentials confidential and for all activity under your account.</li>
           <li>Notify us immediately at <a href="mailto:hello@legalvault.example.com">hello@legalvault.example.com</a> if you suspect unauthorized access to your account.</li>
         </ul>

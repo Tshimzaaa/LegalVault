@@ -1,6 +1,7 @@
 from datetime import datetime, UTC
 
-from fastapi import Request, APIRouter, Depends
+from fastapi import Request, APIRouter, Depends, HTTPException
+from app.core.config import settings
 from sqlalchemy.orm import Session
 from app.modules.auth.repository import AuthRepository
 from app.database.session import get_db
@@ -48,6 +49,11 @@ def logout(request: RefreshTokenRequest, db: Session = Depends(get_db)):
 @router.post("/register", response_model=RegisterResponse, status_code=201)
 @limiter.limit("5/minute")
 def register(request: Request, body: RegisterRequest, db: Session = Depends(get_db)):
+    if not settings.ALLOW_PUBLIC_REGISTRATION:
+        raise HTTPException(
+            status_code=403,
+            detail="Registration is by invitation. Request access and we will set up your organization.",
+        )
     service = RegisterService(db)
     return service.register(body)
 

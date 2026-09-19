@@ -506,8 +506,13 @@ button.chip {
 
 .btn-ghost {
   background: rgba(var(--overlay-rgb), 0.06);
-  color: var(--text-subtle);
-  border: 1px solid rgba(var(--overlay-rgb), 0.1);
+  color: var(--text);
+  border: 1px solid rgba(var(--overlay-rgb), 0.16);
+}
+
+.btn-ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-ghost:hover {
