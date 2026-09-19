@@ -138,7 +138,7 @@ function Staff({ user }: StaffProps) {
 
   return (
     <main className="dash-main">
-      <header className="dash-topbar">
+      <header className="dash-topbar m-header">
         <h1>Staff</h1>
         <div className="topbar-actions">
           <span className="chip">
@@ -283,27 +283,27 @@ function Staff({ user }: StaffProps) {
         <section className="card staff-table-card">
           {forceLogoutError && <p className="contract-error" aria-live="polite">{forceLogoutError}</p>}
           <div className="table-scroll">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th />
-                <th />
+          <table className="data-table data-table-list staff-list" role="table">
+            <thead role="rowgroup">
+              <tr role="row">
+                <th role="columnheader">Name</th>
+                <th role="columnheader">Email</th>
+                <th role="columnheader">Role</th>
+                <th role="columnheader">Status</th>
+                <th role="columnheader"><span className="staff-sr">Deactivate or reactivate</span></th>
+                <th role="columnheader"><span className="staff-sr">Force logout</span></th>
               </tr>
             </thead>
-            <tbody>
+            <tbody role="rowgroup">
               {users.map((u) => (
-                <tr key={u.id}>
-                  <td>
+                <tr key={u.id} role="row">
+                  <td role="cell">
                     {u.first_name} {u.last_name}
                     {u.id === user.id && <span className="muted"> (you)</span>}
                   </td>
-                  <td className="muted">{u.email}</td>
-                  <td className="muted">{roleLabel[u.role]}</td>
-                  <td>
+                  <td role="cell" className="muted staff-email">{u.email}</td>
+                  <td role="cell" className="muted staff-role">{roleLabel[u.role]}</td>
+                  <td role="cell" className="staff-status">
                     {u.invitation_status === 'pending' ? (
                       <span className="status-badge" style={{ color: '#eab308', background: '#eab30822' }}>
                         Invite pending
@@ -320,7 +320,7 @@ function Staff({ user }: StaffProps) {
                       </span>
                     )}
                   </td>
-                  <td>
+                  <td role="cell" className="staff-act">
                     <button
                       type="button"
                       className="btn-ghost staff-toggle-btn"
@@ -330,7 +330,7 @@ function Staff({ user }: StaffProps) {
                       {togglingId === u.id ? 'Saving…' : u.is_active ? 'Deactivate' : 'Reactivate'}
                     </button>
                   </td>
-                  <td>
+                  <td role="cell" className="staff-act">
                     {u.invitation_status !== 'pending' && u.is_active && (
                       <button
                         type="button"
@@ -346,7 +346,7 @@ function Staff({ user }: StaffProps) {
               ))}
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="muted">
+                  <td role="cell" colSpan={6} className="muted">
                     No staff yet.
                   </td>
                 </tr>

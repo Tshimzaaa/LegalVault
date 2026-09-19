@@ -43,6 +43,7 @@ import type { SignatureRequest, SignatureRecipientInput } from '../../api/signat
 import { IconDownload, IconTrash, IconSend, IconEdit } from '../../components/icons'
 
 type LoadState = 'loading' | 'error' | 'ready'
+type DetailTab = 'overview' | 'tasks' | 'documents' | 'messages'
 
 const statusOptions: { value: Contract['status']; label: string }[] = [
   { value: 'intake', label: 'Intake' },
@@ -176,6 +177,13 @@ function ContractDetail() {
   const [sigError, setSigError] = useState<string | null>(null)
   const [sigBusyId, setSigBusyId] = useState<string | null>(null)
 
+  const [tab, setTab] = useState<DetailTab>('overview')
+  const [moreOpen, setMoreOpen] = useState(false)
+  const [showAddTask, setShowAddTask] = useState(false)
+  const [showUpload, setShowUpload] = useState(false)
+  const [showSign, setShowSign] = useState(false)
+  const [showAssign, setShowAssign] = useState(false)
+
   const token = localStorage.getItem('access_token')
 
   function loadAll() {
@@ -223,6 +231,7 @@ function ContractDetail() {
     setEditDescription(contract.description ?? '')
     setDetailsError(null)
     setEditingDetails(true)
+    setTab('overview')
   }
 
   async function handleSaveDetails(e: FormEvent) {
@@ -584,7 +593,7 @@ function ContractDetail() {
 
   return (
     <main className="dash-main">
-      <header className="dash-topbar">
+      <header className="dash-topbar m-header cd-head">
         <div>
           <Link to="/staff/contracts" className="contract-detail-back">
             &larr; Back to Contracts
@@ -593,11 +602,20 @@ function ContractDetail() {
         </div>
         {contract && (
           <div className="topbar-actions">
-            <button type="button" className="icon-btn" onClick={startEditDetails} aria-label="Edit contract details">
+            <button type="button" className="icon-btn cd-edit-btn" onClick={startEditDetails} aria-label="Edit contract details">
               <IconEdit />
             </button>
+            <button
+              type="button"
+              className="btn-ghost cd-more-btn"
+              aria-haspopup="dialog"
+              aria-expanded={moreOpen}
+              onClick={() => setMoreOpen(true)}
+            >
+              More
+            </button>
             <span
-              className="status-badge"
+              className="status-badge cd-head-status"
               style={{ color: statusColor[contract.status], background: `rgba(${statusColorRgb[contract.status]}, 0.13)` }}
             >
               {statusOptions.find((o) => o.value === contract.status)?.label}
@@ -623,11 +641,66 @@ function ContractDetail() {
       )}
 
       {status === 'ready' && contract && (
-        <div className="contract-detail-grid">
+        <>
+        <div className="cd-facts">
           <div>
-            <section className="card">
+            <span className="cd-fact-label">Deadline</span>
+            <span className="cd-fact-value">
+              {contract.due_date ? new Date(contract.due_date).toLocaleDateString() : 'Not set'}
+            </span>
+          </div>
+          <div>
+            <span className="cd-fact-label">Opened</span>
+            <span className="cd-fact-value">{new Date(contract.created_at).toLocaleDateString()}</span>
+          </div>
+          <div>
+            <span className="cd-fact-label">Open tasks</span>
+            <span className="cd-fact-value">{tasks.filter((t) => t.status !== 'done').length}</span>
+          </div>
+          <div>
+            <span className="cd-fact-label">Staff</span>
+            <span className="cd-fact-value">{assignments.length}</span>
+          </div>
+        </div>
+
+        <div className="cd-tabs" role="tablist" aria-label="Contract sections">
+          {(
+            [
+              ['overview', 'Overview', null],
+              ['tasks', 'Tasks', tasks.length],
+              ['documents', 'Documents', documentGroups.length + signatureRequests.length],
+              ['messages', 'Messages', messages.length],
+            ] as [DetailTab, string, number | null][]
+          ).map(([key, label, count]) => (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              id={`cd-tab-${key}`}
+              aria-selected={tab === key}
+              aria-controls="cd-panel"
+              className={`cd-tab ${tab === key ? 'is-active' : ''}`}
+              onClick={() => setTab(key)}
+            >
+              {label}
+              {count ? <span className="cd-tab-count">{count}</span> : null}
+            </button>
+          ))}
+        </div>
+
+        <div className="contract-detail-grid" data-tab={tab} id="cd-panel" role="tabpanel" aria-labelledby={`cd-tab-${tab}`}>
+          <div className="cd-col">
+            <section className="card cd-sec" data-sec="documents">
               <div className="card-header">
                 <h2>Documents</h2>
+                <button
+                  type="button"
+                  className="btn-ghost cd-add-toggle"
+                  aria-expanded={showUpload}
+                  onClick={() => setShowUpload((v) => !v)}
+                >
+                  {showUpload ? 'Close' : 'Upload'}
+                </button>
               </div>
 
               <div className="list-rows">
@@ -697,7 +770,7 @@ function ContractDetail() {
                 {documentGroups.length === 0 && <p className="muted">No documents uploaded yet.</p>}
               </div>
 
-              <form onSubmit={handleUpload} className="contract-doc-upload-row">
+              <form onSubmit={handleUpload} className={`contract-doc-upload-row cd-collapsible ${showUpload ? 'is-open' : ''}`}>
                 <input
                   type="text"
                   aria-label="Document title"
@@ -727,9 +800,17 @@ function ContractDetail() {
               {uploadError && <p className="contract-error" aria-live="polite">{uploadError}</p>}
             </section>
 
-            <section className="card" style={{ marginTop: 16 }}>
+            <section className="card cd-sec" data-sec="documents" style={{ marginTop: 16 }}>
               <div className="card-header">
                 <h2>Signatures</h2>
+                <button
+                  type="button"
+                  className="btn-ghost cd-add-toggle"
+                  aria-expanded={showSign}
+                  onClick={() => setShowSign((v) => !v)}
+                >
+                  {showSign ? 'Close' : 'Send'}
+                </button>
               </div>
 
               <div className="list-rows">
@@ -779,6 +860,7 @@ function ContractDetail() {
                 {signatureRequests.length === 0 && <p className="muted">No signature requests sent yet.</p>}
               </div>
 
+              <div className={`cd-collapsible ${showSign ? 'is-open' : ''}`}>
               <form onSubmit={handleSendForSignature} className="contract-doc-upload-row">
                 <select value={sigDocId} onChange={(e) => setSigDocId(e.target.value)} aria-label="Document to send">
                   <option value="">Choose a document…</option>
@@ -844,12 +926,21 @@ function ContractDetail() {
                   </button>
                 </form>
               </div>
+              </div>
               {sigError && <p className="contract-error" aria-live="polite">{sigError}</p>}
             </section>
 
-            <section className="card" style={{ marginTop: 16 }}>
+            <section className="card cd-sec" data-sec="tasks" style={{ marginTop: 16 }}>
               <div className="card-header">
                 <h2>Tasks</h2>
+                <button
+                  type="button"
+                  className="btn-ghost cd-add-toggle"
+                  aria-expanded={showAddTask}
+                  onClick={() => setShowAddTask((v) => !v)}
+                >
+                  {showAddTask ? 'Close' : 'Add task'}
+                </button>
               </div>
 
               <div className="list-rows">
@@ -889,7 +980,7 @@ function ContractDetail() {
                 {tasks.length === 0 && <p className="muted">No tasks yet.</p>}
               </div>
 
-              <form onSubmit={handleCreateTask} className="contract-task-add-row">
+              <form onSubmit={handleCreateTask} className={`contract-task-add-row cd-collapsible ${showAddTask ? 'is-open' : ''}`}>
                 <input
                   type="text"
                   aria-label="New task title"
@@ -919,7 +1010,7 @@ function ContractDetail() {
               {taskError && <p className="contract-error" aria-live="polite">{taskError}</p>}
             </section>
 
-            <section className="card" style={{ marginTop: 16 }}>
+            <section className="card cd-sec" data-sec="messages" style={{ marginTop: 16 }}>
               <div className="card-header">
                 <h2>Messages</h2>
               </div>
@@ -946,7 +1037,7 @@ function ContractDetail() {
                 {messages.length === 0 && <p className="muted">No messages yet.</p>}
               </div>
 
-              <form onSubmit={handleSendMessage} className="contract-message-compose-row">
+              <form onSubmit={handleSendMessage} className="contract-message-compose-row cd-compose">
                 <textarea
                   rows={2}
                   aria-label="Message"
@@ -962,8 +1053,8 @@ function ContractDetail() {
             </section>
           </div>
 
-          <div>
-            <section className="card">
+          <div className="cd-col">
+            <section className="card cd-sec cd-details" data-sec="overview">
               <div className="card-header">
                 <h2>Details</h2>
               </div>
@@ -995,7 +1086,7 @@ function ContractDetail() {
               )}
             </section>
 
-            <section className="card" style={{ marginTop: 16 }}>
+            <section className="card cd-sec cd-status" data-sec="overview" style={{ marginTop: 16 }}>
               <div className="card-header">
                 <h2>Status</h2>
               </div>
@@ -1066,7 +1157,7 @@ function ContractDetail() {
                 </div>
               )}
 
-              <p className="muted" style={{ margin: '12px 0 4px' }}>
+              <p className="muted cd-deadline-label" style={{ margin: '12px 0 4px' }}>
                 Deadline
               </p>
               <div className="contract-detail-field-row">
@@ -1087,9 +1178,17 @@ function ContractDetail() {
               </div>
             </section>
 
-            <section className="card" style={{ marginTop: 16 }}>
+            <section className="card cd-sec cd-staff" data-sec="overview" style={{ marginTop: 16 }}>
               <div className="card-header">
                 <h2>Staff Assigned</h2>
+                <button
+                  type="button"
+                  className="btn-ghost cd-add-toggle"
+                  aria-expanded={showAssign}
+                  onClick={() => setShowAssign((v) => !v)}
+                >
+                  {showAssign ? 'Close' : 'Assign'}
+                </button>
               </div>
               <div className="list-rows">
                 {assignments.map((a) => (
@@ -1101,7 +1200,7 @@ function ContractDetail() {
                 {assignments.length === 0 && <p className="muted">No staff assigned yet.</p>}
               </div>
 
-              <div className="assignment-add-row">
+              <div className={`assignment-add-row cd-collapsible ${showAssign ? 'is-open' : ''}`}>
                 <select aria-label="Staff member to assign" value={assignUserId} onChange={(e) => setAssignUserId(e.target.value)}>
                   <option value="">Select staff member</option>
                   {assignableUsers.map((u) => (
@@ -1130,6 +1229,51 @@ function ContractDetail() {
               </div>
               {assignError && <p className="contract-error" aria-live="polite">{assignError}</p>}
             </section>
+          </div>
+        </div>
+        </>
+      )}
+
+      {moreOpen && contract && (
+        <div className="cd-sheet-backdrop" onClick={() => setMoreOpen(false)}>
+          <div
+            className="cd-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-label="More actions"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.key === 'Escape' && setMoreOpen(false)}
+          >
+            <div className="cd-sheet-grip" aria-hidden="true" />
+            <h2 className="cd-sheet-title">More actions</h2>
+            {(
+              [
+                ['Edit details', () => startEditDetails()],
+                ['Add a task', () => { setTab('tasks'); setShowAddTask(true) }],
+                ['Upload a document', () => { setTab('documents'); setShowUpload(true) }],
+                ['Send for signature', () => { setTab('documents'); setShowSign(true) }],
+                ['Assign staff', () => { setTab('overview'); setShowAssign(true) }],
+              ] as [string, () => void][]
+            ).map(([label, action]) => (
+              <button
+                key={label}
+                type="button"
+                className="cd-sheet-item"
+                autoFocus={label === 'Edit details'}
+                onClick={() => {
+                  action()
+                  setMoreOpen(false)
+                }}
+              >
+                {label}
+              </button>
+            ))}
+            <Link to="/staff/contracts" className="cd-sheet-item">
+              Back to all contracts
+            </Link>
+            <button type="button" className="btn-ghost cd-sheet-close" onClick={() => setMoreOpen(false)}>
+              Close
+            </button>
           </div>
         </div>
       )}

@@ -138,3 +138,97 @@
   font-size: 11px;
   width: 100%;
 }
+
+.workflow-stage-tabs {
+  display: none;
+}
+
+@media (max-width: 880px) {
+  .workflow-main {
+    padding-bottom: 12px;
+  }
+
+  .workflow-stage-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    flex: none;
+    margin: 0 -2px 12px;
+    padding: 2px;
+    scrollbar-width: none;
+  }
+
+  .workflow-stage-tab {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-sizing: border-box;
+    min-height: 44px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(var(--overlay-rgb), 0.14);
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 13px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .workflow-stage-tab[aria-pressed='true'] {
+    background: rgba(var(--accent-rgb), 0.14);
+    border-color: var(--accent);
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .workflow-stage-tab .workflow-column-count {
+    margin-left: 0;
+  }
+
+  .workflow-board {
+    display: block;
+    overflow: visible;
+    padding: 0;
+  }
+
+  .workflow-column {
+    display: none;
+  }
+
+  .workflow-column.is-active {
+    display: flex;
+  }
+
+  .workflow-column-header {
+    display: none;
+  }
+
+  .workflow-column-body {
+    overflow: visible;
+    gap: 12px;
+  }
+
+  .workflow-card {
+    cursor: default;
+    padding: 16px;
+    gap: 10px;
+  }
+
+  .workflow-card-title {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .workflow-card-move {
+    box-sizing: border-box;
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .workflow-empty-col {
+    font-size: 14px;
+    padding: 16px 2px;
+  }
+}

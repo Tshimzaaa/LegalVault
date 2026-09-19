@@ -189,3 +189,37 @@
     transition: none;
   }
 }
+
+@media (max-width: 640px) {
+  .owner-portal-main {
+    min-height: 100vh;
+    min-height: 100dvh;
+    box-sizing: border-box;
+  }
+
+  .owner-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .owner-create-firm-form .field-row,
+  .owner-create-org-form .field-row {
+    grid-template-columns: 1fr;
+  }
+
+  .owner-portal-main .field input,
+  .owner-portal-main .field select,
+  .owner-portal-main .field textarea {
+    font-size: 16px;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+
+  .owner-portal-main .btn-solid,
+  .owner-portal-main .btn-ghost,
+  .owner-collapse-toggle,
+  .owner-firm-toggle {
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+}

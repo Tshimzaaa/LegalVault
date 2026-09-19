@@ -64,3 +64,107 @@
   margin-top: 12px;
   flex-wrap: wrap;
 }
+
+@media (max-width: 880px) {
+  .isub-page .intake-new-request-form {
+    max-width: none;
+    padding: 14px;
+  }
+
+  .isub-page .intake-new-request-form .field-row {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .isub-page .contract-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    margin: 4px -14px -14px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    flex-direction: row-reverse;
+  }
+
+  .isub-page .contract-actions .btn-solid,
+  .isub-page .contract-actions .btn-ghost {
+    flex: 1;
+  }
+
+  .isub-page .contract-error {
+    text-align: left;
+    font-size: 14px;
+  }
+
+  .isub-page .table-scroll {
+    overflow: visible;
+  }
+
+  .isub-table .intake-submission-row {
+    box-sizing: border-box;
+    min-height: 44px;
+    padding: 14px 4px;
+  }
+
+  .isub-table .intake-submission-row td:first-child::after {
+    content: '';
+  }
+
+  .isub-table td[data-actions] .btn-ghost {
+    box-sizing: border-box;
+    width: 100%;
+  }
+
+  .isub-table .intake-submission-detail-row {
+    display: block;
+    padding: 0;
+    border-bottom: 1px solid rgba(var(--overlay-rgb), 0.08);
+  }
+
+  .isub-table .intake-submission-detail-row td {
+    display: block;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 400;
+    margin-bottom: 12px;
+  }
+
+  .isub-table .intake-submission-answer {
+    flex-direction: column;
+    gap: 2px;
+    overflow-wrap: anywhere;
+  }
+
+  .isub-table .intake-submission-answer .muted {
+    font-size: 12px;
+  }
+
+  .isub-table .intake-submission-status-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .isub-table .intake-submission-status-actions .chip {
+    box-sizing: border-box;
+    min-height: 44px;
+    justify-content: center;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 880px) {
+  .isub-page .intake-new-request-form {
+    align-items: stretch;
+  }
+
+  .isub-page .intake-new-request-form .field,
+  .isub-page .intake-new-request-form select,
+  .isub-page .intake-new-request-form input,
+  .isub-page .intake-new-request-form textarea {
+    box-sizing: border-box;
+    width: 100%;
+  }
+}

@@ -91,3 +91,156 @@
 .intake-builder-field-edit select {
   width: 100%;
 }
+
+@media (max-width: 880px) {
+  .ifb-page .intake-builder-form,
+  .ifb-page .intake-builder-form-edit {
+    padding: 14px;
+  }
+
+  .ifb-page .intake-builder-card {
+    padding: 14px;
+  }
+
+  .ifb-page .intake-builder-card-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 10px;
+    align-items: center;
+  }
+
+  .ifb-page .intake-builder-card-title {
+    box-sizing: border-box;
+    min-height: 44px;
+    max-width: none;
+    font-size: 16px;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow-wrap: anywhere;
+  }
+
+  .ifb-page .intake-builder-card-badges {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .ifb-page .intake-builder-card-header .template-card-actions {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 44px 44px;
+    gap: 8px;
+  }
+
+  .ifb-page .icon-btn {
+    box-sizing: border-box;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+  }
+
+  .ifb-page .icon-btn::before {
+    display: none;
+  }
+
+  .ifb-page .icon-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .ifb-page .ifb-publish-btn {
+    width: 100%;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    border: 1px solid var(--border);
+    background: transparent;
+  }
+
+  .ifb-page .intake-builder-fields {
+    margin-top: 12px;
+    padding-top: 12px;
+  }
+
+  .ifb-page .intake-builder-field-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'move label acts'
+      'move type  acts';
+    gap: 2px 10px;
+    padding: 8px;
+  }
+
+  .ifb-page .intake-builder-field-reorder {
+    grid-area: move;
+    flex-direction: row;
+    gap: 4px;
+  }
+
+  .ifb-page .intake-builder-field-label {
+    grid-area: label;
+    min-width: 0;
+    font-size: 15px;
+    overflow-wrap: anywhere;
+    align-self: end;
+  }
+
+  .ifb-page .intake-builder-field-row > .chip {
+    grid-area: type;
+    justify-self: start;
+    align-self: start;
+  }
+
+  .ifb-page .intake-builder-field-row .template-card-actions {
+    grid-area: acts;
+    gap: 6px;
+  }
+
+  .ifb-page .intake-builder-field-edit {
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+  }
+
+  .ifb-page .field-checkbox {
+    box-sizing: border-box;
+    min-height: 44px;
+  }
+
+  .ifb-page .field-checkbox input[type='checkbox'] {
+    width: 22px;
+    height: 22px;
+  }
+
+  .ifb-page .intake-builder-fields > .btn-ghost {
+    width: 100%;
+  }
+
+  .ifb-page .contract-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    margin: 4px -14px -14px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    flex-direction: row-reverse;
+  }
+
+  .ifb-page .intake-builder-field-edit .contract-actions {
+    margin: 4px -12px -12px;
+  }
+
+  .ifb-page .contract-actions .btn-solid,
+  .ifb-page .contract-actions .btn-ghost {
+    flex: 1;
+  }
+
+  .ifb-page .contract-error {
+    text-align: left;
+    font-size: 14px;
+  }
+}

@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import '../../styles/dashboard.css'
+import '../../styles/mobile.css'
 import Sidebar from '../../components/Sidebar'
 import AnnouncementBanner from '../../components/AnnouncementBanner'
 import NotificationBell from '../../components/NotificationBell'
@@ -32,6 +33,8 @@ const Settings = lazy(() => import('../Settings/Settings'))
 const KnowledgeArticles = lazy(() => import('../KnowledgeArticles/KnowledgeArticles'))
 const Integrations = lazy(() => import('../Integrations/Integrations'))
 
+const MOBILE_TABS = ['dashboard', 'contracts', 'new-contract', 'workflow']
+
 interface WorkspaceProps {
   user: User
   onLogout: () => void
@@ -53,6 +56,8 @@ function Workspace({ user, onLogout }: WorkspaceProps) {
         user={user}
         onLogout={onLogout}
         notificationBell={<NotificationBell />}
+        mobileTabs={MOBILE_TABS}
+        mobileAction="new-contract"
       />
       <div className="dash-content" id="main-content">
         <AnnouncementBanner />

@@ -188,3 +188,84 @@
     grid-template-columns: 1fr;
   }
 }
+
+.contact-info-value a {
+  color: var(--accent);
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .contact-page {
+    padding: 56px 16px 48px;
+  }
+
+  .contact-hero {
+    margin-bottom: 28px;
+  }
+
+  .contact-hero h2 {
+    font-size: 32px;
+    letter-spacing: -0.5px;
+  }
+
+  .contact-hero p {
+    font-size: 16px;
+  }
+
+  .contact-form-card {
+    padding: 20px;
+  }
+
+  .contact-field {
+    font-size: 14px;
+  }
+
+  .contact-field input,
+  .contact-field textarea {
+    font-size: 16px;
+    padding: 12px;
+    min-height: 48px;
+    box-sizing: border-box;
+  }
+
+  .contact-field textarea {
+    min-height: 120px;
+  }
+
+  .contact-field-checkbox input[type='checkbox'] {
+    width: 22px;
+    height: 22px;
+    margin-top: 0;
+  }
+
+  .contact-field-checkbox {
+    font-size: 14px;
+  }
+
+  .contact-submit {
+    min-height: 52px;
+    font-size: 16px;
+  }
+
+  .contact-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .contact-info .contact-card {
+    padding: 16px;
+    min-width: 0;
+  }
+
+  .contact-info .contact-card:nth-child(1),
+  .contact-info .contact-card:nth-child(4) {
+    grid-column: 1 / -1;
+  }
+
+  .contact-info-value a {
+    display: inline-block;
+    padding: 6px 0;
+    overflow-wrap: anywhere;
+  }
+}

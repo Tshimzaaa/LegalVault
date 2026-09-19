@@ -80,7 +80,7 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
 
   return (
     <main className="dash-main">
-      <header className="dash-topbar">
+      <header className="dash-topbar dash-topbar-page">
         <h1>Dashboard</h1>
         <div className="topbar-actions">
           {!previewSummary && (
@@ -117,9 +117,9 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
       )}
 
       {status === 'ready' && summary && (
-        <>
+        <div className="dash-body">
           {pendingSignatures.length > 0 && (
-            <section className="card" style={{ marginBottom: 16 }}>
+            <section className="card dash-signatures">
               <div className="card-header">
                 <span>Awaiting Your Signature</span>
                 <span className="chip">
@@ -286,7 +286,7 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
               </div>
             </div>
           </section>
-        </>
+        </div>
       )}
     </main>
   )

@@ -201,3 +201,115 @@
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+
+.lf-mobile-only {
+  display: none;
+}
+
+@media (max-width: 880px) {
+  .learned-friend-main {
+    padding: 8px 12px 0;
+    gap: 8px;
+  }
+
+  .lf-header.dash-topbar {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .lf-header h1 {
+    flex: 1;
+    min-width: 0;
+    font-size: 20px;
+    margin: 0;
+  }
+
+  .lf-header .topbar-actions {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    width: auto;
+    gap: 8px;
+  }
+
+  .lf-header .topbar-actions .chip {
+    display: none;
+  }
+
+  .lf-mobile-only {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-height: 44px;
+    flex: 0 0 auto !important;
+    padding: 0 14px;
+  }
+
+  .lf-desktop-only {
+    display: none;
+  }
+
+  .lf-chat-layout {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    gap: 0;
+  }
+
+  .lf-chat-sidebar {
+    display: none;
+    position: absolute;
+    inset: 0 0 auto 0;
+    z-index: 5;
+    max-height: 70%;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  }
+
+  .lf-chat-sidebar.open {
+    display: flex;
+  }
+
+  .lf-conversation-item {
+    box-sizing: border-box;
+    min-height: 44px;
+    font-size: 15px;
+  }
+
+  .lf-chat-main {
+    flex: 1;
+    border-radius: 12px 12px 0 0;
+    border-bottom: 0;
+  }
+
+  .lf-messages {
+    min-height: 0;
+    padding: 14px 12px;
+    gap: 12px;
+  }
+
+  .lf-message {
+    max-width: 88%;
+  }
+
+  .lf-send-error {
+    margin: 0 12px 8px;
+  }
+
+  .lf-composer {
+    padding: 8px 10px;
+    align-items: flex-end;
+  }
+
+  .lf-composer-input {
+    box-sizing: border-box;
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .lf-send-btn {
+    width: 44px;
+    height: 44px;
+  }
+}

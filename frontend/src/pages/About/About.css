@@ -102,3 +102,44 @@
     max-width: 420px;
   }
 }
+
+@media (max-width: 640px) {
+  .about-page {
+    padding: 56px 16px 40px;
+  }
+
+  .about-hero {
+    margin-bottom: 32px;
+  }
+
+  .about-hero-title {
+    font-size: 32px;
+    letter-spacing: -0.5px;
+  }
+
+  .about-hero-sub {
+    font-size: 16px;
+  }
+
+  .about-stats {
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+
+  .about-stat {
+    padding: 18px 10px;
+  }
+
+  .about-values {
+    max-width: none;
+    gap: 12px;
+  }
+
+  .about-value-card {
+    padding: 20px;
+  }
+
+  .about-value-card p {
+    font-size: 15px;
+  }
+}

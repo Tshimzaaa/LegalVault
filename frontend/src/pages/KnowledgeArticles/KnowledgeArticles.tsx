@@ -154,7 +154,7 @@ function KnowledgeArticles({ user }: KnowledgeArticlesProps) {
           <option key={c} value={c} />
         ))}
       </datalist>
-      <header className="dash-topbar">
+      <header className="dash-topbar m-header">
         <h1>Knowledge Base</h1>
         <div className="topbar-actions">
           <span className="chip">

@@ -47,7 +47,8 @@
 
 .notification-bell-panel {
   position: fixed;
-  width: 320px;
+  left: var(--np-left, 12px);
+  width: min(340px, calc(100vw - 24px));
   max-height: 420px;
   display: flex;
   flex-direction: column;
@@ -55,7 +56,7 @@
   border: 1px solid rgba(var(--overlay-rgb), 0.1);
   border-radius: 14px;
   box-shadow: 0 12px 32px rgba(var(--shadow-rgb), 0.45);
-  z-index: 50;
+  z-index: 70;
   overflow: hidden;
 }
 
@@ -71,14 +72,54 @@
   flex-shrink: 0;
 }
 
+.notification-bell-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .notification-bell-mark-all {
   background: none;
   border: none;
-  color: var(--accent);
-  font-size: 11.5px;
+  border-radius: 8px;
+  padding: 6px 8px;
+  color: var(--accent-text);
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
+}
+
+.notification-bell-mark-all:hover {
+  background: rgba(var(--accent-rgb), 0.1);
+}
+
+.notification-bell-close {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 44px;
+  height: 44px;
+  margin: -10px -10px -10px 0;
+  background: none;
+  border: none;
+  border-radius: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.notification-bell-close svg {
+  width: 16px;
+  height: 16px;
+}
+
+.notification-bell-btn:focus-visible,
+.notification-bell-item:focus-visible,
+.notification-bell-mark-all:focus-visible,
+.notification-bell-close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .notification-bell-list {
@@ -102,16 +143,19 @@
 
 .notification-bell-item {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: flex-start;
+  gap: 10px;
+  box-sizing: border-box;
   width: 100%;
+  min-height: 56px;
   text-align: left;
-  padding: 10px 14px;
+  padding: 12px 14px;
   background: none;
   border: none;
   border-bottom: 1px solid rgba(var(--overlay-rgb), 0.06);
   cursor: pointer;
   font-family: inherit;
+  transition: background 0.15s;
 }
 
 .notification-bell-item:last-child {
@@ -123,20 +167,50 @@
 }
 
 .notification-bell-item:hover {
-  background: rgba(var(--overlay-rgb), 0.04);
+  background: rgba(var(--overlay-rgb), 0.05);
+}
+
+.notification-bell-item:active {
+  background: rgba(var(--overlay-rgb), 0.09);
+}
+
+/* Unread is shown by a dot and bold title as well as the tint, not by colour alone. */
+.notification-bell-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.notification-bell-item.unread .notification-bell-dot {
+  background: var(--accent);
+}
+
+.notification-bell-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
 }
 
 .notification-bell-item-title {
-  font-size: 12.5px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
   color: var(--text);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+}
+
+.notification-bell-item.unread .notification-bell-item-title {
+  font-weight: 700;
 }
 
 .notification-bell-item-body {
-  font-size: 11.5px;
+  font-size: 12px;
+  line-height: 1.4;
   color: var(--text-muted);
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -145,7 +219,68 @@
 }
 
 .notification-bell-item-time {
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--text-subtle);
   margin-top: 2px;
+}
+
+.notification-bell-item-go {
+  flex-shrink: 0;
+  align-self: center;
+  display: flex;
+  color: var(--text-subtle);
+}
+
+.notification-bell-item-go svg {
+  width: 16px;
+  height: 16px;
+  transform: rotate(-90deg);
+}
+
+.notification-bell-item:hover .notification-bell-item-go {
+  color: var(--text);
+}
+
+@media (max-width: 880px) {
+  /* Phone: a full-width sheet under the top bar, never anchored to the (right-edge) bell. */
+  .notification-bell-panel {
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+
+  .notification-bell-close {
+    display: flex;
+  }
+
+  .notification-bell-mark-all {
+    min-height: 44px;
+    padding-inline: 10px;
+  }
+
+  .notification-bell-item {
+    min-height: 64px;
+    padding: 14px;
+  }
+
+  .notification-bell-item-title {
+    font-size: 14px;
+  }
+
+  .notification-bell-item-body {
+    font-size: 13px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .notification-bell-panel {
+    animation: notification-bell-in 0.14s ease-out;
+  }
+}
+
+@keyframes notification-bell-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
 }

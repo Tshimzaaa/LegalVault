@@ -255,3 +255,85 @@
 .modal-link-back:hover {
   color: var(--text);
 }
+
+@media (max-width: 640px) {
+  .modal-backdrop {
+    align-items: flex-start;
+  }
+
+  .modal-box {
+    max-width: none;
+    margin: 12px;
+    width: calc(100% - 24px);
+    box-sizing: border-box;
+    padding: 28px 20px 20px;
+  }
+
+  .modal-box h2 {
+    padding-right: 44px;
+  }
+
+  .modal-close {
+    top: 10px;
+    right: 10px;
+    width: 44px;
+    height: 44px;
+    font-size: 24px;
+  }
+
+  .modal-sub {
+    font-size: 14px;
+  }
+
+  .modal-field {
+    font-size: 14px;
+  }
+
+  .modal-field input,
+  .modal-field select,
+  .modal-field textarea {
+    font-size: 16px;
+    padding: 12px;
+    min-height: 48px;
+    box-sizing: border-box;
+  }
+
+  .modal-password-wrap input {
+    padding-right: 52px;
+  }
+
+  .modal-password-toggle {
+    width: 44px;
+    height: 44px;
+    right: 2px;
+  }
+
+  .modal-field-checkbox input[type='checkbox'] {
+    width: 22px;
+    height: 22px;
+    margin-top: 0;
+  }
+
+  .modal-error {
+    font-size: 14px;
+  }
+
+  .modal-field-error {
+    font-size: 13px;
+  }
+
+  .modal-submit {
+    min-height: 52px;
+    font-size: 16px;
+    box-sizing: border-box;
+  }
+
+  .modal-hint {
+    font-size: 13px;
+  }
+
+  .modal-link-back {
+    min-height: 44px;
+    font-size: 14px;
+  }
+}

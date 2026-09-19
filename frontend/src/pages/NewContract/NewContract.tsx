@@ -134,7 +134,7 @@ function NewContract() {
 
   return (
     <main className="dash-main contract-main">
-      <header className="dash-topbar contract-topbar">
+      <header className="dash-topbar contract-topbar m-header">
         <h1>Open New Contract</h1>
       </header>
 
@@ -143,6 +143,8 @@ function NewContract() {
           <section className="card form-section">
             <h3>1. Contract Information</h3>
 
+            <div className="form-group">
+            <h2 className="form-group-title">Contract details</h2>
             <label className="field">
               <span>Contract Name</span>
               <input
@@ -187,6 +189,19 @@ function NewContract() {
               </label>
             </div>
 
+            <label className="field">
+              <span>Description</span>
+              <textarea
+                placeholder="Contract Description…"
+                rows={3}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </label>
+            </div>
+
+            <div className="form-group">
+            <h2 className="form-group-title">People</h2>
             <div className="field-row">
               <label className="field">
                 <span>Assigned Attorney</span>
@@ -212,6 +227,10 @@ function NewContract() {
               </label>
             </div>
 
+            </div>
+
+            <div className="form-group">
+            <h2 className="form-group-title">Dates</h2>
             <div className="field-row">
               <label className="field">
                 <span>Opened Date</span>
@@ -229,21 +248,15 @@ function NewContract() {
               </label>
             </div>
 
-            <label className="field">
-              <span>Description</span>
-              <textarea
-                placeholder="Contract Description…"
-                rows={3}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </label>
+            </div>
           </section>
         </div>
 
         <div className="contract-col">
           <section className="card form-section">
             <h3>2. Fee Arrangement</h3>
+            <div className="form-group">
+            <h2 className="form-group-title">Fee arrangement</h2>
 
             <label className="field">
               <span>Fee Type</span>
@@ -254,12 +267,15 @@ function NewContract() {
                 <option value="retainer">Retainer</option>
               </select>
             </label>
+            </div>
           </section>
         </div>
 
         <div className="contract-col">
           <section className="card form-section">
             <h3>3. Contract Details &amp; Strategy</h3>
+            <div className="form-group">
+            <h2 className="form-group-title">Conflict check and strategy</h2>
 
             <label className="field">
               <span>Conflict Check</span>
@@ -295,7 +311,14 @@ function NewContract() {
                 onChange={(e) => setCaseStrategyNotes(e.target.value)}
               />
             </label>
+            </div>
           </section>
+        </div>
+
+        <div className="contract-feedback">
+          {submitted && <p className="contract-success" aria-live="polite">Contract created.</p>}
+          {assignWarning && <p className="contract-error" aria-live="polite">{assignWarning}</p>}
+          {error && <p className="contract-error" aria-live="polite">{error}</p>}
         </div>
 
         <div className="contract-actions">
@@ -315,9 +338,6 @@ function NewContract() {
             {submitting ? 'Opening…' : 'Open Contract'}
           </button>
         </div>
-        {submitted && <p className="contract-success" aria-live="polite">Contract created.</p>}
-        {assignWarning && <p className="contract-error" aria-live="polite">{assignWarning}</p>}
-        {error && <p className="contract-error" aria-live="polite">{error}</p>}
       </form>
     </main>
   )

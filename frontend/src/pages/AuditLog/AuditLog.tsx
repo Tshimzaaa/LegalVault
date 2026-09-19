@@ -25,6 +25,7 @@ function AuditLog({ user }: AuditLogProps) {
   const [entries, setEntries] = useState<AuditLogEntry[]>([])
   const [status, setStatus] = useState<LoadState>('loading')
   const [hasNextPage, setHasNextPage] = useState(true)
+  const [openId, setOpenId] = useState<string | null>(null)
 
   const parsedPage = Number(searchParams.get('page'))
   const page = Number.isInteger(parsedPage) && parsedPage > 0 ? parsedPage - 1 : 0
@@ -72,7 +73,7 @@ function AuditLog({ user }: AuditLogProps) {
 
   return (
     <main className="dash-main">
-      <header className="dash-topbar">
+      <header className="dash-topbar m-header">
         <h1>Audit Log</h1>
         <div className="topbar-actions">
           <span className="chip">
@@ -100,31 +101,45 @@ function AuditLog({ user }: AuditLogProps) {
       {status === 'ready' && (
         <section className="card audit-log-card">
           <div className="table-scroll">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>When</th>
-                <th>Actor</th>
-                <th>Action</th>
-                <th>Target</th>
-                <th>Details</th>
+          <table className="data-table data-table-list audit-list" role="table">
+            <thead role="rowgroup">
+              <tr role="row">
+                <th role="columnheader">When</th>
+                <th role="columnheader">Actor</th>
+                <th role="columnheader">Action</th>
+                <th role="columnheader">Target</th>
+                <th role="columnheader">Details</th>
               </tr>
             </thead>
-            <tbody>
-              {entries.map((e) => (
-                <tr key={e.id}>
-                  <td className="muted tabular">{dateTimeFormat.format(new Date(e.created_at))}</td>
-                  <td className="muted">{e.actor_type}</td>
-                  <td>{auditActionLabel[e.action] ?? e.action}</td>
-                  <td className="muted">{e.target_type}</td>
-                  <td className="muted audit-log-details" title={formatAuditDetails(e.details)}>
-                    {formatAuditDetails(e.details)}
-                  </td>
-                </tr>
-              ))}
+            <tbody role="rowgroup">
+              {entries.map((e) => {
+                const details = formatAuditDetails(e.details)
+                const open = openId === e.id
+                return (
+                  <tr key={e.id} role="row">
+                    <td role="cell" className="muted tabular audit-when">{dateTimeFormat.format(new Date(e.created_at))}</td>
+                    <td role="cell" className="muted audit-actor">{e.actor_type}</td>
+                    <td role="cell" className="audit-action">{auditActionLabel[e.action] ?? e.action}</td>
+                    <td role="cell" className="muted audit-target">{e.target_type}</td>
+                    <td role="cell" className={`muted audit-log-details${open ? ' is-open' : ''}`} title={details}>
+                      <span className="audit-details-text">{details}</span>
+                      {details.length > 60 && (
+                        <button
+                          type="button"
+                          className="audit-more"
+                          aria-expanded={open}
+                          onClick={() => setOpenId(open ? null : e.id)}
+                        >
+                          {open ? 'Hide details' : 'Show details'}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
               {entries.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="muted">
+                  <td role="cell" colSpan={5} className="muted">
                     No audit log entries yet.
                   </td>
                 </tr>

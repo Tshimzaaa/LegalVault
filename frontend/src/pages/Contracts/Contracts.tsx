@@ -41,6 +41,8 @@ function Contracts() {
   const [contracts, setContracts] = useState<Contract[]>([])
   const [status, setStatus] = useState<LoadState>('loading')
   const [attempt, setAttempt] = useState(0)
+  const [query, setQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | Contract['status']>('all')
 
   useEffect(() => {
     let cancelled = false
@@ -68,9 +70,17 @@ function Contracts() {
     }
   }, [attempt])
 
+  const q = query.trim().toLowerCase()
+  const visible = contracts.filter(
+    (m) => (statusFilter === 'all' || m.status === statusFilter) && (!q || m.title.toLowerCase().includes(q)),
+  )
+  const filterKeys = (Object.keys(statusLabel) as Contract['status'][]).filter((k) =>
+    contracts.some((m) => m.status === k),
+  )
+
   return (
     <main className="dash-main">
-      <header className="dash-topbar">
+      <header className="dash-topbar m-header">
         <h1>Contracts</h1>
         <div className="topbar-actions">
           <span className="chip">
@@ -100,24 +110,47 @@ function Contracts() {
 
       {status === 'ready' && (
         <section className="card contracts-table-card">
+          {contracts.length > 0 && (
+            <div className="contracts-filters">
+              <input
+                type="search"
+                className="contracts-search"
+                aria-label="Search contracts"
+                placeholder="Search contracts"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                autoComplete="off"
+              />
+              <div className="contracts-chips" role="group" aria-label="Filter by status">
+                <button type="button" className="contracts-chip" aria-pressed={statusFilter === 'all'} onClick={() => setStatusFilter('all')}>
+                  All
+                </button>
+                {filterKeys.map((k) => (
+                  <button key={k} type="button" className="contracts-chip" aria-pressed={statusFilter === k} onClick={() => setStatusFilter(k)}>
+                    {statusLabel[k]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="table-scroll">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Contract</th>
-                <th>Status</th>
-                <th>Opened</th>
+          <table className="data-table data-table-list" role="table">
+            <thead role="rowgroup">
+              <tr role="row">
+                <th role="columnheader">Contract</th>
+                <th role="columnheader">Status</th>
+                <th role="columnheader">Opened</th>
               </tr>
             </thead>
-            <tbody>
-              {contracts.map((m) => (
-                <tr key={m.id} className="contracts-row">
-                  <td>
+            <tbody role="rowgroup">
+              {visible.map((m) => (
+                <tr key={m.id} className="contracts-row" role="row">
+                  <td role="cell">
                     <Link to={`/staff/contracts/${m.id}`} className="contracts-row-link">
                       {m.title}
                     </Link>
                   </td>
-                  <td>
+                  <td role="cell">
                     <span
                       className="status-badge"
                       style={{ color: statusColor[m.status], background: `rgba(${statusColorRgb[m.status]}, 0.13)` }}
@@ -125,13 +158,13 @@ function Contracts() {
                       {statusLabel[m.status]}
                     </span>
                   </td>
-                  <td className="muted">{new Date(m.created_at).toLocaleDateString()}</td>
+                  <td role="cell" className="muted" data-label="Opened">{new Date(m.created_at).toLocaleDateString()}</td>
                 </tr>
               ))}
-              {contracts.length === 0 && (
-                <tr>
-                  <td colSpan={3} className="muted">
-                    No contracts yet. Create one from New Contract.
+              {visible.length === 0 && (
+                <tr role="row">
+                  <td role="cell" colSpan={3} className="muted">
+                    {contracts.length === 0 ? 'No contracts yet. Create one from New Contract.' : 'No contracts match these filters.'}
                   </td>
                 </tr>
               )}

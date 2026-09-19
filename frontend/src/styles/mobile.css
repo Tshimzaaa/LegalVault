@@ -1,0 +1,164 @@
+/* Shared phone patterns for the staff workspace. Loaded after dashboard.css so these win.
+   Everything here is scoped to <= 880px (the shell's phone breakpoint) except the class
+   definitions that need to exist at all widths. Pages opt in by class name; nothing here
+   changes desktop. */
+
+@media (max-width: 880px) {
+  /* Comfortable reading + tapping. 16px inputs stop iOS zooming the page on focus. */
+  .dash-layout {
+    font-size: 14px;
+  }
+
+  .dash-content {
+    flex: 1 1 0;
+    min-height: 0;
+  }
+
+  .dash-main {
+    padding: 16px 16px 24px;
+    gap: 0;
+  }
+
+  .dash-topbar h1 {
+    font-size: 22px;
+    line-height: 1.2;
+  }
+
+  .btn-solid,
+  .btn-ghost {
+    box-sizing: border-box;
+    min-height: 44px;
+    padding-inline: 20px;
+  }
+
+  .dash-layout input:not([type='checkbox']):not([type='radio']),
+  .dash-layout select,
+  .dash-layout textarea {
+    box-sizing: border-box;
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  .btn-ghost {
+    color: var(--text);
+    border-color: rgba(var(--overlay-rgb), 0.22);
+  }
+
+  .card {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .card-header {
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+
+  /* Page header: title first, then a single row of actions. The primary action grows to fill
+     the row so it is the obvious thumb target; secondary actions sit beside it. */
+  .dash-topbar.m-header {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .dash-topbar.m-header .topbar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dash-topbar.m-header .topbar-actions .btn-solid {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  /* Summary tiles: two per row instead of one full-width card each. */
+  .m-stats {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    height: auto !important;
+    flex: none !important;
+  }
+
+  .m-stats > .card {
+    padding: 14px;
+    min-height: 0;
+  }
+
+  .m-stats > .card:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
+  /* Table -> list. Opt in with class "data-table-list" on the <table> plus role attributes in
+     the JSX (table/rowgroup/row/columnheader/cell), because changing a table's display drops
+     its native semantics. First cell is the row title; other cells become labelled meta. */
+  .data-table-list {
+    min-width: 0 !important;
+    width: 100%;
+    display: block;
+  }
+
+  .data-table-list thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .data-table-list tbody {
+    display: block;
+  }
+
+  .data-table-list tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    padding: 14px 2px;
+    border-bottom: 1px solid rgba(var(--overlay-rgb), 0.08);
+  }
+
+  .data-table-list tr:last-child {
+    border-bottom: none;
+  }
+
+  .data-table-list td {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    border: none;
+    font-size: 13px;
+    min-width: 0;
+  }
+
+  .data-table-list td:first-child {
+    flex: 1 1 100%;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--text);
+    overflow-wrap: anywhere;
+  }
+
+  .data-table-list td[data-label]::before {
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--text-subtle);
+  }
+
+  .data-table-list td[data-full] {
+    flex: 1 1 100%;
+  }
+
+  .data-table-list td[data-actions] {
+    margin-left: auto;
+  }
+}

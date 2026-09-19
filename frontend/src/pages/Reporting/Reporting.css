@@ -216,3 +216,68 @@
   border-radius: 999px;
   background: var(--accent);
 }
+
+@media (max-width: 880px) {
+  .reporting-stats {
+    margin-bottom: 12px;
+  }
+
+  .reporting-stats .card-header {
+    font-size: 12.5px;
+    margin-bottom: 6px;
+  }
+
+  .reporting-stats .stat-big {
+    font-size: 26px;
+  }
+
+  .reporting-charts {
+    gap: 12px;
+  }
+
+  .reporting-chart-card .card-subtitle {
+    margin-bottom: 12px;
+  }
+
+  .donut-wrap {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .donut-legend {
+    flex: 1 1 180px;
+  }
+
+  .donut-legend-row {
+    font-size: 13px;
+    padding: 4px;
+  }
+
+  .reporting-workload td[data-full] {
+    align-items: center;
+  }
+
+  .reporting-workload .utilization-bar {
+    flex: 1;
+    width: auto;
+    max-width: 200px;
+    margin-right: 0;
+  }
+
+  .capacity-edit-btn {
+    box-sizing: border-box;
+    min-height: 44px;
+    padding: 0 12px;
+  }
+
+  .capacity-input {
+    box-sizing: border-box;
+    min-height: 44px;
+    width: 96px;
+  }
+
+  .capacity-edit-wrap .icon-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}

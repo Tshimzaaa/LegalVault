@@ -44,3 +44,18 @@
 .not-found-cta:hover {
   background: var(--accent-hover);
 }
+
+@media (max-width: 640px) {
+  .not-found-page {
+    padding: 120px 20px 72px;
+  }
+
+  .not-found-cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 52px;
+    font-size: 16px;
+    box-sizing: border-box;
+  }
+}

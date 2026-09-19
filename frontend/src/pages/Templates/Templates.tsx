@@ -153,8 +153,8 @@ function Templates() {
   }
 
   return (
-    <main className="dash-main">
-      <header className="dash-topbar">
+    <main className="dash-main lib-page">
+      <header className="dash-topbar m-header">
         <h1>Templates</h1>
         <div className="topbar-actions">
           <span className="chip">
@@ -235,7 +235,7 @@ function Templates() {
       {deleteError && <p className="contract-error" aria-live="polite">{deleteError}</p>}
 
       {status === 'ready' && (
-        <section className="templates-grid">
+        <section className="templates-grid lib-list">
           {templates.map((t) =>
             editingId === t.id ? (
               <form key={t.id} onSubmit={handleSaveEdit} className="card template-card template-edit-form">

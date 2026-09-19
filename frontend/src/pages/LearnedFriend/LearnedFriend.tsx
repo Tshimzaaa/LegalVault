@@ -15,6 +15,7 @@ function LearnedFriend() {
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
+  const [listOpen, setListOpen] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   function token() {
@@ -49,6 +50,7 @@ function LearnedFriend() {
   function openConversation(id: string) {
     const t = token()
     if (!t) return
+    setListOpen(false)
     setActiveConversationId(id)
     setMessagesStatus('loading')
     getConversation(t, id)
@@ -60,6 +62,7 @@ function LearnedFriend() {
   }
 
   function startNewConversation() {
+    setListOpen(false)
     setActiveConversationId(null)
     setMessages([])
     setMessagesStatus('ready')
@@ -102,18 +105,30 @@ function LearnedFriend() {
 
   return (
     <main className="dash-main learned-friend-main">
-      <header className="dash-topbar">
+      <header className="dash-topbar lf-header">
         <h1>Learned Friend</h1>
         <div className="topbar-actions">
           <span className="chip">
             Conversations <span className="chip-badge">{conversations.length}</span>
           </span>
+          <button
+            type="button"
+            className="btn-ghost lf-mobile-only"
+            aria-expanded={listOpen}
+            aria-controls="lf-sidebar"
+            onClick={() => setListOpen((v) => !v)}
+          >
+            Chats ({conversations.length})
+          </button>
+          <button type="button" className="btn-solid lf-mobile-only" onClick={startNewConversation}>
+            New
+          </button>
         </div>
       </header>
 
       <div className="lf-chat-layout">
-        <aside className="lf-chat-sidebar" aria-label="Past conversations">
-          <button type="button" className="btn-ghost lf-new-chat-btn" onClick={startNewConversation}>
+        <aside id="lf-sidebar" className={`lf-chat-sidebar${listOpen ? ' open' : ''}`} aria-label="Past conversations">
+          <button type="button" className="btn-ghost lf-new-chat-btn lf-desktop-only" onClick={startNewConversation}>
             + New conversation
           </button>
           {conversationsStatus === 'loading' && <p className="muted">Loading…</p>}

@@ -56,3 +56,29 @@
     gap: 0;
   }
 }
+
+@media (max-width: 640px) {
+  .auth-page {
+    align-items: flex-start;
+    padding: 12px;
+    box-sizing: border-box;
+  }
+
+  .auth-page .modal-box {
+    width: 100%;
+    margin: 0;
+  }
+
+  .auth-page-link {
+    font-size: 15px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .auth-page-link-inline {
+    display: inline;
+    min-height: 0;
+  }
+}

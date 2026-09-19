@@ -155,8 +155,8 @@ function IntakeSubmissions() {
   }
 
   return (
-    <main className="dash-main">
-      <header className="dash-topbar">
+    <main className="dash-main isub-page">
+      <header className="dash-topbar m-header">
         <h1>Requests</h1>
         <div className="topbar-actions">
           <span className="chip">
@@ -254,7 +254,7 @@ function IntakeSubmissions() {
 
       {status === 'ready' && (
         <div className="table-scroll">
-          <table className="data-table">
+          <table className="data-table data-table-list isub-table">
             <thead>
               <tr>
                 <th>Form</th>
@@ -283,12 +283,12 @@ function IntakeSubmissions() {
                     className="intake-submission-row"
                   >
                     <td>{formTitle(s.form_id)}</td>
-                    <td className="muted">{submitterName(s.submitted_by)}</td>
+                    <td className="muted" data-label="By">{submitterName(s.submitted_by)}</td>
                     <td>
                       <span className={`status-badge status-${s.status}`}>{STATUS_LABELS[s.status]}</span>
                     </td>
-                    <td className="muted tabular">{new Date(s.created_at).toLocaleDateString()}</td>
-                    <td>
+                    <td className="muted tabular" data-label="On">{new Date(s.created_at).toLocaleDateString()}</td>
+                    <td data-full data-actions>
                       {s.status !== 'converted' && (
                         <button
                           type="button"
@@ -306,7 +306,7 @@ function IntakeSubmissions() {
                   </tr>
                   {expandedId === s.id && (
                     <tr className="intake-submission-detail-row">
-                      <td colSpan={5}>
+                      <td colSpan={5} data-full>
                         <div className="intake-submission-answers">
                           {s.answers.map((a) => (
                             <div key={a.id} className="intake-submission-answer">

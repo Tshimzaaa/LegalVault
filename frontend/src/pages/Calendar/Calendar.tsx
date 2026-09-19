@@ -66,9 +66,9 @@ function Calendar() {
 
   return (
     <main className="dash-main">
-      <header className="dash-topbar">
+      <header className="dash-topbar m-header">
         <h1>Calendar</h1>
-        <div className="topbar-actions">
+        <div className="topbar-actions calendar-range">
           <select aria-label="Date range" value={rangeDays} onChange={(e) => setRangeDays(Number(e.target.value))}>
             <option value={7}>Next 7 days</option>
             <option value={30}>Next 30 days</option>

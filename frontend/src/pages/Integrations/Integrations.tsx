@@ -87,7 +87,7 @@ function Integrations({ user }: IntegrationsProps) {
   if (user.role !== 'admin') {
     return (
       <main className="dash-main">
-        <header className="dash-topbar">
+        <header className="dash-topbar m-header">
           <h1>Integrations</h1>
         </header>
         <div className="dash-state">
@@ -162,7 +162,7 @@ function Integrations({ user }: IntegrationsProps) {
 
   return (
     <main className="dash-main">
-      <header className="dash-topbar">
+      <header className="dash-topbar m-header">
         <h1>Integrations</h1>
         <div className="topbar-actions">
           <span className="chip">

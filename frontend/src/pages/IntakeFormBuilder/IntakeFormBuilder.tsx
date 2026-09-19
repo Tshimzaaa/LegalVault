@@ -232,8 +232,8 @@ function IntakeFormBuilder() {
   }
 
   return (
-    <main className="dash-main">
-      <header className="dash-topbar">
+    <main className="dash-main ifb-page">
+      <header className="dash-topbar m-header">
         <h1>Intake Form Builder</h1>
         <div className="topbar-actions">
           <span className="chip">
@@ -348,7 +348,7 @@ function IntakeFormBuilder() {
                     <div className="template-card-actions">
                       <button
                         type="button"
-                        className="icon-btn"
+                        className="icon-btn ifb-publish-btn"
                         onClick={() => handleTogglePublish(form)}
                         aria-label={form.is_published ? `Unpublish ${form.title}` : `Publish ${form.title}`}
                       >

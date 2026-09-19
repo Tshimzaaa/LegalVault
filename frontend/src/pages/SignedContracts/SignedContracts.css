@@ -72,3 +72,64 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
+
+@media (max-width: 880px) {
+  .signed-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .signed-table-card {
+    overflow-y: visible;
+    flex: none;
+  }
+
+  .signed-filters {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .signed-filters .field {
+    min-width: 0;
+  }
+
+  .signed-filters .field:first-child,
+  .signed-filters-count {
+    grid-column: 1 / -1;
+  }
+
+  .signed-filters .field input,
+  .signed-filters .field select {
+    height: 44px;
+    width: 100%;
+  }
+
+  .signed-filters-count {
+    width: auto;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .signed-filters-count .chip {
+    height: 32px;
+  }
+
+  .signed-contract-cell {
+    max-width: none;
+  }
+
+  .signed-contract-title {
+    white-space: normal;
+  }
+
+  .signed-row-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .signed-row-actions .btn-ghost {
+    flex: 1;
+  }
+}

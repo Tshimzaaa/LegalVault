@@ -26,6 +26,7 @@ function Workflow() {
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [dragOverStatus, setDragOverStatus] = useState<ContractStage | null>(null)
   const [moveError, setMoveError] = useState<string | null>(null)
+  const [activeStage, setActiveStage] = useState<ContractStage>('intake')
 
   useEffect(() => {
     let cancelled = false
@@ -123,7 +124,7 @@ function Workflow() {
 
   return (
     <main className="dash-main workflow-main">
-      <header className="dash-topbar">
+      <header className="dash-topbar m-header">
         <h1>Workflow</h1>
         <div className="topbar-actions">
           <span className="chip">
@@ -158,13 +159,29 @@ function Workflow() {
       )}
 
       {status === 'ready' && (
+        <>
+        <div className="workflow-stage-tabs" role="group" aria-label="Workflow stage">
+          {columnOrder.map((col) => (
+            <button
+              key={col.status}
+              type="button"
+              className="workflow-stage-tab"
+              aria-pressed={activeStage === col.status}
+              onClick={() => setActiveStage(col.status)}
+            >
+              <span className="status-dot" style={{ background: col.color }} aria-hidden="true" />
+              {col.label}
+              <span className="workflow-column-count">{contracts.filter((m) => m.status === col.status).length}</span>
+            </button>
+          ))}
+        </div>
         <section className="workflow-board">
           {columnOrder.map((col) => {
             const cards = contracts.filter((m) => m.status === col.status)
             return (
               <div
                 key={col.status}
-                className={`workflow-column${dragOverStatus === col.status ? ' drag-over' : ''}`}
+                className={`workflow-column${activeStage === col.status ? ' is-active' : ''}${dragOverStatus === col.status ? ' drag-over' : ''}`}
                 onDragOver={(e) => handleDragOver(e, col.status)}
                 onDragLeave={() => setDragOverStatus((s) => (s === col.status ? null : s))}
                 onDrop={(e) => handleDrop(e, col.status)}
@@ -225,6 +242,7 @@ function Workflow() {
             )
           })}
         </section>
+        </>
       )}
     </main>
   )

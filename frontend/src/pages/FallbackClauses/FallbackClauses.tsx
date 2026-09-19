@@ -124,8 +124,8 @@ function FallbackClauses() {
   }
 
   return (
-    <main className="dash-main">
-      <header className="dash-topbar">
+    <main className="dash-main lib-page">
+      <header className="dash-topbar m-header">
         <h1>Fallback Clauses</h1>
         <div className="topbar-actions">
           <span className="chip">
@@ -210,7 +210,7 @@ function FallbackClauses() {
       {deleteError && <p className="contract-error" aria-live="polite">{deleteError}</p>}
 
       {status === 'ready' && (
-        <section className="templates-grid">
+        <section className="templates-grid lib-list">
           {clauses.map((c) =>
             editingId === c.id ? (
               <form key={c.id} onSubmit={handleSaveEdit} className="card template-card template-edit-form">

@@ -74,7 +74,7 @@ function Settings({ user }: SettingsProps) {
 
   return (
     <main className="dash-main">
-      <header className="dash-topbar">
+      <header className="dash-topbar m-header">
         <h1>Organization Settings</h1>
       </header>
 
@@ -102,6 +102,8 @@ function Settings({ user }: SettingsProps) {
           </div>
 
           <form onSubmit={handleSave} className="settings-form">
+            <fieldset className="settings-group">
+            <legend>Identity</legend>
             <div className="field-row">
               <label className="field">
                 <span>Organization name</span>
@@ -126,6 +128,9 @@ function Settings({ user }: SettingsProps) {
                 />
               </label>
             </div>
+            </fieldset>
+            <fieldset className="settings-group">
+            <legend>Contact</legend>
             <div className="field-row">
               <label className="field">
                 <span>Phone</span>
@@ -157,12 +162,13 @@ function Settings({ user }: SettingsProps) {
                 autoComplete="street-address"
               />
             </label>
+            </fieldset>
 
             {saveError && <p className="contract-error" aria-live="polite">{saveError}</p>}
             {saved && <p className="settings-saved" aria-live="polite">Organization settings saved.</p>}
 
             {isAdmin && (
-              <div className="contract-actions">
+              <div className="contract-actions settings-save-bar">
                 <button type="submit" className="btn-solid" disabled={saving}>
                   {saving ? 'Saving…' : 'Save changes'}
                 </button>

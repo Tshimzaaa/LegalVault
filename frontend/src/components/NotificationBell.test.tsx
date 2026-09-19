@@ -1,11 +1,27 @@
 import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import NotificationBell from './NotificationBell'
 import * as notificationsApi from '../api/notifications'
 import type { Notification } from '../api/notifications'
 
 vi.mock('../api/notifications')
+
+function LocationProbe() {
+  return <span data-testid="location">{useLocation().pathname}</span>
+}
+
+function renderBell() {
+  return render(
+    <MemoryRouter initialEntries={['/staff/dashboard']}>
+      <NotificationBell />
+      <Routes>
+        <Route path="*" element={<LocationProbe />} />
+      </Routes>
+    </MemoryRouter>,
+  )
+}
 
 function makeNotification(overrides: Partial<Notification> = {}): Notification {
   return {
@@ -41,14 +57,14 @@ describe('NotificationBell', () => {
   it('shows the unread badge from the initial poll', async () => {
     vi.mocked(notificationsApi.getUnreadCount).mockResolvedValue(3)
 
-    render(<NotificationBell />)
+    renderBell()
 
     expect(await screen.findByText('3')).toBeInTheDocument()
     expect(notificationsApi.getUnreadCount).toHaveBeenCalledWith('token-a')
   })
 
   it('hides the badge when there are no unread notifications', async () => {
-    render(<NotificationBell />)
+    renderBell()
 
     await waitFor(() => expect(notificationsApi.getUnreadCount).toHaveBeenCalled())
     expect(screen.queryByText('0')).not.toBeInTheDocument()
@@ -60,7 +76,7 @@ describe('NotificationBell', () => {
     // token expired every subsequent poll needed a wasted refresh round trip.
     vi.useFakeTimers()
 
-    render(<NotificationBell />)
+    renderBell()
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0)
@@ -80,7 +96,7 @@ describe('NotificationBell', () => {
     vi.mocked(notificationsApi.getUnreadCount).mockResolvedValue(1)
     vi.mocked(notificationsApi.listNotifications).mockResolvedValue([makeNotification()])
 
-    render(<NotificationBell />)
+    renderBell()
     await screen.findByText('1')
 
     await user.click(screen.getByRole('button', { name: /notifications/i }))
@@ -94,6 +110,41 @@ describe('NotificationBell', () => {
     )
   })
 
+  it('opens the related contract when a contract notification is clicked', async () => {
+    const user = userEvent.setup()
+    vi.mocked(notificationsApi.getUnreadCount).mockResolvedValue(1)
+    vi.mocked(notificationsApi.listNotifications).mockResolvedValue([makeNotification()])
+
+    renderBell()
+    await screen.findByText('1')
+    await user.click(screen.getByRole('button', { name: /notifications/i }))
+    await user.click(await screen.findByText('New message'))
+
+    expect(screen.getByTestId('location')).toHaveTextContent('/staff/contracts/m1')
+    await waitFor(() =>
+      expect(notificationsApi.markNotificationRead).toHaveBeenCalledWith('token-a', 'n1'),
+    )
+    expect(screen.queryByRole('dialog', { name: /notifications/i })).not.toBeInTheDocument()
+  })
+
+  it('only marks read, without navigating, when a notification has no target', async () => {
+    const user = userEvent.setup()
+    vi.mocked(notificationsApi.getUnreadCount).mockResolvedValue(1)
+    vi.mocked(notificationsApi.listNotifications).mockResolvedValue([
+      makeNotification({ target_type: null, target_id: null }),
+    ])
+
+    renderBell()
+    await screen.findByText('1')
+    await user.click(screen.getByRole('button', { name: /notifications/i }))
+    await user.click(await screen.findByText('New message'))
+
+    expect(screen.getByTestId('location')).toHaveTextContent('/staff/dashboard')
+    await waitFor(() =>
+      expect(notificationsApi.markNotificationRead).toHaveBeenCalledWith('token-a', 'n1'),
+    )
+  })
+
   it('marks all notifications read and clears the badge', async () => {
     const user = userEvent.setup()
     vi.mocked(notificationsApi.getUnreadCount).mockResolvedValue(2)
@@ -102,7 +153,7 @@ describe('NotificationBell', () => {
       makeNotification({ id: 'n2' }),
     ])
 
-    render(<NotificationBell />)
+    renderBell()
     await screen.findByText('2')
 
     await user.click(screen.getByRole('button', { name: /notifications/i }))

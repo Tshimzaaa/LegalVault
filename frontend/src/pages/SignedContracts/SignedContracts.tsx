@@ -218,7 +218,7 @@ function SignedContracts() {
 
   return (
     <main className="dash-main">
-      <header className="dash-topbar">
+      <header className="dash-topbar m-header">
         <h1>Signed Contracts</h1>
         <div className="topbar-actions">
           <span className="chip">
@@ -327,7 +327,7 @@ function SignedContracts() {
 
       {status === 'ready' && (
         <>
-          <section className="dash-row signed-stats">
+          <section className="dash-row signed-stats m-stats">
             <div className="card">
               <div className="card-header">
                 <span>Total Contracts</span>
@@ -399,34 +399,34 @@ function SignedContracts() {
             {actionError && <p className="contract-error" aria-live="polite">{actionError}</p>}
 
             <div className="table-scroll">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Contract</th>
-                  <th>Type</th>
-                  <th>Signed Date</th>
-                  <th>Source</th>
-                  <th>Status</th>
-                  <th />
+            <table className="data-table data-table-list" role="table">
+              <thead role="rowgroup">
+                <tr role="row">
+                  <th role="columnheader">Contract</th>
+                  <th role="columnheader">Type</th>
+                  <th role="columnheader">Signed Date</th>
+                  <th role="columnheader">Source</th>
+                  <th role="columnheader">Status</th>
+                  <th role="columnheader" />
                 </tr>
               </thead>
-              <tbody>
+              <tbody role="rowgroup">
                 {filteredContracts.map((c) => (
-                  <tr key={c.id}>
-                    <td className="signed-contract-cell">
+                  <tr key={c.id} role="row">
+                    <td role="cell" className="signed-contract-cell">
                       <div className="signed-contract-title">{c.title}</div>
                       {c.description && <div className="muted signed-contract-description">{c.description}</div>}
                     </td>
-                    <td className="muted">{typeLabel[c.agreement_type]}</td>
-                    <td className="muted">{c.signed_date}</td>
-                    <td className="muted">{c.integration_source}</td>
-                    <td>
+                    <td role="cell" className="muted">{typeLabel[c.agreement_type]}</td>
+                    <td role="cell" className="muted" data-label="Signed">{c.signed_date}</td>
+                    <td role="cell" className="muted" data-label="Source">{c.integration_source}</td>
+                    <td role="cell">
                       <span className="status-badge" style={{ color: statusColor[c.status], background: `rgba(${statusColorRgb[c.status]}, 0.13)` }}>
                         {statusLabel[c.status]}
                       </span>
                     </td>
-                    <td>
-                      <div className="clients-row-actions">
+                    <td role="cell" data-full>
+                      <div className="clients-row-actions signed-row-actions">
                         <button
                           type="button"
                           className="btn-ghost"
@@ -448,8 +448,8 @@ function SignedContracts() {
                   </tr>
                 ))}
                 {filteredContracts.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="muted">
+                  <tr role="row">
+                    <td role="cell" colSpan={6} className="muted">
                       {contracts.length === 0
                         ? 'No signed contracts yet. Add one with Add Contract.'
                         : 'No contracts match these filters.'}

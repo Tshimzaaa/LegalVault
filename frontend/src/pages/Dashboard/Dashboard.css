@@ -168,3 +168,104 @@
   font-size: 11px;
 }
 
+
+.dash-body {
+  display: contents;
+}
+
+.dash-signatures {
+  margin-bottom: 16px;
+}
+
+.contract-status-list .status-count {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 880px) {
+  /* The shell already has search and account, so the in-page copies are hidden on phones. */
+  .dash-topbar-page .topbar-actions {
+    display: none;
+  }
+
+  .dash-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .dash-body > .dash-row {
+    display: contents;
+  }
+
+  .dash-body > .dash-row + .dash-row {
+    margin-top: 0;
+  }
+
+  .dash-body .dash-signatures {
+    order: 1;
+    margin-bottom: 0;
+    border-color: var(--accent);
+  }
+
+  .dash-body .key-deadlines { order: 2; }
+  .dash-body .tasks-deadlines { order: 3; }
+  .dash-body .active-cases { order: 4; }
+  .dash-body .contract-status { order: 5; }
+  .dash-body .recent-documents { order: 6; }
+  .dash-body .recent-communication { order: 7; }
+  .dash-body .need-help { order: 8; }
+
+  .dash-signatures .contract-doc-row {
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .dash-signatures .contract-doc-title {
+    flex: 1 1 160px;
+    min-width: 0;
+  }
+
+  .contract-status-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .contract-status-list .stat-line {
+    grid-column: 1 / -1;
+  }
+
+  .contract-status-list .status-row {
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(var(--overlay-rgb), 0.05);
+  }
+
+  .contract-status-list .status-label {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .comm-text {
+    font-size: 13px;
+  }
+
+  .deadline-row,
+  .task-row,
+  .doc-row,
+  .comm-row {
+    padding: 4px 0;
+  }
+}
+
+@media (max-width: 880px) {
+  .dash-body .need-help {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+}

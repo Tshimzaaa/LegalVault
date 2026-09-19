@@ -103,8 +103,16 @@ function Navbar({ onLoginClick }: NavbarProps) {
           </a>
         ))}
         <Link
-          to="/login"
+          to="/register"
           className="navbar-cta navbar-mobile-cta"
+          tabIndex={menuOpen ? undefined : -1}
+          onClick={closeMenu}
+        >
+          Get Started Free
+        </Link>
+        <Link
+          to="/login"
+          className="navbar-mobile-login"
           tabIndex={menuOpen ? undefined : -1}
           onClick={() => {
             closeMenu()

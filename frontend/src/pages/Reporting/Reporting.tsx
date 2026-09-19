@@ -153,27 +153,27 @@ function StaffWorkloadTable({
 
   return (
     <div className="table-scroll">
-    <table className="data-table">
-      <thead>
-        <tr>
-          <th>Staff</th>
-          <th>Active</th>
-          <th>Open tasks</th>
-          <th>Overdue</th>
-          <th>Weekly capacity</th>
-          <th>Utilization</th>
+    <table className="data-table data-table-list reporting-workload" role="table">
+      <thead role="rowgroup">
+        <tr role="row">
+          <th role="columnheader">Staff</th>
+          <th role="columnheader">Active</th>
+          <th role="columnheader">Open tasks</th>
+          <th role="columnheader">Overdue</th>
+          <th role="columnheader">Weekly capacity</th>
+          <th role="columnheader">Utilization</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody role="rowgroup">
         {rows.map((r) => (
-          <tr key={r.user_id}>
-            <td>{r.name}</td>
-            <td className="muted tabular">{r.active_contracts}</td>
-            <td className="muted tabular">{r.open_tasks}</td>
-            <td className="muted tabular" style={{ color: r.overdue_tasks > 0 ? '#ef4444' : undefined }}>
+          <tr key={r.user_id} role="row">
+            <td role="cell">{r.name}</td>
+            <td role="cell" data-label="Active" className="muted tabular">{r.active_contracts}</td>
+            <td role="cell" data-label="Open tasks" className="muted tabular">{r.open_tasks}</td>
+            <td role="cell" data-label="Overdue" className="muted tabular" style={{ color: r.overdue_tasks > 0 ? '#ef4444' : undefined }}>
               {r.overdue_tasks}
             </td>
-            <td className="tabular">
+            <td role="cell" data-label="Capacity" className="tabular">
               {editingId === r.user_id ? (
                 <span className="capacity-edit-wrap">
                   <input
@@ -217,7 +217,7 @@ function StaffWorkloadTable({
                 <span className="muted">{r.weekly_capacity_hours != null ? `${r.weekly_capacity_hours}h/wk` : 'Not set'}</span>
               )}
             </td>
-            <td className="tabular">
+            <td role="cell" data-label="Utilization" data-full className="tabular">
               {r.utilization_percent != null ? (
                 <>
                   <UtilizationBar percent={r.utilization_percent} />
@@ -230,8 +230,8 @@ function StaffWorkloadTable({
           </tr>
         ))}
         {rows.length === 0 && (
-          <tr>
-            <td colSpan={6} className="muted">
+          <tr role="row">
+            <td role="cell" colSpan={6} className="muted">
               No staff assigned to contracts yet.
             </td>
           </tr>
@@ -300,7 +300,7 @@ function Reporting({ user }: ReportingProps) {
 
   return (
     <main className="dash-main">
-      <header className="dash-topbar">
+      <header className="dash-topbar m-header">
         <h1>Reporting</h1>
         <div className="topbar-actions">
           {exportError && <span className="contract-error" aria-live="polite">{exportError}</span>}
@@ -310,7 +310,7 @@ function Reporting({ user }: ReportingProps) {
         </div>
       </header>
 
-      <section className="dash-row reporting-stats">
+      <section className="dash-row reporting-stats m-stats">
         <div className="card">
           <div className="card-header">
             <span>Active contracts</span>

@@ -66,3 +66,95 @@
   height: 15px;
   accent-color: var(--accent);
 }
+
+@media (max-width: 880px) {
+  .integrations-grid {
+    overflow: visible;
+    gap: 12px;
+  }
+
+  .integration-card .template-description {
+    -webkit-line-clamp: unset;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .integration-card .template-name {
+    font-size: 16px;
+  }
+
+  .integration-card .template-category {
+    font-size: 12.5px;
+  }
+
+  .integration-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .integration-actions .template-use-btn {
+    flex: 1 1 auto;
+    margin-top: 0;
+    padding-inline: 16px;
+    justify-content: center;
+  }
+
+  .integration-actions .icon-btn {
+    box-sizing: border-box;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+  }
+
+  .integration-actions .icon-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .integration-add-row {
+    align-self: stretch;
+    justify-content: center;
+    font-size: 13px;
+    padding-inline: 16px;
+  }
+
+  .integration-config-form .field-row {
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed rgba(var(--overlay-rgb), 0.1);
+  }
+
+  .intake-required-checkbox {
+    min-height: 44px;
+    font-size: 13.5px;
+  }
+
+  .intake-required-checkbox input {
+    width: 20px;
+    height: 20px;
+  }
+
+  .integration-config-form .contract-actions {
+    position: sticky;
+    bottom: 0;
+    margin: 8px -16px -16px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border-top: 1px solid rgba(var(--overlay-rgb), 0.08);
+    border-radius: 0 0 14px 14px;
+  }
+
+  .integration-config-form .contract-actions .btn-solid {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 880px) {
+  .integration-add-row svg {
+    width: 16px;
+    height: 16px;
+  }
+}

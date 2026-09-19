@@ -104,3 +104,28 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+@media (max-width: 720px) {
+  .site-footer {
+    padding: 40px 20px 24px;
+  }
+
+  .site-footer-col {
+    gap: 0;
+  }
+
+  .site-footer-heading {
+    margin-bottom: 4px;
+  }
+
+  .site-footer-col a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: 15px;
+  }
+
+  .site-footer-tagline {
+    font-size: 14px;
+  }
+}

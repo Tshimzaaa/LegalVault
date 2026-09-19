@@ -13,3 +13,143 @@
   width: 16px;
   height: 16px;
 }
+
+@media (max-width: 880px) {
+  .lib-page .lib-list.templates-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    overflow: visible;
+  }
+
+  .lib-page .template-card {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    column-gap: 12px;
+    row-gap: 4px;
+    align-items: center;
+    padding: 14px;
+  }
+
+  .lib-page .template-card:hover {
+    transform: none;
+  }
+
+  .lib-page .template-card-top {
+    display: contents;
+  }
+
+  .lib-page .template-icon {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    width: 40px;
+    height: 40px;
+    margin: 0;
+  }
+
+  .lib-page .template-name {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 15px;
+    align-self: end;
+    overflow-wrap: anywhere;
+  }
+
+  .lib-page .template-category {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .lib-page .template-card-actions {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    gap: 6px;
+  }
+
+  .lib-page .template-card-actions .icon-btn {
+    box-sizing: border-box;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+  }
+
+  .lib-page .template-card-actions .icon-btn::before {
+    display: none;
+  }
+
+  .lib-page .template-card-actions .icon-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .lib-page .template-description {
+    grid-column: 1 / -1;
+    font-size: 13.5px;
+    margin-top: 6px;
+    -webkit-line-clamp: 4;
+  }
+
+  .lib-page .template-use-btn {
+    grid-column: 1 / -1;
+    align-self: stretch;
+    box-sizing: border-box;
+    min-height: 44px;
+    font-size: 14px;
+    margin-top: 6px;
+  }
+
+  .lib-page .template-edit-form,
+  .lib-page .template-upload-form,
+  .lib-page .fallback-clause-form {
+    display: flex;
+    flex-direction: column;
+    padding: 14px;
+  }
+
+  .lib-page .field-row {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .lib-page .contract-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    margin: 4px -14px -14px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    flex-direction: row-reverse;
+  }
+
+  .lib-page .contract-actions .btn-solid,
+  .lib-page .contract-actions .btn-ghost {
+    flex: 1;
+  }
+
+  .lib-page .contract-error {
+    text-align: left;
+    font-size: 14px;
+  }
+
+  .lib-page textarea {
+    max-height: 40vh;
+  }
+}
+
+@media (max-width: 880px) {
+  .lib-page form.card {
+    align-items: stretch;
+  }
+
+  .lib-page form.card .field,
+  .lib-page form.card .field input,
+  .lib-page form.card .field textarea {
+    box-sizing: border-box;
+    width: 100%;
+  }
+}
