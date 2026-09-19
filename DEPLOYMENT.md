@@ -19,22 +19,34 @@ that instance exists (see §3).
 `backend/.env.example` and `frontend/.env.example` document every variable the app reads.
 Copy them to `.env` and fill in.
 
-## 2. Production database **[manual: needs your Neon account]**
+## 2. Production database **[manual: needs your Supabase account]**
 
-1. Create (or pick) the production Neon project/branch. This is `DATABASE_URL`.
-2. Create the restricted `app_runtime` role RLS depends on:
+Host chosen: **Supabase** (plain Postgres; nothing in the app is provider-specific).
+
+1. Create a Supabase project on the **Pro plan**. The free tier pauses the database after a week
+   of inactivity, which is the same failure mode that made Neon feel slow. Pick the region
+   closest to the Render services (Render's default is Oregon or Frankfurt; match it).
+2. Get the connection strings from **Project Settings -> Database -> Connection string**.
+   Use the **pooler** hosts, not the direct host. The direct host is IPv6-only unless you buy
+   the IPv4 add-on, and Render can't reach it.
+   - **Session pooler** (port 5432): use for `DATABASE_URL`, i.e. migrations and owner tasks.
+   - **Transaction pooler** (port 6543): use for `RUNTIME_DATABASE_URL`, i.e. the running API
+     and worker. `SET LOCAL` in `app/database/rls.py` is transaction-scoped, so RLS context is
+     safe through this pooler, and psycopg2 doesn't use server-side prepared statements.
+   - Pooler usernames are suffixed with the project ref, e.g. `postgres.<project-ref>` and
+     `app_runtime.<project-ref>`.
+3. Create the restricted `app_runtime` role RLS depends on:
    ```
-   python backend/scripts/print_runtime_role_sql.py --database <dbname> --owner-role <ownerrole>
+   python backend/scripts/print_runtime_role_sql.py --database postgres --owner-role postgres
    ```
-   Run the printed SQL against the database as the owner role, then set `RUNTIME_DATABASE_URL`
-   to the connection string it prints. **Without this, `ENVIRONMENT=production` refuses to
-   start at all.** See `app/core/config.py`'s startup checks.
-3. Run migrations against it: `cd backend && alembic upgrade head`.
-4. **Check compute size/autoscaling before launch.** The current dev branch has been
-   consistently taking 3 to 8 seconds per API call in manual testing, plausibly a free-tier/minimum
-   compute size cold-starting on every request rather than anything in the app code. Confirm
-   the production branch's compute tier (and autoscaling settings) in the Neon dashboard
-   before assuming this won't recur for real users; this checklist can't verify that for you.
+   Run the printed SQL in the Supabase SQL editor, then build `RUNTIME_DATABASE_URL` from the
+   transaction-pooler host with the `app_runtime.<project-ref>` username. **Without this,
+   `ENVIRONMENT=production` refuses to start at all.** See `app/core/config.py`'s startup checks.
+4. Run migrations against it, using the session-pooler `DATABASE_URL`:
+   `cd backend && alembic upgrade head`.
+5. Supabase's own Data API (PostgREST) is not used by this app. In **Project Settings -> Data API**
+   turn it off, so the tables aren't exposed over an extra public endpoint.
+6. Confirm backups in **Database -> Backups** (daily on Pro; point-in-time recovery is a paid add-on).
 
 ## 3. Documenso + ClamAV **[manual: needs a persistent host]**
 
@@ -139,7 +151,7 @@ failure at startup. Not part of the required-secrets checklist in §5/§6 above.
 
 - **Real email delivery**: invite links and notification emails are still console-stubbed.
   Out of scope here by request; see README's Known Gaps.
-- **Neon backup/PITR**: confirm your production branch's retention settings in the Neon
+- **Supabase backup/PITR**: confirm your project's backup retention in the Supabase
   dashboard; not something the app or this checklist can configure for you.
 - **External uptime alerting**: Sentry (§8, once configured) covers application errors, but
   nothing pages anyone if the process itself goes down entirely (a true uptime/ping check, not

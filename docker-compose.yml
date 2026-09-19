@@ -7,6 +7,7 @@ services:
   # workflow's one-off GRANT ALL TABLES, which only covers tables that already exist).
   db:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_USER: legalvault
       POSTGRES_PASSWORD: legalvault
@@ -30,6 +31,7 @@ services:
   # Notification rows); Redis here is purely a task queue.
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
     ports:
       - "6379:6379"
     healthcheck:
@@ -40,6 +42,7 @@ services:
 
   clamav:
     image: clamav/clamav:stable
+    restart: unless-stopped
     ports:
       - "3310:3310"
     volumes:
@@ -62,6 +65,7 @@ services:
   # shared or production environment.
   documenso-db:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_USER: documenso
       POSTGRES_PASSWORD: documenso
@@ -76,6 +80,7 @@ services:
 
   documenso:
     image: documenso/documenso:latest
+    restart: unless-stopped
     ports:
       - "3000:3000"
     depends_on:

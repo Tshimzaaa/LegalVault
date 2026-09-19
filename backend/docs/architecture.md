@@ -1,5 +1,11 @@
 # LegalVault Backend: Architecture & Feature Documentation
 
+> **Stale — historical context only.** This doc predates the "corporate pivot" (see
+> git history) that removed the Firm Clients tier entirely and renamed matters to
+> contracts. The three-tier model, client portal, and `matters`/`clients` modules
+> described below no longer exist in the codebase. See the top-level
+> [`README.md`](../../README.md) for the current two-tier design and module list.
+
 ## Overview
 
 LegalVault is a multi-tenant SaaS platform for law firm practice management. 
