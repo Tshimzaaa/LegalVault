@@ -40,12 +40,6 @@ envVarGroups:
         sync: false
       - key: R2_BUCKET_NAME
         sync: false
-      # Still an open hosting decision (see DEPLOYMENT.md §3) — ClamAV isn't provisioned
-      # by this Blueprint. Point these at wherever it ends up running.
-      - key: CLAMD_HOST
-        sync: false
-      - key: CLAMD_PORT
-        sync: false
       - key: DOCUMENSO_API_URL
         sync: false
       - key: DOCUMENSO_API_KEY
@@ -61,6 +55,23 @@ services:
     type: keyvalue
     plan: starter
     ipAllowList: []
+
+  # Malware scanner for every upload. Without it uploads are refused (fail closed, HTTP 503),
+  # so documents, templates, signed contracts and intake attachments do not work. clamd loads
+  # the whole signature database into memory (roughly 1.5 GB), so it needs the standard plan;
+  # the disk keeps the downloaded definitions across restarts so a restart is not followed by
+  # a long window of refused uploads while freshclam downloads them again.
+  - name: legalvault-clamav
+    type: pserv
+    runtime: image
+    image:
+      url: docker.io/clamav/clamav:stable
+    plan: standard
+    autoDeploy: false
+    disk:
+      name: clamav-db
+      mountPath: /var/lib/clamav
+      sizeGB: 2
 
   - name: legalvault-api
     type: web
@@ -80,6 +91,13 @@ services:
           name: legalvault-redis
           type: keyvalue
           property: connectionString
+      - key: CLAMD_HOST
+        fromService:
+          name: legalvault-clamav
+          type: pserv
+          property: host
+      - key: CLAMD_PORT
+        value: "3310"
       # Render service URLs are https://<name>.onrender.com by default — update this if
       # legalvault-frontend later gets a custom domain.
       - key: FRONTEND_URL

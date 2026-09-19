@@ -220,15 +220,16 @@ class ContractService:
             target_id=assignment.id,
             details={"user_id": str(request.user_id), "role_on_contract": request.role_on_contract.value},
         )
-        self.notifications.notify(
-            recipient_type=RecipientType.STAFF,
-            recipient_id=request.user_id,
-            type="contract.staff_assigned",
-            title=f'You were assigned to "{contract.title}"',
-            body=f"Role: {request.role_on_contract.value.replace('_', ' ').title()}",
-            target_type="contract",
-            target_id=contract.id,
-        )
+        if str(request.user_id) != str(actor_id):
+            self.notifications.notify(
+                recipient_type=RecipientType.STAFF,
+                recipient_id=request.user_id,
+                type="contract.staff_assigned",
+                title=f'You were assigned to "{contract.title}"',
+                body=f"Role: {request.role_on_contract.value.replace('_', ' ').title()}",
+                target_type="contract",
+                target_id=contract.id,
+            )
         self.db.commit()
         return assignment
 
@@ -369,7 +370,7 @@ class ContractService:
             target_id=task.id,
             details={"title": task.title},
         )
-        if task.assigned_to is not None:
+        if task.assigned_to is not None and str(task.assigned_to) != str(actor_id):
             self.notifications.notify(
                 recipient_type=RecipientType.STAFF,
                 recipient_id=task.assigned_to,
@@ -412,7 +413,11 @@ class ContractService:
                 for k, v in updates.items()
             },
         )
-        if "assigned_to" in updates and updates["assigned_to"] is not None:
+        if (
+            "assigned_to" in updates
+            and updates["assigned_to"] is not None
+            and str(updates["assigned_to"]) != str(actor_id)
+        ):
             self.notifications.notify(
                 recipient_type=RecipientType.STAFF,
                 recipient_id=updates["assigned_to"],
@@ -627,18 +632,19 @@ class ContractService:
             target_id=approval.id,
             details={"decision": approval.status.value, "to": approval.to_status.value},
         )
-        self.notifications.notify(
-            recipient_type=RecipientType.STAFF,
-            recipient_id=approval.requested_by,
-            type="contract.approval_decided",
-            title=f'Approval {approval.status.value}: "{contract.title}"',
-            body=(
-                f"Your request to move to {approval.to_status.value} was {approval.status.value}."
-                + (f" Note: {request.note}" if request.note else "")
-            ),
-            target_type="contract",
-            target_id=contract.id,
-        )
+        if str(approval.requested_by) != str(actor_id):
+            self.notifications.notify(
+                recipient_type=RecipientType.STAFF,
+                recipient_id=approval.requested_by,
+                type="contract.approval_decided",
+                title=f'Approval {approval.status.value}: "{contract.title}"',
+                body=(
+                    f"Your request to move to {approval.to_status.value} was {approval.status.value}."
+                    + (f" Note: {request.note}" if request.note else "")
+                ),
+                target_type="contract",
+                target_id=contract.id,
+            )
         self.db.commit()
         self.db.refresh(approval)
         return approval

@@ -152,35 +152,27 @@ function Dashboard({ user, onLogout, previewSummary }: DashboardProps) {
           )}
 
           <section className="dash-row row-1">
-            <div className="card active-cases">
-              <div className="card-header">
-                <span>Active Cases</span>
-              </div>
-              <div className="stat-line">
-                <span className="stat-big">{summary.activeCases.count}</span>
-                <span className="stat-sub">count</span>
-              </div>
-              <div
-                className="progress-track"
-                role="progressbar"
-                aria-valuenow={summary.activeCases.progressPercent}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label="Active cases progress"
-              >
-                <span className="progress-fill" style={{ width: `${summary.activeCases.progressPercent}%` }} />
-              </div>
-            </div>
-
             <div className="card contract-status">
               <div className="card-header">
                 <span>Contract Status</span>
               </div>
               <div className="contract-status-list">
                 <div className="stat-line">
-                  <span className="stat-big">{summary.contractStatus.total}</span>
-                  <span className="stat-sub">Total</span>
+                  <span className="stat-big">{summary.activeCases.count}</span>
+                  <span className="stat-sub">active cases</span>
+                  <span className="stat-sub stat-total">of {summary.contractStatus.total} total</span>
                 </div>
+                <div
+                  className="progress-track"
+                  role="progressbar"
+                  aria-valuenow={summary.activeCases.progressPercent}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label="Share of contracts signed or closed"
+                >
+                  <span className="progress-fill" style={{ width: `${summary.activeCases.progressPercent}%` }} />
+                </div>
+                <p className="progress-caption">{summary.activeCases.progressPercent}% signed or closed</p>
                 {summary.contractStatus.breakdown.map((s) => (
                   <div key={s.label} className="status-row">
                     <span className="status-dot" style={{ background: s.color }} />
